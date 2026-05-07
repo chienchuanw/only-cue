@@ -4,6 +4,30 @@ Append-only session log. Newer entries on top.
 
 ---
 
+## 2026-05-08 — E10 distribution + v0.1.0 release (PR #26, issue #12)
+
+**Shipped:** issue #12 (E10 distribution). PR #26 merged into `dev` (rebase, head `008cf03`). Then ran the post-merge release sequence in this session: tagged `v0.1.0` on `008cf03`, built and DMG'd via the C3 scripts, published the [v0.1.0 GitHub Release](https://github.com/chienchuanw/only-cue/releases/tag/v0.1.0) with `OnlyCue-0.1.0.dmg` attached. **MVP is live.**
+
+**What landed (docs in PR #26):**
+- `README.md` — new `## Install` section above `## Status` with the right-click → Open Gatekeeper bypass walkthrough; mentions Control-click for trackpad users; system-requirements line (macOS 14+, both architectures); "build from source" escape hatch link. Distribution row in the stack table tightened to "Ad-hoc signed DMG (Developer ID + notarization opt-in)".
+- `docs/release-notes/0.1.0.md` (new file) — the literal body for `gh release create --notes-file`. Lists shipped features (document workflow, media import, preview, transport, cue list, cue editing, cue markers, polish), install steps, known limitations (Gatekeeper prompt on free tier, sandbox off, no Sparkle, cue list ←/→ contention with global shortcuts when inspector is focused), pointer at `docs/verification.md` for the full manual end-to-end script.
+- `docs/verification.md` — "Distribution sanity check" rewritten with mode-aware expectations: unsigned `spctl` rejects (expected; right-click → Open clears the prompt), signed `spctl` accepts (silent first launch). "OnlyCue is damaged" flagged as the regression signal that ad-hoc signing didn't take.
+
+**Iteration via simplify pass — 3 fixes (commit `008cf03`):**
+1. Release notes overstated supported audio/video formats by listing 7 closed extensions when `MediaImporter.allowedContentTypes` is `[.audio, .movie]` (anything AVFoundation accepts). Broadened to "any AVFoundation-supported audio or video file (`.mp3`, `.wav`, ..., and friends)".
+2. Release notes had an internal ADR-007 reference in user-facing copy. Trimmed to "App Sandbox is off." — internal pointers don't belong in release notes.
+3. Right-click instructions in both README and release notes lacked a Control-click alternative for trackpad users without secondary-click configured.
+
+**Post-merge release sequence (this session, on user's machine):**
+- `git tag -a v0.1.0 -m "OnlyCue 0.1.0"` on `008cf03`; `git push origin v0.1.0`.
+- `bash scripts/build-release.sh` → `build/export/OnlyCue.app` (ad-hoc signed; `codesign --verify --deep --strict --verbose=2` clean: "valid on disk", "satisfies its Designated Requirement").
+- `bash scripts/make-dmg.sh` → `build/OnlyCue-0.1.0.dmg` (~907 KB, compressed HFS+ disk image).
+- `gh release create v0.1.0 --title "OnlyCue 0.1.0" --notes-file docs/release-notes/0.1.0.md "build/OnlyCue-0.1.0.dmg"` → [released](https://github.com/chienchuanw/only-cue/releases/tag/v0.1.0).
+
+**Closing note — phase 1 complete.** All 13 MVP issues closed (#1, #2, #3–#11, #13, #12). Phase 2 (LTC timecode generation, cue templates, CSV / Resolve EDL export, OSC / MIDI integrations, beat-detection-assisted cue placement, plus the as-yet-undefined differentiator) starts when the issue board picks up new epics — see `docs/roadmap.md`.
+
+---
+
 ## 2026-05-07 / 08 — C3 release pipeline session (PR #25, issue #13)
 
 **Shipped:** issue #13 (C3 release pipeline). PR #25 merged into `dev` (rebase, head `6128837`). Bag of scripts + docs that turn `dev` into a drag-installable DMG.

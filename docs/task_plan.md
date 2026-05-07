@@ -2,7 +2,7 @@
 
 Working source of truth for what's left. Sourced from the [GitHub issue board](https://github.com/chienchuanw/only-cue/issues) and the build sequence. When in doubt, the issues are authoritative.
 
-## Active milestone — MVP
+## Active milestone — MVP ✅ shipped (v0.1.0)
 
 | Issue | Title | Status |
 |---|---|---|
@@ -18,7 +18,7 @@ Working source of truth for what's left. Sourced from the [GitHub issue board](h
 | [#10](https://github.com/chienchuanw/only-cue/issues/10) | E8 cue markers — draw on waveform, drag to retime, click to seek | ✅ shipped (PR #23) |
 | [#11](https://github.com/chienchuanw/only-cue/issues/11) | E9 polish | ✅ shipped (PR #24) |
 | [#13](https://github.com/chienchuanw/only-cue/issues/13) | C3 release pipeline | ✅ shipped (PR #25) |
-| [#12](https://github.com/chienchuanw/only-cue/issues/12) | E10 distribution | ⏭️ next |
+| [#12](https://github.com/chienchuanw/only-cue/issues/12) | E10 distribution | ✅ shipped (PR #26 + [v0.1.0](https://github.com/chienchuanw/only-cue/releases/tag/v0.1.0)) |
 
 ## Recommended order
 
@@ -33,7 +33,7 @@ Working source of truth for what's left. Sourced from the [GitHub issue board](h
 9. ~~**#10 (E8 cue markers)** — overlay vertical markers + colored caps on the waveform, drag to retime via `CueCommands.retime`, tap to seek via `engine.seek`.~~ Done.
 10. ~~**#11 (E9 polish)** — relink alert, navigation subtitle, Space/←/→ shortcuts, placeholder app icon, About panel, first-launch sheet.~~ Done.
 11. ~~**#13 (C3 release pipeline)** — `scripts/build-release.sh`, `scripts/make-dmg.sh`, `docs/release.md`. Defaults to free-tier `RELEASE_MODE=unsigned` (ad-hoc signed .app + plain DMG); `RELEASE_MODE=signed` opt-in for Developer ID + notarization once we upgrade.~~ Done.
-12. **#12 (E10 distribution)** — bump `CFBundleShortVersionString` to `0.1.0`, run the C3 pipeline, smoke-test the DMG on a fresh-feeling Mac, tag `v0.1.0`, `gh release create` with the DMG attached + release notes, update this README's install section to point at the release.
+12. ~~**#12 (E10 distribution)** — README install section, `docs/release-notes/0.1.0.md`, free-tier-aware verification doc; tagged `v0.1.0` on `008cf03`, built the DMG via the C3 pipeline, attached to a GitHub Release.~~ Done — [v0.1.0 published](https://github.com/chienchuanw/only-cue/releases/tag/v0.1.0).
 
 ## Phase 2 / Phase 3 milestones
 

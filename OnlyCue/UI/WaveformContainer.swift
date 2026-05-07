@@ -33,28 +33,28 @@ struct WaveformContainer: View {
         let cache = WaveformCache.shared
         let target = resolution
         let url = asset.url
-        let assetCopy = asset
 
         do {
-            let cached: [Float]? = await Task.detached(priority: .userInitiated) {
-                guard let hash = try? WaveformCache.fileHash(url) else { return nil }
-                return cache.read(assetHash: hash, resolution: target)
+            let hash: String? = await Task.detached(priority: .userInitiated) {
+                try? WaveformCache.fileHash(url)
             }.value
 
             if Task.isCancelled { return }
-            if let cached {
+
+            if let hash, let cached = cache.read(assetHash: hash, resolution: target) {
                 peaks = cached
                 return
             }
 
-            let generated = try await WaveformGenerator.peaks(for: assetCopy, resolution: target)
+            let generated = try await WaveformGenerator.peaks(for: asset, resolution: target)
             if Task.isCancelled { return }
             peaks = generated
 
-            await Task.detached(priority: .background) {
-                guard let hash = try? WaveformCache.fileHash(url) else { return }
-                try? cache.write(generated, assetHash: hash, resolution: target)
-            }.value
+            if let hash {
+                Task.detached(priority: .background) {
+                    try? cache.write(generated, assetHash: hash, resolution: target)
+                }
+            }
         } catch is CancellationError {
             return
         } catch {

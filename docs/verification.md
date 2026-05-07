@@ -62,6 +62,11 @@ Not formal perf tests, but anything outside these budgets is a bug to investigat
 
 Before tagging a release:
 
-- `codesign --verify --deep --strict --verbose=2 OnlyCue.app` clean.
-- `spctl --assess --type execute OnlyCue.app` accepts.
-- DMG opens, drag-to-Applications works, first launch on a Mac that has never seen the app produces no Gatekeeper warning.
+- `codesign --verify --deep --strict --verbose=2 OnlyCue.app` clean. (Passes for both ad-hoc and Developer ID signatures.)
+- `spctl --assess --type execute OnlyCue.app` outcome depends on `RELEASE_MODE`:
+    - **Unsigned (free-tier)**: returns "rejected: Unnotarized Developer ID" or similar — expected. End users use right-click → Open as documented in the install instructions.
+    - **Signed**: must accept. If it rejects after stapling, re-staple and try again.
+- DMG opens, drag-to-Applications works.
+- First launch on a Mac that has never seen the app:
+    - **Unsigned**: shows the standard "developer cannot be verified" Gatekeeper prompt; right-click → Open clears it; the app launches and the system remembers the override. Must **not** show "OnlyCue is damaged and can't be opened" — that indicates the ad-hoc signature didn't take.
+    - **Signed**: launches silently with no Gatekeeper prompt.

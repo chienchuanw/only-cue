@@ -17,7 +17,6 @@ struct WaveformContainer: View {
         Group {
             if let peaks {
                 WaveformView(peaks: peaks)
-                    .padding(.horizontal, 8)
                     .overlay(alignment: .topLeading) {
                         if loadedDuration > 0 {
                             CueMarkersOverlay(
@@ -28,6 +27,7 @@ struct WaveformContainer: View {
                             )
                         }
                     }
+                    .padding(.horizontal, 8)
             } else if failed {
                 Text("Could not generate waveform")
                     .font(.callout)

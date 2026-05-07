@@ -5,10 +5,6 @@ struct WaveformCache {
 
     let directory: URL
 
-    init(directory: URL) {
-        self.directory = directory
-    }
-
     static let shared: WaveformCache = {
         let base = (try? FileManager.default.url(
             for: .cachesDirectory,
@@ -16,7 +12,7 @@ struct WaveformCache {
             appropriateFor: nil,
             create: true
         )) ?? FileManager.default.temporaryDirectory
-        return WaveformCache(directory: base.appendingPathComponent("OnlyCue/peaks", isDirectory: true))
+        return Self(directory: base.appendingPathComponent("OnlyCue/peaks", isDirectory: true))
     }()
 
     func read(assetHash: String, resolution: Int) -> [Float]? {

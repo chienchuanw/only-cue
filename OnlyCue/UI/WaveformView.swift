@@ -11,7 +11,7 @@ struct WaveformView: View {
             let midY = size.height / 2
             let columnWidth = size.width / CGFloat(peaks.count)
             let barWidth = max(columnWidth - 1, 0.5)
-            let resolved = context.resolve(.color(color))
+            let shading = context.resolve(.color(color))
             for (index, peak) in peaks.enumerated() {
                 let halfHeight = max(CGFloat(peak) * midY, 0.5)
                 let xCenter = (CGFloat(index) + 0.5) * columnWidth
@@ -21,7 +21,7 @@ struct WaveformView: View {
                     width: barWidth,
                     height: halfHeight * 2
                 )
-                context.fill(Path(roundedRect: rect, cornerRadius: barWidth / 2), with: .color(resolved.color))
+                context.fill(Path(roundedRect: rect, cornerRadius: barWidth / 2), with: shading)
             }
         }
         .accessibilityIdentifier("waveform")

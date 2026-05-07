@@ -8,16 +8,17 @@ Run on a clean user account with a freshly installed DMG. Use bundled fixtures `
 
 1. Launch the app → a new untitled document opens with empty preview and empty cue list.
 2. Drag `sample.mp3` onto the window → waveform appears, transport becomes active, time readout shows `00:03:04.000` (= duration).
-3. Press space → audio plays, playhead moves on the waveform, time readout advances.
-4. Press `M` three times at different points → 3 cues appear in the list and as markers on the waveform.
-5. Double-click cue #2 name → rename to `Chorus` → press enter → list updates.
-6. Drag cue #2's waveform marker → its time field updates live; release → list reflects the new time.
-7. Click cue #1 in the list → playhead jumps to its time; pressing space resumes from there.
-8. `⌘Z` → last edit undone. `⌘⇧Z` → redone. Repeat across mixed edits (rename + retime + delete).
-9. `⌘S` → save as `Show.cuelist` to Desktop. Quit the app.
-10. Re-launch → File → Open Recent → `Show.cuelist` → media reloads via bookmark, all cues intact, time fields match.
-11. Repeat steps 2–10 with `clip.mp4` to validate the video path (preview pane shows picture stacked above a waveform strip; cue markers drag and seek on the strip).
-12. Move `sample.mp3` to a new folder, then reopen `Show.cuelist` → app surfaces a "Relink media…" alert; relinking restores playback.
+3. Press space → audio plays, playhead line moves across the waveform with a floating HH:MM:SS label, time readout advances.
+4. Drag the playhead line on the audio waveform → playback pauses, the line follows the cursor; release → playback resumes from the new position. Drag again while paused → playback stays paused after release.
+5. Press `M` three times at different points → 3 cues appear in the list and as markers on the waveform.
+6. Double-click cue #2 name → rename to `Chorus` → press enter → list updates.
+7. Drag cue #2's waveform marker → its time field updates live; release → list reflects the new time.
+8. Click cue #1 in the list → playhead jumps to its time; pressing space resumes from there.
+9. `⌘Z` → last edit undone. `⌘⇧Z` → redone. Repeat across mixed edits (rename + retime + delete).
+10. `⌘S` → save as `Show.cuelist` to Desktop. Quit the app.
+11. Re-launch → File → Open Recent → `Show.cuelist` → media reloads via bookmark, all cues intact, time fields match.
+12. Repeat steps 2–11 with `clip.mp4` to validate the video path (preview pane shows picture stacked above a waveform strip; cue markers drag and seek on the strip; the strip itself shows no playhead line).
+13. Move `sample.mp3` to a new folder, then reopen `Show.cuelist` → app surfaces a "Relink media…" alert; relinking restores playback.
 
 If any step fails, the MVP is not done.
 

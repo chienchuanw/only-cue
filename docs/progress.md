@@ -4,6 +4,30 @@ Append-only session log. Newer entries on top.
 
 ---
 
+## 2026-05-07 — E8 cue markers session (PR #23, issue #10)
+
+**Shipped:** issue #10 (E8 cue markers on waveform). PR #23 merged into `dev` (rebase, head `716a710`). The waveform is now a real cue-editing surface, not just a static peak chart.
+
+**What landed:**
+- `OnlyCue/UI/CueMarkersGeometry.swift` — pure functions: `position(forTime:width:duration:)` (linear projection, zero-duration → 0) and `time(originalTime:dx:width:duration:)` (clamps to `0…duration`). Kept side-effect-free so geometry is unit-testable without SwiftUI.
+- `OnlyCue/UI/CueMarkersOverlay.swift` — `GeometryReader` + `ForEach(cues)` driving `CueMarkerView` (vertical `Rectangle` + `Capsule` cap, both colored from `cue.colorHex`). A clear hit-area `Capsule` (14pt) widens the touch target. A single `DragGesture(minimumDistance: 0)` decides drag-vs-tap on `.onEnded` via a 4pt magnitude threshold — single ended call → exactly one `retime` undo step. Live `dragOffset` `@State` follows the finger; reset on end.
+- `OnlyCue/UI/WaveformContainer.swift` — `.overlay(alignment: .topLeading) { CueMarkersOverlay(...) }` mounted on `WaveformView` **before** `.padding(.horizontal, 8)` so the overlay shares the waveform's pre-padded frame (markers align with peaks). Loads `asset.duration` during peak load so the overlay can project times.
+- `OnlyCue/UI/PreviewPane.swift` — refactored from `media: MediaReference?` to `@ObservedObject document: CueListDocument`; audio path forwards `cues`, `onSeek` (→ `engine.seek`), and `onRetime` (→ `CueCommands.retime`).
+- `OnlyCueTests/CueMarkersGeometryTests.swift` — 7 tests covering position at zero / full / mid / zero-duration, plus drag-time math with both clamps.
+
+**Iteration via PR review — one cycle, four cleanups (`716a710`):**
+1. **Blocker — overlay/peak misalignment** — original modifier order was `.padding` then `.overlay`, which sized the overlay to the *padded* frame. Markers drifted 8pt left of peaks. Fix: swap order so the overlay sizes to the waveform's intrinsic frame, then pad both as one unit.
+2. Moved `dragThreshold` to sit with the other static layout constants for discoverability.
+3. Dropped redundant `.contentShape(Rectangle())` on the clear `Capsule` hit-area (a filled shape already participates in hit-testing).
+4. Dropped default `.allowsHitTesting(true)` on the overlay (it's the SwiftUI default).
+
+**Manual verification (per issue #10 Gherkin):**
+- Import `.mp3` → 3 cues at 4.25s / 12.0s / 18.5s (DEBUG seed) → 3 colored markers appear at correct x-positions.
+- Tap marker #2 → playhead seeks to 12.0s.
+- Drag marker #2 right → time updates live; release → one ⌘Z step restores original time.
+
+---
+
 ## 2026-05-07 — E7 add/edit/delete cues session (PR #22, issue #9)
 
 **Shipped:** issue #9 (E7 add/edit/delete cues). PR #22 merged into `dev` (rebase, head `5c5645a`). Documents are now live editors with proper undo.

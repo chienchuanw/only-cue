@@ -4,6 +4,28 @@ Non-obvious things learned during development. Things you'd want to remember nex
 
 ---
 
+## SwiftUI `.padding` then `.overlay` vs `.overlay` then `.padding`
+
+`.overlay` sizes to the receiver's frame **at the point of application**. So:
+
+```swift
+WaveformView(peaks: peaks)
+    .padding(.horizontal, 8)         // adds 8pt to the frame
+    .overlay { CueMarkersOverlay(...) }  // overlay is now 16pt wider than the waveform; markers drift
+```
+
+vs.
+
+```swift
+WaveformView(peaks: peaks)
+    .overlay { CueMarkersOverlay(...) }  // overlay matches waveform frame exactly
+    .padding(.horizontal, 8)              // both pad together
+```
+
+The second form is what you almost always want when projecting coordinates (cue x-positions, playhead, ROI boxes) onto a child view. Rule of thumb: **overlay sizes to whoever it's attached to, not to whatever wraps that.** Apply the overlay before any padding/margin modifier.
+
+---
+
 ## `UndoManager` grouping in tests vs production — both halves required
 
 In production with `DocumentGroup`'s injected `UndoManager`, `groupsByEvent = true` opens a fresh group at the start of each run-loop iteration. Each user click runs in one iteration, so one click = one auto-group = one ⌘Z step. Works out of the box.

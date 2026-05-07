@@ -15,8 +15,8 @@ Working source of truth for what's left. Sourced from the [GitHub issue board](h
 | [#7](https://github.com/chienchuanw/only-cue/issues/7) | E5 waveform — async peak generation, cache, `Canvas` rendering | ✅ shipped (PR #20) |
 | [#8](https://github.com/chienchuanw/only-cue/issues/8) | E6 cue list pane — read-only list bound to `ProjectModel.cues` | ✅ shipped (PR #21) |
 | [#9](https://github.com/chienchuanw/only-cue/issues/9) | E7 add/edit/delete cues — M-key, inline rename, color picker, undoable | ✅ shipped (PR #22) |
-| [#10](https://github.com/chienchuanw/only-cue/issues/10) | E8 cue markers — draw on waveform, drag to retime, click to seek | ⏭️ next |
-| [#11](https://github.com/chienchuanw/only-cue/issues/11) | E9 polish | pending |
+| [#10](https://github.com/chienchuanw/only-cue/issues/10) | E8 cue markers — draw on waveform, drag to retime, click to seek | ✅ shipped (PR #23) |
+| [#11](https://github.com/chienchuanw/only-cue/issues/11) | E9 polish | ⏭️ next |
 | [#12](https://github.com/chienchuanw/only-cue/issues/12) | E10 distribution (blocked by #13) | pending |
 | [#13](https://github.com/chienchuanw/only-cue/issues/13) | C3 release pipeline | pending |
 
@@ -30,7 +30,7 @@ Working source of truth for what's left. Sourced from the [GitHub issue board](h
 6. ~~**#7 (E5 waveform)** — `WaveformGenerator` + `WaveformCache` + `WaveformView`.~~ Done.
 7. ~~**#8 (E6 cue list pane)** — `CueListPane` + `CueRowView` + `Color+Hex` + minimal `CueCommands` seam.~~ Done.
 8. ~~**#9 (E7 add/edit/delete cues)** — `CueCommands` extended with 5 undoable mutations + UI wiring (M, ⌘Z, double-click rename, palette popover, ⌫).~~ Done.
-9. **#10 (E8 cue markers)** — overlay `Path`-drawn vertical markers on the waveform at each cue's x-position (`time / duration * width`). Draggable to retime (calls `CueCommands.retime`); tap to seek (calls `engine.seek`). Marker color = cue color. First UI to combine the waveform layer with cue mutations — design carefully so `WaveformContainer` stays a pure renderer and the marker overlay sits above it.
+9. ~~**#10 (E8 cue markers)** — overlay vertical markers + colored caps on the waveform, drag to retime via `CueCommands.retime`, tap to seek via `engine.seek`.~~ Done.
 10. **#11 (E9 polish)** — empty states, missing-media relink alert, app icon, default keyboard shortcuts, About box. The relink work unblocks the deferred Gherkin scenarios from E5/E6 (waveform/cue cache hits on document reopen).
 11. **#13 (C3) → #12 (E10)** — release pipeline, then ship.
 

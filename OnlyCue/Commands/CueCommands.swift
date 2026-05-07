@@ -65,6 +65,9 @@ enum CueCommands {
         actionName: String,
         _ change: ([Cue]) -> [Cue]
     ) {
+        undoManager?.beginUndoGrouping()
+        defer { undoManager?.endUndoGrouping() }
+
         let before = document.model.cues
         document.model.cues = change(before)
         undoManager?.registerUndo(withTarget: document) { doc in

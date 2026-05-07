@@ -35,6 +35,15 @@ final class WaveformGeneratorTests: XCTestCase {
         XCTAssertLessThanOrEqual(peaks.max() ?? 1, 1.0)
     }
 
+    func test_peaks_assetWithNoAudioTrack_returnsFlatPeaks() async throws {
+        let composition = AVMutableComposition()
+
+        let peaks = try await WaveformGenerator.peaks(for: composition, resolution: 48)
+
+        XCTAssertEqual(peaks.count, 48)
+        XCTAssertEqual(peaks.max() ?? 1, 0, accuracy: 0.001)
+    }
+
     func test_peaks_normalizedTo01() async throws {
         let url = try SilentAudioFixture.makeSineWAV(duration: 1, frequency: 440)
         defer { try? FileManager.default.removeItem(at: url) }

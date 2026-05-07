@@ -26,14 +26,17 @@ final class PlayerHostingView: NSView {
     override init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
         wantsLayer = true
+        layer = CALayer()
         playerLayer.videoGravity = .resizeAspect
+        layer?.addSublayer(playerLayer)
     }
 
     required init?(coder: NSCoder) {
         fatalError("init(coder:) is not supported")
     }
 
-    override func makeBackingLayer() -> CALayer {
-        playerLayer
+    override func layout() {
+        super.layout()
+        playerLayer.frame = bounds
     }
 }

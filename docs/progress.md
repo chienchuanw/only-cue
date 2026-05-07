@@ -4,6 +4,29 @@ Append-only session log. Newer entries on top.
 
 ---
 
+## 2026-05-07 — E4 video preview session (PR #19, issue #6)
+
+**Shipped:** issue #6 (E4 video preview pane). PR #19 merged into `dev` (rebase, head `be72182`). Documents now show their picture.
+
+**What landed:**
+- `OnlyCue/UI/AVPlayerLayerView.swift` — `NSViewRepresentable` over `PlayerHostingView: NSView`. Host view sets `wantsLayer = true`, gets a plain `CALayer`, then `addSublayer(playerLayer)` with `videoGravity = .resizeAspect`. `override func layout()` keeps `playerLayer.frame = bounds` on every resize.
+- `OnlyCue/UI/PreviewPane.swift` — `if let media; switch media.kind` dispatches to `AVPlayerLayerView`, an audio placeholder ("Audio loaded — waveform arrives in E5"), or an empty placeholder. `minHeight: 180`, rounded corners, accessibility identifiers per state.
+- `OnlyCue/UI/DocumentView.swift` — pane slotted between media summary and cue count; window minimum bumped to 560×480.
+- `project.yml` — pre-build SwiftLint script now `export PATH="/opt/homebrew/bin:/usr/local/bin:$PATH"` before `which swiftlint`. Xcode runs build scripts in a sandboxed shell with restricted PATH; without the export, a Homebrew-installed swiftlint reported "not installed".
+
+**Build/render iteration mid-session:**
+- First pass used `override func makeBackingLayer() -> CALayer { playerLayer }` to make the AVPlayerLayer the view's own backing layer. Compiles, looks elegant; rendered no picture in practice on macOS 15. Audio played, video stayed empty. Switched to the `addSublayer + override layout()` canonical pattern (commit `9fcc9cc` / `be72182`); video now renders.
+- Stale Swift 6 `@MainActor` build error appeared once — DerivedData cache from before the E3 fix. `⌘⇧K` clean build folder cleared it.
+
+**Simplify drop:** first pass added `PreviewPane.Kind { empty/audio/video }` + a static `previewKind(for:)` function + a unit test. The function just unwrapped `media?.kind`, the test was tautological. All three deleted (commit `b2091ed`); inline switch on `media?.kind` in the body. -32 LOC.
+
+**Manual verification (per Gherkin in issue #6):**
+- `.mp4` drag-drop → first frame visible immediately, transport drives video + audio in sync.
+- `.mp3` drag-drop → audio placeholder.
+- Empty document → empty placeholder.
+
+---
+
 ## 2026-05-07 — E3 media import session (PR #18, issue #5)
 
 **Shipped:** issue #5 (E3 media import). PR #18 merged into `dev` (rebase, head `ce3e0ca`). The app can now actually open user-supplied media.

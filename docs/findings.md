@@ -4,6 +4,53 @@ Non-obvious things learned during development. Things you'd want to remember nex
 
 ---
 
+## `AVPlayerLayer` in `NSViewRepresentable`: use addSublayer, not `makeBackingLayer`
+
+The "elegant" pattern for hosting `AVPlayerLayer` in an `NSView` is to override `makeBackingLayer()` to return the `AVPlayerLayer` directly, so the player layer **is** the view's backing layer. It compiles, AppKit accepts it, and audio plays — but on macOS 15 the layer rendered no video frames in practice. Use the canonical addSublayer pattern instead:
+
+```swift
+final class PlayerHostingView: NSView {
+    let playerLayer = AVPlayerLayer()
+
+    override init(frame frameRect: NSRect) {
+        super.init(frame: frameRect)
+        wantsLayer = true
+        layer = CALayer()
+        playerLayer.videoGravity = .resizeAspect
+        layer?.addSublayer(playerLayer)
+    }
+
+    required init?(coder: NSCoder) { fatalError() }
+
+    override func layout() {
+        super.layout()
+        playerLayer.frame = bounds
+    }
+}
+```
+
+Plain `CALayer` as the backing layer; `AVPlayerLayer` as a sublayer; `override func layout()` keeps the sublayer's frame in sync with `bounds` across window resizes. `videoGravity = .resizeAspect` for aspect-fit.
+
+## Xcode pre-build scripts run with a stripped PATH
+
+A pre-build "Run Script" in Xcode (or `preBuildScripts:` in `project.yml`) executes in a sandboxed shell that does **not** inherit your interactive PATH. Homebrew-installed tools at `/opt/homebrew/bin` (Apple Silicon) or `/usr/local/bin` (Intel) are missing, so `which swiftlint` reports "not installed" even when `brew install swiftlint` succeeded. Always prepend the Homebrew paths at the top of the script:
+
+```yaml
+preBuildScripts:
+  - name: SwiftLint
+    script: |
+      export PATH="/opt/homebrew/bin:/usr/local/bin:$PATH"
+      if which swiftlint > /dev/null; then
+        swiftlint
+      else
+        echo "warning: SwiftLint not installed (brew install swiftlint)"
+      fi
+```
+
+Same applies to swiftgen, sourcery, xcodegen invoked from a script, etc.
+
+---
+
 ## macOS 15 SDK + Swift 6 isolates `AVPlayerItem.init(asset:)` to MainActor
 
 Building against the macOS 15 SDK with Swift 6 strict concurrency surfaces:

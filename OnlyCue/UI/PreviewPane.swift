@@ -1,3 +1,4 @@
+import AVFoundation
 import SwiftUI
 
 struct PreviewPane: View {
@@ -23,12 +24,22 @@ struct PreviewPane: View {
                 AVPlayerLayerView(player: engine.player)
                     .accessibilityIdentifier("videoPreview")
             case .audio:
-                placeholder("Audio loaded — waveform arrives in E5")
-                    .accessibilityIdentifier("audioPlaceholder")
+                audioContent
             }
         } else {
             placeholder("Import audio or video to preview")
                 .accessibilityIdentifier("emptyPreview")
+        }
+    }
+
+    @ViewBuilder
+    private var audioContent: some View {
+        if let asset = engine.player.currentItem?.asset as? AVURLAsset {
+            WaveformContainer(asset: asset)
+                .accessibilityIdentifier("audioWaveform")
+        } else {
+            placeholder("Audio loaded — reopen with media to see waveform")
+                .accessibilityIdentifier("audioPlaceholder")
         }
     }
 

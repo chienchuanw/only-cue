@@ -15,13 +15,20 @@ final class DocumentLaunchTests: XCTestCase {
         let app = XCUIApplication()
         app.launch()
 
-        XCTAssertTrue(app.staticTexts["OnlyCue"].waitForExistence(timeout: 5),
-                      "Title 'OnlyCue' should appear within 5 seconds of launch")
+        XCTAssertTrue(
+            app.staticTexts["OnlyCue"].waitForExistence(timeout: 5),
+            "Title 'OnlyCue' should appear within 5 seconds of launch"
+        )
 
-        XCTAssertTrue(app.staticTexts["0 cues"].exists,
-                      "Empty document must show '0 cues' label")
+        XCTAssertTrue(
+            app.staticTexts["0 cues"].exists,
+            "Empty document must show '0 cues' label"
+        )
 
-        XCTAssertGreaterThan(app.windows.count, 0,
-                             "DocumentGroup should open at least one window on launch")
+        XCTAssertGreaterThan(
+            app.windows.count,
+            0,
+            "DocumentGroup should open at least one window on launch"
+        )
     }
 }

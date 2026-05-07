@@ -8,6 +8,7 @@ struct DocumentView: View {
     @State private var showImporter = false
     @State private var importError: ImportAlert?
     @State private var relinkPrompt: RelinkPrompt?
+    @State private var showFirstLaunch: Bool = !UserDefaults.standard.bool(forKey: FirstLaunchFlag.key)
     @Environment(\.undoManager) private var undoManager
 
     var body: some View {
@@ -17,6 +18,12 @@ struct DocumentView: View {
                     .inspectorColumnWidth(min: 240, ideal: 300, max: 400)
             }
             .navigationSubtitle(document.model.media?.displayName ?? "")
+            .sheet(isPresented: $showFirstLaunch) {
+                FirstLaunchSheet {
+                    UserDefaults.standard.set(true, forKey: FirstLaunchFlag.key)
+                    showFirstLaunch = false
+                }
+            }
     }
 
     private var mainPane: some View {

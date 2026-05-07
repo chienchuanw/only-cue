@@ -4,6 +4,66 @@ Non-obvious things learned during development. Things you'd want to remember nex
 
 ---
 
+## `UndoManager` grouping in tests vs production — both halves required
+
+In production with `DocumentGroup`'s injected `UndoManager`, `groupsByEvent = true` opens a fresh group at the start of each run-loop iteration. Each user click runs in one iteration, so one click = one auto-group = one ⌘Z step. Works out of the box.
+
+In **synchronous test code**, that auto-group never closes (no run-loop turn), so every `registerUndo` call from a sequence of `add → delete → rename` lands in the **same** group. A single `undo.undo()` rolls back **everything**.
+
+The fix is to do both:
+
+1. Production-side, have the command layer open its own group:
+
+   ```swift
+   private static func mutate(...) {
+       undoManager?.beginUndoGrouping()
+       defer { undoManager?.endUndoGrouping() }
+       // mutate, registerUndo, setActionName...
+   }
+   ```
+
+2. Test-side, disable the auto-group so the command's group is the top-level group:
+
+   ```swift
+   private func makeUndoManager() -> UndoManager {
+       let undo = UndoManager()
+       undo.groupsByEvent = false
+       return undo
+   }
+   ```
+
+In production, `mutate`'s explicit group nests inside the run-loop auto-group — but since each user event runs in its own turn, the auto-group ends up containing exactly one inner group. One undoable unit per user click. ✓
+
+Failure modes by combination:
+| `groupsByEvent` | in-`mutate` grouping | symptom |
+|---|---|---|
+| `true` | none | all sync mutations share one auto-group; `undo()` rolls back all |
+| `false` | none | `registerUndo` throws "must begin a group" |
+| `true` | yes | nested group inside auto-group; `undo()` rolls back the outer auto-group → still all |
+| `false` | yes | `mutate`'s group is top-level; `undo()` rolls back exactly that command ✓ |
+
+Took three PR review cycles on PR #22 to converge on this. Don't repeat.
+
+## SwiftUI macOS gotchas around inline list-row controls
+
+Three things that bit us building the cue row's swatch + delete affordances (E7):
+
+1. **`ColorPicker` cannot be sized small.** Wraps `NSColorWell`, which has minimum chrome dimensions. `.frame(width: 16, height: 16)` is silently ignored — the well renders at ~80×24pt and overflows compact rows. Don't put a bare `ColorPicker` in a `List` row. Replace with a palette `Button` + `.popover`.
+
+2. **`Menu { ... } label: { Circle() }.menuStyle(.borderlessButton)` collapses the label.** The borderless style hides the trigger view entirely on macOS 14 — the Circle disappears, the menu becomes invisible. Without the borderless style, Menu uses its default popup-button chrome (which is the same chunky pill as `ColorPicker`). No middle ground that works for tiny inline labels.
+
+   Working pattern: `Button + .popover` with `.buttonStyle(.plain)` for full custom rendering, no system-style fighting.
+
+   ```swift
+   Button { showPopover.toggle() } label: { Circle().fill(color).frame(width: 14, height: 14) }
+       .buttonStyle(.plain)
+       .popover(isPresented: $showPopover) { paletteList }
+   ```
+
+3. **`.onKeyPress(.delete)` on SwiftUI `List` + `@FocusState` doesn't reliably capture the Mac delete (backspace) key.** The canonical macOS path is `.onDeleteCommand`, which routes through AppKit's `deleteBackward:` responder action that `List` participates in via selection. No focus-state machinery needed.
+
+---
+
 ## SwiftUI `GraphicsContext.fill(_:with:)` takes `Shading` directly
 
 A common mistake when using `Canvas`:

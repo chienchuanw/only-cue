@@ -4,7 +4,7 @@ A native macOS application for lighting designers and show programmers, inspired
 
 ## Status
 
-C1 bootstrap, C2 CI, E1 skeleton, E2 player core, E3 media import, E4 video preview, E5 waveform, and E6 cue list pane have shipped ([#14](https://github.com/chienchuanw/only-cue/pull/14)–[#21](https://github.com/chienchuanw/only-cue/pull/21)). Documents now show a read-only cue list in the right inspector with an empty-state hint ("Press M to add one at the playhead") and click-to-seek wired to `PlayerEngine`. The seam for cue mutations (`OnlyCue/Commands/CueCommands.swift`) is in place; E7 will plug in `add(at:)`, `delete`, `move`, and `UndoManager` wrapping. Next up: [#9](https://github.com/chienchuanw/only-cue/issues/9) (E7 add/edit/delete cues — M-key shortcut, inline rename, color picker, undoable). Track everything on the [issue board](https://github.com/chienchuanw/only-cue/issues).
+C1 bootstrap, C2 CI, E1 skeleton, E2 player core, E3 media import, E4 video preview, E5 waveform, E6 cue list pane, and E7 add/edit/delete cues have shipped ([#14](https://github.com/chienchuanw/only-cue/pull/14)–[#22](https://github.com/chienchuanw/only-cue/pull/22)). Documents are now live editors: `M` adds a cue at the playhead, double-click to rename inline, swatch button opens an 8-color palette popover, `⌫` deletes the selected row. Every mutation flows through `OnlyCue/Commands/CueCommands.swift` and is undoable via `UndoManager` (⌘Z / ⌘⇧Z), with action names in the Edit menu. Next up: [#10](https://github.com/chienchuanw/only-cue/issues/10) (E8 cue markers on waveform — draw markers at correct x-positions, drag to retime, click to seek). Track everything on the [issue board](https://github.com/chienchuanw/only-cue/issues).
 
 ## Build
 

@@ -4,6 +4,36 @@ Append-only session log. Newer entries on top.
 
 ---
 
+## 2026-05-07 — E7 add/edit/delete cues session (PR #22, issue #9)
+
+**Shipped:** issue #9 (E7 add/edit/delete cues). PR #22 merged into `dev` (rebase, head `5c5645a`). Documents are now live editors with proper undo.
+
+**What landed:**
+- `OnlyCue/Commands/CueCommands.swift` — 5 `@MainActor` static mutations (`addCueAtPlayhead`, `delete`, `rename`, `recolor`, `retime`) + private `mutate(_:undoManager:actionName:_:)` snapshot-and-replace helper. The helper opens its own undo group (`beginUndoGrouping` + `defer { endUndoGrouping() }`) so each command is one undoable unit regardless of host. Recursive `Self.mutate` inside the undo callback establishes the redo path. Edit-menu action names ("Undo Add Cue", "Redo Rename Cue", etc.) via `setActionName`.
+- `OnlyCue/UI/CueRowView.swift` — `Button` swatch (14pt `Circle`, `.buttonStyle(.plain)`) opens a `.popover` listing 8 predefined cue colors. `TextField`-with-`@FocusState` handles inline rename on double-click; commits on Enter, cancels on Esc.
+- `OnlyCue/UI/CueListPane.swift` — `.onDeleteCommand { deleteSelected() }` deletes the selected row via AppKit's responder chain. `.onDelete(perform:)` mirrors via swipe. `@Environment(\.undoManager)` flows through to all commands.
+- `OnlyCue/UI/DocumentView.swift` — DEBUG seed button replaced with a real "Add Cue" button bound to `M` (no modifiers). `@Environment(\.undoManager)` injected.
+- `OnlyCueTests/CueCommandsTests.swift` — 8 tests: add at time, add+undo+redo, delete+undo, rename+undo, recolor+undo, retime+undo, multi-add stays sorted by time. Test helper sets `groupsByEvent = false` so each `mutate` group lands at top level (one mutation = one undo).
+
+**Iteration mid-session — three live-smoke fixes:**
+1. **`ColorPicker` rendered as a chunky pill** — wraps `NSColorWell` with minimum chrome size; `.frame(width:height:)` is silently ignored. Swapped to a palette `Menu`.
+2. **Mac delete key didn't fire** with `.onKeyPress(.delete)` + `@FocusState` on a `List`. Swapped to `.onDeleteCommand`, which routes through AppKit's responder chain.
+3. **`Menu { ... }.menuStyle(.borderlessButton)` collapsed the trigger**, hiding the swatch label entirely. Final form: `Button` + `.popover` with `.buttonStyle(.plain)` for full custom rendering.
+
+**Iteration via PR review — three undo-grouping cycles** (captured in `docs/findings.md`):
+1. Initial `groupsByEvent = false` in tests broke `registerUndo` (must begin a group first).
+2. Removing the override let `groupsByEvent = true` swallow every test mutation into one auto-group → `undo()` rolled back the whole test.
+3. Final fix: `mutate` opens its own group (host-independent), test helper sets `groupsByEvent = false` so that group lands at top level. Production keeps `groupsByEvent = true` from `DocumentGroup` and our group nests cleanly inside the run-loop auto-group (one user click = one undoable unit).
+
+**Manual verification (per issue #9 Gherkin):**
+- Drop `.mp3` → press `M` at various playhead positions → cues appear sorted by time with default name "Cue" and teal swatch.
+- ⌘Z empties; ⌘⇧Z restores.
+- Double-click name → TextField focused → type → Enter → name updates; ⌘Z restores.
+- Click swatch → palette popover → choose color → swatch updates; ⌘Z restores.
+- Select row → ⌫ → deleted; ⌘Z restores with same id and time.
+
+---
+
 ## 2026-05-07 — E6 cue list pane session (PR #21, issue #8)
 
 **Shipped:** issue #8 (E6 cue list pane). PR #21 merged into `dev` (rebase, head `0009f35`). The cue list — the thing this app exists to plan — finally has a UI.

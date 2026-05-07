@@ -7,6 +7,7 @@ struct DocumentView: View {
     @State private var engine = PlayerEngine()
     @State private var showImporter = false
     @State private var importError: ImportAlert?
+    @Environment(\.undoManager) private var undoManager
 
     var body: some View {
         mainPane
@@ -39,10 +40,9 @@ struct DocumentView: View {
                     .accessibilityIdentifier("importMediaButton")
                     .keyboardShortcut("o", modifiers: .command)
 
-                #if DEBUG
-                Button("+ Sample cues") { seedSampleCues() }
-                    .accessibilityIdentifier("seedSampleCuesButton")
-                #endif
+                Button("Add Cue") { addCueAtPlayhead() }
+                    .accessibilityIdentifier("addCueButton")
+                    .keyboardShortcut("m", modifiers: [])
             }
 
             Text("Drop an audio or video file anywhere in this window to import.")
@@ -108,15 +108,13 @@ struct DocumentView: View {
         }
     }
 
-    #if DEBUG
-    private func seedSampleCues() {
-        CueCommands.replaceAll([
-            Cue(id: UUID(), name: "Spot up SR", time: 4.25, colorHex: "#FF6B6B", notes: ""),
-            Cue(id: UUID(), name: "Wash full", time: 12.0, colorHex: "#4ECDC4", notes: ""),
-            Cue(id: UUID(), name: "Chorus hit", time: 18.5, colorHex: "#FFD93D", notes: "")
-        ], in: document)
+    private func addCueAtPlayhead() {
+        CueCommands.addCueAtPlayhead(
+            time: engine.currentTime,
+            document: document,
+            undoManager: undoManager
+        )
     }
-    #endif
 }
 
 private struct ImportAlert: Identifiable {

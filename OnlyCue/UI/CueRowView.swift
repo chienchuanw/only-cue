@@ -2,6 +2,17 @@ import SwiftUI
 
 struct CueRowView: View {
 
+    static let palette: [(name: String, hex: String)] = [
+        ("Red", "#FF6B6B"),
+        ("Orange", "#FFA94D"),
+        ("Yellow", "#FFD93D"),
+        ("Green", "#6BCB77"),
+        ("Teal", "#4ECDC4"),
+        ("Blue", "#4D96FF"),
+        ("Purple", "#9D7EE0"),
+        ("Pink", "#FF6FB5")
+    ]
+
     let index: Int
     let cue: Cue
     var onRename: (String) -> Void = { _ in }
@@ -18,9 +29,7 @@ struct CueRowView: View {
                 .foregroundStyle(.secondary)
                 .frame(width: 28, alignment: .trailing)
 
-            ColorPicker("", selection: swatchBinding, supportsOpacity: false)
-                .labelsHidden()
-                .frame(width: 16, height: 16)
+            colorMenu
 
             nameField
                 .accessibilityIdentifier("cueName-\(index)")
@@ -33,6 +42,32 @@ struct CueRowView: View {
         }
         .padding(.vertical, 2)
         .accessibilityIdentifier("cueRow-\(index)")
+    }
+
+    private var colorMenu: some View {
+        Menu {
+            ForEach(Self.palette, id: \.hex) { entry in
+                Button {
+                    if entry.hex != cue.colorHex { onRecolor(entry.hex) }
+                } label: {
+                    HStack {
+                        Circle()
+                            .fill(Color(hex: entry.hex) ?? .gray)
+                            .frame(width: 12, height: 12)
+                        Text(entry.name)
+                    }
+                }
+            }
+        } label: {
+            Circle()
+                .fill(swatchColor)
+                .overlay(Circle().stroke(.secondary.opacity(0.25), lineWidth: 0.5))
+                .frame(width: 14, height: 14)
+        }
+        .menuStyle(.borderlessButton)
+        .menuIndicator(.hidden)
+        .fixedSize()
+        .accessibilityIdentifier("cueColorMenu-\(index)")
     }
 
     @ViewBuilder
@@ -52,14 +87,8 @@ struct CueRowView: View {
         }
     }
 
-    private var swatchBinding: Binding<Color> {
-        Binding(
-            get: { Color(hex: cue.colorHex) ?? .accentColor },
-            set: { newColor in
-                guard let hex = newColor.hexString, hex != cue.colorHex else { return }
-                onRecolor(hex)
-            }
-        )
+    private var swatchColor: Color {
+        Color(hex: cue.colorHex) ?? .accentColor
     }
 
     private func beginRename() {

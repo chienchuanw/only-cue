@@ -7,7 +7,6 @@ struct CueListPane: View {
 
     @Environment(\.undoManager) private var undoManager
     @State private var selection: Cue.ID?
-    @FocusState private var listFocused: Bool
 
     var body: some View {
         Group {
@@ -55,10 +54,7 @@ struct CueListPane: View {
             }
             .onDelete(perform: deleteAtOffsets)
         }
-        .focused($listFocused)
-        .focusable()
-        .onAppear { listFocused = true }
-        .onKeyPress(.delete) { deleteSelected() }
+        .onDeleteCommand { deleteSelected() }
         .onChange(of: selection) { _, newValue in
             guard
                 let id = newValue,
@@ -76,10 +72,9 @@ struct CueListPane: View {
         }
     }
 
-    private func deleteSelected() -> KeyPress.Result {
-        guard let id = selection else { return .ignored }
+    private func deleteSelected() {
+        guard let id = selection else { return }
         CueCommands.delete(cueId: id, document: document, undoManager: undoManager)
         selection = nil
-        return .handled
     }
 }

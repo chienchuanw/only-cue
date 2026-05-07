@@ -4,6 +4,82 @@ Non-obvious things learned during development. Things you'd want to remember nex
 
 ---
 
+## `.task(id:)` re-fire trap when the task itself mutates the key
+
+`.task(id: someValue) { ... }` re-runs whenever `someValue` changes — including changes the task body itself writes back. Concretely we hit this on the relink path:
+
+```swift
+.task(id: document.model.media?.bookmarkData) { await reloadIfNeeded() }
+
+// inside reload:
+if resolution.isStale {
+    document.model.media?.bookmarkData = try Bookmarks.create(for: resolution.url)  // re-fires .task
+}
+```
+
+Symptoms: an apparent infinite loop on the stale-refresh path (saved by an unrelated guard further down), or a redundant second pass that terminates only because the second iteration finds nothing to refresh.
+
+Fix is a sentinel on the *post-mutation* value:
+
+```swift
+@State private var reloadedFor: Data?
+
+private func reloadIfNeeded() async {
+    guard let bookmark = document.model.media?.bookmarkData else { return }
+    guard reloadedFor != bookmark else { return }
+    reloadedFor = bookmark                              // pre-call sentinel
+    do {
+        try await MediaImporter.reload(into: document, engine: engine)
+        reloadedFor = document.model.media?.bookmarkData  // post-call sentinel — critical
+    } catch { ... }
+}
+```
+
+Setting `reloadedFor` *after* a successful call to whatever the new value ended up being makes the second `.task` fire short-circuit cleanly. **Without the post-call assignment** the sentinel still holds the pre-refresh bookmark, the guard misses, and the body runs again.
+
+Rule of thumb: don't key `.task(id:)` on a value the task body can write back. If you must, sentinel both before and after.
+
+---
+
+## Two `.alert(item:)` on the same SwiftUI view → second is silently dropped
+
+On macOS, stacking two `.alert(item: $a)` and `.alert(item: $b)` on the same view tree means whichever fires while the other is presenting is lost without warning. Same shape applies to `.fileImporter`.
+
+Collapse into one alert driven by an enum:
+
+```swift
+private enum DocumentAlert: Identifiable {
+    case unsupported(String)
+    case relink(String)
+    var id: String {
+        switch self {
+        case .unsupported(let m): "unsupported:\(m)"
+        case .relink(let n): "relink:\(n)"
+        }
+    }
+}
+```
+
+Single `@State pendingAlert: DocumentAlert?` and switch in the alert builder.
+
+---
+
+## SwiftLint `force_unwrapping` flags URL literals — even safe ones
+
+`URL(string: "https://...")!` always succeeds for a valid hardcoded literal, but `force_unwrapping` doesn't reason about that. Don't disable the rule per-file; instead hoist to a `private static let docsURL: URL?` and gate the consumer with `if let`:
+
+```swift
+private static let docsURL = URL(string: "https://github.com/...")
+
+if let docsURL = Self.docsURL {
+    Link("Read the docs", destination: docsURL)
+}
+```
+
+The rule is correct as a defensive default — future edits to the literal might invalidate the safety claim, and `if let` makes the absence path explicit.
+
+---
+
 ## SwiftUI `.padding` then `.overlay` vs `.overlay` then `.padding`
 
 `.overlay` sizes to the receiver's frame **at the point of application**. So:

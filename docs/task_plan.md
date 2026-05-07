@@ -16,9 +16,9 @@ Working source of truth for what's left. Sourced from the [GitHub issue board](h
 | [#8](https://github.com/chienchuanw/only-cue/issues/8) | E6 cue list pane — read-only list bound to `ProjectModel.cues` | ✅ shipped (PR #21) |
 | [#9](https://github.com/chienchuanw/only-cue/issues/9) | E7 add/edit/delete cues — M-key, inline rename, color picker, undoable | ✅ shipped (PR #22) |
 | [#10](https://github.com/chienchuanw/only-cue/issues/10) | E8 cue markers — draw on waveform, drag to retime, click to seek | ✅ shipped (PR #23) |
-| [#11](https://github.com/chienchuanw/only-cue/issues/11) | E9 polish | ⏭️ next |
+| [#11](https://github.com/chienchuanw/only-cue/issues/11) | E9 polish | ✅ shipped (PR #24) |
+| [#13](https://github.com/chienchuanw/only-cue/issues/13) | C3 release pipeline | ⏭️ next |
 | [#12](https://github.com/chienchuanw/only-cue/issues/12) | E10 distribution (blocked by #13) | pending |
-| [#13](https://github.com/chienchuanw/only-cue/issues/13) | C3 release pipeline | pending |
 
 ## Recommended order
 
@@ -31,8 +31,9 @@ Working source of truth for what's left. Sourced from the [GitHub issue board](h
 7. ~~**#8 (E6 cue list pane)** — `CueListPane` + `CueRowView` + `Color+Hex` + minimal `CueCommands` seam.~~ Done.
 8. ~~**#9 (E7 add/edit/delete cues)** — `CueCommands` extended with 5 undoable mutations + UI wiring (M, ⌘Z, double-click rename, palette popover, ⌫).~~ Done.
 9. ~~**#10 (E8 cue markers)** — overlay vertical markers + colored caps on the waveform, drag to retime via `CueCommands.retime`, tap to seek via `engine.seek`.~~ Done.
-10. **#11 (E9 polish)** — empty states, missing-media relink alert, app icon, default keyboard shortcuts, About box. The relink work unblocks the deferred Gherkin scenarios from E5/E6 (waveform/cue cache hits on document reopen).
-11. **#13 (C3) → #12 (E10)** — release pipeline, then ship.
+10. ~~**#11 (E9 polish)** — relink alert, navigation subtitle, Space/←/→ shortcuts, placeholder app icon, About panel, first-launch sheet.~~ Done.
+11. **#13 (C3 release pipeline)** — Developer ID signing in CI, notarization, DMG packaging via `create-dmg`. Likely needs a `RELEASE` GitHub Actions workflow + signing-secret wiring; deployment target / entitlements stay per ADR-001/007 (no sandbox).
+12. **#12 (E10 distribution)** — once C3 is green, cut a 0.1.0 tag, attach the notarized DMG to a GitHub release, and update README install instructions.
 
 ## Phase 2 / Phase 3 milestones
 

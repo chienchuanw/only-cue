@@ -125,7 +125,7 @@ Scenario: …
 
 Same as Leaf but Gherkin section is optional; replaced with a Tasks checklist when more appropriate.
 
-## Labels (17)
+## Labels (23)
 
 | Group | Labels | Color |
 |---|---|---|
@@ -234,7 +234,7 @@ Footer baked into every forked template:
 git remote -v | grep -q only-cue.git
 
 # Labels in place
-[ "$(gh label list --json name | jq length)" -ge 17 ]
+[ "$(gh label list --json name | jq length)" -ge 23 ]
 
 # Milestones
 [ "$(gh api repos/chienchuanw/only-cue/milestones --jq 'length')" = 3 ]

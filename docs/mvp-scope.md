@@ -8,7 +8,7 @@ A **thin slice** of the cue-planning workflow. Everything below should work end-
 |---|---|---|
 | 1 | Open the app | Empty document window appears |
 | 2 | Import media (`⌘O` or drag-drop) | Audio (`.mp3`, `.wav`, `.aac`, `.m4a`, `.aiff`) and video (`.mp4`, `.mov`) load via `AVPlayer` |
-| 3 | Preview pane | Audio shows a waveform; video shows the picture |
+| 3 | Preview pane | Audio shows a waveform; video shows the picture and a waveform strip beneath it |
 | 4 | Transport controls | Play / pause / scrub / jump start / jump end / time readout `HH:MM:SS.mmm` |
 | 5 | Cue list panel | Right-side list showing `#`, name, time, color swatch |
 | 6 | Add cue at playhead | `M` key or button; appends to list |

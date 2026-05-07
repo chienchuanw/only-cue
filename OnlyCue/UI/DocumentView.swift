@@ -9,6 +9,14 @@ struct DocumentView: View {
     @State private var importError: ImportAlert?
 
     var body: some View {
+        mainPane
+            .inspector(isPresented: .constant(true)) {
+                CueListPane(document: document, engine: engine)
+                    .inspectorColumnWidth(min: 240, ideal: 300, max: 400)
+            }
+    }
+
+    private var mainPane: some View {
         VStack(spacing: 12) {
             Text("OnlyCue")
                 .font(.title)
@@ -26,9 +34,16 @@ struct DocumentView: View {
             TransportBar(engine: engine)
                 .padding(.top, 4)
 
-            Button("Import Media…") { showImporter = true }
-                .accessibilityIdentifier("importMediaButton")
-                .keyboardShortcut("o", modifiers: .command)
+            HStack {
+                Button("Import Media…") { showImporter = true }
+                    .accessibilityIdentifier("importMediaButton")
+                    .keyboardShortcut("o", modifiers: .command)
+
+                #if DEBUG
+                Button("+ Sample cues") { seedSampleCues() }
+                    .accessibilityIdentifier("seedSampleCuesButton")
+                #endif
+            }
 
             Text("Drop an audio or video file anywhere in this window to import.")
                 .multilineTextAlignment(.center)
@@ -92,6 +107,16 @@ struct DocumentView: View {
             }
         }
     }
+
+    #if DEBUG
+    private func seedSampleCues() {
+        document.model.cues = [
+            Cue(id: UUID(), name: "Spot up SR", time: 4.25, colorHex: "#FF6B6B", notes: ""),
+            Cue(id: UUID(), name: "Wash full", time: 12.0, colorHex: "#4ECDC4", notes: ""),
+            Cue(id: UUID(), name: "Chorus hit", time: 18.5, colorHex: "#FFD93D", notes: "")
+        ]
+    }
+    #endif
 }
 
 private struct ImportAlert: Identifiable {

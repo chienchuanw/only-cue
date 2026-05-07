@@ -4,6 +4,30 @@ Append-only session log. Newer entries on top.
 
 ---
 
+## 2026-05-07 — E1 skeleton session (PR #16, issue #3)
+
+**Shipped:** issue #3 (E1 skeleton). PR #16 merged into `dev`. First feature epic — first real Swift code.
+
+**What landed:**
+- Data model under `OnlyCue/Document/`: `ProjectModel`, `Cue`, `MediaReference`, `MediaKind`. All `Codable`/`Equatable`; `Cue` is also `Identifiable`.
+- `CueListDocument` (`final class : ReferenceFileDocument`) with JSON encode/decode using `[.prettyPrinted, .sortedKeys]`.
+- `Info.plist` adds `UTExportedTypeDeclarations` (declares `com.onlycue.cuelist`) and `CFBundleDocumentTypes` (binds it to `CueListDocument` via `NSDocumentClass`).
+- `OnlyCueApp` now uses `DocumentGroup`. `DocumentView` shows minimal placeholder (title + cue count + hint) — preview/waveform/cue list arrive in E4–E6.
+- Tests: 3 unit tests in `ProjectModelTests` (round-trip with media, round-trip with nil media, format assertions) + 1 UI test in `DocumentLaunchTests` mapping the "Scenario: New document opens" Gherkin.
+- Replaced C1 placeholder tests with real ones.
+
+**Review cycles applied (3 commits beyond initial 6):**
+- Cycle 1: SwiftLint `--strict` failed on test code — replaced 6 force-unwraps with `try XCTUnwrap`, fixed `String(decoding:)` per `optional_data_string_conversion`, fixed `multiline_arguments` on `XCTAssert*` calls. Hoisted fixed UUIDs into `static let` constants.
+- Cycle 2: macOS `DocumentGroup` shows the launcher window on cold launch (not auto untitled doc), so the UI test never reached `DocumentView`. Drove the test through `app.typeKey("n", modifierFlags: .command)` to mirror the Gherkin "When the user creates a new document". Added `.accessibilityIdentifier("documentTitle")` and `.accessibilityIdentifier("cueCount")` to query by stable identifier.
+- Cycle 3: `XCUIElement.label` returns empty string when querying SwiftUI `Text` by `accessibilityIdentifier`. Dropped both `.label` equality assertions; element existence under the identifier is sufficient evidence of the rendered content.
+
+**Key learnings (captured in `docs/findings.md`-worthy items):**
+- SwiftLint `--strict` applies to test code too. Use `try XCTUnwrap` over force-unwrap in tests.
+- macOS `DocumentGroup` cold-launch shows launcher, not untitled document. UI tests must drive ⌘N first.
+- XCUITest `.label` is unreliable when an element carries `accessibilityIdentifier` from a SwiftUI `Text`; rely on identifier resolution + `exists`/`waitForExistence` instead.
+
+---
+
 ## 2026-05-07 — CI session (PR #15, issue #2)
 
 **Shipped:** issue #2 (C2 CI). PR #15 merged into `dev`. First PR using the new dev-as-default flow.

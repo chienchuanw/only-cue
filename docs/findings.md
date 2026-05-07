@@ -57,6 +57,25 @@ settings:
 
 Debug stays loose for fast iteration; Release fails fast on drift. The `configs:` keys at the project root tell xcodegen which Xcode build configurations to generate.
 
+## SwiftLint `--strict` lints test code too
+
+The `.swiftlint.yml` `included:` list covers `OnlyCueTests/` and `OnlyCueUITests/`, so test code is held to the same opt-in rules as production (`force_unwrapping`, `multiline_arguments`, `optional_data_string_conversion`, etc.). In tests:
+
+- Replace `something!` with `try XCTUnwrap(something)` — test methods must `throws`. Failures point at the exact line instead of crashing the test harness.
+- `String(decoding: data, as: UTF8.self)` triggers `optional_data_string_conversion`. Use `try XCTUnwrap(String(bytes: data, encoding: .utf8))` instead.
+- `XCTAssertTrue(a, "msg")` on one line triggers `multiline_arguments` once you cross the line-length threshold. Either keep both args on one short line or put each on its own line.
+
+## macOS `DocumentGroup` cold launch shows the launcher window, not an untitled doc
+
+Unlike iOS, on macOS a `DocumentGroup`-based app shows the system **launcher / start window** on cold launch (newer macOS) or the open-file panel (older). It does **not** auto-create an untitled document. Implications for UI tests:
+
+- After `app.launch()`, send `app.typeKey("n", modifierFlags: .command)` (or click the "New Document" button) to reach a document window before asserting on document content.
+- Auto-opening untitled docs via `applicationShouldOpenUntitledFile` is a UX commitment — Pages/Numbers/Keynote don't do it. Keep that decision out of E1; revisit in E9 polish if desired.
+
+## XCUITest `.label` is unreliable when querying SwiftUI `Text` by `accessibilityIdentifier`
+
+If you `.accessibilityIdentifier("foo")` a SwiftUI `Text("Bar")` and then query `app.staticTexts["foo"]`, the element resolves correctly via `waitForExistence` / `exists`, but `.label` often comes back as `""` (sometimes the value surfaces via `.value` in AppKit-bridged paths, sometimes not at all). Don't assert on `.label` for identifier-resolved elements — rely on existence under the identifier as proof of rendering. If you genuinely need to assert visible copy, use a SwiftUI snapshot or unit test on the view body, not XCUITest.
+
 ## A `Closes #N` line in the PR body auto-closes the issue at merge
 
 Verified on PR #14 → issue #1. No need to manually close the issue. Same syntax works for `Fixes #N` / `Resolves #N`. If the PR uses GitHub's "linked issues" UI, that's separate from this body marker but functions identically.

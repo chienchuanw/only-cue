@@ -25,11 +25,11 @@ Closes #{issue_number}
 {What this PR deliberately does NOT do, especially work that belongs to a sibling chore or epic.}
 
 ---
-## OnlyCue verification (required)
+## OnlyCue verification (required — chore)
 **Spec link:** `docs/<file>.md#<anchor>`
 **Closes:** #__   (also updates parent Epic task list)
 
-- [ ] New tests added for every behavior (TDD: red→green committed)
-- [ ] Gherkin scenarios from the issue mapped to UI tests where applicable
-- [ ] Spec updated if behavior diverged from `docs/`
+- [ ] Tooling verified locally (commands run, artifacts produced, no errors reported)
+- [ ] No behavioral surface in this PR (or behavioral changes split into a follow-up)
+- [ ] Spec / `CLAUDE.md` updated if conventions changed
 - [ ] CI green

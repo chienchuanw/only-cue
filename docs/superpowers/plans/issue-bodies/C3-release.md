@@ -18,7 +18,9 @@ Set up signing, notarization, and DMG packaging so MVP can ship.
 - `bash scripts/make-dmg.sh` produces a DMG that opens, drag-installs, and launches without Gatekeeper warning on a Mac that has never seen the app
 
 ## Blocks
-Epic E10 — distribution.
+
+---
+**Blocks:** #12
 
 ## Out of scope
 - Sparkle / auto-update

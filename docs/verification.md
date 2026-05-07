@@ -16,7 +16,7 @@ Run on a clean user account with a freshly installed DMG. Use bundled fixtures `
 8. `⌘Z` → last edit undone. `⌘⇧Z` → redone. Repeat across mixed edits (rename + retime + delete).
 9. `⌘S` → save as `Show.cuelist` to Desktop. Quit the app.
 10. Re-launch → File → Open Recent → `Show.cuelist` → media reloads via bookmark, all cues intact, time fields match.
-11. Repeat steps 2–10 with `clip.mp4` to validate the video path (preview pane shows picture instead of waveform).
+11. Repeat steps 2–10 with `clip.mp4` to validate the video path (preview pane shows picture stacked above a waveform strip; cue markers drag and seek on the strip).
 12. Move `sample.mp3` to a new folder, then reopen `Show.cuelist` → app surfaces a "Relink media…" alert; relinking restores playback.
 
 If any step fails, the MVP is not done.

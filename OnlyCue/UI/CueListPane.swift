@@ -5,7 +5,9 @@ struct CueListPane: View {
     @ObservedObject var document: CueListDocument
     let engine: PlayerEngine
 
+    @Environment(\.undoManager) private var undoManager
     @State private var selection: Cue.ID?
+    @FocusState private var listFocused: Bool
 
     var body: some View {
         Group {
@@ -39,10 +41,24 @@ struct CueListPane: View {
     private var cueList: some View {
         List(selection: $selection) {
             ForEach(Array(document.model.cues.enumerated()), id: \.element.id) { index, cue in
-                CueRowView(index: index + 1, cue: cue)
-                    .tag(cue.id)
+                CueRowView(
+                    index: index + 1,
+                    cue: cue,
+                    onRename: { newName in
+                        CueCommands.rename(cueId: cue.id, to: newName, document: document, undoManager: undoManager)
+                    },
+                    onRecolor: { newHex in
+                        CueCommands.recolor(cueId: cue.id, to: newHex, document: document, undoManager: undoManager)
+                    }
+                )
+                .tag(cue.id)
             }
+            .onDelete(perform: deleteAtOffsets)
         }
+        .focused($listFocused)
+        .focusable()
+        .onAppear { listFocused = true }
+        .onKeyPress(.delete) { deleteSelected() }
         .onChange(of: selection) { _, newValue in
             guard
                 let id = newValue,
@@ -50,5 +66,20 @@ struct CueListPane: View {
             else { return }
             Task { await engine.seek(to: cue.time) }
         }
+    }
+
+    private func deleteAtOffsets(_ offsets: IndexSet) {
+        for index in offsets {
+            guard document.model.cues.indices.contains(index) else { continue }
+            let cue = document.model.cues[index]
+            CueCommands.delete(cueId: cue.id, document: document, undoManager: undoManager)
+        }
+    }
+
+    private func deleteSelected() -> KeyPress.Result {
+        guard let id = selection else { return .ignored }
+        CueCommands.delete(cueId: id, document: document, undoManager: undoManager)
+        selection = nil
+        return .handled
     }
 }

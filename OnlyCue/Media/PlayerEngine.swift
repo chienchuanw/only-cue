@@ -2,6 +2,7 @@ import AVFoundation
 import Observation
 
 @Observable
+@MainActor
 final class PlayerEngine {
 
     private(set) var currentTime: TimeInterval = 0

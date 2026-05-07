@@ -110,11 +110,11 @@ struct DocumentView: View {
 
     #if DEBUG
     private func seedSampleCues() {
-        document.model.cues = [
+        CueCommands.replaceAll([
             Cue(id: UUID(), name: "Spot up SR", time: 4.25, colorHex: "#FF6B6B", notes: ""),
             Cue(id: UUID(), name: "Wash full", time: 12.0, colorHex: "#4ECDC4", notes: ""),
             Cue(id: UUID(), name: "Chorus hit", time: 18.5, colorHex: "#FFD93D", notes: "")
-        ]
+        ], in: document)
     }
     #endif
 }

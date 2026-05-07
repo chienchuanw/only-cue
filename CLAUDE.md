@@ -38,9 +38,10 @@ Do **not** append `Co-Authored-By` trailers, signatures, or other attribution. T
 
 ## Branching
 
+- Default branch is `dev`. Production-ready code on `main`.
 - Branch name for issue work: `issues/<N>` (enforced by the `gh-dev` skill).
-- Base branch: `main`. No `dev`/`develop` branch.
-- Do not push to `main` directly except for repo-metadata work that has no review value (rare).
+- Issue branches base off `dev`. PRs merge into `dev`. Periodically `dev` is fast-forwarded into `main` for releases.
+- Do not push to `dev` or `main` directly except for repo-metadata work that has no review value (rare — e.g., post-merge README/status updates after a session).
 
 ## Bootstrapping the Xcode project
 

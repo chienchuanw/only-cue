@@ -17,6 +17,8 @@ struct DocumentView: View {
             mediaSummary
                 .accessibilityIdentifier("mediaSummary")
 
+            PreviewPane(engine: engine, media: document.model.media)
+
             Text("\(document.model.cues.count) cue\(document.model.cues.count == 1 ? "" : "s")")
                 .foregroundStyle(.secondary)
                 .accessibilityIdentifier("cueCount")
@@ -33,7 +35,7 @@ struct DocumentView: View {
                 .foregroundStyle(.tertiary)
                 .padding(.top, 4)
         }
-        .frame(minWidth: 480, minHeight: 320)
+        .frame(minWidth: 560, minHeight: 480)
         .padding()
         .fileImporter(
             isPresented: $showImporter,

@@ -16,10 +16,7 @@ struct AppCommands: Commands {
                 .foregroundColor: NSColor.labelColor
             ]
         )
-        NSApplication.shared.orderFrontStandardAboutPanel(options: [
-            .credits: credits,
-            .applicationName: "OnlyCue"
-        ])
+        NSApplication.shared.orderFrontStandardAboutPanel(options: [.credits: credits])
         NSApplication.shared.activate(ignoringOtherApps: true)
     }
 }

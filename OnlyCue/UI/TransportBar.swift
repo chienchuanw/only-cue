@@ -7,11 +7,7 @@ struct TransportBar: View {
     var body: some View {
         HStack(spacing: 12) {
             Button {
-                if engine.rate > 0 {
-                    engine.pause()
-                } else {
-                    engine.play()
-                }
+                engine.toggle()
             } label: {
                 Image(systemName: engine.rate > 0 ? "pause.fill" : "play.fill")
                     .frame(width: 16, height: 16)

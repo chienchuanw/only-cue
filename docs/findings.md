@@ -4,6 +4,46 @@ Non-obvious things learned during development. Things you'd want to remember nex
 
 ---
 
+## macOS 15 SDK + Swift 6 isolates `AVPlayerItem.init(asset:)` to MainActor
+
+Building against the macOS 15 SDK with Swift 6 strict concurrency surfaces:
+
+> `Main actor-isolated initializer 'init(asset:)' cannot be called from outside of the actor; this is an error in the Swift 6 language mode`
+
+Anything that constructs `AVPlayerItem` inside a non-`@MainActor` method fails. The fix is to mark the wrapper class `@MainActor` so its methods inherit the isolation. For `PlayerEngine`, that also means the periodic-time-observer closure (which is `@Sendable`) loses the type-system guarantee that it runs on `.main` even when you pass `.main` as the queue. Wrap the closure body in `MainActor.assumeIsolated { ... }` — synchronous, no per-tick `Task` allocation, and the assumption is sound because we passed `queue: .main` ourselves.
+
+```swift
+@Observable
+@MainActor
+final class PlayerEngine { ... }
+
+timeObserver = player.addPeriodicTimeObserver(forInterval: interval, queue: .main) { [weak self] time in
+    MainActor.assumeIsolated {
+        guard let self else { return }
+        self.currentTime = CMTimeGetSeconds(time)
+        self.rate = self.player.rate
+    }
+}
+```
+
+When the wrapper class becomes `@MainActor`, sync-call test methods (`engine.play()`) need `@MainActor` on the test class to inherit isolation.
+
+## Ad-hoc signing + missing `get-task-allow` blocks Xcode debug attach (and masks real build errors)
+
+`CODE_SIGN_IDENTITY: "-"` (ad-hoc) without an entitlements file containing `com.apple.security.get-task-allow = YES` makes Xcode fail to attach LLDB on macOS 14+:
+
+> `Unable to obtain a task name port right for pid X: (os/kern) failure (0x5)`
+
+This error is shown in the run console even when there is also a **build** error preventing the app from being produced — the run-attach failure is what surfaces visually. Lesson: when this error appears, switch to the **Issue navigator** / build log first. Don't troubleshoot the signing-debug error until you've confirmed the build is clean.
+
+Workarounds for actual debugging once the build is green: Product → Run Without Debugging (⌘⌃R), or open the built `.app` from Finder. Proper fix (deferred — chore-shaped infra change): add `Debug.entitlements` with `get-task-allow = YES` and reference it via `CODE_SIGN_ENTITLEMENTS` in `project.yml` for the Debug config only.
+
+## XCUITest can't drive `NSOpenPanel` or SwiftUI `.dropDestination`
+
+For E3 media import, the natural acceptance tests are "user picks file via ⌘O" and "user drops file on window". Both are out of XCUITest's reach: `NSOpenPanel` runs out-of-process (sandboxed `com.apple.appkit.xpc.openAndSavePanelService`) so the test app can't see its UI tree, and SwiftUI's `.dropDestination` listens for AppKit drag events that XCUITest can't synthesize. Recourse: cover the contract with unit tests on the import command, and rely on manual verification per `docs/build-sequence.md` detour rule #3.
+
+
+
 ## xcodegen `info:` directive overwrites custom Info.plist
 
 The `targets.<name>.info: { path: ... }` key in `project.yml` causes xcodegen to **generate** an `Info.plist` at the given path — overwriting any custom contents (including `UTExportedTypeDeclarations`).

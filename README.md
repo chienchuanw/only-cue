@@ -2,6 +2,18 @@
 
 A native macOS application for lighting designers and show programmers, inspired by [CuePoints](https://cuepoints.com/). Import a media file (audio or video), preview it, and lay out a **cue list** — an ordered set of named, color-coded markers anchored to timestamps — to plan and communicate timing for live shows or TV.
 
+## Install
+
+Download the latest DMG from the [releases page](https://github.com/chienchuanw/only-cue/releases) and follow these steps:
+
+1. Open `OnlyCue-x.y.z.dmg` and drag **OnlyCue** into your Applications folder.
+2. Eject the DMG.
+3. **First launch:** in Finder, right-click `OnlyCue.app` and choose **Open**. macOS will warn that the developer can't be verified — click **Open** anyway. Future launches are silent.
+
+Why the right-click step? OnlyCue is currently distributed without a paid Apple Developer ID signature. The `.app` is ad-hoc signed and unmodified; right-clicking → Open is the standard macOS bypass. If you'd rather avoid that step, [build from source](#build).
+
+System requirements: macOS 14 (Sonoma) or later, Apple silicon or Intel.
+
 ## Status
 
 All MVP feature epics (C1, C2, E1–E9) plus the C3 release pipeline have shipped ([#14](https://github.com/chienchuanw/only-cue/pull/14)–[#25](https://github.com/chienchuanw/only-cue/pull/25)). `bash scripts/build-release.sh && bash scripts/make-dmg.sh` produces a drag-installable DMG. The default `RELEASE_MODE=unsigned` path is free-tier-friendly: the `.app` is ad-hoc-signed (so users see a normal "developer cannot be verified" Gatekeeper prompt cleared by right-click → Open, not the misleading "is damaged" error), the DMG is plain. `RELEASE_MODE=signed` opt-in produces a Gatekeeper-clean Developer ID + notarized + stapled DMG once we upgrade to a paid Apple Developer Program. Full procedure in [`docs/release.md`](docs/release.md). Next up: [#12](https://github.com/chienchuanw/only-cue/issues/12) (E10 distribution — tag, GitHub release, install instructions in this README) — the last MVP issue. Track everything on the [issue board](https://github.com/chienchuanw/only-cue/issues).
@@ -44,7 +56,7 @@ Read in this order:
 | Media | AVFoundation (`AVPlayer`, `AVAssetReader`) |
 | Min OS | macOS 14 (Sonoma) |
 | Project file | `.cuelist` (JSON) |
-| Distribution | Developer ID signed + notarized DMG |
+| Distribution | Ad-hoc signed DMG (free tier) — Developer ID + notarization wired but opt-in |
 
 ## Reference
 

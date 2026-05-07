@@ -3,8 +3,8 @@ import SwiftUI
 @main
 struct OnlyCueApp: App {
     var body: some Scene {
-        WindowGroup {
-            Text("OnlyCue — placeholder")
+        DocumentGroup(newDocument: CueListDocument.init) { file in
+            DocumentView(document: file.document)
         }
     }
 }

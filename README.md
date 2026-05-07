@@ -4,7 +4,7 @@ A native macOS application for lighting designers and show programmers, inspired
 
 ## Status
 
-C1 bootstrap, C2 CI, E1 skeleton, E2 player core, E3 media import, and E4 video preview have shipped ([#14](https://github.com/chienchuanw/only-cue/pull/14), [#15](https://github.com/chienchuanw/only-cue/pull/15), [#16](https://github.com/chienchuanw/only-cue/pull/16), [#17](https://github.com/chienchuanw/only-cue/pull/17), [#18](https://github.com/chienchuanw/only-cue/pull/18), [#19](https://github.com/chienchuanw/only-cue/pull/19)). Drag-drop or ⌘O imports audio + video; `.mp4` / `.mov` documents render their picture in a `PreviewPane` driven by `PlayerEngine` through an `AVPlayerLayer`-backed `NSViewRepresentable`. Audio documents show a placeholder until the waveform lands. Next up: [#7](https://github.com/chienchuanw/only-cue/issues/7) (E5 waveform — async peak generation via `AVAssetReader`, on-disk peak cache, `Canvas`-rendered waveform view). Track everything on the [issue board](https://github.com/chienchuanw/only-cue/issues).
+C1 bootstrap, C2 CI, E1 skeleton, E2 player core, E3 media import, E4 video preview, and E5 waveform have shipped ([#14](https://github.com/chienchuanw/only-cue/pull/14), [#15](https://github.com/chienchuanw/only-cue/pull/15), [#16](https://github.com/chienchuanw/only-cue/pull/16), [#17](https://github.com/chienchuanw/only-cue/pull/17), [#18](https://github.com/chienchuanw/only-cue/pull/18), [#19](https://github.com/chienchuanw/only-cue/pull/19), [#20](https://github.com/chienchuanw/only-cue/pull/20)). Audio documents now render an `AVAssetReader`-driven waveform via SwiftUI `Canvas`, with an on-disk peak cache (`~/Library/Caches/OnlyCue/peaks/`) keyed by file SHA256 + resolution. Re-importing the same file is instant. Next up: [#8](https://github.com/chienchuanw/only-cue/issues/8) (E6 cue list pane — read-only list bound to `ProjectModel.cues`). Track everything on the [issue board](https://github.com/chienchuanw/only-cue/issues).
 
 ## Build
 
@@ -15,6 +15,12 @@ open OnlyCue.xcodeproj
 ```
 
 `OnlyCue.xcodeproj/` is generated and gitignored — `project.yml` is the source of truth.
+
+### When to re-run xcodegen / clean the build folder
+
+- **Re-run `xcodegen generate`** whenever `project.yml`, `Info.plist`, or the source folder structure changes (new top-level folder under `OnlyCue/`, new target, new pre-build script). Pulling a branch that touched any of those counts.
+- **`⌘⇧K` (Clean Build Folder)** in Xcode after switching branches that changed Swift concurrency annotations or other compile-time invariants — Xcode's incremental build sometimes hangs on stale bitcode and surfaces it as a confusing build error (e.g., a Swift 6 `@MainActor` error on code that has already been fixed).
+- **`⌘⇧⌥K` (Delete Derived Data)** if `⌘⇧K` doesn't clear the issue. Slower (full rebuild after) but resolves persistent stale-cache errors.
 
 ## Documents
 

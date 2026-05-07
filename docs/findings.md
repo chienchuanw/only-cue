@@ -4,6 +4,41 @@ Non-obvious things learned during development. Things you'd want to remember nex
 
 ---
 
+## SwiftUI `GraphicsContext.fill(_:with:)` takes `Shading` directly
+
+A common mistake when using `Canvas`:
+
+```swift
+// Wrong — `color` is a static factory on Shading, not an instance member
+let resolved = context.resolve(.color(.accentColor))
+context.fill(path, with: .color(resolved.color))   // compile error
+
+// Right — pass the resolved shading itself
+let shading = context.resolve(.color(.accentColor))
+context.fill(path, with: shading)
+```
+
+`context.resolve(_:)` returns a `GraphicsContext.Shading` that has been pre-evaluated against the canvas's color scheme / environment. You hand that resolved shading to `fill` / `stroke` directly. There is no `.color` instance property to extract.
+
+## SwiftLint default budgets: 10 cyclomatic complexity, 50-line function body
+
+Both rules are on by default and bite as soon as a function gathers a few branches plus a non-trivial buffer-processing loop. `WaveformGenerator.peaks(for:resolution:)` tripped both at 11/66 — the fix is structural, not config:
+
+- Extract per-iteration state into a `private struct PeakAccumulator` with `mutating func ingest(...)` + `mutating func finalize() -> [Float]`.
+- Pull setup into helpers: `makeReader(asset:track:)`, `estimatedSampleCount(asset:resolution:)`.
+- Top-level function becomes a thin orchestrator (~30 lines) over the helpers and accumulator.
+
+This shape also reads better under review than one long imperative function.
+
+## `unneeded_synthesized_initializer` and `prefer_self_in_static_references` (SwiftLint)
+
+Two opt-in rules on by default in this project:
+
+- `unneeded_synthesized_initializer`: don't write an explicit memberwise init for a struct whose properties already match what the synthesized init would produce. `struct Foo { let x: Int }` is enough.
+- `prefer_self_in_static_references`: inside a type's own static methods/lazy initializers, refer to the surrounding type as `Self`, not the literal type name. `WaveformCache.shared`'s factory closure must use `Self(directory:)`.
+
+---
+
 ## `AVPlayerLayer` in `NSViewRepresentable`: use addSublayer, not `makeBackingLayer`
 
 The "elegant" pattern for hosting `AVPlayerLayer` in an `NSView` is to override `makeBackingLayer()` to return the `AVPlayerLayer` directly, so the player layer **is** the view's backing layer. It compiles, AppKit accepts it, and audio plays — but on macOS 15 the layer rendered no video frames in practice. Use the canonical addSublayer pattern instead:

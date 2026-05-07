@@ -4,6 +4,33 @@ Append-only session log. Newer entries on top.
 
 ---
 
+## 2026-05-07 — E5 waveform session (PR #20, issue #7)
+
+**Shipped:** issue #7 (E5 waveform). PR #20 merged into `dev` (rebase, head `d962d96`). Audio documents now have a real waveform.
+
+**What landed:**
+- `OnlyCue/Media/WaveformGenerator.swift` — `static peaks(for: AVAsset, resolution: Int) async throws -> [Float]`. Forces output to mono Int16 LinearPCM @ 44.1kHz via `AVAssetReaderTrackOutput`, streams sample buffers, peak-reduces into N buckets via a `private struct PeakAccumulator`, normalizes to `0…1`. `Task.checkCancellation()` between buffers; `CMSampleBufferInvalidate` to free the reader's pool. Top-level function split into `makeReader` / `estimatedSampleCount` helpers to fit SwiftLint's complexity (10) and length (50) budgets.
+- `OnlyCue/Media/WaveformCache.swift` — `WaveformCache(directory:)` for tests + `WaveformCache.shared` rooted at `~/Library/Caches/OnlyCue/peaks/`. Binary `Float32` blob keyed by `<sha>-<resolution>.peaks`. `static fileHash(_:)` streams the file in 1 MB chunks via `CryptoKit.SHA256`.
+- `OnlyCue/UI/WaveformView.swift` — Canvas of rounded vertical bars centered on midline; resolves shading once, fills with `context.fill(path, with: shading)`.
+- `OnlyCue/UI/WaveformContainer.swift` — orchestrates: hash file once → cache lookup → render or generate → fire-and-forget background write. `.task(id: asset.url)` cancels and reruns when the URL changes.
+- `OnlyCue/UI/PreviewPane.swift` — audio path mounts `WaveformContainer` when `engine.player.currentItem?.asset is AVURLAsset`; otherwise shows reopen-required placeholder (relink work is E9).
+- `OnlyCueTests/{WaveformGenerator,WaveformCache}Tests.swift` — generator (count, silent → zero, sine → non-zero, normalized) + cache (round-trip, miss, resolution mismatch, hash stability + uniqueness). `SilentAudioFixture.makeSineWAV(duration:frequency:)` added.
+
+**Iteration mid-session — five SwiftLint/API errors caught at build time:**
+1. `GraphicsContext.fill(_:with:)` takes `Shading` directly, not `Shading.color(...)`. The resolved shading **is** the value to pass.
+2. `unneeded_synthesized_initializer` on `WaveformCache(directory:)` — dropped the explicit init, kept memberwise.
+3. `prefer_self_in_static_references` inside `WaveformCache.shared` factory — `Self(directory:)` not `WaveformCache(directory:)`.
+4. & 5. `cyclomatic_complexity 11` and `function_body_length 66` on `peaks(for:resolution:)` — extracted `PeakAccumulator` struct and split helpers; top-level function dropped to ~30 lines.
+
+**Manual verification:**
+- 5-min `.mp3` first import: spinner appears, waveform renders within ~1s.
+- Re-import same `.mp3`: cache hit, instant render.
+- Video import: unchanged (video preview pane).
+
+**Caveat — Gherkin reopen scenario:** "peak cache hits on document reopen within 250ms" is partially deferred. Cache hits on **re-import** of the same file. Reopen-from-bookmark requires the document open path to resolve `MediaReference.bookmarkData` and reload the asset into the player — that's E9 relink. PreviewPane shows "reopen with media" placeholder when the engine is empty.
+
+---
+
 ## 2026-05-07 — E4 video preview session (PR #19, issue #6)
 
 **Shipped:** issue #6 (E4 video preview pane). PR #19 merged into `dev` (rebase, head `be72182`). Documents now show their picture.

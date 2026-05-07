@@ -6,6 +6,8 @@ enum FirstLaunchFlag {
 
 struct FirstLaunchSheet: View {
 
+    private static let docsURL = URL(string: "https://github.com/chienchuanw/only-cue#documents")
+
     let onDismiss: () -> Void
 
     var body: some View {
@@ -18,8 +20,10 @@ struct FirstLaunchSheet: View {
             Text("Drop an audio or video file (or press ⌘O) to start. Press M at the playhead to add a cue. ⌘Z undoes anything.")
                 .multilineTextAlignment(.center)
                 .foregroundStyle(.secondary)
-            Link("Read the docs on GitHub", destination: URL(string: "https://github.com/chienchuanw/only-cue#documents")!)
-                .font(.callout)
+            if let docsURL = Self.docsURL {
+                Link("Read the docs on GitHub", destination: docsURL)
+                    .font(.callout)
+            }
             Button("Got it") { onDismiss() }
                 .keyboardShortcut(.defaultAction)
         }

@@ -4,6 +4,29 @@ Append-only session log. Newer entries on top.
 
 ---
 
+## 2026-05-07 — CI session (PR #15, issue #2)
+
+**Shipped:** issue #2 (C2 CI). PR #15 merged into `dev`. First PR using the new dev-as-default flow.
+
+**What landed:**
+- `.github/workflows/ci.yml` — single `build-test` job on `macos-latest`, ~25 min timeout.
+- Pipeline: checkout → `maxim-lobanov/setup-xcode@v1` (latest stable Xcode) → `brew install xcodegen swiftlint xcbeautify` → `swiftlint lint --strict --reporter github-actions-logging` → `xcodegen generate` → `actions/cache@v4` (DerivedData + SPM) → `xcodebuild build` Debug → `xcodebuild test`. Build/test piped through `xcbeautify --renderer github-actions` for proper annotations.
+- Triggers: `pull_request` (any branch) and `push` to `main` or `dev`.
+- Concurrency: `cancel-in-progress` per ref.
+- Code signing disabled (signing is C3's job).
+
+**Coverage of reviewer feedback from PR #14:**
+- SwiftLint must fail CI on absent or violating — `--strict` mode + natural `brew install` failure mode covers both.
+
+**Out of scope (deferred):**
+- Code signing in CI → C3 (#13).
+- Release builds in CI → C3.
+- Branch protection (require CI green + 1 review) → repo Settings UI, not committable.
+
+**Verification:** the PR's own check run was the first exercise of the workflow — green on first run.
+
+---
+
 ## 2026-05-07 — Bootstrap session (PR #14, issue #1)
 
 **Shipped:** issue #1 (C1 bootstrap). PR #14 merged via rebase into `main`.

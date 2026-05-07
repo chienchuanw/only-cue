@@ -4,7 +4,7 @@ A native macOS application for lighting designers and show programmers, inspired
 
 ## Status
 
-C1 bootstrap shipped ([PR #14](https://github.com/chienchuanw/only-cue/pull/14), closes [#1](https://github.com/chienchuanw/only-cue/issues/1)). The repo has the full planning docs, an xcodegen-generated Xcode project skeleton, GitHub issue & PR templates, and SwiftLint. Next up: [#2](https://github.com/chienchuanw/only-cue/issues/2) (CI on GitHub Actions), then [#3](https://github.com/chienchuanw/only-cue/issues/3) (E1 skeleton — `DocumentGroup`, `ProjectModel`, `.cuelist` UTType). Track everything on the [issue board](https://github.com/chienchuanw/only-cue/issues).
+C1 bootstrap and C2 CI have shipped ([#14](https://github.com/chienchuanw/only-cue/pull/14), [#15](https://github.com/chienchuanw/only-cue/pull/15)). The repo has the full planning docs, an xcodegen-generated Xcode project skeleton, GitHub issue & PR templates, SwiftLint, and a green-build gate via GitHub Actions on every PR. Next up: [#3](https://github.com/chienchuanw/only-cue/issues/3) (E1 skeleton — `DocumentGroup`, `ProjectModel`, `.cuelist` UTType registration, first real Codable round-trip test). Track everything on the [issue board](https://github.com/chienchuanw/only-cue/issues).
 
 ## Build
 

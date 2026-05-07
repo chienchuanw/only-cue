@@ -7,8 +7,8 @@ Working source of truth for what's left. Sourced from the [GitHub issue board](h
 | Issue | Title | Status |
 |---|---|---|
 | [#1](https://github.com/chienchuanw/only-cue/issues/1) | C1 bootstrap | ✅ shipped (PR #14) |
-| [#2](https://github.com/chienchuanw/only-cue/issues/2) | C2 CI — GitHub Actions, build + XCTest + XCUITest | ⏭️ next |
-| [#3](https://github.com/chienchuanw/only-cue/issues/3) | E1 skeleton — `DocumentGroup`, `ProjectModel`, `.cuelist` UTType | pending |
+| [#2](https://github.com/chienchuanw/only-cue/issues/2) | C2 CI — GitHub Actions, build + XCTest + XCUITest | ✅ shipped (PR #15) |
+| [#3](https://github.com/chienchuanw/only-cue/issues/3) | E1 skeleton — `DocumentGroup`, `ProjectModel`, `.cuelist` UTType | ⏭️ next |
 | [#4](https://github.com/chienchuanw/only-cue/issues/4) | E2 player core | pending |
 | [#5](https://github.com/chienchuanw/only-cue/issues/5) | E3 media import | pending |
 | [#6](https://github.com/chienchuanw/only-cue/issues/6) | E4 video preview | pending |
@@ -22,9 +22,9 @@ Working source of truth for what's left. Sourced from the [GitHub issue board](h
 
 ## Recommended order
 
-1. **#2 (C2 CI)** — adds the green-build gate that all subsequent PRs need. Lands quickly.
-2. **#3 (E1 skeleton)** — first real feature work. After this lands, leaf issues for E2..E10 can be expanded JIT.
-3. **#4..#11 (E2..E9)** — feature epics in build-sequence order.
+1. ~~**#2 (C2 CI)** — green-build gate.~~ Done.
+2. **#3 (E1 skeleton)** — first real feature work. Define `ProjectModel`, `Cue`, `MediaReference` Codable types; register the `.cuelist` UTType in `Info.plist`; wire `OnlyCueApp` to `DocumentGroup` with a `CueListDocument`. This is the first PR with TDD applied (Codable round-trip test red → green).
+3. **#4..#11 (E2..E9)** — feature epics in build-sequence order. Leaves expanded JIT once #3 lands.
 4. **#13 (C3) → #12 (E10)** — release pipeline first, then the actual ship.
 
 ## Phase 2 / Phase 3 milestones

@@ -8,7 +8,7 @@ Download the latest DMG from the [releases page](https://github.com/chienchuanw/
 
 1. Open `OnlyCue-x.y.z.dmg` and drag **OnlyCue** into your Applications folder.
 2. Eject the DMG.
-3. **First launch:** in Finder, right-click `OnlyCue.app` and choose **Open**. macOS will warn that the developer can't be verified — click **Open** anyway. Future launches are silent.
+3. **First launch:** in Finder, right-click (or Control-click) `OnlyCue.app` and choose **Open**. macOS will warn that the developer can't be verified — click **Open** anyway. Future launches are silent.
 
 Why the right-click step? OnlyCue is currently distributed without a paid Apple Developer ID signature. The `.app` is ad-hoc signed and unmodified; right-clicking → Open is the standard macOS bypass. If you'd rather avoid that step, [build from source](#build).
 
@@ -56,7 +56,7 @@ Read in this order:
 | Media | AVFoundation (`AVPlayer`, `AVAssetReader`) |
 | Min OS | macOS 14 (Sonoma) |
 | Project file | `.cuelist` (JSON) |
-| Distribution | Ad-hoc signed DMG (free tier) — Developer ID + notarization wired but opt-in |
+| Distribution | Ad-hoc signed DMG (Developer ID + notarization opt-in) |
 
 ## Reference
 

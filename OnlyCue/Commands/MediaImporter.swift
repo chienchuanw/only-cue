@@ -31,6 +31,22 @@ enum MediaImporter {
         await engine.load(asset: asset)
     }
 
+    @MainActor
+    static func reload(
+        into document: CueListDocument,
+        engine: PlayerEngine
+    ) async throws {
+        guard let media = document.model.media else { return }
+        let resolution = try Bookmarks.resolve(media.bookmarkData)
+        let asset = AVURLAsset(url: resolution.url)
+        _ = try await asset.load(.duration)
+        if resolution.isStale {
+            let refreshed = try Bookmarks.create(for: resolution.url)
+            document.model.media?.bookmarkData = refreshed
+        }
+        await engine.load(asset: asset)
+    }
+
     static func mediaKind(for url: URL) -> MediaKind? {
         guard let type = UTType(filenameExtension: url.pathExtension) else { return nil }
         if type.conforms(to: .audio) { return .audio }

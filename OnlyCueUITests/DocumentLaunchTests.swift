@@ -18,8 +18,8 @@ final class DocumentLaunchTests: XCTestCase {
         XCTAssertTrue(app.staticTexts["OnlyCue"].waitForExistence(timeout: 5),
                       "Title 'OnlyCue' should appear within 5 seconds of launch")
 
-        let cueCountLabel = app.staticTexts.matching(NSPredicate(format: "label CONTAINS 'cue'")).firstMatch
-        XCTAssertTrue(cueCountLabel.exists, "Cue count label must be visible on launch")
+        XCTAssertTrue(app.staticTexts["0 cues"].exists,
+                      "Empty document must show '0 cues' label")
 
         XCTAssertGreaterThan(app.windows.count, 0,
                              "DocumentGroup should open at least one window on launch")

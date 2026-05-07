@@ -9,7 +9,7 @@ struct DocumentView: View {
                 .font(.title)
             Text("\(document.model.cues.count) cue\(document.model.cues.count == 1 ? "" : "s")")
                 .foregroundStyle(.secondary)
-            Text("Drop a media file or press ⌘O. Preview, waveform, and cue list arrive in later epics.")
+            Text("Empty document. Preview, waveform, and cue list arrive in later epics.")
                 .multilineTextAlignment(.center)
                 .foregroundStyle(.tertiary)
                 .padding(.top, 4)

@@ -14,6 +14,7 @@ The mapping from PR type to template file is the same as the skill's:
 - `doc` → `.github/PULL_REQUEST_TEMPLATE/doc.md`
 - `perf` → `.github/PULL_REQUEST_TEMPLATE/perf.md`
 - `security` → `.github/PULL_REQUEST_TEMPLATE/security.md`
+- `chore` → `.github/PULL_REQUEST_TEMPLATE/chore.md` (OnlyCue addition — not in upstream gh-pr skill; use when the issue carries the `chore` kind label)
 
 If a future PR type is needed and a forked template does not yet exist, stop and add the forked template before creating the PR. Do not fall back to the skill's bundled template silently.
 

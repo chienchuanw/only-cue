@@ -28,10 +28,11 @@ final class PlayerEngine {
     func load(asset: AVAsset) async {
         let item = AVPlayerItem(asset: asset)
         player.replaceCurrentItem(with: item)
+        rate = 0
+        currentTime = 0
         if let cmDuration = try? await asset.load(.duration) {
             duration = CMTimeGetSeconds(cmDuration)
         }
-        currentTime = 0
     }
 
     func play() {

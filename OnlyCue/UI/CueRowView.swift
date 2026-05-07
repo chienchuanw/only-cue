@@ -20,6 +20,7 @@ struct CueRowView: View {
 
     @State private var isEditingName = false
     @State private var draftName = ""
+    @State private var showColorPopover = false
     @FocusState private var nameFieldFocused: Bool
 
     var body: some View {
@@ -45,29 +46,40 @@ struct CueRowView: View {
     }
 
     private var colorMenu: some View {
-        Menu {
-            ForEach(Self.palette, id: \.hex) { entry in
-                Button {
-                    if entry.hex != cue.colorHex { onRecolor(entry.hex) }
-                } label: {
-                    HStack {
-                        Circle()
-                            .fill(Color(hex: entry.hex) ?? .gray)
-                            .frame(width: 12, height: 12)
-                        Text(entry.name)
-                    }
-                }
-            }
+        Button {
+            showColorPopover.toggle()
         } label: {
             Circle()
                 .fill(swatchColor)
-                .overlay(Circle().stroke(.secondary.opacity(0.25), lineWidth: 0.5))
+                .overlay(Circle().stroke(.secondary.opacity(0.3), lineWidth: 0.5))
                 .frame(width: 14, height: 14)
         }
-        .menuStyle(.borderlessButton)
-        .menuIndicator(.hidden)
-        .fixedSize()
-        .accessibilityIdentifier("cueColorMenu-\(index)")
+        .buttonStyle(.plain)
+        .popover(isPresented: $showColorPopover, arrowEdge: .bottom) {
+            VStack(alignment: .leading, spacing: 2) {
+                ForEach(Self.palette, id: \.hex) { entry in
+                    Button {
+                        if entry.hex != cue.colorHex { onRecolor(entry.hex) }
+                        showColorPopover = false
+                    } label: {
+                        HStack(spacing: 8) {
+                            Circle()
+                                .fill(Color(hex: entry.hex) ?? .gray)
+                                .frame(width: 12, height: 12)
+                            Text(entry.name)
+                            Spacer(minLength: 12)
+                        }
+                        .contentShape(Rectangle())
+                    }
+                    .buttonStyle(.plain)
+                    .padding(.vertical, 3)
+                    .padding(.horizontal, 6)
+                }
+            }
+            .padding(6)
+            .frame(minWidth: 140)
+        }
+        .accessibilityIdentifier("cueColorButton-\(index)")
     }
 
     @ViewBuilder

@@ -58,9 +58,11 @@ final class PlayerEngine {
             forInterval: interval,
             queue: .main
         ) { [weak self] time in
-            guard let self else { return }
-            self.currentTime = CMTimeGetSeconds(time)
-            self.rate = self.player.rate
+            MainActor.assumeIsolated {
+                guard let self else { return }
+                self.currentTime = CMTimeGetSeconds(time)
+                self.rate = self.player.rate
+            }
         }
     }
 }

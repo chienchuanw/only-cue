@@ -42,6 +42,7 @@ targets:
     preBuildScripts:
       - name: SwiftLint
         script: |
+          export PATH="/opt/homebrew/bin:/usr/local/bin:$PATH"
           if which swiftlint > /dev/null; then
             swiftlint
           else

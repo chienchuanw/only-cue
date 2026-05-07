@@ -66,8 +66,7 @@ struct CueMarkerView: View {
                 .frame(width: Self.capWidth, height: Self.capHeight)
         }
         .offset(x: baseX + dragOffset - Self.hitWidth / 2)
-        .gesture(dragGesture, including: .all)
-        .onTapGesture { onSeek() }
+        .gesture(dragOrTapGesture)
         .accessibilityIdentifier("cueMarker-\(cue.id.uuidString)")
     }
 
@@ -75,14 +74,21 @@ struct CueMarkerView: View {
         Color(hex: cue.colorHex) ?? .accentColor
     }
 
-    private var dragGesture: some Gesture {
-        DragGesture(minimumDistance: 4)
+    private var dragOrTapGesture: some Gesture {
+        DragGesture(minimumDistance: 0)
             .onChanged { value in
                 dragOffset = value.translation.width
             }
             .onEnded { value in
-                onRetimeBy(value.translation.width)
+                let dx = value.translation.width
+                if abs(dx) < Self.dragThreshold {
+                    onSeek()
+                } else {
+                    onRetimeBy(dx)
+                }
                 dragOffset = 0
             }
     }
+
+    private static let dragThreshold: CGFloat = 4
 }

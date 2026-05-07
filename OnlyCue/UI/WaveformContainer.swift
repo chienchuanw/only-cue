@@ -26,7 +26,6 @@ struct WaveformContainer: View {
                                 onSeek: onSeek,
                                 onRetime: onRetime
                             )
-                            .padding(.horizontal, 8)
                         }
                     }
             } else if failed {

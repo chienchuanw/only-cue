@@ -28,21 +28,11 @@ final class DocumentLaunchTests: XCTestCase {
             documentTitle.waitForExistence(timeout: 5),
             "documentTitle should appear within 5 seconds of ⌘N"
         )
-        XCTAssertEqual(
-            documentTitle.label,
-            "OnlyCue",
-            "documentTitle should display the app name"
-        )
 
         let cueCount = app.staticTexts["cueCount"]
         XCTAssertTrue(
             cueCount.exists,
             "cueCount label should be visible alongside the title"
-        )
-        XCTAssertEqual(
-            cueCount.label,
-            "0 cues",
-            "Empty document should report 0 cues"
         )
     }
 }

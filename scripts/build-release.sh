@@ -42,10 +42,10 @@ if [[ -z "${DEVELOPER_ID:-}" ]]; then
 fi
 log "Signing identity: $DEVELOPER_ID"
 
-if ! xcrun notarytool history --keychain-profile "$NOTARY_PROFILE" >/dev/null 2>&1; then
+if ! security find-generic-password -s "com.apple.gke.notary.tool" -a "$NOTARY_PROFILE" >/dev/null 2>&1; then
     fail "notarytool keychain profile '$NOTARY_PROFILE' missing. Run: xcrun notarytool store-credentials $NOTARY_PROFILE --apple-id <id> --team-id <TEAMID> --password <app-pw>"
 fi
-log "Notarization profile OK: $NOTARY_PROFILE"
+log "Notarization profile present: $NOTARY_PROFILE"
 
 # Clean slate
 rm -rf "$BUILD_DIR"
@@ -64,8 +64,8 @@ xcodebuild archive \
     CODE_SIGN_STYLE=Manual \
     "CODE_SIGN_IDENTITY=$DEVELOPER_ID" \
     OTHER_CODE_SIGN_FLAGS="--timestamp --options=runtime" \
-    | xcbeautify --renderer terminal --quieter || true
-
+    | xcbeautify --renderer terminal --quieter
+[[ "${PIPESTATUS[0]}" -eq 0 ]] || fail "xcodebuild archive failed"
 [[ -d "$ARCHIVE_PATH" ]] || fail "Archive not produced at $ARCHIVE_PATH"
 
 log "Exporting Developer ID build"

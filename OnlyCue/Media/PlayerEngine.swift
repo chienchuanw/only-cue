@@ -9,6 +9,8 @@ final class PlayerEngine {
     private(set) var rate: Float = 0
     private(set) var duration: TimeInterval = 0
 
+    var isPlaying: Bool { rate > 0 }
+
     @ObservationIgnored
     let player: AVPlayer
 

@@ -55,7 +55,7 @@ struct PreviewPane: View {
     @ViewBuilder
     private var audioContent: some View {
         if let asset = engine.player.currentItem?.asset as? AVURLAsset {
-            waveform(for: asset, showsPlayhead: true)
+            waveform(for: asset, withPlayhead: true)
                 .accessibilityIdentifier("audioWaveform")
         } else {
             placeholder("Audio loaded — reopen with media to see waveform")
@@ -63,7 +63,7 @@ struct PreviewPane: View {
         }
     }
 
-    private func waveform(for asset: AVURLAsset, showsPlayhead: Bool = false) -> WaveformContainer {
+    private func waveform(for asset: AVURLAsset, withPlayhead: Bool = false) -> WaveformContainer {
         WaveformContainer(
             asset: asset,
             cues: document.model.cues,
@@ -76,8 +76,7 @@ struct PreviewPane: View {
                     undoManager: undoManager
                 )
             },
-            showsPlayhead: showsPlayhead,
-            engine: showsPlayhead ? engine : nil
+            engine: withPlayhead ? engine : nil
         )
     }
 

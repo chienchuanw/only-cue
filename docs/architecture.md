@@ -66,7 +66,7 @@ OnlyCue/
 │   └── WaveformCache.swift       # On-disk peak cache
 ├── UI/
 │   ├── DocumentView.swift        # Top-level NavigationSplitView
-│   ├── PreviewPane.swift         # Switches video vs waveform
+│   ├── PreviewPane.swift         # Video stacks waveform below; audio fills with waveform
 │   ├── WaveformView.swift        # Canvas waveform + markers + playhead
 │   ├── TransportBar.swift        # Transport controls
 │   ├── CueListPane.swift         # Cue table

@@ -18,7 +18,7 @@ final class PlayerEngineTests: XCTestCase {
     }
 
     func test_seek_updatesCurrentTime() async throws {
-        let url = try Self.makeSilentAsset(duration: 5)
+        let url = try SilentAudioFixture.makeWAV(duration: 5)
         defer { try? FileManager.default.removeItem(at: url) }
 
         let engine = PlayerEngine()
@@ -29,39 +29,12 @@ final class PlayerEngineTests: XCTestCase {
     }
 
     func test_load_populatesDuration() async throws {
-        let url = try Self.makeSilentAsset(duration: 3)
+        let url = try SilentAudioFixture.makeWAV(duration: 3)
         defer { try? FileManager.default.removeItem(at: url) }
 
         let engine = PlayerEngine()
         await engine.load(asset: AVURLAsset(url: url))
 
         XCTAssertEqual(engine.duration, 3.0, accuracy: 0.1)
-    }
-
-    /// Generates a silent mono PCM WAV file in the temp directory and returns its URL.
-    /// Used to give `PlayerEngine` a real asset to seek/load against without bundling
-    /// fixture media.
-    private static func makeSilentAsset(duration: TimeInterval) throws -> URL {
-        let url = FileManager.default.temporaryDirectory
-            .appendingPathComponent(UUID().uuidString)
-            .appendingPathExtension("wav")
-
-        let format = try XCTUnwrap(
-            AVAudioFormat(
-                commonFormat: .pcmFormatFloat32,
-                sampleRate: 44100,
-                channels: 1,
-                interleaved: false
-            )
-        )
-        let frameCount = AVAudioFrameCount(format.sampleRate * duration)
-        let buffer = try XCTUnwrap(
-            AVAudioPCMBuffer(pcmFormat: format, frameCapacity: frameCount)
-        )
-        buffer.frameLength = frameCount
-
-        let file = try AVAudioFile(forWriting: url, settings: format.settings)
-        try file.write(from: buffer)
-        return url
     }
 }

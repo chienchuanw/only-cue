@@ -1,4 +1,3 @@
-import AVFoundation
 import XCTest
 @testable import OnlyCue
 
@@ -21,7 +20,7 @@ final class MediaImporterTests: XCTestCase {
     }
 
     func test_importMedia_populatesModelAndLoadsAsset() async throws {
-        let url = try Self.makeSilentWAV(duration: 2)
+        let url = try SilentAudioFixture.makeWAV(duration: 2)
         defer { try? FileManager.default.removeItem(at: url) }
 
         let document = CueListDocument()
@@ -54,27 +53,5 @@ final class MediaImporterTests: XCTestCase {
             XCTAssertEqual(rejected, url.lastPathComponent)
         }
         XCTAssertNil(document.model.media)
-    }
-
-    private static func makeSilentWAV(duration: TimeInterval) throws -> URL {
-        let url = FileManager.default.temporaryDirectory
-            .appendingPathComponent(UUID().uuidString)
-            .appendingPathExtension("wav")
-        let format = try XCTUnwrap(
-            AVAudioFormat(
-                commonFormat: .pcmFormatFloat32,
-                sampleRate: 44100,
-                channels: 1,
-                interleaved: false
-            )
-        )
-        let frameCount = AVAudioFrameCount(format.sampleRate * duration)
-        let buffer = try XCTUnwrap(
-            AVAudioPCMBuffer(pcmFormat: format, frameCapacity: frameCount)
-        )
-        buffer.frameLength = frameCount
-        let file = try AVAudioFile(forWriting: url, settings: format.settings)
-        try file.write(from: buffer)
-        return url
     }
 }

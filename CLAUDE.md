@@ -41,6 +41,18 @@ Do **not** append `Co-Authored-By` trailers, signatures, or other attribution. T
 - Base branch: `main`. No `dev`/`develop` branch.
 - Do not push to `main` directly except for repo-metadata work that has no review value (rare).
 
+## Bootstrapping the Xcode project
+
+The project is generated from `project.yml` via [xcodegen](https://github.com/yonaskolb/XcodeGen). The `OnlyCue.xcodeproj/` directory is **not committed** — regenerate it whenever `project.yml`, `Info.plist`, or the source folder structure changes:
+
+```bash
+brew install xcodegen      # one-time
+xcodegen generate           # creates OnlyCue.xcodeproj
+open OnlyCue.xcodeproj
+```
+
+If you add a new source folder under `OnlyCue/`, add it as a `sources` path in `project.yml` (or rely on the existing folder rules) and re-run `xcodegen generate`.
+
 ## Where things live
 
 - `docs/` — vision, MVP scope, architecture, data model, build sequence, verification, roadmap, ADRs.

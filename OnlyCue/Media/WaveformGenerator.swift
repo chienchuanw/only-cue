@@ -1,7 +1,6 @@
 import AVFoundation
 
 enum WaveformError: Error, Equatable {
-    case noAudioTrack
     case readerFailed
 }
 
@@ -11,7 +10,7 @@ enum WaveformGenerator {
         guard resolution > 0 else { return [] }
 
         guard let track = try await asset.loadTracks(withMediaType: .audio).first else {
-            throw WaveformError.noAudioTrack
+            return [Float](repeating: 0, count: resolution)
         }
 
         let reader = try makeReader(asset: asset, track: track)

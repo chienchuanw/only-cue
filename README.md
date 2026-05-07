@@ -4,7 +4,17 @@ A native macOS application for lighting designers and show programmers, inspired
 
 ## Status
 
-Pre-implementation. This repository currently contains **planning documents only**. No Swift sources yet.
+Scaffolding landed (issue [#1](https://github.com/chienchuanw/only-cue/issues/1)). The repo now has the full planning docs, an xcodegen-generated Xcode project skeleton, GitHub issue & PR templates, and SwiftLint. Feature work tracks via the [issue board](https://github.com/chienchuanw/only-cue/issues) — start with epic `#3` (skeleton) once C1 ships.
+
+## Build
+
+```bash
+brew install xcodegen swiftlint   # one-time
+xcodegen generate                  # produces OnlyCue.xcodeproj from project.yml
+open OnlyCue.xcodeproj
+```
+
+`OnlyCue.xcodeproj/` is generated and gitignored — `project.yml` is the source of truth.
 
 ## Documents
 

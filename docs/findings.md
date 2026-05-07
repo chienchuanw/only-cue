@@ -4,6 +4,24 @@ Non-obvious things learned during development. Things you'd want to remember nex
 
 ---
 
+## macOS distribution: ad-hoc signed beats truly unsigned
+
+There are three states for a `.app` on first launch from a download:
+
+1. **Truly unsigned** (no `codesign` ever run): Gatekeeper shows "OnlyCue is damaged and can't be opened. You should move it to the Trash." This is misleading — the binary isn't damaged, it just has no signature attribute. **Right-click → Open does NOT bypass it.** The user has to run `xattr -dr com.apple.quarantine /Applications/OnlyCue.app` from Terminal, which is hostile UX.
+2. **Ad-hoc signed** (`codesign --sign - "OnlyCue.app"`): Gatekeeper shows the standard "developer cannot be verified" prompt. Right-click → Open clears it, and macOS remembers the override for future launches.
+3. **Developer ID + notarized + stapled**: silent first launch. Requires Apple Developer Program ($99/yr).
+
+For a free-tier developer, the right path is **always** option 2, never option 1. In a release script, `xcodebuild archive CODE_SIGN_STYLE=Manual CODE_SIGN_IDENTITY="-"` produces an ad-hoc signed product directly. With ad-hoc, you don't need `xcodebuild -exportArchive` (which requires a real `method` like `developer-id`) — just `cp -R "$ARCHIVE_PATH/Products/Applications/OnlyCue.app" "$EXPORT_DIR/"`.
+
+For DMG: `create-dmg` produces an unsigned DMG. In ad-hoc mode that's fine (Gatekeeper prompts on the .app, not the container). In Developer ID mode, sign + notarize + staple the DMG too — both the .app and the DMG get independent tickets so first-mount works offline.
+
+Probe for missing notary credentials: `security find-generic-password -s "com.apple.gke.notary.tool" -a "$NOTARY_PROFILE"` is deterministic and offline. Don't use `xcrun notarytool history` — that does a network round-trip per build and can flake.
+
+Pipe-failure trap: `xcodebuild ... | xcbeautify ...` with `set -o pipefail` lets xcbeautify's exit status mask xcodebuild's. Either drop the pipe or guard with `[[ "${PIPESTATUS[0]}" -eq 0 ]] || fail "..."`. **Never** wrap with `|| true` — that's how a broken signing flow ships green.
+
+---
+
 ## `.task(id:)` re-fire trap when the task itself mutates the key
 
 `.task(id: someValue) { ... }` re-runs whenever `someValue` changes — including changes the task body itself writes back. Concretely we hit this on the relink path:

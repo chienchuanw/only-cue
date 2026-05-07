@@ -4,6 +4,37 @@ Append-only session log. Newer entries on top.
 
 ---
 
+## 2026-05-07 / 08 — C3 release pipeline session (PR #25, issue #13)
+
+**Shipped:** issue #13 (C3 release pipeline). PR #25 merged into `dev` (rebase, head `6128837`). Bag of scripts + docs that turn `dev` into a drag-installable DMG.
+
+**What landed:**
+- `scripts/build-release.sh` — archive → (signed mode) export Developer ID → notarize → staple → verify, OR (unsigned mode) `cp -R` the ad-hoc-signed `.app` straight out of the archive. `RELEASE_MODE` env var (`unsigned` default, `signed` opt-in) gates which branch runs. Pre-flight checks for `xcodebuild` / `xcodegen` / `xcrun`; signed mode also probes `security find-generic-password -s "com.apple.gke.notary.tool" -a "$NOTARY_PROFILE"` (deterministic, offline) for the notary keychain profile and `security find-identity -v -p codesigning login.keychain` for the Developer ID identity. `[[ "${PIPESTATUS[0]}" -eq 0 ]]` guard around `xcodebuild | xcbeautify` so a failed archive can't be masked by xcbeautify's exit status.
+- `scripts/make-dmg.sh` — `create-dmg` wrapper with sensible window/icon geometry (540×380, 96pt icons, 140/400 layout). In signed mode, also `codesign`s the DMG, submits it to notarytool as a separate submission, staples the ticket, and runs `spctl --assess --type open --context context:primary-signature`. Apple's recommended distribution path: both the .app and the DMG carry independent stapled tickets so first-mount works offline.
+- `scripts/export-options.plist` — referenced only by signed mode's `xcodebuild -exportArchive` (`method: developer-id`, `signingStyle: automatic`).
+- `docs/release.md` — leads with the free-tier path (`brew install xcodegen create-dmg xcbeautify`, then `bash scripts/build-release.sh && bash scripts/make-dmg.sh`); signed/notarized procedure stays as a "when we upgrade" section. Includes a copy-paste install blurb for end users walking through the right-click → Open Gatekeeper bypass, troubleshooting (Account Holder role for cert generation, "is damaged" failure mode, notary `Invalid` log fetch), and an ADR-007 sandbox note.
+
+**Iteration via simplify pass — 4 fixes from 1 reviewer agent (commit `ba742d3`):**
+1. `notarytool history` as a profile probe → network round-trip per build that flakes on transient 5xx. Replaced with the keychain probe above.
+2. `xcodebuild ... | xcbeautify ... || true` masked archive failures because `pipefail` made xcbeautify's exit status the pipeline's. Switched to `PIPESTATUS[0]` guard.
+3. `spctl --assess` on an unsigned DMG was a meaningless no-op logged as "non-fatal" — misleading. Fixed by signing, notarizing, and stapling the DMG itself in signed mode.
+4. The "Publishing the release" section in `docs/release.md` had migrated into E10 territory (`gh release create`, README updates). Trimmed to a one-line pointer at #12 to keep C3 focused.
+
+**Iteration mid-session — free-tier pivot (commit `6128837`):**
+- User flagged that on the free Apple Developer tier, you can't generate a Developer ID Application certificate (those require the $99/yr paid program). Rather than block MVP shipping, refactored both scripts to accept `RELEASE_MODE=unsigned|signed` (default unsigned). The .app is ad-hoc signed (`CODE_SIGN_IDENTITY=-`) — critical because *truly* unsigned binaries trigger Gatekeeper's misleading "OnlyCue is damaged and can't be opened" error that even right-click → Open won't bypass. Ad-hoc signing produces the standard "developer cannot be verified" prompt, which right-click → Open or `xattr -dr com.apple.quarantine /Applications/OnlyCue.app` clears.
+- `docs/release.md` rewritten to lead with the free-tier path, with a copy-paste install blurb users can paste into release notes.
+
+**Iteration during user smoke-test:**
+- `xcode-select` pointing at `/Library/Developer/CommandLineTools` instead of the full Xcode.app caused `xcodebuild` to error. Fix: `sudo xcode-select -s /Applications/Xcode.app/Contents/Developer`. Worth adding to `docs/release.md` prerequisites in a follow-up.
+
+**Verification (manual, by user):**
+- `bash scripts/build-release.sh` produces `build/export/OnlyCue.app`; `codesign --verify --deep --strict --verbose=2` passes.
+- `bash scripts/make-dmg.sh` produces `build/OnlyCue-0.1.0.dmg`; mounts cleanly.
+- DMG contents: app icon visible, drag-to-Applications layout works.
+- First launch from `/Applications` shows Gatekeeper "developer cannot be verified" prompt; right-click → Open clears it; the app launches with the first-launch welcome sheet.
+
+---
+
 ## 2026-05-07 — E9 polish session (PR #24, issue #11)
 
 **Shipped:** issue #11 (E9 polish, all 7 leaves). PR #24 merged into `dev` (rebase, head `e60ddd6`). With this, every MVP **feature** epic is done; the remaining MVP work is the C3 release pipeline (#13) and E10 distribution (#12).

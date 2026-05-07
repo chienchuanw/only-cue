@@ -2,6 +2,7 @@ import AVFoundation
 import XCTest
 @testable import OnlyCue
 
+@MainActor
 final class PlayerEngineTests: XCTestCase {
 
     func test_play_setsRateToOne() {

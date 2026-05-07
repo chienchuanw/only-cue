@@ -9,8 +9,8 @@ Working source of truth for what's left. Sourced from the [GitHub issue board](h
 | [#1](https://github.com/chienchuanw/only-cue/issues/1) | C1 bootstrap | ✅ shipped (PR #14) |
 | [#2](https://github.com/chienchuanw/only-cue/issues/2) | C2 CI — GitHub Actions, build + XCTest + XCUITest | ✅ shipped (PR #15) |
 | [#3](https://github.com/chienchuanw/only-cue/issues/3) | E1 skeleton — `DocumentGroup`, `ProjectModel`, `.cuelist` UTType | ✅ shipped (PR #16) |
-| [#4](https://github.com/chienchuanw/only-cue/issues/4) | E2 player core — `AVPlayer` wrapper, transport bar, time publisher | ⏭️ next |
-| [#5](https://github.com/chienchuanw/only-cue/issues/5) | E3 media import | pending |
+| [#4](https://github.com/chienchuanw/only-cue/issues/4) | E2 player core — `AVPlayer` wrapper, transport bar, time publisher | ✅ shipped (PR #17) |
+| [#5](https://github.com/chienchuanw/only-cue/issues/5) | E3 media import — file picker, drag-drop, security-scoped bookmarks | ⏭️ next |
 | [#6](https://github.com/chienchuanw/only-cue/issues/6) | E4 video preview | pending |
 | [#7](https://github.com/chienchuanw/only-cue/issues/7) | E5 waveform | pending |
 | [#8](https://github.com/chienchuanw/only-cue/issues/8) | E6 cue list pane | pending |
@@ -24,9 +24,10 @@ Working source of truth for what's left. Sourced from the [GitHub issue board](h
 
 1. ~~**#2 (C2 CI)** — green-build gate.~~ Done.
 2. ~~**#3 (E1 skeleton)** — `ProjectModel`/`CueListDocument`/`DocumentGroup`.~~ Done.
-3. **#4 (E2 player core)** — `PlayerEngine` wrapping `AVPlayer`, `TransportBar` SwiftUI view, `currentTime` publisher, `Time+Format.swift` formatter + tests. First media-handling code.
-4. **#5..#11 (E3..E9)** — feature epics in build-sequence order. Leaves expanded JIT.
-5. **#13 (C3) → #12 (E10)** — release pipeline, then ship.
+3. ~~**#4 (E2 player core)** — `PlayerEngine`, `TransportBar`, `TimeFormat.hms`.~~ Done.
+4. **#5 (E3 media import)** — `fileImporter`, drag-drop, `URL.bookmarkData(.withSecurityScope)`, persist `MediaReference` in `ProjectModel`, wire through `PlayerEngine.load(asset:)`. First time we touch user files.
+5. **#6..#11 (E4..E9)** — feature epics in build-sequence order. Leaves expanded JIT.
+6. **#13 (C3) → #12 (E10)** — release pipeline, then ship.
 
 ## Phase 2 / Phase 3 milestones
 

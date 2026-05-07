@@ -4,6 +4,26 @@ Append-only session log. Newer entries on top.
 
 ---
 
+## 2026-05-07 — E2 player core session (PR #17, issue #4)
+
+**Shipped:** issue #4 (E2 player core). PR #17 merged into `dev` (rebase, head `2240f5c`). First media-handling code.
+
+**What landed:**
+- `OnlyCue/Utilities/Time+Format.swift` — `TimeFormat.hms(_:)` returns `HH:MM:SS.mmm`, clamps negatives to zero, half-away-from-zero millisecond rounding. 7 unit tests covering zero, sub-second, minute/hour rollover, complex case, negatives, and sub-ms rounding.
+- `OnlyCue/Media/PlayerEngine.swift` — `@Observable final class` wrapping `AVPlayer`. Exposes `currentTime`, `rate`, `duration` as observable state via the `Observation` framework; player and `timeObserver` use `@ObservationIgnored`. API: `play()`, `pause()`, `seek(to:)`, `load(asset:)`. Periodic time observer fires every 0.1s on the main queue. 4 unit tests using a programmatically-generated silent WAV (`AVAudioFile`) — no fixture media in the repo.
+- `OnlyCue/UI/TransportBar.swift` — minimal SwiftUI transport: play/pause `Image` button toggling on `engine.rate > 0`, monospaced time readout via `TimeFormat.hms(engine.currentTime)`. `accessibilityIdentifier`s on both elements.
+- `OnlyCue/UI/DocumentView.swift` — wired `@State private var engine = PlayerEngine()` per document and embedded `TransportBar(engine:)`.
+
+**Review cycle (1 commit beyond initial 4):**
+- Cycle 1: 3 optional suggestions on PR #17. Applied #3 (`load(asset:)` now resets `rate = 0` immediately, closing a ~100ms stale-rate window between `replaceCurrentItem(with:)` and the next periodic observer tick — commit `2240f5c`). Deferred #1 (`@MainActor`) and #2 (`rate != 0` vs `> 0`) per YAGNI: the reviewer's own framing was conditional ("once we cross threading boundaries", "if/when we support reverse playback"). Posted gh-comment explaining the deferral with reasoning.
+
+**Key learnings:**
+- `@Observable` + `@ObservationIgnored` is the right shape for engine-style classes that own non-observable resources (an `AVPlayer`, a periodic-time-observer token).
+- Real assets (not mocks) for `seek`/`load` tests via `AVAudioFile.write(from:)` to a temp WAV. Keeps tests fast, hermetic, and realistic without committing binary fixtures.
+- Establish convention for review feedback: apply unconditional correctness fixes; defer suggestions whose own framing is conditional on future events.
+
+---
+
 ## 2026-05-07 — E1 skeleton session (PR #16, issue #3)
 
 **Shipped:** issue #3 (E1 skeleton). PR #16 merged into `dev`. First feature epic — first real Swift code.

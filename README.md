@@ -4,7 +4,7 @@ A native macOS application for lighting designers and show programmers, inspired
 
 ## Status
 
-C1 bootstrap, C2 CI, and E1 skeleton have shipped ([#14](https://github.com/chienchuanw/only-cue/pull/14), [#15](https://github.com/chienchuanw/only-cue/pull/15), [#16](https://github.com/chienchuanw/only-cue/pull/16)). Document-based app foundation is in place: `ProjectModel`/`Cue`/`MediaReference` Codable types, `CueListDocument` (`ReferenceFileDocument`), `.cuelist` UTType registration, `DocumentGroup` wiring, and the first real round-trip + UI launch tests. Next up: [#4](https://github.com/chienchuanw/only-cue/issues/4) (E2 player core — `AVPlayer` wrapper, transport bar, time publisher). Track everything on the [issue board](https://github.com/chienchuanw/only-cue/issues).
+C1 bootstrap, C2 CI, E1 skeleton, and E2 player core have shipped ([#14](https://github.com/chienchuanw/only-cue/pull/14), [#15](https://github.com/chienchuanw/only-cue/pull/15), [#16](https://github.com/chienchuanw/only-cue/pull/16), [#17](https://github.com/chienchuanw/only-cue/pull/17)). Document-based app foundation plus first media playback: `ProjectModel`/`Cue`/`MediaReference` Codable types, `CueListDocument` (`ReferenceFileDocument`), `.cuelist` UTType, `DocumentGroup` wiring, `PlayerEngine` wrapping `AVPlayer` with `@Observable` state, `TransportBar` SwiftUI view, and `TimeFormat.hms` HH:MM:SS.mmm formatter. Next up: [#5](https://github.com/chienchuanw/only-cue/issues/5) (E3 media import — file picker, drag-drop, security-scoped bookmarks). Track everything on the [issue board](https://github.com/chienchuanw/only-cue/issues).
 
 ## Build
 

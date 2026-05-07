@@ -16,6 +16,7 @@ struct DocumentView: View {
                 CueListPane(document: document, engine: engine)
                     .inspectorColumnWidth(min: 240, ideal: 300, max: 400)
             }
+            .navigationSubtitle(document.model.media?.displayName ?? "")
     }
 
     private var mainPane: some View {
@@ -46,7 +47,9 @@ struct DocumentView: View {
                     .keyboardShortcut("m", modifiers: [])
             }
 
-            Text("Drop an audio or video file anywhere in this window to import.")
+            transportShortcuts
+
+            Text("Drop a file here or press ⌘O to import.")
                 .multilineTextAlignment(.center)
                 .foregroundStyle(.tertiary)
                 .padding(.top, 4)
@@ -127,6 +130,28 @@ struct DocumentView: View {
                 importError = ImportAlert(message: error.localizedDescription)
             }
         }
+    }
+
+    private var transportShortcuts: some View {
+        ZStack {
+            Button("Play/Pause") { togglePlayPause() }
+                .keyboardShortcut(.space, modifiers: [])
+            Button("Back 1s") { jump(by: -1) }
+                .keyboardShortcut(.leftArrow, modifiers: [])
+            Button("Forward 1s") { jump(by: 1) }
+                .keyboardShortcut(.rightArrow, modifiers: [])
+        }
+        .frame(width: 0, height: 0)
+        .opacity(0)
+        .accessibilityHidden(true)
+    }
+
+    private func togglePlayPause() {
+        if engine.rate > 0 { engine.pause() } else { engine.play() }
+    }
+
+    private func jump(by seconds: TimeInterval) {
+        Task { await engine.seek(to: max(0, engine.currentTime + seconds)) }
     }
 
     private func addCueAtPlayhead() {

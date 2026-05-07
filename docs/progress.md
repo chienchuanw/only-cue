@@ -4,6 +4,26 @@ Append-only session log. Newer entries on top.
 
 ---
 
+## 2026-05-07 — E6 cue list pane session (PR #21, issue #8)
+
+**Shipped:** issue #8 (E6 cue list pane). PR #21 merged into `dev` (rebase, head `0009f35`). The cue list — the thing this app exists to plan — finally has a UI.
+
+**What landed:**
+- `OnlyCue/UI/CueListPane.swift` — `if cues.isEmpty { emptyState } else { List(selection: $selection) }`. Empty state has SF Symbol + "No cues yet" + "Press M to add one at the playhead". Selection is `Cue.ID?`; `.onChange(of: selection)` looks up the cue and calls `engine.seek(to: cue.time)` in a `Task`.
+- `OnlyCue/UI/CueRowView.swift` — `HStack` with zero-padded `#`, `Circle` color swatch, name (or "Untitled"), `TimeFormat.hms(cue.time)` in monospaced caption.
+- `OnlyCue/Utilities/Color+Hex.swift` — `Color.init?(hex: String)` parsing `#RRGGBB`. Defensive `allSatisfy(\.isHexDigit)` guard since `Scanner.scanHexInt64` accepts some non-hex strings.
+- `OnlyCue/UI/DocumentView.swift` — `.inspector(isPresented: .constant(true))` hosts `CueListPane` with `inspectorColumnWidth(min: 240, ideal: 300, max: 400)`. Locked-open is correct for E6 (Gherkin demands the empty-state hint be discoverable); collapsible toggle is E9 polish.
+- `OnlyCue/Commands/CueCommands.swift` — minimal `@MainActor enum CueCommands { static func replaceAll(_:in:) }`. CLAUDE.md mandates "UI layers go through `Commands/CueCommands.swift`" — so even the DEBUG seed button must route through it. E7 will extend with `add(at:)`, `delete`, `move`, and `UndoManager` wrapping.
+- `OnlyCue/UI/DocumentView.swift` — `#if DEBUG` "+ Sample cues" button (3 cues at 4.25s / 12.0s / 18.5s). Smoke-tests the populated-list and click-to-seek Gherkin scenarios before E7 ships the M-key path. Hidden in Release; trivial to delete when E7 lands.
+- `OnlyCueTests/ColorHexTests.swift` — valid hex → expected RGB; lowercase OK; missing `#` OK; wrong length → nil; non-hex chars → nil.
+
+**Manual verification (per issue #8 Gherkin):**
+- New document → cue list shows empty state with the M-key hint.
+- Click "+ Sample cues" (DEBUG) → 3 rows render in order with correct colors and HH:MM:SS.mmm times.
+- Click row 2 → playhead seeks to ~12.0s.
+
+---
+
 ## 2026-05-07 — E5 waveform session (PR #20, issue #7)
 
 **Shipped:** issue #7 (E5 waveform). PR #20 merged into `dev` (rebase, head `d962d96`). Audio documents now have a real waveform.

@@ -37,16 +37,19 @@ struct PreviewPane: View {
     private var videoContent: some View {
         if let asset = engine.player.currentItem?.asset as? AVURLAsset {
             VStack(spacing: 0) {
-                AVPlayerLayerView(player: engine.player)
-                    .accessibilityIdentifier("videoPreview")
+                videoPlayer
                 waveform(for: asset)
                     .frame(height: 100)
                     .accessibilityIdentifier("videoWaveform")
             }
         } else {
-            AVPlayerLayerView(player: engine.player)
-                .accessibilityIdentifier("videoPreview")
+            videoPlayer
         }
+    }
+
+    private var videoPlayer: some View {
+        AVPlayerLayerView(player: engine.player)
+            .accessibilityIdentifier("videoPreview")
     }
 
     @ViewBuilder

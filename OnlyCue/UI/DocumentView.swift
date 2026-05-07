@@ -103,6 +103,7 @@ struct DocumentView: View {
         reloadedFor = bookmark
         do {
             try await MediaImporter.reload(into: document, engine: engine)
+            reloadedFor = document.model.media?.bookmarkData
         } catch {
             pendingAlert = .relink(document.model.media?.displayName ?? "The media file")
         }

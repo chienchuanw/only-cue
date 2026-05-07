@@ -68,20 +68,9 @@ The build script reads `NOTARY_PROFILE` (default `OnlyCueNotary`) from this keyc
    - Eject the DMG.
    - Open `/Applications/OnlyCue.app`. **Expected:** launches without a Gatekeeper warning. If a "from the Internet" prompt appears, that's the standard quarantine prompt for first launch — it should *not* be the "cannot be opened because Apple cannot check it for malicious software" wall.
 
-## Publishing the release (E10 territory, kept here for proximity)
+## Publishing the release
 
-After the smoke test:
-
-```bash
-git tag -a v0.1.0 -m "OnlyCue 0.1.0"
-git push origin v0.1.0
-gh release create v0.1.0 \
-    --title "OnlyCue 0.1.0" \
-    --notes-file docs/release-notes/0.1.0.md \
-    "build/OnlyCue-0.1.0.dmg"
-```
-
-Update README install instructions to point at the new release.
+Tagging and `gh release create` belong to E10 (#12), which consumes the DMG produced by the workflow above. Keeping the boundary clean lets C3 land independently of distribution decisions.
 
 ## Troubleshooting
 

@@ -46,6 +46,10 @@ final class PlayerEngine {
         rate = player.rate
     }
 
+    func toggle() {
+        if rate > 0 { pause() } else { play() }
+    }
+
     func seek(to seconds: TimeInterval) async {
         let target = CMTime(seconds: seconds, preferredTimescale: 600)
         await player.seek(to: target, toleranceBefore: .zero, toleranceAfter: .zero)

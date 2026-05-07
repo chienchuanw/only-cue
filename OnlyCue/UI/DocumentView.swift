@@ -6,9 +6,10 @@ struct DocumentView: View {
     @ObservedObject var document: CueListDocument
     @State private var engine = PlayerEngine()
     @State private var showImporter = false
-    @State private var importError: ImportAlert?
-    @State private var relinkPrompt: RelinkPrompt?
-    @State private var showFirstLaunch: Bool = !UserDefaults.standard.bool(forKey: FirstLaunchFlag.key)
+    @State private var pendingAlert: DocumentAlert?
+    @State private var reloadedFor: Data?
+    @State private var seekTask: Task<Void, Never>?
+    @AppStorage(FirstLaunchFlag.key) private var didShowFirstLaunch = false
     @Environment(\.undoManager) private var undoManager
 
     var body: some View {
@@ -18,11 +19,11 @@ struct DocumentView: View {
                     .inspectorColumnWidth(min: 240, ideal: 300, max: 400)
             }
             .navigationSubtitle(document.model.media?.displayName ?? "")
-            .sheet(isPresented: $showFirstLaunch) {
-                FirstLaunchSheet {
-                    UserDefaults.standard.set(true, forKey: FirstLaunchFlag.key)
-                    showFirstLaunch = false
-                }
+            .sheet(isPresented: Binding(
+                get: { !didShowFirstLaunch },
+                set: { if !$0 { didShowFirstLaunch = true } }
+            )) {
+                FirstLaunchSheet { didShowFirstLaunch = true }
             }
     }
 
@@ -74,32 +75,36 @@ struct DocumentView: View {
             importURL(url)
             return true
         }
-        .alert(item: $importError) { alert in
-            Alert(
+        .alert(item: $pendingAlert, content: alertContent)
+        .task(id: document.model.media?.bookmarkData) { await reloadIfNeeded() }
+    }
+
+    private func alertContent(_ alert: DocumentAlert) -> Alert {
+        switch alert {
+        case .unsupported(let message):
+            return Alert(
                 title: Text("Unsupported file"),
-                message: Text(alert.message),
+                message: Text(message),
                 dismissButton: .default(Text("OK"))
             )
-        }
-        .alert(item: $relinkPrompt) { prompt in
-            Alert(
+        case .relink(let displayName):
+            return Alert(
                 title: Text("Missing media"),
-                message: Text("\(prompt.displayName) couldn't be opened from its saved location."),
+                message: Text("\(displayName) couldn't be opened from its saved location."),
                 primaryButton: .default(Text("Relink media…")) { showImporter = true },
                 secondaryButton: .cancel(Text("Continue without media"))
             )
         }
-        .task(id: document.model.media?.bookmarkData) { await reloadIfNeeded() }
     }
 
     private func reloadIfNeeded() async {
-        guard document.model.media != nil, engine.player.currentItem == nil else { return }
+        guard let bookmark = document.model.media?.bookmarkData else { return }
+        guard reloadedFor != bookmark else { return }
+        reloadedFor = bookmark
         do {
             try await MediaImporter.reload(into: document, engine: engine)
         } catch {
-            relinkPrompt = RelinkPrompt(
-                displayName: document.model.media?.displayName ?? "The media file"
-            )
+            pendingAlert = .relink(document.model.media?.displayName ?? "The media file")
         }
     }
 
@@ -121,7 +126,7 @@ struct DocumentView: View {
             guard let url = urls.first else { return }
             importURL(url)
         case .failure(let error):
-            importError = ImportAlert(message: error.localizedDescription)
+            pendingAlert = .unsupported(error.localizedDescription)
         }
     }
 
@@ -130,18 +135,16 @@ struct DocumentView: View {
             do {
                 try await MediaImporter.importMedia(from: url, into: document, engine: engine)
             } catch let MediaImportError.unsupportedType(filename) {
-                importError = ImportAlert(
-                    message: "\(filename) isn't a supported audio or video file."
-                )
+                pendingAlert = .unsupported("\(filename) isn't a supported audio or video file.")
             } catch {
-                importError = ImportAlert(message: error.localizedDescription)
+                pendingAlert = .unsupported(error.localizedDescription)
             }
         }
     }
 
     private var transportShortcuts: some View {
         ZStack {
-            Button("Play/Pause") { togglePlayPause() }
+            Button("Play/Pause") { engine.toggle() }
                 .keyboardShortcut(.space, modifiers: [])
             Button("Back 1s") { jump(by: -1) }
                 .keyboardShortcut(.leftArrow, modifiers: [])
@@ -153,12 +156,10 @@ struct DocumentView: View {
         .accessibilityHidden(true)
     }
 
-    private func togglePlayPause() {
-        if engine.rate > 0 { engine.pause() } else { engine.play() }
-    }
-
     private func jump(by seconds: TimeInterval) {
-        Task { await engine.seek(to: max(0, engine.currentTime + seconds)) }
+        let target = max(0, engine.currentTime + seconds)
+        seekTask?.cancel()
+        seekTask = Task { await engine.seek(to: target) }
     }
 
     private func addCueAtPlayhead() {
@@ -170,12 +171,14 @@ struct DocumentView: View {
     }
 }
 
-private struct ImportAlert: Identifiable {
-    let id = UUID()
-    let message: String
-}
+private enum DocumentAlert: Identifiable {
+    case unsupported(String)
+    case relink(String)
 
-private struct RelinkPrompt: Identifiable {
-    let id = UUID()
-    let displayName: String
+    var id: String {
+        switch self {
+        case .unsupported(let message): "unsupported:\(message)"
+        case .relink(let name): "relink:\(name)"
+        }
+    }
 }

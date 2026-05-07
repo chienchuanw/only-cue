@@ -7,6 +7,7 @@ struct DocumentView: View {
     @State private var engine = PlayerEngine()
     @State private var showImporter = false
     @State private var importError: ImportAlert?
+    @State private var relinkPrompt: RelinkPrompt?
     @Environment(\.undoManager) private var undoManager
 
     var body: some View {
@@ -70,6 +71,26 @@ struct DocumentView: View {
                 dismissButton: .default(Text("OK"))
             )
         }
+        .alert(item: $relinkPrompt) { prompt in
+            Alert(
+                title: Text("Missing media"),
+                message: Text("\(prompt.displayName) couldn't be opened from its saved location."),
+                primaryButton: .default(Text("Relink media…")) { showImporter = true },
+                secondaryButton: .cancel(Text("Continue without media"))
+            )
+        }
+        .task(id: document.model.media?.bookmarkData) { await reloadIfNeeded() }
+    }
+
+    private func reloadIfNeeded() async {
+        guard document.model.media != nil, engine.player.currentItem == nil else { return }
+        do {
+            try await MediaImporter.reload(into: document, engine: engine)
+        } catch {
+            relinkPrompt = RelinkPrompt(
+                displayName: document.model.media?.displayName ?? "The media file"
+            )
+        }
     }
 
     @ViewBuilder
@@ -120,4 +141,9 @@ struct DocumentView: View {
 private struct ImportAlert: Identifiable {
     let id = UUID()
     let message: String
+}
+
+private struct RelinkPrompt: Identifiable {
+    let id = UUID()
+    let displayName: String
 }

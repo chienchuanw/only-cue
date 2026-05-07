@@ -3,8 +3,10 @@ import SwiftUI
 
 struct PreviewPane: View {
 
+    @ObservedObject var document: CueListDocument
     let engine: PlayerEngine
-    let media: MediaReference?
+
+    @Environment(\.undoManager) private var undoManager
 
     var body: some View {
         ZStack {
@@ -18,7 +20,7 @@ struct PreviewPane: View {
 
     @ViewBuilder
     private var content: some View {
-        if let media {
+        if let media = document.model.media {
             switch media.kind {
             case .video:
                 AVPlayerLayerView(player: engine.player)
@@ -35,8 +37,20 @@ struct PreviewPane: View {
     @ViewBuilder
     private var audioContent: some View {
         if let asset = engine.player.currentItem?.asset as? AVURLAsset {
-            WaveformContainer(asset: asset)
-                .accessibilityIdentifier("audioWaveform")
+            WaveformContainer(
+                asset: asset,
+                cues: document.model.cues,
+                onSeek: { time in Task { await engine.seek(to: time) } },
+                onRetime: { cueId, newTime in
+                    CueCommands.retime(
+                        cueId: cueId,
+                        to: newTime,
+                        document: document,
+                        undoManager: undoManager
+                    )
+                }
+            )
+            .accessibilityIdentifier("audioWaveform")
         } else {
             placeholder("Audio loaded — reopen with media to see waveform")
                 .accessibilityIdentifier("audioPlaceholder")

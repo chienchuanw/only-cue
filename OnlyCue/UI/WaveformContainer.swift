@@ -5,15 +5,30 @@ struct WaveformContainer: View {
 
     let asset: AVURLAsset
     var resolution: Int = 512
+    var cues: [Cue] = []
+    var onSeek: (TimeInterval) -> Void = { _ in }
+    var onRetime: (Cue.ID, TimeInterval) -> Void = { _, _ in }
 
     @State private var peaks: [Float]?
     @State private var failed = false
+    @State private var loadedDuration: TimeInterval = 0
 
     var body: some View {
         Group {
             if let peaks {
                 WaveformView(peaks: peaks)
                     .padding(.horizontal, 8)
+                    .overlay(alignment: .topLeading) {
+                        if loadedDuration > 0 {
+                            CueMarkersOverlay(
+                                cues: cues,
+                                duration: loadedDuration,
+                                onSeek: onSeek,
+                                onRetime: onRetime
+                            )
+                            .padding(.horizontal, 8)
+                        }
+                    }
             } else if failed {
                 Text("Could not generate waveform")
                     .font(.callout)
@@ -40,6 +55,9 @@ struct WaveformContainer: View {
             }.value
 
             if Task.isCancelled { return }
+
+            let cmDuration = try await asset.load(.duration)
+            loadedDuration = CMTimeGetSeconds(cmDuration)
 
             if let hash, let cached = cache.read(assetHash: hash, resolution: target) {
                 peaks = cached

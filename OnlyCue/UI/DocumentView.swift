@@ -26,7 +26,7 @@ struct DocumentView: View {
             mediaSummary
                 .accessibilityIdentifier("mediaSummary")
 
-            PreviewPane(engine: engine, media: document.model.media)
+            PreviewPane(document: document, engine: engine)
 
             Text("\(document.model.cues.count) cue\(document.model.cues.count == 1 ? "" : "s")")
                 .foregroundStyle(.secondary)

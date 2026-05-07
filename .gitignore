@@ -25,7 +25,6 @@ OnlyCue.xcodeproj/
 Packages/
 Package.pins
 Package.resolved
-*.xcodeproj/project.xcworkspace/swiftpm/
 
 # Bundler / fastlane
 fastlane/report.xml

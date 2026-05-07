@@ -32,7 +32,6 @@ struct CueMarkersOverlay: View {
                 }
             }
         }
-        .allowsHitTesting(true)
         .accessibilityIdentifier("cueMarkersOverlay")
     }
 }
@@ -50,13 +49,13 @@ struct CueMarkerView: View {
     private static let capHeight: CGFloat = 8
     private static let capWidth: CGFloat = 10
     private static let hitWidth: CGFloat = 14
+    private static let dragThreshold: CGFloat = 4
 
     var body: some View {
         ZStack(alignment: .top) {
             Capsule()
                 .fill(.clear)
                 .frame(width: Self.hitWidth)
-                .contentShape(Rectangle())
             Rectangle()
                 .fill(markerColor)
                 .frame(width: Self.lineWidth)
@@ -89,6 +88,4 @@ struct CueMarkerView: View {
                 dragOffset = 0
             }
     }
-
-    private static let dragThreshold: CGFloat = 4
 }

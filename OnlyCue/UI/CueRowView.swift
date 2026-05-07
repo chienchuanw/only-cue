@@ -9,6 +9,7 @@ struct CueRowView: View {
 
     @State private var isEditingName = false
     @State private var draftName = ""
+    @FocusState private var nameFieldFocused: Bool
 
     var body: some View {
         HStack(spacing: 8) {
@@ -39,8 +40,10 @@ struct CueRowView: View {
         if isEditingName {
             TextField("Cue name", text: $draftName)
                 .textFieldStyle(.plain)
+                .focused($nameFieldFocused)
                 .onSubmit { commitRename() }
                 .onExitCommand { cancelRename() }
+                .onAppear { nameFieldFocused = true }
         } else {
             Text(cue.name.isEmpty ? "Untitled" : cue.name)
                 .lineLimit(1)

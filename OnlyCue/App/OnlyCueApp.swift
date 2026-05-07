@@ -6,5 +6,6 @@ struct OnlyCueApp: App {
         DocumentGroup(newDocument: CueListDocument.init) { file in
             DocumentView(document: file.document)
         }
+        .commands { AppCommands() }
     }
 }

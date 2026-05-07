@@ -1,0 +1,71 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+      - dev
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build-test:
+    name: Build & test (macOS)
+    runs-on: macos-latest
+    timeout-minutes: 25
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Select latest stable Xcode
+        uses: maxim-lobanov/setup-xcode@v1
+        with:
+          xcode-version: latest-stable
+
+      - name: Install tooling
+        run: brew install xcodegen swiftlint xcbeautify
+
+      - name: SwiftLint (strict)
+        run: swiftlint lint --strict --reporter github-actions-logging
+
+      - name: Generate Xcode project
+        run: xcodegen generate
+
+      - name: Cache DerivedData and SPM
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/Library/Developer/Xcode/DerivedData
+            ~/Library/Caches/org.swift.swiftpm
+          key: ${{ runner.os }}-xcode-${{ hashFiles('project.yml', '.swiftlint.yml', 'OnlyCue/**/*.swift', 'OnlyCueTests/**/*.swift', 'OnlyCueUITests/**/*.swift') }}
+          restore-keys: |
+            ${{ runner.os }}-xcode-
+
+      - name: Build
+        run: |
+          set -o pipefail
+          xcodebuild build \
+            -project OnlyCue.xcodeproj \
+            -scheme OnlyCue \
+            -configuration Debug \
+            -destination 'platform=macOS' \
+            CODE_SIGN_IDENTITY="-" \
+            CODE_SIGNING_REQUIRED=NO \
+            CODE_SIGNING_ALLOWED=NO \
+            | xcbeautify --renderer github-actions
+
+      - name: Test
+        run: |
+          set -o pipefail
+          xcodebuild test \
+            -project OnlyCue.xcodeproj \
+            -scheme OnlyCue \
+            -destination 'platform=macOS' \
+            CODE_SIGN_IDENTITY="-" \
+            CODE_SIGNING_REQUIRED=NO \
+            CODE_SIGNING_ALLOWED=NO \
+            | xcbeautify --renderer github-actions

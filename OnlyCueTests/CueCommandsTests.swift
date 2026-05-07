@@ -99,6 +99,8 @@ final class CueCommandsTests: XCTestCase {
     }
 
     private func makeUndoManager() -> UndoManager {
-        UndoManager()
+        let undo = UndoManager()
+        undo.groupsByEvent = false
+        return undo
     }
 }

@@ -23,8 +23,7 @@ struct PreviewPane: View {
         if let media = document.model.media {
             switch media.kind {
             case .video:
-                AVPlayerLayerView(player: engine.player)
-                    .accessibilityIdentifier("videoPreview")
+                videoContent
             case .audio:
                 audioContent
             }
@@ -35,26 +34,46 @@ struct PreviewPane: View {
     }
 
     @ViewBuilder
+    private var videoContent: some View {
+        if let asset = engine.player.currentItem?.asset as? AVURLAsset {
+            VStack(spacing: 0) {
+                AVPlayerLayerView(player: engine.player)
+                    .accessibilityIdentifier("videoPreview")
+                waveform(for: asset)
+                    .frame(height: 100)
+                    .accessibilityIdentifier("videoWaveform")
+            }
+        } else {
+            AVPlayerLayerView(player: engine.player)
+                .accessibilityIdentifier("videoPreview")
+        }
+    }
+
+    @ViewBuilder
     private var audioContent: some View {
         if let asset = engine.player.currentItem?.asset as? AVURLAsset {
-            WaveformContainer(
-                asset: asset,
-                cues: document.model.cues,
-                onSeek: { time in Task { await engine.seek(to: time) } },
-                onRetime: { cueId, newTime in
-                    CueCommands.retime(
-                        cueId: cueId,
-                        to: newTime,
-                        document: document,
-                        undoManager: undoManager
-                    )
-                }
-            )
-            .accessibilityIdentifier("audioWaveform")
+            waveform(for: asset)
+                .accessibilityIdentifier("audioWaveform")
         } else {
             placeholder("Audio loaded — reopen with media to see waveform")
                 .accessibilityIdentifier("audioPlaceholder")
         }
+    }
+
+    private func waveform(for asset: AVURLAsset) -> WaveformContainer {
+        WaveformContainer(
+            asset: asset,
+            cues: document.model.cues,
+            onSeek: { time in Task { await engine.seek(to: time) } },
+            onRetime: { cueId, newTime in
+                CueCommands.retime(
+                    cueId: cueId,
+                    to: newTime,
+                    document: document,
+                    undoManager: undoManager
+                )
+            }
+        )
     }
 
     private func placeholder(_ message: String) -> some View {

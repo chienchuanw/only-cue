@@ -35,6 +35,14 @@ Working source of truth for what's left. Sourced from the [GitHub issue board](h
 11. ~~**#13 (C3 release pipeline)** — `scripts/build-release.sh`, `scripts/make-dmg.sh`, `docs/release.md`. Defaults to free-tier `RELEASE_MODE=unsigned` (ad-hoc signed .app + plain DMG); `RELEASE_MODE=signed` opt-in for Developer ID + notarization once we upgrade.~~ Done.
 12. ~~**#12 (E10 distribution)** — README install section, `docs/release-notes/0.1.0.md`, free-tier-aware verification doc; tagged `v0.1.0` on `008cf03`, built the DMG via the C3 pipeline, attached to a GitHub Release.~~ Done — [v0.1.0 published](https://github.com/chienchuanw/only-cue/releases/tag/v0.1.0).
 
+## Post-MVP enhancements
+
+Targeted gap fixes on the shipped MVP. Not part of phase 2 epics.
+
+| Issue | Title | Status |
+|---|---|---|
+| [#27](https://github.com/chienchuanw/only-cue/issues/27) | Display waveform for video imports — stack waveform strip beneath video frame | ✅ shipped (PR #28) |
+
 ## Phase 2 / Phase 3 milestones
 
-Empty placeholders. Phase 2 (LTC, templates, export, custom shortcuts) and Phase 3 (the differentiator — TBD) get their own epics added when the MVP is feature-complete. See `docs/roadmap.md`.
+Empty placeholders. Phase 2 (LTC, templates, export, custom shortcuts) and Phase 3 (the differentiator — TBD) get their own epics added when scoped. See `docs/roadmap.md`.

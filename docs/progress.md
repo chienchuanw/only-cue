@@ -4,6 +4,31 @@ Append-only session log. Newer entries on top.
 
 ---
 
+## 2026-05-08 — Video waveform display (PR #28, issue #27)
+
+**Shipped:** issue #27 (post-MVP enhancement). PR #28 merged into `dev`. First post-MVP feature — corrects an asymmetry the MVP shipped with: cue-marker drag-to-retime and click-to-seek lived only on the audio waveform, so video imports had no timeline editing affordance. Now video imports show the picture stacked above a 100pt waveform strip; cue markers, drag, and seek work identically to the audio path.
+
+**What landed:**
+- `OnlyCue/UI/PreviewPane.swift` — `videoContent` becomes `VStack { videoPlayer; waveform.frame(height: 100) }`. Extracted `videoPlayer` and `waveform(for:)` as shared helpers so audio and video paths route through one cue-marker wiring (`onSeek`, `onRetime → CueCommands.retime`).
+- `OnlyCue/Media/WaveformGenerator.swift` — when an asset has no audio track, `peaks(for:resolution:)` now returns `[Float](repeating: 0, count: resolution)` instead of throwing. `WaveformError.noAudioTrack` removed (only caller was `WaveformContainer`, which treated all throws uniformly). Silent videos render a flat baseline; markers stay draggable.
+- `OnlyCueTests/WaveformGeneratorTests.swift` — new `test_peaks_assetWithNoAudioTrack_returnsFlatPeaks` using `AVMutableComposition()` (no fixture file needed).
+- `docs/superpowers/specs/2026-05-08-video-waveform-design.md` — spec captured before implementation.
+- `docs/mvp-scope.md`, `docs/architecture.md`, `docs/build-sequence.md`, `docs/verification.md` — preview-pane descriptions updated to reflect the new behavior.
+
+**TDD discipline:** red commit (`ba49bcc` — failing test for no-audio-track asset) → green commit (`76340f1` — flat-peaks early return) committed separately, per project convention.
+
+**Simplify pass — 1 fix (commit `679b9d9`):**
+- `videoContent` had two branches each constructing `AVPlayerLayerView(player: engine.player).accessibilityIdentifier("videoPreview")`. Hoisted into a `videoPlayer` computed property.
+- Other simplify findings (cache-flicker on cached read, fileHash cost on every `.task` fire, `loadedDuration` ordering before cache check) were pre-existing in `WaveformContainer` and out of scope for this change — file separately if revisiting waveform performance.
+
+**Review cycle:**
+- Auto-review flagged `docs/verification.md` step 11 still said the video preview "shows picture instead of waveform" — accurate; missed in initial docs sweep that updated `mvp-scope`/`architecture`/`build-sequence`. Fixed in `3f997ab` and posted status comment on PR #28.
+- Lesson: when sweeping `docs/` for behavior changes affecting the preview pane, include `verification.md` alongside the architecture/scope/build-sequence trio. The verification MVP checklist contains user-visible behavior assertions that go stale with UX changes.
+
+**Closing note — first post-MVP enhancement landed.** Phase 2 (LTC, templates, export, custom shortcuts, the differentiator) hasn't been scoped into epics yet; this PR was a targeted gap fix on the MVP itself. Roadmap unchanged.
+
+---
+
 ## 2026-05-08 — E10 distribution + v0.1.0 release (PR #26, issue #12)
 
 **Shipped:** issue #12 (E10 distribution). PR #26 merged into `dev` (rebase, head `008cf03`). Then ran the post-merge release sequence in this session: tagged `v0.1.0` on `008cf03`, built and DMG'd via the C3 scripts, published the [v0.1.0 GitHub Release](https://github.com/chienchuanw/only-cue/releases/tag/v0.1.0) with `OnlyCue-0.1.0.dmg` attached. **MVP is live.**

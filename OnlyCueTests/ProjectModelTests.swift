@@ -60,6 +60,48 @@ final class ProjectModelTests: XCTestCase {
         XCTAssertEqual(decoded, original)
     }
 
+    func test_jsonRoundTrip_withCuePointTypeAndCueReference() throws {
+        let projectID = try XCTUnwrap(UUID(uuidString: Self.projectID))
+        let itemID    = try XCTUnwrap(UUID(uuidString: Self.itemID))
+        let cueID     = try XCTUnwrap(UUID(uuidString: Self.cueOneID))
+        let typeID    = try XCTUnwrap(UUID(uuidString: "BBBB2222-BBBB-2222-BBBB-2222BBBB2222"))
+
+        let lighting = CuePointType(id: typeID, name: "Lighting", colorHex: "#FF6B6B")
+        let cue = Cue(
+            id: cueID,
+            typeID: typeID,
+            name: "Spot up SR",
+            time: 4.25,
+            colorHex: "#FF6B6B",
+            notes: ""
+        )
+        let item = MediaItem(
+            id: itemID,
+            media: MediaReference(
+                displayName: "act1.wav",
+                kind: .audio,
+                duration: 184.32,
+                bookmarkData: Data([0x01])
+            ),
+            cues: [cue]
+        )
+        let original = ProjectModel(
+            schemaVersion: ProjectModel.currentSchemaVersion,
+            id: projectID,
+            name: "Show A",
+            cuePointTypes: [lighting],
+            items: [item],
+            activeItemID: itemID
+        )
+
+        let data = try JSONEncoder().encode(original)
+        let decoded = try ProjectModel.decode(from: data)
+
+        XCTAssertEqual(decoded, original)
+        XCTAssertEqual(decoded.cuePointTypes.first?.id, typeID)
+        XCTAssertEqual(decoded.items.first?.cues.first?.typeID, typeID)
+    }
+
     func test_encoded_isPrettyAndSortedKeys() throws {
         let projectID = try XCTUnwrap(UUID(uuidString: Self.templateProjectID))
         let model = ProjectModel(

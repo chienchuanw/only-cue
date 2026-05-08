@@ -75,8 +75,8 @@ final class ProjectModelMigrationTests: XCTestCase {
         do {
             _ = try ProjectModel.decode(from: Data(json.utf8))
             XCTFail("expected unsupportedSchemaVersion error")
-        } catch ProjectModel.LoadError.unsupportedSchemaVersion(let v) {
-            XCTAssertEqual(v, 999)
+        } catch ProjectModel.LoadError.unsupportedSchemaVersion(let version) {
+            XCTAssertEqual(version, 999)
         } catch {
             XCTFail("unexpected error: \(error)")
         }

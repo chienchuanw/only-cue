@@ -25,7 +25,7 @@ final class ProjectModelTests: XCTestCase {
             ),
             cues: [
                 Cue(id: cueOneID, name: "Spot up SR", time: 4.250, colorHex: "#FF6B6B", notes: "Wait for breath"),
-                Cue(id: cueTwoID, name: "Wash full",  time: 12.000, colorHex: "#4ECDC4", notes: "")
+                Cue(id: cueTwoID, name: "Wash full", time: 12.000, colorHex: "#4ECDC4", notes: "")
             ]
         )
 

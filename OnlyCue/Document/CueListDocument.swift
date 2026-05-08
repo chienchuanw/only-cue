@@ -18,6 +18,7 @@ final class CueListDocument: ReferenceFileDocument {
             schemaVersion: ProjectModel.currentSchemaVersion,
             id: UUID(),
             name: "Untitled",
+            cuePointTypes: [ProjectModel.makeDefaultCuePointType()],
             items: [],
             activeItemID: nil
         )

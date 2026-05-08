@@ -7,11 +7,6 @@ struct TypeManagementSheet: View {
     @Environment(\.undoManager) private var undoManager
     @State private var pendingDeletion: TypeDeletionPlan?
 
-    private static let defaultPalette: [String] = [
-        "#FF6B6B", "#FFA94D", "#FFD93D", "#6BCB77",
-        "#4ECDC4", "#4D96FF", "#9D7EE0", "#FF6FB5"
-    ]
-
     var body: some View {
         VStack(spacing: 0) {
             header
@@ -93,10 +88,11 @@ struct TypeManagementSheet: View {
 
     private func addType() {
         let nextIndex = document.model.cuePointTypes.count
+        let palette = CuePointType.defaultPalette
         let newType = CuePointType(
             id: UUID(),
             name: "Type \(nextIndex + 1)",
-            colorHex: Self.defaultPalette[nextIndex % Self.defaultPalette.count]
+            colorHex: palette[nextIndex % palette.count]
         )
         CueCommands.addCuePointType(newType, document: document, undoManager: undoManager)
     }
@@ -148,7 +144,6 @@ struct TypeManagementRow: View {
     var onRequestDelete: () -> Void
 
     @State private var nameDraft = ""
-    @State private var colorBinding: Color = .accentColor
     @FocusState private var nameFocused: Bool
 
     var body: some View {

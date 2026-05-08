@@ -139,21 +139,21 @@ extension CueCommands {
         undoManager?.setActionName(actionName)
     }
 
+    /// Snapshots only `cuePointTypes` and `items` — `activeItemID` is intentionally
+    /// excluded so that undoing a Type-level change after switching items does not
+    /// silently revert the user's selection.
     fileprivate struct ProjectSnapshot {
         let cuePointTypes: [CuePointType]
         let items: [MediaItem]
-        let activeItemID: MediaItem.ID?
 
         init(model: ProjectModel) {
             self.cuePointTypes = model.cuePointTypes
             self.items = model.items
-            self.activeItemID = model.activeItemID
         }
 
         func apply(to model: inout ProjectModel) {
             model.cuePointTypes = cuePointTypes
             model.items = items
-            model.activeItemID = activeItemID
         }
     }
 

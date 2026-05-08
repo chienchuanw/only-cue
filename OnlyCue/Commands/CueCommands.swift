@@ -14,11 +14,31 @@ enum CueCommands {
             assertionFailure("Project has no CuePointTypes — invariant violated by upstream code")
             return
         }
+        appendCue(time: time, typeID: defaultType.id, document: document, undoManager: undoManager)
+    }
+
+    /// Explicit-Type variant used by the number-key cue-creation dispatch. The caller
+    /// resolves the Type via `ProjectModel.cuePointType(forHotkey:)` and passes its id.
+    static func addCueAtPlayhead(
+        time: TimeInterval,
+        typeID: CuePointType.ID,
+        document: CueListDocument,
+        undoManager: UndoManager?
+    ) {
+        appendCue(time: time, typeID: typeID, document: document, undoManager: undoManager)
+    }
+
+    private static func appendCue(
+        time: TimeInterval,
+        typeID: CuePointType.ID,
+        document: CueListDocument,
+        undoManager: UndoManager?
+    ) {
         let clampedTime = max(time, 0)
         let existingCues = document.model.activeItem?.cues ?? []
         let cue = Cue(
             id: UUID(),
-            typeID: defaultType.id,
+            typeID: typeID,
             cueNumber: CueNumberAssignment.next(forInsertionAt: clampedTime, in: existingCues),
             name: "Cue",
             time: clampedTime,

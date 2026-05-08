@@ -64,6 +64,7 @@ struct DocumentView: View {
 
             transportShortcuts
             digitShortcuts
+            playheadStepShortcuts
 
             Text("Drop files on the sidebar or press ⌘O to import.")
                 .multilineTextAlignment(.center)
@@ -189,6 +190,19 @@ struct DocumentView: View {
         .disabled(document.model.activeItem == nil)
     }
 
+    private var playheadStepShortcuts: some View {
+        ZStack {
+            Button("Previous Cue") { stepPlayhead(.previous) }
+                .keyboardShortcut(.upArrow, modifiers: [])
+            Button("Next Cue") { stepPlayhead(.next) }
+                .keyboardShortcut(.downArrow, modifiers: [])
+        }
+        .frame(width: 0, height: 0)
+        .opacity(0)
+        .accessibilityHidden(true)
+        .disabled(document.model.activeItem == nil)
+    }
+
     private func triggerHotkey(_ digit: Int) {
         guard let type = document.model.cuePointType(forHotkey: digit) else { return }
         CueCommands.addCueAtPlayhead(
@@ -197,6 +211,14 @@ struct DocumentView: View {
             document: document,
             undoManager: undoManager
         )
+    }
+
+    private func stepPlayhead(_ direction: MediaItem.PlayheadStep) {
+        guard let item = document.model.activeItem,
+              let target = item.cue(steppingFrom: engine.currentTime, direction: direction)
+        else { return }
+        seekTask?.cancel()
+        seekTask = Task { await engine.seek(to: target.time) }
     }
 
     private func jump(by seconds: TimeInterval) {

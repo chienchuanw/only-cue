@@ -13,7 +13,35 @@ extension CueCommands {
         }
     }
 
+    static func setCuePointTypeName(
+        id: CuePointType.ID,
+        to newName: String,
+        document: CueListDocument,
+        undoManager: UndoManager?
+    ) {
+        updateType(id: id, document: document, undoManager: undoManager, actionName: "Rename Type") {
+            $0.name = newName
+        }
+    }
+
     // MARK: - Internals
+
+    private static func updateType(
+        id: CuePointType.ID,
+        document: CueListDocument,
+        undoManager: UndoManager?,
+        actionName: String,
+        update: (inout CuePointType) -> Void
+    ) {
+        mutateTypes(document, undoManager: undoManager, actionName: actionName) { types in
+            types.map { type in
+                guard type.id == id else { return type }
+                var copy = type
+                update(&copy)
+                return copy
+            }
+        }
+    }
 
     fileprivate static func mutateTypes(
         _ document: CueListDocument,

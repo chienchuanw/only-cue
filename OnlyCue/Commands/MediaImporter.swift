@@ -27,6 +27,10 @@ enum MediaImporter {
                 CueCommands.setActiveItem(id: firstNewID, in: document)
                 try await loadActive(into: document, engine: engine)
             }
+            let itemsToPrewarm = newItems
+            Task.detached(priority: .background) {
+                await WaveformPrewarmer.prewarm(items: itemsToPrewarm)
+            }
         }
 
         if !unsupported.isEmpty {

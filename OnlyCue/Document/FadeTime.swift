@@ -7,15 +7,18 @@ struct FadeTime: Codable, Equatable, Hashable {
 
 extension FadeTime {
 
-    /// Symmetric fade where `fadeIn == fadeOut == t`. Use `.symmetric(0)` as the no-fade default.
-    static func symmetric(_ t: TimeInterval) -> FadeTime {
-        FadeTime(fadeIn: t, fadeOut: t)
+    /// No-fade default: `fadeIn == fadeOut == 0`. Use this at construction sites and migration backfills.
+    static let zero: FadeTime = .symmetric(0)
+
+    /// Symmetric fade where `fadeIn == fadeOut == seconds`.
+    static func symmetric(_ seconds: TimeInterval) -> FadeTime {
+        FadeTime(fadeIn: seconds, fadeOut: seconds)
     }
 
     /// Parses a fade-time string. Accepts `"1"`, `"1.5"` (symmetric) and `"1/2"` (split: in=1, out=2).
-    /// Trims surrounding whitespace; rejects empty, non-numeric, negative, multi-slash, or half-empty inputs.
-    static func parse(_ s: String) -> FadeTime? {
-        let trimmed = s.trimmingCharacters(in: .whitespaces)
+    /// See `FadeTimeTests` for the full grammar and rejection set.
+    static func parse(_ text: String) -> FadeTime? {
+        let trimmed = text.trimmingCharacters(in: .whitespaces)
         guard !trimmed.isEmpty else { return nil }
         let parts = trimmed.split(separator: "/", omittingEmptySubsequences: false)
         switch parts.count {
@@ -39,15 +42,20 @@ extension FadeTime {
         return "\(Self.formatNumber(fadeIn))/\(Self.formatNumber(fadeOut))"
     }
 
-    private static func parseNonNegative(_ s: Substring) -> TimeInterval? {
-        guard !s.isEmpty, let value = Double(s), value >= 0 else { return nil }
+    private static func parseNonNegative(_ text: Substring) -> TimeInterval? {
+        guard !text.isEmpty,
+              !text.hasPrefix("+"),
+              let value = Double(text),
+              value.isFinite,
+              value >= 0
+        else { return nil }
         return value
     }
 
-    private static func formatNumber(_ t: TimeInterval) -> String {
-        if t == t.rounded() {
-            return String(Int(t))
+    private static func formatNumber(_ seconds: TimeInterval) -> String {
+        if seconds == seconds.rounded() {
+            return String(Int(seconds))
         }
-        return String(t)
+        return String(seconds)
     }
 }

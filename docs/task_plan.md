@@ -52,7 +52,7 @@ Filed 2026-05-08 from the CuePoints competitive-gap brainstorm. Positioning: "pr
 
 | Issue | Title | Pri | Status |
 |---|---|---|---|
-| [#32](https://github.com/chienchuanw/only-cue/issues/32) | Cue model rework — CuePoint Types, Cue ID, fade time | p1 | 🟡 in progress (leaves [#44](https://github.com/chienchuanw/only-cue/issues/44) → PR #45 [CuePointType + schema v3], [#46](https://github.com/chienchuanw/only-cue/issues/46) → PR #47 [Cue.cueNumber + schema v4]) |
+| [#32](https://github.com/chienchuanw/only-cue/issues/32) | Cue model rework — CuePoint Types, Cue ID, fade time | p1 | 🟡 in progress (leaves [#44](https://github.com/chienchuanw/only-cue/issues/44) → PR #45 [CuePointType + schema v3], [#46](https://github.com/chienchuanw/only-cue/issues/46) → PR #47 [Cue.cueNumber + schema v4], [#50](https://github.com/chienchuanw/only-cue/issues/50) → PR #51 [Cue.fadeTime + schema v5]) |
 | [#33](https://github.com/chienchuanw/only-cue/issues/33) | LTC generation + audio routing | p1 | ⚪ open |
 | [#34](https://github.com/chienchuanw/only-cue/issues/34) | Console export — CSV, MA2, MA3 (depends on #32) | p1 | ⚪ open |
 | [#35](https://github.com/chienchuanw/only-cue/issues/35) | OSC remote control (Companion / MA3 / StreamDeck) | p1 | ⚪ open |
@@ -70,7 +70,7 @@ Filed JIT via `gh-dev` as work picks up. Each becomes its own issue + PR.
 - [x] model — introduce `CuePointType` (#44 → PR #45)
 - [x] migration — v2→v3 transform (#44 → PR #45)
 - [x] model — editable `Cue.cueNumber` with mid-point insertion rule + schema v4 + v3→v4 migration (#46 → PR #47)
-- [ ] model — `Cue.fadeTime` with split-fade syntax (`1/2` → `(in: 1.0, out: 2.0)`)
+- [x] model — `Cue.fadeTime` with split-fade syntax (`1/2` → `(in: 1.0, out: 2.0)`) + schema v5 + v4→v5 migration (#50 → PR #51)
 - [ ] shortcut — number-key cue creation (1–0 binds to a Type via the keymap)
 - [ ] ui — cue inspector pane (edit Type, cueNumber, fade, notes)
 - [ ] cleanup — UI reads color from Type; remove transitional `Cue.colorHex`

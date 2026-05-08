@@ -4,6 +4,57 @@ Append-only session log. Newer entries on top.
 
 ---
 
+## 2026-05-08 — Cue.fadeTime with split-fade syntax, schema v5 (PR #51, leaf #50 of epic #32)
+
+**Shipped:** issue #50 (third leaf of epic #32). PR #51 merged into `dev` (rebase, head `99aeda8`). Every `Cue` now carries a required `fadeTime: FadeTime`, where `FadeTime` is a value `struct { fadeIn, fadeOut: TimeInterval }` with synthesized `Codable`. Symmetric fades (`fadeIn == fadeOut`) and split fades (`fadeIn != fadeOut`) are both representable; the user-facing string form (`"1.5"` symmetric, `"1/2"` split) is handled by a pure `FadeTime.parse(_:) -> FadeTime?` and a canonical `format() -> String`. Schema bumped to **v5** with a v4→v5 migration that backfills `.zero` (no fade) on every existing cue; v1, v2, v3 chains backfill at the `LegacyCue.toCue` / `LegacyV3Cue.toCue` boundary so any pre-v5 source lands on a v5 model.
+
+**Why struct, not enum:** the central design call at CHECKPOINT 1 was `struct { fadeIn, fadeOut }` vs `enum { .symmetric(t); .split(in:out:) }`. Picked struct: synthesized Codable keeps the JSON shape compile-checked without a custom encoder, the symmetric/split distinction is a derived fact (`fadeIn == fadeOut`) not a hidden invariant, and the future cue inspector pane gets two-way bindings for free (two `var` properties → two TextFields, no case rebuilds on every keystroke). The enum's "encode the symmetric/split distinction at the type level" advantage was not worth its costs (custom Codable, schema-evolution risk, mutation friction). Captured as **ADR-011**.
+
+**Why parser is the gate (not the struct):** the model layer trusts its inputs — `FadeTime(fadeIn: -1, fadeOut: 0)` is permitted, the struct doesn't trap. Validation lives in `FadeTime.parse(_:)`, which is the single entry point from user/UI/migration. Same trust-the-seam design we used for `Cue.cueNumber` going negative on edge cases. Construction sites (CueCommands, all four legacy migrations, test fixtures) all use `FadeTime.zero` rather than `FadeTime(fadeIn: 0, fadeOut: 0)` or `.symmetric(0)` — the constant reads as "no fade default" intent rather than asking the reader to know that 0 = no fade.
+
+**What landed in PR #51 (8 commits):**
+- `OnlyCue/Document/FadeTime.swift` (new) — `struct FadeTime: Codable, Equatable, Hashable`, plus an extension carrying `static let zero`, `static func symmetric(_ seconds:)`, `static func parse(_ text:) -> FadeTime?`, and instance `func format() -> String`. Parser accepts `"1"`/`"1.5"` (symmetric) and `"1/2"` (split), trims surrounding whitespace, rejects 18 malformed inputs (empty, blank, non-numeric, negative, multi-slash, half-empty, internal whitespace, non-finite `inf`/`infinity`/`Inf`, leading-`+`). Formatter emits `"1.5"` when `fadeIn == fadeOut` else `"1/2"`, drops trailing `.0` on whole numbers (`"1"` not `"1.0"`).
+- `OnlyCue/Document/Cue.swift` — gains required `var fadeTime: FadeTime`.
+- `OnlyCue/Document/ProjectModel.swift` — `currentSchemaVersion` 4 → 5; `case 4: migrateFromV4` added to the decode switch; new private `LegacyV4` / `LegacyV4Item` / `LegacyV4Cue` shapes (the v4 envelope minus `fadeTime`); `migrateFromV4(_:)` constructs cues with `fadeTime: .zero`; existing `LegacyCue.toCue` (v1/v2 path) and `LegacyV3Cue.toCue` extend their `Cue(...)` initializers with `fadeTime: .zero`.
+- `OnlyCue/Commands/CueCommands.swift` — `addCueAtPlayhead` constructs new cues with `fadeTime: .zero`.
+- `OnlyCueTests/FadeTimeTests.swift` (new) — 16 tests: 2 Codable round-trips (symmetric, split), 6 parser happy paths, 1 omnibus rejection test covering 18 malformed inputs, 5 formatter cases, 2 parse↔format round-trip cases.
+- `OnlyCueTests/ProjectModelTests.swift` — `test_cueFadeTimeRoundTripsThroughJSON_split` (new); schema-version sentinel renamed `…IsFour` → `…IsFive`; existing fixtures updated with `fadeTime: .zero`.
+- `OnlyCueTests/ProjectModelMigrationTests.swift` — `test_v4_assignsZeroFadeToExistingCues` (new); v1/v2/v3 chain tests grew `fadeTime == .zero` assertions; v3 and v4 JSON fixtures hoisted to file-scope `private let` (`v3FixtureWithUnsortedCues`, `v4FixtureWithoutFadeTime`) to keep the class body under SwiftLint's `type_body_length` cap.
+- `docs/data-model.md` — schema v5 throughout: example JSON with `fadeTime` field, Swift types section adds `FadeTime`, new `cue.fadeTime` field rules row, versioning policy describing all four migration chains (v1→current through v4→current).
+- `docs/decisions.md` — **ADR-011** (after ADR-010 cueNumber).
+- **133/133 unit tests green; 0 SwiftLint violations; Release build clean (warnings-as-errors).**
+
+**Simplify pass — 3 fixes (commit `99aeda8`):**
+1. Quality reviewer caught a real bug: the parser docstring promised "rejects non-numeric" but `Double("inf")` returns infinity (and `Double("+1")` returns 1.0). Added `value.isFinite` and `!hasPrefix("+")` guards. Confirmed via 6 new rejection inputs (`"inf"`, `"infinity"`, `"Inf"`, `"+1"`, `"+1/2"`, `"1/+2"`).
+2. The `.symmetric(0)` literal appeared at 8+ sites. Quality reviewer flagged it as "no-fade intent that should be grep-able". Extracted `static let zero: FadeTime = .symmetric(0)` and replaced every production and test call site. Reads as `fadeTime: .zero` instead of `fadeTime: .symmetric(0)`.
+3. Trimmed `parse(_:)` docstring from a 2-line listing of the rejection set to a one-line pointer at `FadeTimeTests` for the full grammar — the test names are the canonical spec; duplicating them in a docstring just creates drift.
+
+**Skipped from simplify:**
+- "`String(t)` for non-whole doubles produces `0.30000000000000004` for arithmetic-derived values" — theoretical concern (no current call path produces such values; parser produces clean doubles, no `FadeTime` arithmetic exists). Defer to whichever future leaf adds fade-time arithmetic.
+- Reuse reviewer's "`LegacyV4*` boilerplate is structurally identical to `LegacyV3*`" — kept the duplication on purpose. Each `LegacyVN` is a frozen snapshot; generalising would couple frozen formats and create regression risk on every future schema bump. Pattern is intentional.
+
+**SwiftLint hits — same playbook as PR #47, caught earlier this time:**
+1. **`type_body_length`** — `ProjectModelMigrationTests` swelled to 282 lines after adding `test_v4_assignsZeroFadeToExistingCues` + the new `v4FixtureWithoutFadeTime` static let (cap is 250). Hoisted both `v3FixtureWithUnsortedCues` and `v4FixtureWithoutFadeTime` from `private static let` (in-class) to file-scope `private let` constants between the imports and the class declaration. Class body dropped to ~125 lines.
+2. **`identifier_name`** — single-letter parameter names `t: TimeInterval` and `s: Substring` violated min-2 (one of the leftover footguns from #46's similar fix on `var c`). Renamed to `seconds` and `text`.
+
+Both blockers caught by `swiftlint --strict` locally before pushing — same pattern as PR #47 fix #4 (re-running lint between fix commits catches self-inflicted regressions). No CI surprises.
+
+**TDD discipline — 8 separate commits, each a coherent unit:**
+1. FadeTime struct with synthesized Codable + symmetric round-trip test
+2. Parser (happy + rejection)
+3. Canonical formatter + parse/format round-trip
+4. `Cue.fadeTime` field + 7 construction-site updates with `.symmetric(0)` (later replaced by `.zero` in simplify)
+5. `currentSchemaVersion` 4 → 5 + `migrateFromV4` + LegacyV4 types
+6. Chain regression assertions across v1/v2/v3 migration tests
+7. Docs (data-model.md + ADR-011)
+8. Simplify pass (parser hardening + `.zero` constant + fixture hoisting + lint-driven renames)
+
+Each cycle: red (verified failure), green (minimum impl), commit. Cycle 2 (split round-trip) was a regression check that passed immediately on the synthesized Codable from cycle 1 — fine, documented as such in the commit log rather than papered over.
+
+**Closing note — third leaf of #32 done; model rework for epic #32 is complete.** Remaining leaves under #32 are now UI/UX shaped (no more schema bumps planned for the epic): number-key cue creation (1–0 binds to a Type via the keymap), cue inspector pane (edit Type / cueNumber / fade / notes), and the UI rewire that reads color from the Type and removes transitional `Cue.colorHex`. Carry-overs from PR #47 review still open: [#48](https://github.com/chienchuanw/only-cue/issues/48) (stable-sort tie-breaker) and [#49](https://github.com/chienchuanw/only-cue/issues/49) (drop the `cueNumber: 0` placeholder in `LegacyCue.toCue` / `LegacyV3Cue.toCue` via a `PendingCue` helper). The same `fadeTime: .zero` placeholder pattern in `LegacyV4Cue.toCue` would naturally fold into the same fix.
+
+---
+
 ## 2026-05-08 — Editable Cue.cueNumber with mid-point insertion rule, schema v4 (PR #47, leaf #46 of epic #32)
 
 **Shipped:** issue #46 (second leaf of epic #32). PR #47 merged into `dev` (rebase, head `19713f9`). `Cue` now carries a user-facing `cueNumber: Double` distinct from `Cue.id: UUID`. `addCueAtPlayhead` assigns the number by an "insert without ripple" rule: empty list → 1.0; at-end → predecessor's number + 1; between two cues → mid-point; before all → successor's number − 1 (may go negative on repeated inserts before the minimum). Schema bumped to v4 with a v3→v4 migration that assigns sequential numbers by time order; v1 and v2 paths chain through the same shared `assignCueNumbersBySort` helper.

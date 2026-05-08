@@ -38,7 +38,7 @@ enum CueInspectorCommit {
         return .parsed(parsed)
     }
 
-    private static func formatNumber(_ value: Double) -> String {
+    static func formatNumber(_ value: Double) -> String {
         if value == value.rounded() {
             return String(Int(value))
         }

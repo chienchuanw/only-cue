@@ -50,4 +50,38 @@ final class FadeTimeTests: XCTestCase {
             XCTAssertNil(FadeTime.parse(input), "expected parse to reject input \(input.debugDescription)")
         }
     }
+
+    // MARK: - format
+
+    func test_format_symmetric_decimal() {
+        XCTAssertEqual(FadeTime(fadeIn: 1.5, fadeOut: 1.5).format(), "1.5")
+    }
+
+    func test_format_symmetric_whole_dropsTrailingZero() {
+        XCTAssertEqual(FadeTime(fadeIn: 1.0, fadeOut: 1.0).format(), "1")
+    }
+
+    func test_format_symmetric_zero() {
+        XCTAssertEqual(FadeTime(fadeIn: 0, fadeOut: 0).format(), "0")
+    }
+
+    func test_format_split() {
+        XCTAssertEqual(FadeTime(fadeIn: 1.0, fadeOut: 2.0).format(), "1/2")
+    }
+
+    func test_format_splitDecimal() {
+        XCTAssertEqual(FadeTime(fadeIn: 0.5, fadeOut: 1.5).format(), "0.5/1.5")
+    }
+
+    func test_parseAndFormat_roundTrip_symmetric() throws {
+        let parsed = try XCTUnwrap(FadeTime.parse("1.5"))
+        XCTAssertEqual(parsed.format(), "1.5")
+        XCTAssertEqual(FadeTime.parse(parsed.format()), parsed)
+    }
+
+    func test_parseAndFormat_roundTrip_split() throws {
+        let parsed = try XCTUnwrap(FadeTime.parse("1/2"))
+        XCTAssertEqual(parsed.format(), "1/2")
+        XCTAssertEqual(FadeTime.parse(parsed.format()), parsed)
+    }
 }

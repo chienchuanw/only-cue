@@ -70,6 +70,8 @@ OnlyCue/
 │   ├── ItemListPane.swift        # Sidebar list of MediaItems; drag-reorder, multi-URL drop
 │   ├── ItemRowView.swift         # Single sidebar row (kind icon + name + duration)
 │   ├── PreviewPane.swift         # Video stacks waveform below; audio fills with waveform (active item)
+│   ├── WaveformContainer.swift   # ScrollView host: pinch + ⌘=/⌘-/⌘0 zoom (1×–16×), auto-follow
+│   ├── WaveformZoomController.swift # Anchored-zoom + auto-follow math (pure, unit-tested)
 │   ├── WaveformView.swift        # Canvas waveform + markers + playhead
 │   ├── TransportBar.swift        # Transport controls
 │   ├── CueListPane.swift         # Cue table (active item)

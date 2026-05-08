@@ -78,6 +78,62 @@ final class CueCommandsTypesTests: XCTestCase {
         XCTAssertNil(document.model.cuePointTypes.first(where: { $0.id == typeB.id })?.hotkey)
     }
 
+    func test_removeCuePointType_reassignsReferencedCues_andDeletes_undoRestoresBoth() throws {
+        let document = makeDocumentWithItem()
+        let undo = makeUndoManager()
+        let defaultID = try XCTUnwrap(document.model.defaultCuePointTypeID)
+        let lighting = CuePointType(id: UUID(), name: "Lighting", colorHex: "#FF6B6B")
+        CueCommands.addCuePointType(lighting, document: document, undoManager: undo)
+
+        // Two cues, both on Lighting.
+        CueCommands.addCueAtPlayhead(time: 1.0, document: document, undoManager: undo)
+        CueCommands.addCueAtPlayhead(time: 2.0, document: document, undoManager: undo)
+        let cueIDs = activeCues(document).map(\.id)
+        for cueID in cueIDs {
+            CueCommands.setType(cueId: cueID, to: lighting.id, document: document, undoManager: undo)
+        }
+        XCTAssertTrue(activeCues(document).allSatisfy { $0.typeID == lighting.id })
+
+        // Delete Lighting; the two cues should be reassigned to the default.
+        CueCommands.removeCuePointType(
+            id: lighting.id,
+            reassignTo: defaultID,
+            document: document,
+            undoManager: undo
+        )
+        XCTAssertFalse(document.model.cuePointTypes.contains(where: { $0.id == lighting.id }))
+        XCTAssertTrue(
+            activeCues(document).allSatisfy { $0.typeID == defaultID },
+            "all cues must be reassigned to the default Type"
+        )
+
+        // Undo restores both the Type and the cues' typeIDs.
+        undo.undo()
+        XCTAssertTrue(document.model.cuePointTypes.contains(where: { $0.id == lighting.id }))
+        XCTAssertTrue(activeCues(document).allSatisfy { $0.typeID == lighting.id })
+    }
+
+    private func makeDocumentWithItem() -> CueListDocument {
+        let doc = CueListDocument()
+        let item = MediaItem(
+            id: UUID(),
+            media: MediaReference(
+                displayName: "test.wav",
+                kind: .audio,
+                duration: 60,
+                bookmarkData: Data([0x00])
+            ),
+            cues: []
+        )
+        doc.model.items = [item]
+        doc.model.activeItemID = item.id
+        return doc
+    }
+
+    private func activeCues(_ doc: CueListDocument) -> [Cue] {
+        doc.model.activeItem?.cues ?? []
+    }
+
     private func makeUndoManager() -> UndoManager {
         let undo = UndoManager()
         undo.groupsByEvent = false

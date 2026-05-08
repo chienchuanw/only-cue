@@ -20,6 +20,7 @@ struct WaveformContainer: View {
     @State private var leadingAnchor: Int? = 0
     @State private var pinchBaseline: CGFloat = 1
     @State private var viewportWidth: CGFloat = 0
+    @State private var isProgrammaticAnchor = false
 
     private static let maxAnchorCount = 200
 
@@ -88,6 +89,10 @@ struct WaveformContainer: View {
             .scrollDisabled(zoom.zoom <= 1)
             .gesture(magnifyGesture(viewportWidth: width))
             .onChange(of: leadingAnchor) { _, new in
+                if isProgrammaticAnchor {
+                    isProgrammaticAnchor = false
+                    return
+                }
                 guard zoom.zoom > 1, let new, loadedDuration > 0 else { return }
                 let pxPerAnchor = contentWidth / CGFloat(anchorCount())
                 scrollOffset = CGFloat(new) * pxPerAnchor
@@ -153,6 +158,7 @@ struct WaveformContainer: View {
         var offset = scrollOffset
         zoom.reset(scrollOffset: &offset)
         scrollOffset = offset
+        isProgrammaticAnchor = true
         leadingAnchor = 0
         pinchBaseline = 1
     }
@@ -168,11 +174,13 @@ struct WaveformContainer: View {
 
     private func syncAnchorFromOffset(viewportWidth: CGFloat) {
         guard zoom.zoom > 1, loadedDuration > 0 else {
+            isProgrammaticAnchor = true
             leadingAnchor = 0
             return
         }
         let contentWidth = viewportWidth * zoom.zoom
         let pxPerAnchor = contentWidth / CGFloat(anchorCount())
+        isProgrammaticAnchor = true
         leadingAnchor = max(Int((scrollOffset / pxPerAnchor).rounded()), 0)
     }
 
@@ -181,16 +189,20 @@ struct WaveformContainer: View {
         guard zoom.zoom > 1 else { return }
         let contentWidth = viewportWidth * zoom.zoom
         let pxPerAnchor = contentWidth / CGFloat(anchorCount())
+        isProgrammaticAnchor = true
         leadingAnchor = max(Int((targetOffset / pxPerAnchor).rounded()), 0)
     }
 
     private func load() async {
         peaks = nil
         failed = false
-        var resetOffset: CGFloat = 0
+        var resetOffset = scrollOffset
         zoom.reset(scrollOffset: &resetOffset)
         scrollOffset = resetOffset
-        leadingAnchor = 0
+        if leadingAnchor != 0 {
+            isProgrammaticAnchor = true
+            leadingAnchor = 0
+        }
         pinchBaseline = 1
 
         let cache = WaveformCache.shared

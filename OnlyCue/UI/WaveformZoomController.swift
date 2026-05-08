@@ -63,6 +63,7 @@ final class WaveformZoomController {
     }
 
     func reset(scrollOffset: inout CGFloat) {
+        if zoom == 1 && followsPlayhead && scrollOffset == 0 { return }
         zoom = 1
         followsPlayhead = true
         scrollOffset = 0
@@ -79,7 +80,11 @@ final class WaveformZoomController {
     ) -> CGFloat? {
         guard followsPlayhead, zoom > 1, duration > 0, viewportWidth > 0 else { return nil }
         let contentWidth = viewportWidth * zoom
-        let playheadContentX = CGFloat(playheadTime / duration) * contentWidth
+        let playheadContentX = CueMarkersGeometry.position(
+            forTime: playheadTime,
+            width: contentWidth,
+            duration: duration
+        )
         let playheadViewportX = playheadContentX - currentScrollOffset
         let trailingThreshold = viewportWidth * Self.followTrailingFraction
         guard playheadViewportX > trailingThreshold else { return nil }

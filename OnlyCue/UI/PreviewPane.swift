@@ -7,6 +7,7 @@ struct PreviewPane: View {
     let engine: PlayerEngine
 
     @Environment(\.undoManager) private var undoManager
+    @State private var waveformURL: URL?
 
     var body: some View {
         ZStack {
@@ -16,6 +17,7 @@ struct PreviewPane: View {
         .frame(minHeight: 180)
         .clipShape(RoundedRectangle(cornerRadius: 6))
         .accessibilityIdentifier("previewPane")
+        .task(id: document.model.activeItemID) { await resolveWaveformURL() }
     }
 
     @ViewBuilder
@@ -35,15 +37,13 @@ struct PreviewPane: View {
 
     @ViewBuilder
     private func videoContent(item: MediaItem) -> some View {
-        if let asset = engine.player.currentItem?.asset as? AVURLAsset {
-            VStack(spacing: 0) {
-                videoPlayer
-                waveform(for: asset, item: item, withPlayhead: true)
+        VStack(spacing: 0) {
+            videoPlayer
+            if let url = waveformURL {
+                waveform(for: url, item: item, withPlayhead: true)
                     .frame(height: 100)
                     .accessibilityIdentifier("videoWaveform")
             }
-        } else {
-            videoPlayer
         }
     }
 
@@ -54,18 +54,18 @@ struct PreviewPane: View {
 
     @ViewBuilder
     private func audioContent(item: MediaItem) -> some View {
-        if let asset = engine.player.currentItem?.asset as? AVURLAsset {
-            waveform(for: asset, item: item, withPlayhead: true)
+        if let url = waveformURL {
+            waveform(for: url, item: item, withPlayhead: true)
                 .accessibilityIdentifier("audioWaveform")
         } else {
-            placeholder("Audio loaded — reopen with media to see waveform")
+            placeholder("Loading…")
                 .accessibilityIdentifier("audioPlaceholder")
         }
     }
 
-    private func waveform(for asset: AVURLAsset, item: MediaItem, withPlayhead: Bool = false) -> some View {
+    private func waveform(for url: URL, item: MediaItem, withPlayhead: Bool = false) -> some View {
         WaveformContainer(
-            asset: asset,
+            asset: AVURLAsset(url: url),
             cues: item.cues,
             onSeek: { time in Task { await engine.seek(to: time) } },
             onRetime: { cueId, newTime in
@@ -78,7 +78,7 @@ struct PreviewPane: View {
             },
             engine: withPlayhead ? engine : nil
         )
-        .id(asset.url)
+        .id(url)
     }
 
     private func placeholder(_ message: String) -> some View {
@@ -87,5 +87,16 @@ struct PreviewPane: View {
             .foregroundStyle(.secondary)
             .frame(maxWidth: .infinity, maxHeight: .infinity)
             .multilineTextAlignment(.center)
+    }
+
+    private func resolveWaveformURL() async {
+        waveformURL = nil
+        guard let bookmarkData = document.model.activeItem?.media.bookmarkData else { return }
+        let resolved = await Task.detached(priority: .userInitiated) {
+            try? Bookmarks.resolve(bookmarkData)
+        }.value
+        if document.model.activeItem?.media.bookmarkData == bookmarkData {
+            waveformURL = resolved?.url
+        }
     }
 }

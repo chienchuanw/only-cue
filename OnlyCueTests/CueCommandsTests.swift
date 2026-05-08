@@ -242,6 +242,20 @@ final class CueCommandsTests: XCTestCase {
         XCTAssertEqual(activeCues(document)[0].fadeTime, originalFade)
     }
 
+    func test_setNotes_updatesNotes_undoRestoresPriorNotes() throws {
+        let document = makeDocumentWithItem()
+        let undo = makeUndoManager()
+        CueCommands.addCueAtPlayhead(time: 1.0, document: document, undoManager: undo)
+        let cueId = try XCTUnwrap(activeCues(document).first?.id)
+        let originalNotes = activeCues(document)[0].notes
+
+        CueCommands.setNotes(cueId: cueId, to: "Wait for the breath", document: document, undoManager: undo)
+        XCTAssertEqual(activeCues(document)[0].notes, "Wait for the breath")
+
+        undo.undo()
+        XCTAssertEqual(activeCues(document)[0].notes, originalNotes)
+    }
+
     func test_cueMutations_noActiveItem_areNoOps() {
         let document = CueListDocument()
         let undo = makeUndoManager()

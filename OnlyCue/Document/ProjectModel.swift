@@ -2,7 +2,7 @@ import Foundation
 
 struct ProjectModel: Codable, Equatable {
 
-    static let currentSchemaVersion = 3
+    static let currentSchemaVersion = 4
 
     var schemaVersion: Int
     var id: UUID
@@ -40,6 +40,8 @@ extension ProjectModel {
             return migrateFromV1(try JSONDecoder().decode(LegacyV1.self, from: data))
         case 2:
             return migrateFromV2(try JSONDecoder().decode(LegacyV2.self, from: data))
+        case 3:
+            return migrateFromV3(try JSONDecoder().decode(LegacyV3.self, from: data))
         case currentSchemaVersion:
             return try JSONDecoder().decode(ProjectModel.self, from: data)
         default:
@@ -55,6 +57,22 @@ extension ProjectModel {
             name: defaultCuePointTypeName,
             colorHex: defaultCuePointTypeColorHex
         )
+    }
+
+    /// Sort each item's cues by `time` and assign sequential `cueNumber`s starting at 1.
+    /// Used by every migration path to seed user-facing cue numbers for documents that
+    /// predate the field.
+    private static func assignCueNumbersBySort(_ model: ProjectModel) -> ProjectModel {
+        var copy = model
+        for itemIndex in copy.items.indices {
+            let sorted = copy.items[itemIndex].cues.sorted { $0.time < $1.time }
+            copy.items[itemIndex].cues = sorted.enumerated().map { index, cue in
+                var c = cue
+                c.cueNumber = Double(index + 1)
+                return c
+            }
+        }
+        return copy
     }
 
     private struct LegacyV1: Decodable {
@@ -98,7 +116,7 @@ extension ProjectModel {
             items = []
             active = nil
         }
-        return ProjectModel(
+        let model = ProjectModel(
             schemaVersion: currentSchemaVersion,
             id: legacy.id,
             name: legacy.name,
@@ -106,6 +124,7 @@ extension ProjectModel {
             items: items,
             activeItemID: active
         )
+        return assignCueNumbersBySort(model)
     }
 
     private struct LegacyV2: Decodable {
@@ -131,7 +150,7 @@ extension ProjectModel {
                 cues: legacyItem.cues.map { $0.toCue(typeID: defaultType.id) }
             )
         }
-        return ProjectModel(
+        let model = ProjectModel(
             schemaVersion: currentSchemaVersion,
             id: legacy.id,
             name: legacy.name,
@@ -139,5 +158,61 @@ extension ProjectModel {
             items: items,
             activeItemID: legacy.activeItemID
         )
+        return assignCueNumbersBySort(model)
+    }
+
+    private struct LegacyV3: Decodable {
+        let schemaVersion: Int
+        let id: UUID
+        let name: String
+        let cuePointTypes: [CuePointType]
+        let items: [LegacyV3Item]
+        let activeItemID: UUID?
+    }
+
+    private struct LegacyV3Item: Decodable {
+        let id: UUID
+        let media: MediaReference
+        let cues: [LegacyV3Cue]
+    }
+
+    private struct LegacyV3Cue: Decodable {
+        let id: UUID
+        let typeID: UUID
+        let name: String
+        let time: TimeInterval
+        let colorHex: String
+        let notes: String
+
+        func toCue() -> Cue {
+            Cue(
+                id: id,
+                typeID: typeID,
+                cueNumber: 0,
+                name: name,
+                time: time,
+                colorHex: colorHex,
+                notes: notes
+            )
+        }
+    }
+
+    private static func migrateFromV3(_ legacy: LegacyV3) -> ProjectModel {
+        let items = legacy.items.map { legacyItem in
+            MediaItem(
+                id: legacyItem.id,
+                media: legacyItem.media,
+                cues: legacyItem.cues.map { $0.toCue() }
+            )
+        }
+        let model = ProjectModel(
+            schemaVersion: currentSchemaVersion,
+            id: legacy.id,
+            name: legacy.name,
+            cuePointTypes: legacy.cuePointTypes,
+            items: items,
+            activeItemID: legacy.activeItemID
+        )
+        return assignCueNumbersBySort(model)
     }
 }

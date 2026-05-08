@@ -174,6 +174,22 @@ final class CueCommandsTests: XCTestCase {
         XCTAssertEqual(cues[3].cueNumber, 1.0)
     }
 
+    func test_addCueAtPlayhead_withExplicitTypeID_assignsThatTypeID_undoRemoves() throws {
+        let document = makeDocumentWithItem()
+        let undo = makeUndoManager()
+        let lighting = CuePointType(id: UUID(), name: "Lighting", colorHex: "#FF6B6B", hotkey: 1)
+        document.model.cuePointTypes.append(lighting)
+
+        CueCommands.addCueAtPlayhead(time: 4.25, typeID: lighting.id, document: document, undoManager: undo)
+
+        let cue = try XCTUnwrap(activeCues(document).first)
+        XCTAssertEqual(cue.time, 4.25, accuracy: 0.001)
+        XCTAssertEqual(cue.typeID, lighting.id, "explicit typeID overload must use the passed Type")
+
+        undo.undo()
+        XCTAssertEqual(activeCues(document).count, 0)
+    }
+
     func test_setType_updatesTypeID_undoRestoresPriorTypeID() throws {
         let document = makeDocumentWithItem()
         let undo = makeUndoManager()

@@ -78,7 +78,7 @@ Filed JIT via `gh-dev` as work picks up. Each becomes its own issue + PR.
 
 ### Carry-overs from PR #47 review (deferred substantive notes)
 
-- [ ] [#48](https://github.com/chienchuanw/only-cue/issues/48) — stable-sort tie-breaker on equal `cue.time` in `assignCueNumbersBySort`
+- [x] [#48](https://github.com/chienchuanw/only-cue/issues/48) → PR [#61](https://github.com/chienchuanw/only-cue/pull/61) — `assignCueNumbersBySort` tie-breaks equal `time`s on `id.uuidString` lexicographic order; ADR-010 amended; 2 new tests in `ProjectModelMigrationTieBreakTests.swift` (RED-first verified). **Both PR #47 review carry-overs now done.**
 - [x] [#49](https://github.com/chienchuanw/only-cue/issues/49) → PR [#60](https://github.com/chienchuanw/only-cue/pull/60) — `private struct PendingCue` carries every `Cue` field except `cueNumber`; `assignCueNumbersBySort` now takes `[PendingCue]` and returns `[Cue]` per-item; the v1/v2/v3 migrations build per-item arrays and call the helper inline; v4/v5 untouched (they carry real cueNumbers). Pure structural refactor — type system now enforces the invariant.
 
 ## Phase 3 milestone — Differentiator

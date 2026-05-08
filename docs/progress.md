@@ -4,6 +4,35 @@ Append-only session log. Newer entries on top.
 
 ---
 
+## 2026-05-08 — Stable-sort tie-breaker on equal-time cues (PR #61, second carry-over from PR #47 review)
+
+**Shipped:** issue #48 (second of two carry-overs filed during PR #47's review). PR #61 merged into `dev` (rebase, head `fc478c3`). Closed the order-determinism gap in `assignCueNumbersBySort`: when two `PendingCue`s share a `time`, the sort now tie-breaks on `id.uuidString` lexicographic order so re-running the migration on the same JSON always produces the identical `cueNumber` assignment. **166/166 unit tests green (164 baseline + 2 new tie-break tests); 0 SwiftLint violations across 69 files; Release build clean (warnings-as-errors).** Both PR #47 review carry-overs are now done.
+
+**Why this was real:** Swift's `Array.sorted(by:)` is **not spec-guaranteed stable** — it happens to be stable on macOS today, but that's an implementation detail. If two cues shared a `time`, their relative order (and therefore the sequential `cueNumber` they'd get from the migration) was implementation-defined. Real-world v1/v2/v3 documents rarely have equal-time cues, but the gap should be closed regardless. Right after PR #60 settled `assignCueNumbersBySort` on `[PendingCue]`, the tie-break slotted in cleanly as one extra clause in the sort closure.
+
+**Why `id.uuidString` over the raw `id.uuid` byte tuple:** same total ordering (uuidString is the hex representation of the bytes), but `lhs.id.uuidString < rhs.id.uuidString` is a one-line readable expression. Allocation cost is two strings per equal-time comparison — negligible at migration scale (typical projects have hundreds of cues max, and migrations are one-shot at decode).
+
+**Why amend ADR-010 instead of filing a new ADR:** the tie-break is a refinement of the same sort-order migration decision. Single sentence appended to ADR-010's Decision paragraph rather than a new ADR-013.
+
+**RED-first TDD discipline (genuine red-green, not cosmetic):** the new test fixture lists cue B (UUID `BBBB...`) BEFORE cue A (UUID `1111...`) at the same `time: 5.0`. On the unmodified code, Swift's incidentally-stable sort preserved input order so cue B got `cueNumber: 1` (RED — assertion failed expecting A=1.0 / B=2.0, got A=2.0 / B=1.0). After the tie-break, cue A always wins the equal-time comparison regardless of JSON order so A gets `cueNumber: 1` (GREEN). The idempotency test (same JSON decoded twice produces identical mappings) was authored alongside as a belt-and-braces lock on the deterministic property.
+
+**What landed in PR #61 (1 commit, 3 files):**
+- `OnlyCue/Document/ProjectModel.swift` (+10 / −2): sort closure now tie-breaks on `id.uuidString`; doc comment expanded with the rationale.
+- `OnlyCueTests/ProjectModelMigrationTieBreakTests.swift` (new file, 95 lines, separate XCTestCase class): two tests — `test_v3_equalTimeCues_assignCueNumbersDeterministically` and `test_v3_equalTimeCues_migrationIsIdempotent`.
+- `docs/decisions.md`: ADR-010 amended with one sentence about the tie-break rule.
+
+**Why a new test file rather than appending to `ProjectModelMigrationTests.swift`:** SwiftLint's `file_length` cap is 400 lines; the additions would have pushed `ProjectModelMigrationTests.swift` to 463 lines. Caught by the lint gate before commit; resolved by hoisting the new fixture + tests into their own file. Same module, same test target.
+
+**Simplify pass — skipped (full 3-agent dispatch).** The change is 5 lines of production code (sort closure expansion) plus a doc comment, plus an ADR sentence, plus the new test file. Nothing to simplify on a sort comparator that's already idiomatic Swift. Self-reviewed and proceeded.
+
+**Behavioral impact:** no change for the typical case (real-world v1/v2/v3 documents rarely have equal-time cues). For documents that *do* have equal-time cues, the migration result is now spec-guaranteed deterministic instead of implementation-defined. On the current macOS Swift impl (which is incidentally stable), the new tie-break may *change* the cueNumber assignment for equal-time cues compared to the prior input-order-preserving behavior — but anyone relying on the old behavior was relying on undefined behavior.
+
+**Closing note — both PR #47 review carry-overs now done.** PR #60 closed #49 (PendingCue helper), PR #61 closed #48 (tie-break sort). The migration code at `ProjectModel.swift` is settled. The next high-value Phase 2 push is epic [#34](https://github.com/chienchuanw/only-cue/issues/34) (console export — CSV / MA2 / MA3), which depended on epic #32 ✅. That epic needs a brainstorm/decomposition session before any `/feature` work — file-format research first, then leaves filed JIT.
+
+A small pre-existing finding still open: dead `colorHex` decode-only properties on `LegacyCue` / `LegacyV3Cue` / `LegacyV4Cue` (decoded from JSON but never read after the `toCue` / `toPendingCue` boundary). Surfaced by the simplify pass on PR #60. Pre-dates the carry-over work; candidate for a small cleanup PR.
+
+---
+
 ## 2026-05-08 — PendingCue helper refactor (PR #60, first carry-over from PR #47 review)
 
 **Shipped:** issue #49 (first of two carry-overs filed during PR #47's review). PR #60 merged into `dev` (rebase, head `b8f69b3`). Pure structural refactor of the v1/v2/v3 schema migrations in `OnlyCue/Document/ProjectModel.swift`. **164/164 unit tests green throughout (no test modifications); 0 SwiftLint violations; Release build clean (warnings-as-errors).**

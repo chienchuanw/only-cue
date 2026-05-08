@@ -10,7 +10,7 @@ UTType: `com.onlycue.cuelist`, conforms to `public.json`.
 
 ```json
 {
-  "schemaVersion": 4,
+  "schemaVersion": 5,
   "id": "9F2E0F8A-9C2D-4F2A-9E1A-0E1A2D3C4B5A",
   "name": "Show A",
   "activeItemID": "AABBCCDD-1111-2222-3333-444455556666",
@@ -43,7 +43,8 @@ UTType: `com.onlycue.cuelist`, conforms to `public.json`.
           "name": "Spot up SR",
           "time": 4.250,
           "colorHex": "#FF6B6B",
-          "notes": "Wait for breath"
+          "notes": "Wait for breath",
+          "fadeTime": { "fadeIn": 1.5, "fadeOut": 1.5 }
         },
         {
           "id": "22222222-2222-2222-2222-222222222222",
@@ -52,7 +53,8 @@ UTType: `com.onlycue.cuelist`, conforms to `public.json`.
           "name": "Wash full",
           "time": 12.000,
           "colorHex": "#4ECDC4",
-          "notes": ""
+          "notes": "",
+          "fadeTime": { "fadeIn": 1.0, "fadeOut": 2.0 }
         }
       ]
     }
@@ -64,7 +66,7 @@ UTType: `com.onlycue.cuelist`, conforms to `public.json`.
 
 ```swift
 struct ProjectModel: Codable {
-    static let currentSchemaVersion = 4
+    static let currentSchemaVersion = 5
 
     var schemaVersion: Int
     var id: UUID
@@ -101,6 +103,14 @@ struct Cue: Codable, Identifiable, Equatable {
     var time: TimeInterval        // seconds from item's media start
     var colorHex: String          // "#RRGGBB" — kept transitionally; UI will read color from the Type in a follow-up leaf
     var notes: String
+    var fadeTime: FadeTime        // required; .symmetric(0) means no fade
+}
+
+struct FadeTime: Codable, Equatable, Hashable {
+    var fadeIn: TimeInterval      // seconds; >= 0 (parser-enforced; struct does not trap)
+    var fadeOut: TimeInterval     // seconds; >= 0
+    // .symmetric(t) → FadeTime(fadeIn: t, fadeOut: t)
+    // Canonical string form: "1.5" when fadeIn == fadeOut, otherwise "1/2"
 }
 
 struct MediaReference: Codable {
@@ -141,17 +151,19 @@ enum MediaKind: String, Codable {
 | `cue.time` | Seconds, double precision. Must be `>= 0` and `<= item.media.duration`. |
 | `cue.colorHex` | `#RRGGBB`, uppercase, validated on decode. Transitional duplication of the Type's color until the UI is updated to read from the Type. |
 | `cue.notes` | Free text, may be empty. |
+| `cue.fadeTime` | Required. `FadeTime(fadeIn:fadeOut:)`. New cues default to `.symmetric(0)` (no fade); v4 → v5 migration backfills the same. UI input is parsed via `FadeTime.parse(_:)` which accepts `"1"` / `"1.5"` (symmetric) and `"1/2"` (split: in=1, out=2), trims surrounding whitespace, rejects empty/non-numeric/negative/multi-slash/half-empty inputs. The struct itself does not trap on negative values; the parser is the gate. |
 
 ## Versioning policy
 
-- `schemaVersion: 4` is the current file. We will **never** mutate v4 semantics; new fields go in v5.
+- `schemaVersion: 5` is the current file. We will **never** mutate v5 semantics; new fields go in v6.
 - Adding optional fields → old readers ignore unknown keys via `Codable`; no version bump required.
 - Adding a required field, or removing / repurposing a field → bump `schemaVersion` and write a migration.
-- Migrations are pure functions `(JSONvN) -> ProjectModel`, applied during `ProjectModel.decode(from:)`. Every migration ends with a `assignCueNumbersBySort` pass so cues from any pre-v4 source land with sequential `cueNumber` values:
-  - **v1 → current**: wraps the v1 (media, cues) into a single `MediaItem`; seeds a default `CuePointType` "General" with `colorHex` `#4ECDC4`; assigns that Type's id to every cue. v1 documents with no media decode to `items: []`.
-  - **v2 → current**: keeps `items` and `activeItemID` as-is; seeds the default `CuePointType` "General"; assigns that Type's id to every existing cue.
-  - **v3 → current**: keeps `cuePointTypes`, `items`, and `activeItemID` as-is; assigns sequential `cueNumber`s by time order within each item.
-- v4 is a one-way upgrade: v0.1.0 (v1), the multi-items build (v2), and the CuePoint-Types build (v3) cannot open v4 files.
+- Migrations are pure functions `(JSONvN) -> ProjectModel`, applied during `ProjectModel.decode(from:)`. Pre-v4 chains run `assignCueNumbersBySort` so cues land with sequential `cueNumber` values; every chain backfills `fadeTime = .symmetric(0)` at the cue boundary so any pre-v5 source lands with a valid `fadeTime`:
+  - **v1 → current**: wraps the v1 (media, cues) into a single `MediaItem`; seeds a default `CuePointType` "General" with `colorHex` `#4ECDC4`; assigns that Type's id to every cue; backfills `fadeTime = .symmetric(0)`. v1 documents with no media decode to `items: []`.
+  - **v2 → current**: keeps `items` and `activeItemID` as-is; seeds the default `CuePointType` "General"; assigns that Type's id to every existing cue; backfills `fadeTime = .symmetric(0)`.
+  - **v3 → current**: keeps `cuePointTypes`, `items`, and `activeItemID` as-is; assigns sequential `cueNumber`s by time order within each item; backfills `fadeTime = .symmetric(0)`.
+  - **v4 → current**: keeps `cuePointTypes`, `items`, `activeItemID`, and per-cue `cueNumber` as-is; backfills `fadeTime = .symmetric(0)` on every cue.
+- v5 is a one-way upgrade: v0.1.0 (v1), the multi-items build (v2), the CuePoint-Types build (v3), and the cueNumber build (v4) cannot open v5 files.
 
 ## Bookmark behavior
 
@@ -171,5 +183,6 @@ These are out of scope. Adding any of them is a `schemaVersion` bump.
 - Per-cue OSC/MIDI payloads
 - Cross-item cue references or shared cue lists
 - Per-item playhead memory (active-item switch resets transport to 0)
-- `Cue.fadeTime` with split-fade syntax (e.g. `1/2`) — separate leaf under epic #32
 - Manual edit / "renumber all" of `cueNumber` — comes with the cue inspector leaf under epic #32
+- UI for editing `fadeTime` (text field that calls `FadeTime.parse(_:)`) — comes with the cue inspector leaf under epic #32
+- `CuePointType.defaultFadeTime` applied at cue creation — currently unused; wiring is a separate leaf that may also convert that field to `FadeTime`

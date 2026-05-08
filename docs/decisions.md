@@ -15,6 +15,13 @@ ADR template:
 
 ---
 
+## ADR-011 — `Cue.fadeTime` as a struct with synthesized Codable; symmetric vs split is derived (schema v5)
+**Date**: 2026-05-08
+**Status**: Accepted
+**Decision**: Add `Cue.fadeTime: FadeTime` as a required field. `FadeTime` is a value struct with two `TimeInterval` fields, `fadeIn` and `fadeOut`, and synthesized Codable. Symmetric vs split is a derived fact (`fadeIn == fadeOut`), implemented by a pure string parser (`"1"`/`"1.5"` → symmetric, `"1/2"` → split) and a canonical formatter that drops trailing `.0` on whole numbers. Bump `schemaVersion` 4 → 5 with a `migrateFromV4` that backfills `.symmetric(0)` (no fade) on every existing cue; v1, v2, and v3 chains backfill at the `LegacyCue.toCue` / `LegacyV3Cue.toCue` boundary so any pre-v5 source lands on a v5 model with valid fade data.
+**Why**: Console exports (#34) need a fade-time column per cue, with split-fade syntax supported. Modelling fade as a `struct { fadeIn, fadeOut }` with synthesized Codable keeps the JSON shape stable and compile-checked, avoids a custom encoder, and makes future cue-inspector UI binding trivial (two `var` fields, two TextFields, no case rebuilding on every keystroke). An enum (`.symmetric(t)` / `.split(in:out:)`) was considered: it would encode the symmetric/split distinction at the type level rather than as a runtime equality check, but the duplication that adds (the parser already enforces parsing rules; the formatter already handles canonical output) is not worth the schema-evolution cost of custom Codable. The parser is the single gate for input validation — negative durations and malformed strings are rejected at parse time, not the struct boundary, mirroring the same trust-the-seam design we used for `Cue.cueNumber`.
+**Reversal cost**: Medium. The migration is one-way (pre-v5 readers cannot open v5 files). Reverting would require a v5 → v4 down-migration that drops `fadeTime` — losing user fade data, but everything else survives.
+
 ## ADR-010 — `Cue.cueNumber` as a required model field with sort-order migration (schema v4)
 **Date**: 2026-05-08
 **Status**: Accepted

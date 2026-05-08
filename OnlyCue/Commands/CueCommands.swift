@@ -22,7 +22,6 @@ enum CueCommands {
             cueNumber: CueNumberAssignment.next(forInsertionAt: clampedTime, in: existingCues),
             name: "Cue",
             time: clampedTime,
-            colorHex: defaultType.colorHex,
             notes: "",
             fadeTime: .zero
         )

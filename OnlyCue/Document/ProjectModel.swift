@@ -77,18 +77,38 @@ extension ProjectModel {
         )
     }
 
-    /// Seeds sequential `cueNumber`s (1-based, time-sorted) for documents that predate the field.
-    private static func assignCueNumbersBySort(_ model: ProjectModel) -> ProjectModel {
-        var copy = model
-        for itemIndex in copy.items.indices {
-            let sorted = copy.items[itemIndex].cues.sorted { $0.time < $1.time }
-            copy.items[itemIndex].cues = sorted.enumerated().map { index, cue in
-                var updated = cue
-                updated.cueNumber = Double(index + 1)
-                return updated
+    /// Internal helper carrying every `Cue` field *except* `cueNumber`, which is assigned by
+    /// `assignCueNumbersBySort` once all cues for an item are gathered. Exists so that a v1/v2/v3
+    /// migration physically cannot construct a `Cue` without supplying a real `cueNumber` —
+    /// a future migration that forgets to seed numbers fails to compile rather than silently
+    /// producing zeros that would collide with legitimate `addCueAtPlayhead`-produced cueNumber 0s.
+    private struct PendingCue {
+        let id: UUID
+        let typeID: UUID
+        let time: TimeInterval
+        let name: String
+        let notes: String
+        let fadeTime: FadeTime
+    }
+
+    /// Sorts pending cues by time and assigns 1-based sequential `cueNumber`s, producing the
+    /// final `[Cue]` ready to plug into a `MediaItem`. Used by v1/v2/v3 migrations whose source
+    /// documents predate `Cue.cueNumber`.
+    private static func assignCueNumbersBySort(_ pending: [PendingCue]) -> [Cue] {
+        pending
+            .sorted { $0.time < $1.time }
+            .enumerated()
+            .map { index, pendingCue in
+                Cue(
+                    id: pendingCue.id,
+                    typeID: pendingCue.typeID,
+                    cueNumber: Double(index + 1),
+                    name: pendingCue.name,
+                    time: pendingCue.time,
+                    notes: pendingCue.notes,
+                    fadeTime: pendingCue.fadeTime
+                )
             }
-        }
-        return copy
     }
 
     private struct LegacyV1: Decodable {
@@ -106,13 +126,12 @@ extension ProjectModel {
         let colorHex: String
         let notes: String
 
-        func toCue(typeID: UUID) -> Cue {
-            Cue(
+        func toPendingCue(typeID: UUID) -> PendingCue {
+            PendingCue(
                 id: id,
                 typeID: typeID,
-                cueNumber: 0,  // overwritten by assignCueNumbersBySort
-                name: name,
                 time: time,
+                name: name,
                 notes: notes,
                 fadeTime: .zero
             )
@@ -124,15 +143,15 @@ extension ProjectModel {
         let items: [MediaItem]
         let active: UUID?
         if let media = legacy.media {
-            let cues = legacy.cues.map { $0.toCue(typeID: defaultType.id) }
-            let item = MediaItem(id: UUID(), media: media, cues: cues)
+            let pending = legacy.cues.map { $0.toPendingCue(typeID: defaultType.id) }
+            let item = MediaItem(id: UUID(), media: media, cues: assignCueNumbersBySort(pending))
             items = [item]
             active = item.id
         } else {
             items = []
             active = nil
         }
-        let model = ProjectModel(
+        return ProjectModel(
             schemaVersion: currentSchemaVersion,
             id: legacy.id,
             name: legacy.name,
@@ -140,7 +159,6 @@ extension ProjectModel {
             items: items,
             activeItemID: active
         )
-        return assignCueNumbersBySort(model)
     }
 
     private struct LegacyV2: Decodable {
@@ -160,13 +178,14 @@ extension ProjectModel {
     private static func migrateFromV2(_ legacy: LegacyV2) -> ProjectModel {
         let defaultType = makeDefaultCuePointType()
         let items = legacy.items.map { legacyItem in
-            MediaItem(
+            let pending = legacyItem.cues.map { $0.toPendingCue(typeID: defaultType.id) }
+            return MediaItem(
                 id: legacyItem.id,
                 media: legacyItem.media,
-                cues: legacyItem.cues.map { $0.toCue(typeID: defaultType.id) }
+                cues: assignCueNumbersBySort(pending)
             )
         }
-        let model = ProjectModel(
+        return ProjectModel(
             schemaVersion: currentSchemaVersion,
             id: legacy.id,
             name: legacy.name,
@@ -174,7 +193,6 @@ extension ProjectModel {
             items: items,
             activeItemID: legacy.activeItemID
         )
-        return assignCueNumbersBySort(model)
     }
 
     private struct LegacyV3: Decodable {
@@ -200,13 +218,12 @@ extension ProjectModel {
         let colorHex: String
         let notes: String
 
-        func toCue() -> Cue {
-            Cue(
+        func toPendingCue() -> PendingCue {
+            PendingCue(
                 id: id,
                 typeID: typeID,
-                cueNumber: 0,  // overwritten by assignCueNumbersBySort
-                name: name,
                 time: time,
+                name: name,
                 notes: notes,
                 fadeTime: .zero
             )
@@ -215,13 +232,14 @@ extension ProjectModel {
 
     private static func migrateFromV3(_ legacy: LegacyV3) -> ProjectModel {
         let items = legacy.items.map { legacyItem in
-            MediaItem(
+            let pending = legacyItem.cues.map { $0.toPendingCue() }
+            return MediaItem(
                 id: legacyItem.id,
                 media: legacyItem.media,
-                cues: legacyItem.cues.map { $0.toCue() }
+                cues: assignCueNumbersBySort(pending)
             )
         }
-        let model = ProjectModel(
+        return ProjectModel(
             schemaVersion: currentSchemaVersion,
             id: legacy.id,
             name: legacy.name,
@@ -229,7 +247,6 @@ extension ProjectModel {
             items: items,
             activeItemID: legacy.activeItemID
         )
-        return assignCueNumbersBySort(model)
     }
 
     private struct LegacyV4: Decodable {

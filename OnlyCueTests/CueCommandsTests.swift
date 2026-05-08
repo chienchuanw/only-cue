@@ -60,20 +60,6 @@ final class CueCommandsTests: XCTestCase {
         XCTAssertEqual(activeCues(document)[0].name, originalName)
     }
 
-    func test_recolor_updatesColorHex_undoRestoresPriorColor() throws {
-        let document = makeDocumentWithItem()
-        let undo = makeUndoManager()
-        CueCommands.addCueAtPlayhead(time: 1.0, document: document, undoManager: undo)
-        let cueId = try XCTUnwrap(activeCues(document).first?.id)
-        let originalColor = activeCues(document)[0].colorHex
-
-        CueCommands.recolor(cueId: cueId, to: "#FF6B6B", document: document, undoManager: undo)
-        XCTAssertEqual(activeCues(document)[0].colorHex, "#FF6B6B")
-
-        undo.undo()
-        XCTAssertEqual(activeCues(document)[0].colorHex, originalColor)
-    }
-
     func test_retime_updatesTime_undoRestoresPriorTime() throws {
         let document = makeDocumentWithItem()
         let undo = makeUndoManager()

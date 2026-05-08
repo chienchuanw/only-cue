@@ -43,12 +43,6 @@ enum CueCommands {
         }
     }
 
-    static func recolor(cueId: Cue.ID, to newColorHex: String, document: CueListDocument, undoManager: UndoManager?) {
-        updateCue(cueId: cueId, document: document, undoManager: undoManager, actionName: "Change Cue Color") {
-            $0.colorHex = newColorHex
-        }
-    }
-
     static func setType(cueId: Cue.ID, to newTypeID: CuePointType.ID, document: CueListDocument, undoManager: UndoManager?) {
         updateCue(cueId: cueId, document: document, undoManager: undoManager, actionName: "Change Cue Type") {
             $0.typeID = newTypeID

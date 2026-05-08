@@ -10,13 +10,24 @@ struct CueListPane: View {
 
     private var cues: [Cue] { document.model.activeItem?.cues ?? [] }
 
+    private var selectedCue: Cue? {
+        guard let id = selection else { return nil }
+        return cues.first(where: { $0.id == id })
+    }
+
     var body: some View {
-        Group {
-            if cues.isEmpty {
-                emptyState
-            } else {
-                cueList
+        VSplitView {
+            Group {
+                if cues.isEmpty {
+                    emptyState
+                } else {
+                    cueList
+                }
             }
+            .frame(minHeight: 120)
+
+            CueInspectorView(document: document, cue: selectedCue)
+                .frame(minHeight: 180)
         }
         .frame(minWidth: 240)
         .accessibilityIdentifier("cueListPane")

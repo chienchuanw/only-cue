@@ -12,8 +12,10 @@ enum CueCommands {
         document: CueListDocument,
         undoManager: UndoManager?
     ) {
+        let typeID = document.model.defaultCuePointTypeID ?? UUID()
         let cue = Cue(
             id: UUID(),
+            typeID: typeID,
             name: "Cue",
             time: max(time, 0),
             colorHex: defaultCueColorHex,

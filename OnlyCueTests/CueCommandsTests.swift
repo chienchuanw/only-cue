@@ -99,6 +99,17 @@ final class CueCommandsTests: XCTestCase {
         XCTAssertEqual(times, [2.0, 5.0, 8.0])
     }
 
+    func test_addCueAtPlayhead_assignsDefaultCuePointTypeID() throws {
+        let document = makeDocumentWithItem()
+        let undo = makeUndoManager()
+        let defaultTypeID = try XCTUnwrap(document.model.defaultCuePointTypeID)
+
+        CueCommands.addCueAtPlayhead(time: 5.0, document: document, undoManager: undo)
+
+        let cue = try XCTUnwrap(activeCues(document).first)
+        XCTAssertEqual(cue.typeID, defaultTypeID)
+    }
+
     func test_cueMutations_noActiveItem_areNoOps() {
         let document = CueListDocument()
         let undo = makeUndoManager()

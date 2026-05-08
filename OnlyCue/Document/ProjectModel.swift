@@ -62,10 +62,10 @@ extension ProjectModel {
         let id: UUID
         let name: String
         let media: MediaReference?
-        let cues: [LegacyV1Cue]
+        let cues: [LegacyCue]
     }
 
-    private struct LegacyV1Cue: Decodable {
+    private struct LegacyCue: Decodable {
         let id: UUID
         let name: String
         let time: TimeInterval
@@ -111,19 +111,7 @@ extension ProjectModel {
     private struct LegacyV2Item: Decodable {
         let id: UUID
         let media: MediaReference
-        let cues: [LegacyV2Cue]
-    }
-
-    private struct LegacyV2Cue: Decodable {
-        let id: UUID
-        let name: String
-        let time: TimeInterval
-        let colorHex: String
-        let notes: String
-
-        func toCue(typeID: UUID) -> Cue {
-            Cue(id: id, typeID: typeID, name: name, time: time, colorHex: colorHex, notes: notes)
-        }
+        let cues: [LegacyCue]
     }
 
     private static func migrateFromV2(_ legacy: LegacyV2) -> ProjectModel {

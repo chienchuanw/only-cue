@@ -49,3 +49,6 @@ fastlane/test_output/
 # Notarization / signing artifacts
 notarization.zip
 *.dmg
+
+# Tests
+OnlyCue/Tests/*

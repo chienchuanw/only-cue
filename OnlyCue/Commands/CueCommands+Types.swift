@@ -35,6 +35,28 @@ extension CueCommands {
         }
     }
 
+    /// Sets the target Type's hotkey. If `newHotkey` is non-nil and another Type already
+    /// holds it, that Type's hotkey is cleared atomically (move semantics). Single
+    /// `mutateTypes` snapshot so undo restores both Types' hotkeys in one step.
+    static func setCuePointTypeHotkey(
+        id: CuePointType.ID,
+        to newHotkey: Int?,
+        document: CueListDocument,
+        undoManager: UndoManager?
+    ) {
+        mutateTypes(document, undoManager: undoManager, actionName: "Change Type Hotkey") { types in
+            types.map { type in
+                var copy = type
+                if type.id == id {
+                    copy.hotkey = newHotkey
+                } else if let key = newHotkey, type.hotkey == key {
+                    copy.hotkey = nil
+                }
+                return copy
+            }
+        }
+    }
+
     // MARK: - Internals
 
     private static func updateType(

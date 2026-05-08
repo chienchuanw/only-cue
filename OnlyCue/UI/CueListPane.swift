@@ -58,6 +58,7 @@ struct CueListPane: View {
                 CueRowView(
                     index: index + 1,
                     cue: cue,
+                    resolvedColorHex: document.model.colorHex(for: cue),
                     onRename: { newName in
                         CueCommands.rename(cueId: cue.id, to: newName, document: document, undoManager: undoManager)
                     },

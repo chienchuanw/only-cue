@@ -73,7 +73,15 @@ extension ProjectModel {
         let notes: String
 
         func toCue(typeID: UUID) -> Cue {
-            Cue(id: id, typeID: typeID, name: name, time: time, colorHex: colorHex, notes: notes)
+            Cue(
+                id: id,
+                typeID: typeID,
+                cueNumber: 0,
+                name: name,
+                time: time,
+                colorHex: colorHex,
+                notes: notes
+            )
         }
     }
 

@@ -59,9 +59,7 @@ extension ProjectModel {
         )
     }
 
-    /// Sort each item's cues by `time` and assign sequential `cueNumber`s starting at 1.
-    /// Used by every migration path to seed user-facing cue numbers for documents that
-    /// predate the field.
+    /// Seeds sequential `cueNumber`s (1-based, time-sorted) for documents that predate the field.
     private static func assignCueNumbersBySort(_ model: ProjectModel) -> ProjectModel {
         var copy = model
         for itemIndex in copy.items.indices {
@@ -94,7 +92,7 @@ extension ProjectModel {
             Cue(
                 id: id,
                 typeID: typeID,
-                cueNumber: 0,
+                cueNumber: 0,  // overwritten by assignCueNumbersBySort
                 name: name,
                 time: time,
                 colorHex: colorHex,
@@ -188,7 +186,7 @@ extension ProjectModel {
             Cue(
                 id: id,
                 typeID: typeID,
-                cueNumber: 0,
+                cueNumber: 0,  // overwritten by assignCueNumbersBySort
                 name: name,
                 time: time,
                 colorHex: colorHex,

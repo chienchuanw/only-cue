@@ -30,7 +30,6 @@ enum CueCommands {
         }
     }
 
-    /// Pick the cueNumber for a new cue inserted at `time` into a list of existing cues.
     /// Existing cues' numbers are never shifted — the rule produces a fractional value
     /// when needed so the new cue slots between its time-neighbors.
     static func nextCueNumber(forInsertionAt time: TimeInterval, in cues: [Cue]) -> Double {
@@ -46,7 +45,7 @@ enum CueCommands {
         case (.some(let prev), .some(let next)):
             return (prev.cueNumber + next.cueNumber) / 2.0
         case (nil, nil):
-            return 1.0
+            preconditionFailure("nextCueNumber: cues non-empty but neither neighbor found — every cue's time partitions on \(time)")
         }
     }
 

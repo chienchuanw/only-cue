@@ -39,6 +39,7 @@ final class ProjectModelMigrationTests: XCTestCase {
         XCTAssertEqual(item.media.duration, 184.32, accuracy: 0.001)
         XCTAssertEqual(item.cues.count, 1)
         XCTAssertEqual(item.cues.first?.name, "Spot up SR")
+        XCTAssertEqual(item.cues.first?.fadeTime, .symmetric(0), "v1 chain must backfill fadeTime")
 
         XCTAssertEqual(model.activeItemID, item.id, "the migrated item must be active")
     }
@@ -109,6 +110,7 @@ final class ProjectModelMigrationTests: XCTestCase {
         XCTAssertEqual(cues.count, 2)
         for cue in cues {
             XCTAssertEqual(cue.typeID, defaultType.id, "every existing cue must reference the seeded default Type")
+            XCTAssertEqual(cue.fadeTime, .symmetric(0), "v2 chain must backfill fadeTime")
         }
         XCTAssertEqual(cues[0].cueNumber, 1.0, "v2 chain must assign cueNumbers by time order")
         XCTAssertEqual(cues[1].cueNumber, 2.0)
@@ -146,6 +148,7 @@ final class ProjectModelMigrationTests: XCTestCase {
         let cue = try XCTUnwrap(model.items.first?.cues.first)
         XCTAssertEqual(cue.typeID, defaultType.id)
         XCTAssertEqual(cue.cueNumber, 1.0, "v1 chain must assign a cueNumber")
+        XCTAssertEqual(cue.fadeTime, .symmetric(0), "v1 chain must backfill fadeTime")
     }
 
     func test_v3_assignsCueNumbersBySortOrder() throws {
@@ -160,6 +163,9 @@ final class ProjectModelMigrationTests: XCTestCase {
         XCTAssertEqual(cues[1].cueNumber, 2.0)
         XCTAssertEqual(cues[2].name, "C")
         XCTAssertEqual(cues[2].cueNumber, 3.0)
+        for cue in cues {
+            XCTAssertEqual(cue.fadeTime, .symmetric(0), "v3 chain must backfill fadeTime")
+        }
     }
 
     func test_v4_assignsZeroFadeToExistingCues() throws {

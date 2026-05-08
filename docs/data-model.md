@@ -134,10 +134,10 @@ enum MediaKind: String, Codable {
 | `schemaVersion` | Always set on write. Reader rejects unknown future versions. Migrations live in `ProjectModel.decode(from:)`. |
 | `id` | Stable per document; survives "Save As". |
 | `name` | Free text; defaults to "Untitled". |
-| `cuePointTypes` | Project-wide Type catalog. Must contain at least one entry; index `[0]` is the default Type. |
+| `cuePointTypes` | Project-wide Type catalog. Must contain at least one entry; index `[0]` is the default Type. Editable via the **Manage Types** sheet (driven from the cue inspector's "Manage Types…" button → `CueCommands.addCuePointType` / `removeCuePointType` / `setCuePointType*`). |
 | `cuePointType.id` | Stable; never reused even after delete. Referenced by every `Cue.typeID`. |
-| `cuePointType.colorHex` | `#RRGGBB`, uppercase. The color a cue picks up by default at creation; long-term, UI reads cue color from the Type. |
-| `cuePointType.hotkey` | `0...9` or `nil`. Reserved for the number-key cue creation leaf — model layer accepts the value but does not yet wire keymaps. |
+| `cuePointType.colorHex` | `#RRGGBB`, uppercase. Source of truth for cue color since schema v6 — UI resolves via `ProjectModel.colorHex(for:)`. Editable via the Manage Types sheet's `ColorPicker` → `CueCommands.setCuePointTypeColor`. |
+| `cuePointType.hotkey` | `0...9` or `nil`. Settable via the Manage Types sheet (move semantics: assigning a digit already held by another Type clears the prior holder atomically). The model layer accepts the value but the keymap dispatch is wired in the upcoming number-key cue creation leaf. |
 | `items` | Array of media items. Empty for new documents. Sidebar order matches array order; reorder = mutate the array. |
 | `activeItemID` | Currently-selected item's id. `nil` only when `items` is empty. Persisted so users land on the same item after reopen. |
 | `item.id` | Stable; never reused even after delete. |

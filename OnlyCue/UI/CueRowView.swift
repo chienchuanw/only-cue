@@ -18,7 +18,7 @@ struct CueRowView: View {
                 .foregroundStyle(.secondary)
                 .frame(width: 28, alignment: .trailing)
 
-            CueColorSwatch(hex: resolvedColorHex ?? "", diameter: 14)
+            CueColorSwatch(hex: resolvedColorHex, diameter: 14)
                 .accessibilityIdentifier("cueColorSwatch-\(index)")
 
             nameField

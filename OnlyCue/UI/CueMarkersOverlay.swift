@@ -4,6 +4,7 @@ struct CueMarkersOverlay: View {
 
     let cues: [Cue]
     let duration: TimeInterval
+    var resolveColorHex: (Cue) -> String? = { _ in nil }
     var onSeek: (TimeInterval) -> Void = { _ in }
     var onRetime: (Cue.ID, TimeInterval) -> Void = { _, _ in }
 
@@ -13,6 +14,7 @@ struct CueMarkersOverlay: View {
                 ForEach(cues) { cue in
                     CueMarkerView(
                         cue: cue,
+                        resolvedColorHex: resolveColorHex(cue),
                         baseX: CueMarkersGeometry.position(
                             forTime: cue.time,
                             width: geometry.size.width,
@@ -39,6 +41,7 @@ struct CueMarkersOverlay: View {
 struct CueMarkerView: View {
 
     let cue: Cue
+    var resolvedColorHex: String?
     let baseX: CGFloat
     var onSeek: () -> Void = {}
     var onRetimeBy: (CGFloat) -> Void = { _ in }
@@ -70,7 +73,8 @@ struct CueMarkerView: View {
     }
 
     private var markerColor: Color {
-        Color(hex: cue.colorHex) ?? .accentColor
+        guard let hex = resolvedColorHex else { return .accentColor }
+        return Color(hex: hex) ?? .accentColor
     }
 
     private var dragOrTapGesture: some Gesture {

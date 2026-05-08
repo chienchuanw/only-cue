@@ -6,6 +6,7 @@ struct WaveformContainer: View {
     let asset: AVURLAsset
     var resolution: Int = 512
     var cues: [Cue] = []
+    var resolveColorHex: (Cue) -> String? = { _ in nil }
     var onSeek: (TimeInterval) -> Void = { _ in }
     var onRetime: (Cue.ID, TimeInterval) -> Void = { _, _ in }
     var engine: PlayerEngine?
@@ -63,6 +64,7 @@ struct WaveformContainer: View {
                         CueMarkersOverlay(
                             cues: cues,
                             duration: loadedDuration,
+                            resolveColorHex: resolveColorHex,
                             onSeek: onSeek,
                             onRetime: onRetime
                         )

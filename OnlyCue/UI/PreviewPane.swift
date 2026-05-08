@@ -67,6 +67,7 @@ struct PreviewPane: View {
         WaveformContainer(
             asset: AVURLAsset(url: url),
             cues: item.cues,
+            resolveColorHex: { document.model.colorHex(for: $0) },
             onSeek: { time in Task { await engine.seek(to: time) } },
             onRetime: { cueId, newTime in
                 CueCommands.retime(

@@ -110,6 +110,84 @@ final class CueCommandsTests: XCTestCase {
         XCTAssertEqual(cue.typeID, defaultTypeID)
     }
 
+    func test_addCueAtPlayhead_emptyList_assignsCueNumberOne() throws {
+        let document = makeDocumentWithItem()
+        let undo = makeUndoManager()
+
+        CueCommands.addCueAtPlayhead(time: 5.0, document: document, undoManager: undo)
+
+        let cue = try XCTUnwrap(activeCues(document).first)
+        XCTAssertEqual(cue.cueNumber, 1.0)
+    }
+
+    func test_addCueAtPlayhead_atEnd_assignsMaxPlusOne() throws {
+        let document = makeDocumentWithItem()
+        let undo = makeUndoManager()
+        CueCommands.addCueAtPlayhead(time: 1.0, document: document, undoManager: undo)
+        CueCommands.addCueAtPlayhead(time: 5.0, document: document, undoManager: undo)
+        CueCommands.addCueAtPlayhead(time: 10.0, document: document, undoManager: undo)
+
+        CueCommands.addCueAtPlayhead(time: 20.0, document: document, undoManager: undo)
+
+        let cues = activeCues(document)
+        XCTAssertEqual(cues.count, 4)
+        let last = try XCTUnwrap(cues.last)
+        XCTAssertEqual(last.time, 20.0)
+        XCTAssertEqual(last.cueNumber, 4.0, "after end → max + 1")
+        XCTAssertEqual(cues.dropLast().map(\.cueNumber), [1.0, 2.0, 3.0], "existing cueNumbers must not shift")
+    }
+
+    func test_addCueAtPlayhead_betweenTwoCues_assignsMidpoint() throws {
+        let document = makeDocumentWithItem()
+        let undo = makeUndoManager()
+        CueCommands.addCueAtPlayhead(time: 1.0, document: document, undoManager: undo)
+        CueCommands.addCueAtPlayhead(time: 5.0, document: document, undoManager: undo)
+
+        CueCommands.addCueAtPlayhead(time: 3.0, document: document, undoManager: undo)
+
+        let cues = activeCues(document)
+        XCTAssertEqual(cues.count, 3)
+        let middle = try XCTUnwrap(cues.first { $0.time == 3.0 })
+        XCTAssertEqual(middle.cueNumber, 1.5, "between 1 and 2 → 1.5")
+        XCTAssertEqual(cues.first(where: { $0.time == 1.0 })?.cueNumber, 1.0)
+        XCTAssertEqual(cues.first(where: { $0.time == 5.0 })?.cueNumber, 2.0)
+    }
+
+    func test_addCueAtPlayhead_atStart_assignsMinMinusOne() throws {
+        let document = makeDocumentWithItem()
+        let undo = makeUndoManager()
+        CueCommands.addCueAtPlayhead(time: 5.0, document: document, undoManager: undo)
+        CueCommands.addCueAtPlayhead(time: 10.0, document: document, undoManager: undo)
+
+        CueCommands.addCueAtPlayhead(time: 1.0, document: document, undoManager: undo)
+
+        let cues = activeCues(document)
+        XCTAssertEqual(cues.count, 3)
+        let first = try XCTUnwrap(cues.first)
+        XCTAssertEqual(first.time, 1.0)
+        XCTAssertEqual(first.cueNumber, 0.0, "before all → min - 1; min was 1 so new is 0")
+        XCTAssertEqual(cues[1].cueNumber, 1.0, "existing cueNumbers must not shift")
+        XCTAssertEqual(cues[2].cueNumber, 2.0)
+    }
+
+    func test_addCueAtPlayhead_repeatedAtStart_goesNegative() throws {
+        let document = makeDocumentWithItem()
+        let undo = makeUndoManager()
+        CueCommands.addCueAtPlayhead(time: 5.0, document: document, undoManager: undo)
+
+        CueCommands.addCueAtPlayhead(time: 4.0, document: document, undoManager: undo)
+        CueCommands.addCueAtPlayhead(time: 3.0, document: document, undoManager: undo)
+        CueCommands.addCueAtPlayhead(time: 2.0, document: document, undoManager: undo)
+
+        let cues = activeCues(document)
+        XCTAssertEqual(cues.count, 4)
+        XCTAssertEqual(cues[0].time, 2.0)
+        XCTAssertEqual(cues[0].cueNumber, -2.0, "third before-all insert → 0, -1, -2")
+        XCTAssertEqual(cues[1].cueNumber, -1.0)
+        XCTAssertEqual(cues[2].cueNumber, 0.0)
+        XCTAssertEqual(cues[3].cueNumber, 1.0)
+    }
+
     func test_cueMutations_noActiveItem_areNoOps() {
         let document = CueListDocument()
         let undo = makeUndoManager()

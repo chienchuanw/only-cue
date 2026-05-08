@@ -110,6 +110,8 @@ final class ProjectModelMigrationTests: XCTestCase {
         for cue in cues {
             XCTAssertEqual(cue.typeID, defaultType.id, "every existing cue must reference the seeded default Type")
         }
+        XCTAssertEqual(cues[0].cueNumber, 1.0, "v2 chain must assign cueNumbers by time order")
+        XCTAssertEqual(cues[1].cueNumber, 2.0)
     }
 
     func test_v1_chainsThroughV2_seedsDefaultType_andAssignsToCue() throws {
@@ -143,6 +145,78 @@ final class ProjectModelMigrationTests: XCTestCase {
         XCTAssertEqual(defaultType.name, "General")
         let cue = try XCTUnwrap(model.items.first?.cues.first)
         XCTAssertEqual(cue.typeID, defaultType.id)
+        XCTAssertEqual(cue.cueNumber, 1.0, "v1 chain must assign a cueNumber")
+    }
+
+    func test_v3_assignsCueNumbersBySortOrder() throws {
+        let json = """
+        {
+          "schemaVersion": 3,
+          "id": "9F2E0F8A-9C2D-4F2A-9E1A-0E1A2D3C4B5A",
+          "name": "Show",
+          "cuePointTypes": [
+            {
+              "id": "CCCC3333-CCCC-3333-CCCC-3333CCCC3333",
+              "name": "General",
+              "colorHex": "#4ECDC4",
+              "defaultFadeTime": 0,
+              "defaultNamePattern": "Cue",
+              "isVisible": true,
+              "isExportEnabled": true
+            }
+          ],
+          "items": [
+            {
+              "id": "AABBCCDD-1111-2222-3333-444455556666",
+              "media": {
+                "displayName": "act1.wav",
+                "kind": "audio",
+                "duration": 100,
+                "bookmarkData": "AQID"
+              },
+              "cues": [
+                {
+                  "id": "11111111-1111-1111-1111-111111111111",
+                  "typeID": "CCCC3333-CCCC-3333-CCCC-3333CCCC3333",
+                  "name": "C",
+                  "time": 30.0,
+                  "colorHex": "#FF6B6B",
+                  "notes": ""
+                },
+                {
+                  "id": "22222222-2222-2222-2222-222222222222",
+                  "typeID": "CCCC3333-CCCC-3333-CCCC-3333CCCC3333",
+                  "name": "A",
+                  "time": 5.0,
+                  "colorHex": "#4ECDC4",
+                  "notes": ""
+                },
+                {
+                  "id": "33333333-3333-3333-3333-333333333333",
+                  "typeID": "CCCC3333-CCCC-3333-CCCC-3333CCCC3333",
+                  "name": "B",
+                  "time": 15.0,
+                  "colorHex": "#4ECDC4",
+                  "notes": ""
+                }
+              ]
+            }
+          ],
+          "activeItemID": "AABBCCDD-1111-2222-3333-444455556666"
+        }
+        """
+
+        let model = try ProjectModel.decode(from: Data(json.utf8))
+
+        XCTAssertEqual(model.schemaVersion, ProjectModel.currentSchemaVersion)
+        let cues = try XCTUnwrap(model.items.first?.cues)
+        XCTAssertEqual(cues.count, 3)
+        XCTAssertEqual(cues[0].name, "A")
+        XCTAssertEqual(cues[0].cueNumber, 1.0)
+        XCTAssertEqual(cues[1].name, "B")
+        XCTAssertEqual(cues[1].cueNumber, 2.0)
+        XCTAssertEqual(cues[2].name, "C")
+        XCTAssertEqual(cues[2].cueNumber, 3.0)
     }
 
     func test_unknownFutureVersion_throws() {

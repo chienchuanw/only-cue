@@ -5,7 +5,7 @@ struct PlayheadOverlay: View {
     let currentTime: TimeInterval
     let duration: TimeInterval
 
-    private static let lineWidth: CGFloat = 2
+    private static let lineWidth: CGFloat = 1
     private static let labelWidth: CGFloat = 96
     private static let labelHeight: CGFloat = 18
 

@@ -49,7 +49,7 @@ extension ProjectModel {
 
     private struct VersionProbe: Decodable { let schemaVersion: Int }
 
-    private static func makeDefaultCuePointType() -> CuePointType {
+    static func makeDefaultCuePointType() -> CuePointType {
         CuePointType(
             id: UUID(),
             name: defaultCuePointTypeName,

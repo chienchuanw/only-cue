@@ -4,6 +4,69 @@ Append-only session log. Newer entries on top.
 
 ---
 
+## 2026-05-08 — Cue inspector pane (PR #53, leaf #52 of epic #32)
+
+**Shipped:** issue #52 (fourth leaf of epic #32). PR #53 merged into `dev` (rebase, head `091ce02`). The right-side `.inspector` slot now shows a draggable vertical split: the existing cue list on top, a new `CueInspectorView` below, both inside `CueListPane`. Selecting a cue in the list populates the inspector with editable Type / cueNumber / name / fadeTime / notes — finally surfacing the four schema fields the prior three leaves of #32 added. UI-only; zero schema change. **150/150 unit tests green; 0 SwiftLint violations; Release build clean (warnings-as-errors).**
+
+**Why this was the right next leaf:** after PR #45/#47/#51, every cue carried `typeID`, `cueNumber`, `fadeTime`, and `notes`, but the user could only read/edit `name` (double-click rename) and `colorHex` (palette popover). The other four were programmatic-only — set by defaults at creation, by migration backfill, or by future code paths. Console export (#34) cannot be meaningful while the user has no way to actually drive Type and fade values. The inspector closes that gap before the export work begins.
+
+**Why this layout (CHECKPOINT 1 design call):** the right-side `.inspector` slot in `DocumentView` already hosts `CueListPane`. SwiftUI's `.inspector` modifier only allows one inspector view per `NavigationSplitView`, so a third column is impossible without restructuring. Picked `VSplitView` inside `CueListPane`: list on top, inspector below, draggable splitter. Selection state stays in `CueListPane` (`@State var selection: Cue.ID?`) — no hoist to `DocumentView` because no other consumer needs it yet. Rejected: separate inspector pane (slot is taken), sheet/popover triggered on double-click (CuePoints' inspector is always-visible — modal would block the timeline), inline editing in `CueRowView` (Type picker + cueNumber + fadeTime + notes can't fit in a row). Selection hoist deferred until a future leaf actually needs it.
+
+**Why a pure `CueInspectorCommit` helper:** SwiftUI views are hard to TDD without a host. Field-commit logic — given a draft string and the current value, return either `.parsed(T)` or `.revert(canonical: String)` or `.noChange` — is pure and lives outside the view. `commitFadeTime(draft:current:)` and `commitCueNumber(draft:current:)` are exhaustively tested (split, symmetric, no-change, invalid, empty, negative) without spinning up a SwiftUI host. The view consumes the outcome and either calls a `CueCommand`, no-ops, or sets the draft back to canonical form. Same trust-the-seam shape as the model-layer helpers.
+
+**Why `setCueNumber` accepts negatives:** intentional. Matches ADR-010's "auto-assignment can also go negative on repeated inserts before the minimum". The future "renumber from 1" command will normalize both auto-assigned and manually-typed negatives. If lighting consoles reject negatives at export time, that's a separate follow-up at the export boundary, not a model-layer trap.
+
+**Why focused-aware `syncDrafts`:** found by the simplify pass (HOT-PATH). The inspector's `.onChange(of: cue)` resyncs all four drafts whenever the cue object updates — but if the user is mid-typing in `fadeDraft` when an external mutation lands (marker drag retime, undo from elsewhere), their input would be clobbered. Two-line fix: skip the field whose `@FocusState` matches `focused`. The `.id(cue.id)` modifier on the body still resets all drafts cleanly when the *selection* changes (different cue), so the focused-aware skip only applies to same-cue external mutations.
+
+**What landed in PR #53 (10 commits):**
+- `OnlyCue/Commands/CueCommands.swift` — gains `setType` / `setCueNumber` / `setFadeTime` / `setNotes`. All four routed through new private `updateCue(cueId:document:undoManager:actionName:update:)` taking an `(inout Cue) -> Void` closure. `rename` and `recolor` refactored to use the same helper while green; reads uniformly across the cue setters now.
+- `OnlyCue/Commands/CueCommands+Items.swift` (new) — item-level mutations (`addItem`, `addItems`, `removeItem`, `renameItem`, `reorderItems`, `setActiveItem`, `refreshBookmark`) plus their undo helpers (`registerItemUndo`, `restoreItems`, `nextActiveID`) split into a `extension CueCommands` so the main type body stays under SwiftLint's 250-line `type_body_length` cap after the four new setters.
+- `OnlyCue/UI/CueInspectorView.swift` (new) — the inspector itself. `@FocusState`-driven; `@State` drafts for name/cueNumber/fade/notes; Type picker bound directly to `CueCommands.setType` via custom `Binding` setter. Empty state when `cue == nil` shows "Select a cue" with id `cueInspectorEmptyState`. `.id(cue.id)` resets drafts on selection change; `.onChange(of: cue)` syncs them on same-cue external mutation but skips the focused field. `.onChange(of: focused)` commits whichever field just lost focus.
+- `OnlyCue/UI/CueInspectorCommit.swift` (new) — pure helpers. `commitFadeTime(draft:current:) -> FadeOutcome` returning `.parsed(FadeTime)` / `.noChange` / `.revert(canonical: String)`. `commitCueNumber(draft:current:) -> NumberOutcome` same shape. Used by the view's commit path; tested without SwiftUI.
+- `OnlyCue/UI/CueColorSwatch.swift` (new) — small filled circle reused by the inspector's Type picker (10pt) and `CueRowView`'s palette popover (12pt). `Color(hex:) ?? .gray` fallback.
+- `OnlyCue/UI/CueListPane.swift` — wrap List + new inspector in a `VSplitView` with `minHeight` 120 / 180 respectively. Resolves `selectedCue` via `cues.first(where: { $0.id == selection })`.
+- `OnlyCue/UI/CueRowView.swift` — replace inline `Circle()` swatch with `CueColorSwatch`.
+- `OnlyCue/Document/FadeTime.swift` — `formatNumber(_:)` promoted from `private static` to `static` (internal) so `CueInspectorCommit.commitCueNumber`'s revert path reuses it instead of duplicating the "drop trailing .0 on whole numbers" logic.
+- `OnlyCueTests/CueCommandsTests.swift` — round-trip + undo tests for each of the four new mutations.
+- `OnlyCueTests/CueInspectorCommitTests.swift` (new) — 12 tests covering split / symmetric / no-change / invalid / empty / negative for both helpers.
+- `docs/data-model.md` — field-rules rows for `cue.typeID` / `cueNumber` / `fadeTime` / `notes` now reference the inspector as the editing surface; "What's deliberately NOT in the model" trimmed (the items the inspector now covers were previously listed there).
+
+**Simplify pass — 3 fixes applied (commit `d88ed52`), 3 deferred:**
+
+Applied:
+1. **Reuse:** `formatNumber` was duplicated between `FadeTime.formatNumber` (private) and `CueInspectorCommit.formatNumber`. Promoted FadeTime's to internal; deleted the duplicate; `commitCueNumber` reuses `FadeTime.formatNumber`.
+2. **Reuse:** color swatch was inlined as `Circle().fill(Color(hex:) ?? .gray).frame(width:height:)` in two views with only the diameter differing (10pt vs 12pt). Extracted `CueColorSwatch(hex:diameter:)` and replaced both call sites.
+3. **HOT-PATH:** `syncDrafts` was clobbering whichever field the user was typing into when any external mutation hit the cue. Two-line fix to skip the focused field. Without this, marker drag retiming or any concurrent undo would erase in-progress input mid-typing.
+
+Deferred:
+- Double-commit on Return-then-Tab — quality reviewer flagged it, but the existing `.noChange` branch already short-circuits without producing a redundant write.
+- Empty-name silent revert — consistent with `commitNumber` and `commitFade`'s revert paths within the inspector, and with `CueRowView.commitRename`'s same silent-revert pattern. Not a bug; could be a UX polish follow-up.
+- Negative `cueNumber` acceptance — intentional, matches ADR-010 auto-assignment that can also go negative. If lighting consoles reject negatives at export time, the boundary is the right place to enforce that, not the inspector parser.
+
+**Post-push linter cleanup (commit `091ce02`):** `commitNumber` was canonicalizing `numberDraft` only on `.revert`; `.parsed` and `.noChange` left the draft as the user's literal typing (`"1.50"` would stay as `"1.50"` even after committing as `1.5`). Linter pushed a small follow-up that snaps the draft to `FadeTime.formatNumber(value)` on `.parsed` and `FadeTime.formatNumber(cue.cueNumber)` on `.noChange`. Mirrors the fade field's existing canonicalize-on-commit shape. Same patch was already in `commitFade` for the same reason.
+
+**SwiftLint hits — caught locally before push:**
+1. **`type_body_length`** — `CueCommands` enum body grew to 276 lines after the four new setters (cap 250). First refactor (extracting `updateCue` and dropping the per-method `cues.map` boilerplate) brought it to 262 — still over. Second fix: split item-level mutations into `CueCommands+Items.swift` as a separate extension file. Main body now well under 250.
+
+**TDD discipline — 9 separate cycles, each a coherent unit:**
+1. `setType` (RED → GREEN → commit)
+2. `setCueNumber`
+3. `setFadeTime`
+4. `setNotes`
+5. `commitFadeTime` helper (parse-or-revert)
+6. `commitCueNumber` helper (parse-or-revert)
+7. `CueInspectorView` + `VSplitView` integration in `CueListPane` + `updateCue` refactor + `CueCommands+Items` split (compile-checked, exercised by existing 149 tests)
+8. Docs (data-model.md field rules)
+9. Simplify pass (formatNumber dedup + CueColorSwatch extraction + focused-aware syncDrafts)
+
+**TDD discipline slip and recovery (cycle 5):** initially implemented `commitFadeTime` and `commitCueNumber` together but only had a failing test for `commitFadeTime`. Caught before commit during a re-read of the TDD skill rules. Reverted the un-tested `commitCueNumber` + `NumberOutcome` enum + `formatNumber` from the impl, amended the cycle-5 commit to fade-only, then went RED → GREEN properly for cueNumber in cycle 6. The /feature skill's strict-TDD requirement forces these checks; the slip was ~5 minutes of process loss, not lost work.
+
+**XCUITest deferred:** view-host tests for the Gherkin scenarios were not added because `OnlyCueUITests` has been flaky on this machine (prior session memo on `DocumentLaunchTests` zombie-process failures). Behavior is fully covered by `CueInspectorCommitTests` (parse-or-revert) + `CueCommandsTests` (round-trip + undo). When the harness stabilises, a follow-up can map the Gherkin scenarios to XCUITests directly.
+
+**Closing note — fourth leaf of #32 done; the inspector closes the schema-surface gap.** Two leaves remain under #32, both UI-shaped: number-key cue creation (1–0 binds to a `Type` via `Type.hotkey` — model layer already accepts the value, just needs keymap wiring), and the UI rewire that reads color from the Type and removes the transitional `Cue.colorHex` (would be schema v6). Carry-overs from PR #47 review still open: [#48](https://github.com/chienchuanw/only-cue/issues/48) (stable-sort tie-breaker on equal `cue.time`) and [#49](https://github.com/chienchuanw/only-cue/issues/49) (drop the `cueNumber: 0` placeholder in `LegacyCue.toCue` / `LegacyV3Cue.toCue` / `LegacyV4Cue.toCue` via a `PendingCue` helper).
+
+---
+
 ## 2026-05-08 — Cue.fadeTime with split-fade syntax, schema v5 (PR #51, leaf #50 of epic #32)
 
 **Shipped:** issue #50 (third leaf of epic #32). PR #51 merged into `dev` (rebase, head `99aeda8`). Every `Cue` now carries a required `fadeTime: FadeTime`, where `FadeTime` is a value `struct { fadeIn, fadeOut: TimeInterval }` with synthesized `Codable`. Symmetric fades (`fadeIn == fadeOut`) and split fades (`fadeIn != fadeOut`) are both representable; the user-facing string form (`"1.5"` symmetric, `"1/2"` split) is handled by a pure `FadeTime.parse(_:) -> FadeTime?` and a canonical `format() -> String`. Schema bumped to **v5** with a v4→v5 migration that backfills `.zero` (no fade) on every existing cue; v1, v2, v3 chains backfill at the `LegacyCue.toCue` / `LegacyV3Cue.toCue` boundary so any pre-v5 source lands on a v5 model.

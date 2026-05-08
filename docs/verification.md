@@ -19,6 +19,7 @@ Run on a clean user account with a freshly installed DMG. Use bundled fixtures `
 11. Re-launch → File → Open Recent → `Show.cuelist` → media reloads via bookmark, all cues intact, time fields match.
 12. Repeat steps 2–11 with `clip.mp4` to validate the video path (preview pane shows picture stacked above a waveform strip; cue markers drag and seek on the strip; playhead line and scrub work on the strip just like on audio).
 13. Move `sample.mp3` to a new folder, then reopen `Show.cuelist` → app surfaces a "Relink media…" alert; relinking restores playback.
+14. Multi-import: drag `sample.mp3` and `clip.mp4` together onto the sidebar → both appear as items in drop order; the first one becomes active and loads in the preview. Add a cue to item 1, click item 2, add a different cue → switching back shows item 1's cues unchanged. Drag item 2 above item 1 in the sidebar, save and reopen → order persists. Press ⌫ on the active item → it is removed and selection advances; `⌘Z` restores both the item and the prior active selection.
 
 If any step fails, the MVP is not done.
 
@@ -28,9 +29,12 @@ Cheap, fast tests that catch the regressions that humans miss.
 
 ### Unit (XCTest)
 
-- `ProjectModelTests` — JSON round-trip preserves all fields, sorted-key output is stable.
+- `ProjectModelTests` — v2 JSON round-trip preserves all fields, sorted-key output is stable.
+- `ProjectModelMigrationTests` — v1-with-media migrates to one item; v1-without-media migrates to empty items; unknown future versions throw.
 - `CueTests` — color-hex validation, time bounds vs media duration.
-- `CueCommandsTests` — add / delete / rename / retime each register inverse undo; redo restores state exactly.
+- `CueCommandsTests` — cue add/delete/rename/retime register inverse undo against the active item; mutations no-op when no item is active.
+- `CueCommandsItemTests` — addItem/addItems/removeItem/renameItem/reorderItems undo+redo; setActiveItem is not undoable; cue mutations are scoped to the active item.
+- `MediaImporterTests` — single-file and batch imports append in order; partial failures yield `MediaImportError.batch`; first import sets active.
 - `WaveformGeneratorTests` — peak array length matches requested resolution; deterministic for the same input.
 - `BookmarksTests` — round-trip create → encode → decode → resolve on a temp file.
 

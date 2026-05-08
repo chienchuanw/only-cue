@@ -36,3 +36,13 @@ Steps 4 and 5 are independent and can be split across two people.
 ## Definition of done for the MVP
 
 The end-to-end script in [`verification.md`](verification.md) passes on a fresh user account with a freshly built DMG installed.
+
+## Post-MVP enhancements
+
+Targeted gap fixes that landed after v0.1.0. Each gets its own issue and PR; the MVP DAG above is unchanged.
+
+| # | Step | Done when |
+|---|---|---|
+| 11 | **Video waveform strip** (#27) | `PreviewPane` stacks a waveform strip beneath the video so cue markers can be edited on `.mp4`/`.mov` imports. |
+| 12 | **Waveform playhead + scrub** (#29) | Vertical playhead line with HH:MM:SS label tracks playback on both audio and video waveforms; drag-to-scrub pauses, seeks on release, resumes if it was playing. |
+| 13 | **Multi-media items per project** (#31) | One `.cuelist` holds N `MediaItem`s with their own cues. Sidebar list, drag-reorder, multi-select picker + drop. Schema v2 with auto-migration from v1. |

@@ -14,24 +14,24 @@ OnlyCue is a **document-based SwiftUI app** following MVVM. Each open `.cuelist`
                 │     CueListDocument          │  ReferenceFileDocument
                 │  ┌─────────────────────┐     │  - load / save JSON
                 │  │   ProjectModel      │     │  - vended UndoManager
-                │  │   • media ref       │     │
-                │  │   • [Cue]           │     │
+                │  │   • [MediaItem]     │     │
+                │  │   • activeItemID    │     │
                 │  └─────────────────────┘     │
                 └──────────────┬───────────────┘
                                │
-                ┌──────────────▼───────────────┐
-                │       DocumentView           │  NavigationSplitView
-                │ ┌────────────┬─────────────┐ │
-                │ │ PreviewPane│ CueListPane │ │
-                │ │ ┌────────┐ │ ┌─────────┐ │ │
-                │ │ │ Video  │ │ │ Cue rows│ │ │
-                │ │ │ or     │ │ │         │ │ │
-                │ │ │Waveform│ │ │         │ │ │
-                │ │ └────────┘ │ └─────────┘ │ │
-                │ ├────────────┴─────────────┤ │
-                │ │       TransportBar       │ │
-                │ └──────────────────────────┘ │
-                └──────────────┬───────────────┘
+                ┌──────────────▼───────────────────────────────┐
+                │            DocumentView                      │  NavigationSplitView (3-pane)
+                │ ┌────────────┬────────────┬───────────────┐  │
+                │ │ItemListPane│ PreviewPane│ CueListPane   │  │
+                │ │ ┌────────┐ │ ┌────────┐ │ ┌───────────┐ │  │
+                │ │ │ Items  │ │ │ Video  │ │ │ Cue rows  │ │  │
+                │ │ │ sidebar│ │ │ or     │ │ │ (active   │ │  │
+                │ │ │        │ │ │Waveform│ │ │  item)    │ │  │
+                │ │ └────────┘ │ └────────┘ │ └───────────┘ │  │
+                │ │            ├────────────┴───────────────┤  │
+                │ │            │       TransportBar         │  │
+                │ └────────────┴────────────────────────────┘  │
+                └──────────────┬───────────────────────────────┘
                                │ binds to
                 ┌──────────────▼───────────────┐
                 │       PlayerEngine           │  @Observable
@@ -57,7 +57,8 @@ OnlyCue/
 │   └── AppCommands.swift         # Menu commands (Add Cue, Import Media…)
 ├── Document/
 │   ├── CueListDocument.swift     # ReferenceFileDocument, .cuelist UTType
-│   ├── ProjectModel.swift        # Codable root
+│   ├── ProjectModel.swift        # Codable root, schema-versioned decoder + v1→v2 migration
+│   ├── MediaItem.swift           # Codable per-media wrapper (media + own cues)
 │   ├── Cue.swift                 # Codable cue
 │   └── MediaReference.swift      # Codable bookmark wrapper
 ├── Media/
@@ -65,14 +66,16 @@ OnlyCue/
 │   ├── WaveformGenerator.swift   # Async peak extraction
 │   └── WaveformCache.swift       # On-disk peak cache
 ├── UI/
-│   ├── DocumentView.swift        # Top-level NavigationSplitView
-│   ├── PreviewPane.swift         # Video stacks waveform below; audio fills with waveform
+│   ├── DocumentView.swift        # Three-pane NavigationSplitView (items | preview | cues)
+│   ├── ItemListPane.swift        # Sidebar list of MediaItems; drag-reorder, multi-URL drop
+│   ├── ItemRowView.swift         # Single sidebar row (kind icon + name + duration)
+│   ├── PreviewPane.swift         # Video stacks waveform below; audio fills with waveform (active item)
 │   ├── WaveformView.swift        # Canvas waveform + markers + playhead
 │   ├── TransportBar.swift        # Transport controls
-│   ├── CueListPane.swift         # Cue table
+│   ├── CueListPane.swift         # Cue table (active item)
 │   └── CueRowView.swift          # Single cue row
 ├── Commands/
-│   └── CueCommands.swift         # add/delete/move/rename — undoable
+│   └── CueCommands.swift         # cue + item commands — undoable (selection is not)
 └── Utilities/
     ├── Time+Format.swift         # HH:MM:SS.mmm formatter
     └── Bookmarks.swift           # Security-scoped bookmark helpers
@@ -107,11 +110,14 @@ The strict rule: **UI never mutates `ProjectModel` directly.** All mutations rou
 
 ## Data flows
 
-**Import media**
-File importer → resolve URL → create security-scoped bookmark → `AVAsset(url:)` → set `ProjectModel.media` → `PlayerEngine.load(asset:)` → kick off `WaveformGenerator` (async, audio only) → cache peaks.
+**Import media (one or many)**
+File importer (`allowsMultipleSelection: true`) or sidebar drop → for each URL: resolve, create security-scoped bookmark, build `MediaItem` → `CueCommands.addItems(...)` appends in selection order → if document was empty, `setActiveItem` to the first new id and `MediaImporter.loadActive` → `PlayerEngine.load(asset:)` → kick off `WaveformGenerator` (audio only) → cache peaks. Per-file failures surface as `MediaImportError.batch(unsupported:)` after the successful imports complete.
+
+**Switch active item**
+Sidebar selection → `CueCommands.setActiveItem(id:)` (not undoable) → `DocumentView.task(id: activeItemID)` invalidates → `engine.unload()` → resolve next item's bookmark → `engine.load(asset:)`. Transport resets to 0; cue list and preview rebind to the new item.
 
 **Add cue at playhead**
-`M` key → `CueCommands.add(at: player.currentTime)` → `UndoManager.registerUndo` → `ProjectModel.cues.append(...)` → SwiftUI re-renders cue list and waveform markers.
+`M` key → `CueCommands.addCueAtPlayhead(...)` → finds the active item index → mutates `items[i].cues` → registers undo → SwiftUI re-renders the cue list and waveform markers for the active item.
 
 **Seek from cue click**
 `CueListPane` row tap → `PlayerEngine.seek(to: cue.time)` → `currentTime` publisher updates → waveform playhead follows.

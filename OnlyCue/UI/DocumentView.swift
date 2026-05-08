@@ -7,24 +7,34 @@ struct DocumentView: View {
     @State private var engine = PlayerEngine()
     @State private var showImporter = false
     @State private var pendingAlert: DocumentAlert?
-    @State private var reloadedFor: Data?
+    @State private var loadedItemID: MediaItem.ID?
     @State private var seekTask: Task<Void, Never>?
     @AppStorage(FirstLaunchFlag.key) private var didShowFirstLaunch = false
     @Environment(\.undoManager) private var undoManager
 
     var body: some View {
-        mainPane
-            .inspector(isPresented: .constant(true)) {
-                CueListPane(document: document, engine: engine)
-                    .inspectorColumnWidth(min: 240, ideal: 300, max: 400)
-            }
-            .navigationSubtitle(document.model.media?.displayName ?? "")
-            .sheet(isPresented: Binding(
-                get: { !didShowFirstLaunch },
-                set: { if !$0 { didShowFirstLaunch = true } }
-            )) {
-                FirstLaunchSheet { didShowFirstLaunch = true }
-            }
+        NavigationSplitView {
+            ItemListPane(
+                document: document,
+                onDropURLs: importURLs,
+                onActiveItemChange: { Task { await reloadActive() } }
+            )
+            .navigationSplitViewColumnWidth(min: 200, ideal: 240, max: 320)
+        } detail: {
+            mainPane
+                .inspector(isPresented: .constant(true)) {
+                    CueListPane(document: document, engine: engine)
+                        .inspectorColumnWidth(min: 240, ideal: 300, max: 400)
+                }
+        }
+        .navigationSubtitle(document.model.activeItem?.media.displayName ?? "")
+        .sheet(isPresented: Binding(
+            get: { !didShowFirstLaunch },
+            set: { if !$0 { didShowFirstLaunch = true } }
+        )) {
+            FirstLaunchSheet { didShowFirstLaunch = true }
+        }
+        .task(id: document.model.activeItemID) { await reloadActive() }
     }
 
     private var mainPane: some View {
@@ -38,7 +48,7 @@ struct DocumentView: View {
 
             PreviewPane(document: document, engine: engine)
 
-            Text("\(document.model.cues.count) cue\(document.model.cues.count == 1 ? "" : "s")")
+            Text("\(activeCueCount) cue\(activeCueCount == 1 ? "" : "s")")
                 .foregroundStyle(.secondary)
                 .accessibilityIdentifier("cueCount")
 
@@ -53,11 +63,12 @@ struct DocumentView: View {
                 Button("Add Cue") { addCueAtPlayhead() }
                     .accessibilityIdentifier("addCueButton")
                     .keyboardShortcut("m", modifiers: [])
+                    .disabled(document.model.activeItem == nil)
             }
 
             transportShortcuts
 
-            Text("Drop a file here or press ⌘O to import.")
+            Text("Drop files on the sidebar or press ⌘O to import.")
                 .multilineTextAlignment(.center)
                 .foregroundStyle(.tertiary)
                 .padding(.top, 4)
@@ -67,17 +78,18 @@ struct DocumentView: View {
         .fileImporter(
             isPresented: $showImporter,
             allowedContentTypes: MediaImporter.allowedContentTypes,
-            allowsMultipleSelection: false,
+            allowsMultipleSelection: true,
             onCompletion: handlePickerResult
         )
         .dropDestination(for: URL.self) { urls, _ in
-            guard let url = urls.first else { return false }
-            importURL(url)
+            guard !urls.isEmpty else { return false }
+            importURLs(urls)
             return true
         }
         .alert(item: $pendingAlert, content: alertContent)
-        .task(id: document.model.media?.bookmarkData) { await reloadIfNeeded() }
     }
+
+    private var activeCueCount: Int { document.model.activeItem?.cues.count ?? 0 }
 
     private func alertContent(_ alert: DocumentAlert) -> Alert {
         switch alert {
@@ -97,22 +109,25 @@ struct DocumentView: View {
         }
     }
 
-    private func reloadIfNeeded() async {
-        guard let bookmark = document.model.media?.bookmarkData else { return }
-        guard reloadedFor != bookmark else { return }
-        reloadedFor = bookmark
+    private func reloadActive() async {
+        let activeID = document.model.activeItemID
+        guard activeID != loadedItemID else { return }
+        loadedItemID = activeID
+        guard activeID != nil else {
+            await engine.unload()
+            return
+        }
         do {
-            try await MediaImporter.reload(into: document, engine: engine)
-            reloadedFor = document.model.media?.bookmarkData
+            try await MediaImporter.loadActive(into: document, engine: engine)
         } catch {
-            pendingAlert = .relink(document.model.media?.displayName ?? "The media file")
+            pendingAlert = .relink(document.model.activeItem?.media.displayName ?? "The media file")
         }
     }
 
     @ViewBuilder
     private var mediaSummary: some View {
-        if let media = document.model.media {
-            Text("\(media.displayName) — \(TimeFormat.hms(media.duration))")
+        if let item = document.model.activeItem {
+            Text("\(item.media.displayName) — \(TimeFormat.hms(item.media.duration))")
                 .font(.system(.body, design: .monospaced))
                 .foregroundStyle(.secondary)
         } else {
@@ -124,23 +139,37 @@ struct DocumentView: View {
     private func handlePickerResult(_ result: Result<[URL], Error>) {
         switch result {
         case .success(let urls):
-            guard let url = urls.first else { return }
-            importURL(url)
+            guard !urls.isEmpty else { return }
+            importURLs(urls)
         case .failure(let error):
             pendingAlert = .unsupported(error.localizedDescription)
         }
     }
 
-    private func importURL(_ url: URL) {
+    private func importURLs(_ urls: [URL]) {
         Task { @MainActor in
             do {
-                try await MediaImporter.importMedia(from: url, into: document, engine: engine)
+                try await MediaImporter.importMedia(
+                    from: urls,
+                    into: document,
+                    engine: engine,
+                    undoManager: undoManager
+                )
+            } catch let MediaImportError.batch(unsupported) {
+                pendingAlert = .unsupported(unsupportedMessage(unsupported))
             } catch let MediaImportError.unsupportedType(filename) {
                 pendingAlert = .unsupported("\(filename) isn't a supported audio or video file.")
             } catch {
                 pendingAlert = .unsupported(error.localizedDescription)
             }
         }
+    }
+
+    private func unsupportedMessage(_ filenames: [String]) -> String {
+        let list = filenames.joined(separator: ", ")
+        return filenames.count == 1
+            ? "\(list) isn't a supported audio or video file."
+            : "These files weren't supported and were skipped: \(list)"
     }
 
     private var transportShortcuts: some View {

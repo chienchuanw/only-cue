@@ -8,9 +8,11 @@ struct CueListPane: View {
     @Environment(\.undoManager) private var undoManager
     @State private var selection: Cue.ID?
 
+    private var cues: [Cue] { document.model.activeItem?.cues ?? [] }
+
     var body: some View {
         Group {
-            if document.model.cues.isEmpty {
+            if cues.isEmpty {
                 emptyState
             } else {
                 cueList
@@ -27,7 +29,9 @@ struct CueListPane: View {
                 .foregroundStyle(.tertiary)
             Text("No cues yet")
                 .font(.headline)
-            Text("Press M to add one at the playhead")
+            Text(document.model.activeItem == nil
+                 ? "Import or select a media item first"
+                 : "Press M to add one at the playhead")
                 .font(.callout)
                 .foregroundStyle(.secondary)
                 .multilineTextAlignment(.center)
@@ -39,7 +43,7 @@ struct CueListPane: View {
 
     private var cueList: some View {
         List(selection: $selection) {
-            ForEach(Array(document.model.cues.enumerated()), id: \.element.id) { index, cue in
+            ForEach(Array(cues.enumerated()), id: \.element.id) { index, cue in
                 CueRowView(
                     index: index + 1,
                     cue: cue,
@@ -58,7 +62,7 @@ struct CueListPane: View {
         .onChange(of: selection) { _, newValue in
             guard
                 let id = newValue,
-                let cue = document.model.cues.first(where: { $0.id == id })
+                let cue = cues.first(where: { $0.id == id })
             else { return }
             Task { await engine.seek(to: cue.time) }
         }
@@ -66,8 +70,8 @@ struct CueListPane: View {
 
     private func deleteAtOffsets(_ offsets: IndexSet) {
         for index in offsets {
-            guard document.model.cues.indices.contains(index) else { continue }
-            let cue = document.model.cues[index]
+            guard cues.indices.contains(index) else { continue }
+            let cue = cues[index]
             CueCommands.delete(cueId: cue.id, document: document, undoManager: undoManager)
         }
     }

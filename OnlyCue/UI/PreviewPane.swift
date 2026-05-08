@@ -20,12 +20,12 @@ struct PreviewPane: View {
 
     @ViewBuilder
     private var content: some View {
-        if let media = document.model.media {
-            switch media.kind {
+        if let item = document.model.activeItem {
+            switch item.media.kind {
             case .video:
-                videoContent
+                videoContent(item: item)
             case .audio:
-                audioContent
+                audioContent(item: item)
             }
         } else {
             placeholder("Import audio or video to preview")
@@ -34,11 +34,11 @@ struct PreviewPane: View {
     }
 
     @ViewBuilder
-    private var videoContent: some View {
+    private func videoContent(item: MediaItem) -> some View {
         if let asset = engine.player.currentItem?.asset as? AVURLAsset {
             VStack(spacing: 0) {
                 videoPlayer
-                waveform(for: asset, withPlayhead: true)
+                waveform(for: asset, item: item, withPlayhead: true)
                     .frame(height: 100)
                     .accessibilityIdentifier("videoWaveform")
             }
@@ -53,9 +53,9 @@ struct PreviewPane: View {
     }
 
     @ViewBuilder
-    private var audioContent: some View {
+    private func audioContent(item: MediaItem) -> some View {
         if let asset = engine.player.currentItem?.asset as? AVURLAsset {
-            waveform(for: asset, withPlayhead: true)
+            waveform(for: asset, item: item, withPlayhead: true)
                 .accessibilityIdentifier("audioWaveform")
         } else {
             placeholder("Audio loaded — reopen with media to see waveform")
@@ -63,10 +63,10 @@ struct PreviewPane: View {
         }
     }
 
-    private func waveform(for asset: AVURLAsset, withPlayhead: Bool = false) -> WaveformContainer {
+    private func waveform(for asset: AVURLAsset, item: MediaItem, withPlayhead: Bool = false) -> WaveformContainer {
         WaveformContainer(
             asset: asset,
-            cues: document.model.cues,
+            cues: item.cues,
             onSeek: { time in Task { await engine.seek(to: time) } },
             onRetime: { cueId, newTime in
                 CueCommands.retime(

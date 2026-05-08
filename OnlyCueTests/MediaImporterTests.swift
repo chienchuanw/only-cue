@@ -53,8 +53,11 @@ final class MediaImporterTests: XCTestCase {
         XCTAssertEqual(document.model.items.count, 2)
         XCTAssertEqual(document.model.items[0].media.displayName, url1.lastPathComponent)
         XCTAssertEqual(document.model.items[1].media.displayName, url2.lastPathComponent)
-        XCTAssertEqual(document.model.activeItemID, document.model.items.first?.id,
-                       "first newly-imported item becomes active when document was empty")
+        XCTAssertEqual(
+            document.model.activeItemID,
+            document.model.items.first?.id,
+            "first newly-imported item becomes active when document was empty"
+        )
     }
 
     func test_importMedia_partialFailure_importsValid_andReportsBatchError() async throws {

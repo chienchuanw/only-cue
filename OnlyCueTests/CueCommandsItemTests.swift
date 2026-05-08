@@ -40,31 +40,34 @@ final class CueCommandsItemTests: XCTestCase {
 
     func test_removeItem_advancesActiveToNext() {
         let doc = CueListDocument()
-        let a = makeItem(name: "a"); let b = makeItem(name: "b"); let c = makeItem(name: "c")
-        CueCommands.addItems([a, b, c], to: doc, undoManager: nil)
-        CueCommands.setActiveItem(id: b.id, in: doc)
+        let first = makeItem(name: "a")
+        let middle = makeItem(name: "b")
+        let last = makeItem(name: "c")
+        CueCommands.addItems([first, middle, last], to: doc, undoManager: nil)
+        CueCommands.setActiveItem(id: middle.id, in: doc)
 
-        CueCommands.removeItem(id: b.id, document: doc, undoManager: nil)
-        XCTAssertEqual(doc.model.items.map(\.id), [a.id, c.id])
-        XCTAssertEqual(doc.model.activeItemID, c.id)
+        CueCommands.removeItem(id: middle.id, document: doc, undoManager: nil)
+        XCTAssertEqual(doc.model.items.map(\.id), [first.id, last.id])
+        XCTAssertEqual(doc.model.activeItemID, last.id)
     }
 
     func test_removeItem_lastInList_advancesActiveToPrevious() {
         let doc = CueListDocument()
-        let a = makeItem(name: "a"); let b = makeItem(name: "b")
-        CueCommands.addItems([a, b], to: doc, undoManager: nil)
-        CueCommands.setActiveItem(id: b.id, in: doc)
+        let first = makeItem(name: "a")
+        let last = makeItem(name: "b")
+        CueCommands.addItems([first, last], to: doc, undoManager: nil)
+        CueCommands.setActiveItem(id: last.id, in: doc)
 
-        CueCommands.removeItem(id: b.id, document: doc, undoManager: nil)
-        XCTAssertEqual(doc.model.activeItemID, a.id)
+        CueCommands.removeItem(id: last.id, document: doc, undoManager: nil)
+        XCTAssertEqual(doc.model.activeItemID, first.id)
     }
 
     func test_removeItem_onlyItem_clearsActive() {
         let doc = CueListDocument()
-        let a = makeItem(name: "a")
-        CueCommands.addItem(a, to: doc, undoManager: nil)
+        let only = makeItem(name: "a")
+        CueCommands.addItem(only, to: doc, undoManager: nil)
 
-        CueCommands.removeItem(id: a.id, document: doc, undoManager: nil)
+        CueCommands.removeItem(id: only.id, document: doc, undoManager: nil)
         XCTAssertNil(doc.model.activeItemID)
         XCTAssertTrue(doc.model.items.isEmpty)
     }
@@ -72,24 +75,25 @@ final class CueCommandsItemTests: XCTestCase {
     func test_removeItem_undoRestoresItemAndPriorActive() {
         let doc = CueListDocument()
         let undo = makeUndoManager()
-        let a = makeItem(name: "a"); let b = makeItem(name: "b")
-        CueCommands.addItems([a, b], to: doc, undoManager: undo)
-        CueCommands.setActiveItem(id: b.id, in: doc)
+        let first = makeItem(name: "a")
+        let last = makeItem(name: "b")
+        CueCommands.addItems([first, last], to: doc, undoManager: undo)
+        CueCommands.setActiveItem(id: last.id, in: doc)
 
-        CueCommands.removeItem(id: b.id, document: doc, undoManager: undo)
+        CueCommands.removeItem(id: last.id, document: doc, undoManager: undo)
         undo.undo()
 
-        XCTAssertEqual(doc.model.items.map(\.id), [a.id, b.id])
-        XCTAssertEqual(doc.model.activeItemID, b.id)
+        XCTAssertEqual(doc.model.items.map(\.id), [first.id, last.id])
+        XCTAssertEqual(doc.model.activeItemID, last.id)
     }
 
     func test_renameItem_updatesDisplayName_undoRestores() {
         let doc = CueListDocument()
         let undo = makeUndoManager()
-        let a = makeItem(name: "a.wav")
-        CueCommands.addItem(a, to: doc, undoManager: undo)
+        let item = makeItem(name: "a.wav")
+        CueCommands.addItem(item, to: doc, undoManager: undo)
 
-        CueCommands.renameItem(id: a.id, to: "Act 1", document: doc, undoManager: undo)
+        CueCommands.renameItem(id: item.id, to: "Act 1", document: doc, undoManager: undo)
         XCTAssertEqual(doc.model.items[0].media.displayName, "Act 1")
 
         undo.undo()
@@ -99,49 +103,53 @@ final class CueCommandsItemTests: XCTestCase {
     func test_reorderItems_movesWithinArray_preservesActiveIdentity() {
         let doc = CueListDocument()
         let undo = makeUndoManager()
-        let a = makeItem(name: "a"); let b = makeItem(name: "b"); let c = makeItem(name: "c")
-        CueCommands.addItems([a, b, c], to: doc, undoManager: undo)
-        CueCommands.setActiveItem(id: b.id, in: doc)
+        let first = makeItem(name: "a")
+        let middle = makeItem(name: "b")
+        let last = makeItem(name: "c")
+        CueCommands.addItems([first, middle, last], to: doc, undoManager: undo)
+        CueCommands.setActiveItem(id: middle.id, in: doc)
 
         CueCommands.reorderItems(from: IndexSet(integer: 2), to: 0, document: doc, undoManager: undo)
-        XCTAssertEqual(doc.model.items.map(\.id), [c.id, a.id, b.id])
-        XCTAssertEqual(doc.model.activeItemID, b.id)
+        XCTAssertEqual(doc.model.items.map(\.id), [last.id, first.id, middle.id])
+        XCTAssertEqual(doc.model.activeItemID, middle.id)
 
         undo.undo()
-        XCTAssertEqual(doc.model.items.map(\.id), [a.id, b.id, c.id])
+        XCTAssertEqual(doc.model.items.map(\.id), [first.id, middle.id, last.id])
     }
 
     func test_setActiveItem_isNotUndoable() {
         let doc = CueListDocument()
         let undo = makeUndoManager()
-        let a = makeItem(name: "a"); let b = makeItem(name: "b")
-        CueCommands.addItems([a, b], to: doc, undoManager: undo)
+        let first = makeItem(name: "a")
+        let last = makeItem(name: "b")
+        CueCommands.addItems([first, last], to: doc, undoManager: undo)
         let beforeCount = undo.canUndo ? 1 : 0
 
-        CueCommands.setActiveItem(id: b.id, in: doc)
+        CueCommands.setActiveItem(id: last.id, in: doc)
 
-        XCTAssertEqual(doc.model.activeItemID, b.id)
+        XCTAssertEqual(doc.model.activeItemID, last.id)
         XCTAssertEqual(undo.canUndo ? 1 : 0, beforeCount, "setActiveItem must not register undo")
     }
 
     func test_cueMutations_scopedToActiveItem() throws {
         let doc = CueListDocument()
-        let a = makeItem(name: "a"); let b = makeItem(name: "b")
-        CueCommands.addItems([a, b], to: doc, undoManager: nil)
+        let first = makeItem(name: "a")
+        let second = makeItem(name: "b")
+        CueCommands.addItems([first, second], to: doc, undoManager: nil)
 
-        CueCommands.setActiveItem(id: a.id, in: doc)
+        CueCommands.setActiveItem(id: first.id, in: doc)
         CueCommands.addCueAtPlayhead(time: 1.0, document: doc, undoManager: nil)
 
-        CueCommands.setActiveItem(id: b.id, in: doc)
+        CueCommands.setActiveItem(id: second.id, in: doc)
         CueCommands.addCueAtPlayhead(time: 2.0, document: doc, undoManager: nil)
 
-        let aCues = doc.model.items.first { $0.id == a.id }?.cues ?? []
-        let bCues = doc.model.items.first { $0.id == b.id }?.cues ?? []
+        let firstCues = doc.model.items.first { $0.id == first.id }?.cues ?? []
+        let secondCues = doc.model.items.first { $0.id == second.id }?.cues ?? []
 
-        XCTAssertEqual(aCues.count, 1)
-        XCTAssertEqual(try XCTUnwrap(aCues.first).time, 1.0, accuracy: 0.001)
-        XCTAssertEqual(bCues.count, 1)
-        XCTAssertEqual(try XCTUnwrap(bCues.first).time, 2.0, accuracy: 0.001)
+        XCTAssertEqual(firstCues.count, 1)
+        XCTAssertEqual(try XCTUnwrap(firstCues.first).time, 1.0, accuracy: 0.001)
+        XCTAssertEqual(secondCues.count, 1)
+        XCTAssertEqual(try XCTUnwrap(secondCues.first).time, 2.0, accuracy: 0.001)
     }
 
     // MARK: helpers

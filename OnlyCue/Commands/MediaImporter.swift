@@ -82,7 +82,7 @@ enum MediaImporter {
                 }
             }
 
-            var collected = Array<Outcome?>(repeating: nil, count: urls.count)
+            var collected: [Outcome?] = Array(repeating: nil, count: urls.count)
             for await (index, outcome) in group {
                 collected[index] = outcome
             }

@@ -31,8 +31,8 @@ extension ProjectModel {
         let probe = try JSONDecoder().decode(VersionProbe.self, from: data)
         switch probe.schemaVersion {
         case 1:
-            let v1 = try JSONDecoder().decode(V1.self, from: data)
-            return migrateFromV1(v1)
+            let legacy = try JSONDecoder().decode(LegacyV1.self, from: data)
+            return migrateFromV1(legacy)
         case currentSchemaVersion:
             return try JSONDecoder().decode(ProjectModel.self, from: data)
         default:
@@ -42,7 +42,7 @@ extension ProjectModel {
 
     private struct VersionProbe: Decodable { let schemaVersion: Int }
 
-    private struct V1: Decodable {
+    private struct LegacyV1: Decodable {
         let schemaVersion: Int
         let id: UUID
         let name: String
@@ -50,21 +50,21 @@ extension ProjectModel {
         let cues: [Cue]
     }
 
-    private static func migrateFromV1(_ v1: V1) -> ProjectModel {
-        if let media = v1.media {
-            let item = MediaItem(id: UUID(), media: media, cues: v1.cues)
+    private static func migrateFromV1(_ legacy: LegacyV1) -> ProjectModel {
+        if let media = legacy.media {
+            let item = MediaItem(id: UUID(), media: media, cues: legacy.cues)
             return ProjectModel(
                 schemaVersion: currentSchemaVersion,
-                id: v1.id,
-                name: v1.name,
+                id: legacy.id,
+                name: legacy.name,
                 items: [item],
                 activeItemID: item.id
             )
         }
         return ProjectModel(
             schemaVersion: currentSchemaVersion,
-            id: v1.id,
-            name: v1.name,
+            id: legacy.id,
+            name: legacy.name,
             items: [],
             activeItemID: nil
         )

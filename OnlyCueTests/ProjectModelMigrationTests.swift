@@ -1,6 +1,116 @@
 import XCTest
 @testable import OnlyCue
 
+// Fixtures hoisted to file scope to keep ProjectModelMigrationTests under SwiftLint's type_body_length cap.
+
+private let v3FixtureWithUnsortedCues = """
+{
+  "schemaVersion": 3,
+  "id": "9F2E0F8A-9C2D-4F2A-9E1A-0E1A2D3C4B5A",
+  "name": "Show",
+  "cuePointTypes": [
+    {
+      "id": "CCCC3333-CCCC-3333-CCCC-3333CCCC3333",
+      "name": "General",
+      "colorHex": "#4ECDC4",
+      "defaultFadeTime": 0,
+      "defaultNamePattern": "Cue",
+      "isVisible": true,
+      "isExportEnabled": true
+    }
+  ],
+  "items": [
+    {
+      "id": "AABBCCDD-1111-2222-3333-444455556666",
+      "media": {
+        "displayName": "act1.wav",
+        "kind": "audio",
+        "duration": 100,
+        "bookmarkData": "AQID"
+      },
+      "cues": [
+        {
+          "id": "11111111-1111-1111-1111-111111111111",
+          "typeID": "CCCC3333-CCCC-3333-CCCC-3333CCCC3333",
+          "name": "C",
+          "time": 30.0,
+          "colorHex": "#FF6B6B",
+          "notes": ""
+        },
+        {
+          "id": "22222222-2222-2222-2222-222222222222",
+          "typeID": "CCCC3333-CCCC-3333-CCCC-3333CCCC3333",
+          "name": "A",
+          "time": 5.0,
+          "colorHex": "#4ECDC4",
+          "notes": ""
+        },
+        {
+          "id": "33333333-3333-3333-3333-333333333333",
+          "typeID": "CCCC3333-CCCC-3333-CCCC-3333CCCC3333",
+          "name": "B",
+          "time": 15.0,
+          "colorHex": "#4ECDC4",
+          "notes": ""
+        }
+      ]
+    }
+  ],
+  "activeItemID": "AABBCCDD-1111-2222-3333-444455556666"
+}
+"""
+
+private let v4FixtureWithoutFadeTime = """
+{
+  "schemaVersion": 4,
+  "id": "9F2E0F8A-9C2D-4F2A-9E1A-0E1A2D3C4B5A",
+  "name": "Show",
+  "cuePointTypes": [
+    {
+      "id": "CCCC3333-CCCC-3333-CCCC-3333CCCC3333",
+      "name": "General",
+      "colorHex": "#4ECDC4",
+      "defaultFadeTime": 0,
+      "defaultNamePattern": "Cue",
+      "isVisible": true,
+      "isExportEnabled": true
+    }
+  ],
+  "items": [
+    {
+      "id": "AABBCCDD-1111-2222-3333-444455556666",
+      "media": {
+        "displayName": "act1.wav",
+        "kind": "audio",
+        "duration": 100,
+        "bookmarkData": "AQID"
+      },
+      "cues": [
+        {
+          "id": "11111111-1111-1111-1111-111111111111",
+          "typeID": "CCCC3333-CCCC-3333-CCCC-3333CCCC3333",
+          "cueNumber": 1,
+          "name": "Cue 1",
+          "time": 5.0,
+          "colorHex": "#FF6B6B",
+          "notes": ""
+        },
+        {
+          "id": "22222222-2222-2222-2222-222222222222",
+          "typeID": "CCCC3333-CCCC-3333-CCCC-3333CCCC3333",
+          "cueNumber": 2,
+          "name": "Cue 2",
+          "time": 15.0,
+          "colorHex": "#4ECDC4",
+          "notes": ""
+        }
+      ]
+    }
+  ],
+  "activeItemID": "AABBCCDD-1111-2222-3333-444455556666"
+}
+"""
+
 final class ProjectModelMigrationTests: XCTestCase {
 
     func test_v1_withMedia_migratesToSingleItem() throws {
@@ -39,7 +149,7 @@ final class ProjectModelMigrationTests: XCTestCase {
         XCTAssertEqual(item.media.duration, 184.32, accuracy: 0.001)
         XCTAssertEqual(item.cues.count, 1)
         XCTAssertEqual(item.cues.first?.name, "Spot up SR")
-        XCTAssertEqual(item.cues.first?.fadeTime, .symmetric(0), "v1 chain must backfill fadeTime")
+        XCTAssertEqual(item.cues.first?.fadeTime, .zero, "v1 chain must backfill fadeTime")
 
         XCTAssertEqual(model.activeItemID, item.id, "the migrated item must be active")
     }
@@ -110,7 +220,7 @@ final class ProjectModelMigrationTests: XCTestCase {
         XCTAssertEqual(cues.count, 2)
         for cue in cues {
             XCTAssertEqual(cue.typeID, defaultType.id, "every existing cue must reference the seeded default Type")
-            XCTAssertEqual(cue.fadeTime, .symmetric(0), "v2 chain must backfill fadeTime")
+            XCTAssertEqual(cue.fadeTime, .zero, "v2 chain must backfill fadeTime")
         }
         XCTAssertEqual(cues[0].cueNumber, 1.0, "v2 chain must assign cueNumbers by time order")
         XCTAssertEqual(cues[1].cueNumber, 2.0)
@@ -148,11 +258,11 @@ final class ProjectModelMigrationTests: XCTestCase {
         let cue = try XCTUnwrap(model.items.first?.cues.first)
         XCTAssertEqual(cue.typeID, defaultType.id)
         XCTAssertEqual(cue.cueNumber, 1.0, "v1 chain must assign a cueNumber")
-        XCTAssertEqual(cue.fadeTime, .symmetric(0), "v1 chain must backfill fadeTime")
+        XCTAssertEqual(cue.fadeTime, .zero, "v1 chain must backfill fadeTime")
     }
 
     func test_v3_assignsCueNumbersBySortOrder() throws {
-        let model = try ProjectModel.decode(from: Data(Self.v3FixtureWithUnsortedCues.utf8))
+        let model = try ProjectModel.decode(from: Data(v3FixtureWithUnsortedCues.utf8))
 
         XCTAssertEqual(model.schemaVersion, ProjectModel.currentSchemaVersion)
         let cues = try XCTUnwrap(model.items.first?.cues)
@@ -164,128 +274,20 @@ final class ProjectModelMigrationTests: XCTestCase {
         XCTAssertEqual(cues[2].name, "C")
         XCTAssertEqual(cues[2].cueNumber, 3.0)
         for cue in cues {
-            XCTAssertEqual(cue.fadeTime, .symmetric(0), "v3 chain must backfill fadeTime")
+            XCTAssertEqual(cue.fadeTime, .zero, "v3 chain must backfill fadeTime")
         }
     }
 
     func test_v4_assignsZeroFadeToExistingCues() throws {
-        let model = try ProjectModel.decode(from: Data(Self.v4FixtureWithoutFadeTime.utf8))
+        let model = try ProjectModel.decode(from: Data(v4FixtureWithoutFadeTime.utf8))
 
         XCTAssertEqual(model.schemaVersion, ProjectModel.currentSchemaVersion)
         let cues = try XCTUnwrap(model.items.first?.cues)
         XCTAssertEqual(cues.count, 2)
         for cue in cues {
-            XCTAssertEqual(cue.fadeTime, .symmetric(0), "v4 -> v5 migration must backfill fadeTime symmetric 0")
+            XCTAssertEqual(cue.fadeTime, .zero, "v4 -> v5 migration must backfill fadeTime symmetric 0")
         }
     }
-
-    private static let v4FixtureWithoutFadeTime = """
-    {
-      "schemaVersion": 4,
-      "id": "9F2E0F8A-9C2D-4F2A-9E1A-0E1A2D3C4B5A",
-      "name": "Show",
-      "cuePointTypes": [
-        {
-          "id": "CCCC3333-CCCC-3333-CCCC-3333CCCC3333",
-          "name": "General",
-          "colorHex": "#4ECDC4",
-          "defaultFadeTime": 0,
-          "defaultNamePattern": "Cue",
-          "isVisible": true,
-          "isExportEnabled": true
-        }
-      ],
-      "items": [
-        {
-          "id": "AABBCCDD-1111-2222-3333-444455556666",
-          "media": {
-            "displayName": "act1.wav",
-            "kind": "audio",
-            "duration": 100,
-            "bookmarkData": "AQID"
-          },
-          "cues": [
-            {
-              "id": "11111111-1111-1111-1111-111111111111",
-              "typeID": "CCCC3333-CCCC-3333-CCCC-3333CCCC3333",
-              "cueNumber": 1,
-              "name": "Cue 1",
-              "time": 5.0,
-              "colorHex": "#FF6B6B",
-              "notes": ""
-            },
-            {
-              "id": "22222222-2222-2222-2222-222222222222",
-              "typeID": "CCCC3333-CCCC-3333-CCCC-3333CCCC3333",
-              "cueNumber": 2,
-              "name": "Cue 2",
-              "time": 15.0,
-              "colorHex": "#4ECDC4",
-              "notes": ""
-            }
-          ]
-        }
-      ],
-      "activeItemID": "AABBCCDD-1111-2222-3333-444455556666"
-    }
-    """
-
-    private static let v3FixtureWithUnsortedCues = """
-    {
-      "schemaVersion": 3,
-      "id": "9F2E0F8A-9C2D-4F2A-9E1A-0E1A2D3C4B5A",
-      "name": "Show",
-      "cuePointTypes": [
-        {
-          "id": "CCCC3333-CCCC-3333-CCCC-3333CCCC3333",
-          "name": "General",
-          "colorHex": "#4ECDC4",
-          "defaultFadeTime": 0,
-          "defaultNamePattern": "Cue",
-          "isVisible": true,
-          "isExportEnabled": true
-        }
-      ],
-      "items": [
-        {
-          "id": "AABBCCDD-1111-2222-3333-444455556666",
-          "media": {
-            "displayName": "act1.wav",
-            "kind": "audio",
-            "duration": 100,
-            "bookmarkData": "AQID"
-          },
-          "cues": [
-            {
-              "id": "11111111-1111-1111-1111-111111111111",
-              "typeID": "CCCC3333-CCCC-3333-CCCC-3333CCCC3333",
-              "name": "C",
-              "time": 30.0,
-              "colorHex": "#FF6B6B",
-              "notes": ""
-            },
-            {
-              "id": "22222222-2222-2222-2222-222222222222",
-              "typeID": "CCCC3333-CCCC-3333-CCCC-3333CCCC3333",
-              "name": "A",
-              "time": 5.0,
-              "colorHex": "#4ECDC4",
-              "notes": ""
-            },
-            {
-              "id": "33333333-3333-3333-3333-333333333333",
-              "typeID": "CCCC3333-CCCC-3333-CCCC-3333CCCC3333",
-              "name": "B",
-              "time": 15.0,
-              "colorHex": "#4ECDC4",
-              "notes": ""
-            }
-          ]
-        }
-      ],
-      "activeItemID": "AABBCCDD-1111-2222-3333-444455556666"
-    }
-    """
 
     func test_unknownFutureVersion_throws() {
         let json = """

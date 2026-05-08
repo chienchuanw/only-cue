@@ -32,7 +32,7 @@ final class ProjectModelTests: XCTestCase {
                     time: 4.250,
                     colorHex: "#FF6B6B",
                     notes: "Wait for breath",
-                    fadeTime: .symmetric(0)
+                    fadeTime: .zero
                 ),
                 Cue(
                     id: cueTwoID,
@@ -91,7 +91,7 @@ final class ProjectModelTests: XCTestCase {
             time: 4.25,
             colorHex: "#FF6B6B",
             notes: "",
-            fadeTime: .symmetric(0)
+            fadeTime: .zero
         )
         let data = try JSONEncoder().encode(cue)
         let decoded = try JSONDecoder().decode(Cue.self, from: data)
@@ -129,7 +129,7 @@ final class ProjectModelTests: XCTestCase {
             time: 4.25,
             colorHex: "#FF6B6B",
             notes: "",
-            fadeTime: .symmetric(0)
+            fadeTime: .zero
         )
         let item = MediaItem(
             id: itemID,

@@ -99,7 +99,7 @@ extension ProjectModel {
                 time: time,
                 colorHex: colorHex,
                 notes: notes,
-                fadeTime: .symmetric(0)
+                fadeTime: .zero
             )
         }
     }
@@ -194,7 +194,7 @@ extension ProjectModel {
                 time: time,
                 colorHex: colorHex,
                 notes: notes,
-                fadeTime: .symmetric(0)
+                fadeTime: .zero
             )
         }
     }
@@ -251,7 +251,7 @@ extension ProjectModel {
                 time: time,
                 colorHex: colorHex,
                 notes: notes,
-                fadeTime: .symmetric(0)
+                fadeTime: .zero
             )
         }
     }

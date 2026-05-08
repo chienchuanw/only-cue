@@ -45,7 +45,11 @@ final class FadeTimeTests: XCTestCase {
     }
 
     func test_parse_rejectsMalformedInputs() {
-        let rejected = ["", "  ", "abc", "-1", "1/2/3", "1/", "/2", "1/-1", "-1/1", "1 / 2", "1/abc", "abc/1"]
+        let rejected = [
+            "", "  ", "abc", "-1", "1/2/3", "1/", "/2", "1/-1", "-1/1",
+            "1 / 2", "1/abc", "abc/1",
+            "inf", "infinity", "Inf", "+1", "+1/2", "1/+2"
+        ]
         for input in rejected {
             XCTAssertNil(FadeTime.parse(input), "expected parse to reject input \(input.debugDescription)")
         }

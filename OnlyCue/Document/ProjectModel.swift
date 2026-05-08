@@ -2,7 +2,7 @@ import Foundation
 
 struct ProjectModel: Codable, Equatable {
 
-    static let currentSchemaVersion = 5
+    static let currentSchemaVersion = 6
 
     var schemaVersion: Int
     var id: UUID
@@ -51,6 +51,8 @@ extension ProjectModel {
             return migrateFromV3(try JSONDecoder().decode(LegacyV3.self, from: data))
         case 4:
             return migrateFromV4(try JSONDecoder().decode(LegacyV4.self, from: data))
+        case 5:
+            return migrateFromV5(try JSONDecoder().decode(LegacyV5.self, from: data))
         case currentSchemaVersion:
             return try JSONDecoder().decode(ProjectModel.self, from: data)
         default:
@@ -104,7 +106,6 @@ extension ProjectModel {
                 cueNumber: 0,  // overwritten by assignCueNumbersBySort
                 name: name,
                 time: time,
-                colorHex: colorHex,
                 notes: notes,
                 fadeTime: .zero
             )
@@ -199,7 +200,6 @@ extension ProjectModel {
                 cueNumber: 0,  // overwritten by assignCueNumbersBySort
                 name: name,
                 time: time,
-                colorHex: colorHex,
                 notes: notes,
                 fadeTime: .zero
             )
@@ -256,7 +256,6 @@ extension ProjectModel {
                 cueNumber: cueNumber,
                 name: name,
                 time: time,
-                colorHex: colorHex,
                 notes: notes,
                 fadeTime: .zero
             )
@@ -264,6 +263,62 @@ extension ProjectModel {
     }
 
     private static func migrateFromV4(_ legacy: LegacyV4) -> ProjectModel {
+        let items = legacy.items.map { legacyItem in
+            MediaItem(
+                id: legacyItem.id,
+                media: legacyItem.media,
+                cues: legacyItem.cues.map { $0.toCue() }
+            )
+        }
+        return ProjectModel(
+            schemaVersion: currentSchemaVersion,
+            id: legacy.id,
+            name: legacy.name,
+            cuePointTypes: legacy.cuePointTypes,
+            items: items,
+            activeItemID: legacy.activeItemID
+        )
+    }
+
+    private struct LegacyV5: Decodable {
+        let schemaVersion: Int
+        let id: UUID
+        let name: String
+        let cuePointTypes: [CuePointType]
+        let items: [LegacyV5Item]
+        let activeItemID: UUID?
+    }
+
+    private struct LegacyV5Item: Decodable {
+        let id: UUID
+        let media: MediaReference
+        let cues: [LegacyV5Cue]
+    }
+
+    private struct LegacyV5Cue: Decodable {
+        let id: UUID
+        let typeID: UUID
+        let cueNumber: Double
+        let name: String
+        let time: TimeInterval
+        let colorHex: String
+        let notes: String
+        let fadeTime: FadeTime
+
+        func toCue() -> Cue {
+            Cue(
+                id: id,
+                typeID: typeID,
+                cueNumber: cueNumber,
+                name: name,
+                time: time,
+                notes: notes,
+                fadeTime: fadeTime
+            )
+        }
+    }
+
+    private static func migrateFromV5(_ legacy: LegacyV5) -> ProjectModel {
         let items = legacy.items.map { legacyItem in
             MediaItem(
                 id: legacyItem.id,

@@ -9,6 +9,10 @@ final class ProjectModelTests: XCTestCase {
     private static let cueTwoID  = "22222222-2222-2222-2222-222222222222"
     private static let templateProjectID = "00000000-0000-0000-0000-000000000001"
 
+    func test_currentSchemaVersionIsSix() {
+        XCTAssertEqual(ProjectModel.currentSchemaVersion, 6)
+    }
+
     func test_colorHex_for_returnsMatchingTypeColor() throws {
         let typeID = UUID()
         let lighting = CuePointType(id: typeID, name: "Lighting", colorHex: "#FF6B6B")
@@ -18,7 +22,6 @@ final class ProjectModelTests: XCTestCase {
             cueNumber: 1,
             name: "Cue",
             time: 0,
-            colorHex: "#000000",
             notes: "",
             fadeTime: .zero
         )
@@ -41,7 +44,6 @@ final class ProjectModelTests: XCTestCase {
             cueNumber: 1,
             name: "Cue",
             time: 0,
-            colorHex: "#000000",
             notes: "",
             fadeTime: .zero
         )
@@ -78,7 +80,6 @@ final class ProjectModelTests: XCTestCase {
                     cueNumber: 1,
                     name: "Spot up SR",
                     time: 4.250,
-                    colorHex: "#FF6B6B",
                     notes: "Wait for breath",
                     fadeTime: .zero
                 ),
@@ -88,7 +89,6 @@ final class ProjectModelTests: XCTestCase {
                     cueNumber: 2,
                     name: "Wash full",
                     time: 12.000,
-                    colorHex: "#4ECDC4",
                     notes: "",
                     fadeTime: FadeTime(fadeIn: 1.0, fadeOut: 2.0)
                 )
@@ -126,10 +126,6 @@ final class ProjectModelTests: XCTestCase {
         XCTAssertEqual(decoded, original)
     }
 
-    func test_currentSchemaVersionIsFive() {
-        XCTAssertEqual(ProjectModel.currentSchemaVersion, 5)
-    }
-
     func test_cueNumberRoundTripsThroughJSON() throws {
         let cue = Cue(
             id: UUID(),
@@ -137,7 +133,6 @@ final class ProjectModelTests: XCTestCase {
             cueNumber: 1.5,
             name: "Spot up SR",
             time: 4.25,
-            colorHex: "#FF6B6B",
             notes: "",
             fadeTime: .zero
         )
@@ -153,7 +148,6 @@ final class ProjectModelTests: XCTestCase {
             cueNumber: 1,
             name: "Wash full",
             time: 12.0,
-            colorHex: "#4ECDC4",
             notes: "",
             fadeTime: FadeTime(fadeIn: 1.0, fadeOut: 2.0)
         )
@@ -175,7 +169,6 @@ final class ProjectModelTests: XCTestCase {
             cueNumber: 1,
             name: "Spot up SR",
             time: 4.25,
-            colorHex: "#FF6B6B",
             notes: "",
             fadeTime: .zero
         )

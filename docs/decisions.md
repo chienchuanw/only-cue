@@ -15,6 +15,13 @@ ADR template:
 
 ---
 
+## ADR-010 — `Cue.cueNumber` as a required model field with sort-order migration (schema v4)
+**Date**: 2026-05-08
+**Status**: Accepted
+**Decision**: Add `Cue.cueNumber: Double` as a required user-facing cue number distinct from `Cue.id: UUID`. `addCueAtPlayhead` assigns the number by an "insert without ripple" rule: empty list → 1.0; at-end → predecessor's number + 1; between two cues → mid-point; before all → successor's number − 1 (may go negative on repeated inserts before the minimum). Bump `schemaVersion` 3 → 4 with a v3 → v4 migration that assigns sequential `cueNumber`s by time order within each item; v1 and v2 migrations chain through the same `assignCueNumbersBySort` helper so any pre-v4 source lands with valid numbers.
+**Why**: Console exports (#34) need a cue number column that lighting designers actually edit. Modelling it as a required `Double` rather than `Optional<Double>` keeps every consumer (export, inspector, breakdown view) free of `Optional` plumbing — at the cost of a schema bump. We chose mid-point insertion over re-numbering on every insert so existing cue numbers are stable: a console operator who wrote down "GO 4" doesn't see it become "GO 5" because someone added a cue earlier in the timeline. Below-minimum inserts going negative is allowed and ugly; the cue inspector leaf will provide a "renumber from 1" command to clean up. Alternative algorithms (mid-point with virtual 0 floor; hard floor at 0.5) all collide on repeated insertion before the minimum, while negatives degrade gracefully.
+**Reversal cost**: Medium. The migration is one-way (pre-v4 readers cannot open v4 files). Reverting would require a v4 → v3 down-migration that drops `cueNumber` — losing user numbering, but everything else survives.
+
 ## ADR-009 — CuePoint Types as first-class entities (schema v3)
 **Date**: 2026-05-08
 **Status**: Accepted

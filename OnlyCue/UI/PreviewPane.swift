@@ -63,7 +63,7 @@ struct PreviewPane: View {
         }
     }
 
-    private func waveform(for asset: AVURLAsset, item: MediaItem, withPlayhead: Bool = false) -> WaveformContainer {
+    private func waveform(for asset: AVURLAsset, item: MediaItem, withPlayhead: Bool = false) -> some View {
         WaveformContainer(
             asset: asset,
             cues: item.cues,
@@ -78,6 +78,7 @@ struct PreviewPane: View {
             },
             engine: withPlayhead ? engine : nil
         )
+        .id(asset.url)
     }
 
     private func placeholder(_ message: String) -> some View {

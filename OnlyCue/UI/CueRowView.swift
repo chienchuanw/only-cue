@@ -15,6 +15,7 @@ struct CueRowView: View {
 
     let index: Int
     let cue: Cue
+    var resolvedColorHex: String?
     var onRename: (String) -> Void = { _ in }
     var onRecolor: (String) -> Void = { _ in }
 
@@ -59,7 +60,7 @@ struct CueRowView: View {
             VStack(alignment: .leading, spacing: 2) {
                 ForEach(Self.palette, id: \.hex) { entry in
                     Button {
-                        if entry.hex != cue.colorHex { onRecolor(entry.hex) }
+                        if entry.hex != resolvedColorHex { onRecolor(entry.hex) }
                         showColorPopover = false
                     } label: {
                         HStack(spacing: 8) {
@@ -98,7 +99,8 @@ struct CueRowView: View {
     }
 
     private var swatchColor: Color {
-        Color(hex: cue.colorHex) ?? .accentColor
+        guard let hex = resolvedColorHex else { return .accentColor }
+        return Color(hex: hex) ?? .accentColor
     }
 
     private func beginRename() {

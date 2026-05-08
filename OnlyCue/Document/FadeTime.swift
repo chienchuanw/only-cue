@@ -26,8 +26,23 @@ extension FadeTime {
         }
     }
 
+    /// Canonical user-facing form: `"1.5"` for symmetric, `"1/2"` for split. Drops trailing `.0` on whole numbers.
+    func format() -> String {
+        if fadeIn == fadeOut {
+            return Self.formatNumber(fadeIn)
+        }
+        return "\(Self.formatNumber(fadeIn))/\(Self.formatNumber(fadeOut))"
+    }
+
     private static func parseNonNegative(_ s: Substring) -> TimeInterval? {
         guard !s.isEmpty, let value = Double(s), value >= 0 else { return nil }
         return value
+    }
+
+    private static func formatNumber(_ t: TimeInterval) -> String {
+        if t == t.rounded() {
+            return String(Int(t))
+        }
+        return String(t)
     }
 }

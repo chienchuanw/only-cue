@@ -35,6 +35,29 @@ extension CueCommands {
         }
     }
 
+    /// Removes a Type and reassigns every cue currently referencing it to `reassignTo`.
+    /// Both mutations land in one undo group: ⌘Z restores the Type and the prior typeIDs.
+    /// Caller is responsible for: blocking the call when this is the last Type, and showing
+    /// any confirmation dialog before invoking.
+    static func removeCuePointType(
+        id: CuePointType.ID,
+        reassignTo: CuePointType.ID,
+        document: CueListDocument,
+        undoManager: UndoManager?
+    ) {
+        mutateProject(document, undoManager: undoManager, actionName: "Delete Type") { model in
+            for itemIndex in model.items.indices {
+                model.items[itemIndex].cues = model.items[itemIndex].cues.map { cue in
+                    guard cue.typeID == id else { return cue }
+                    var copy = cue
+                    copy.typeID = reassignTo
+                    return copy
+                }
+            }
+            model.cuePointTypes.removeAll(where: { $0.id == id })
+        }
+    }
+
     /// Sets the target Type's hotkey. If `newHotkey` is non-nil and another Type already
     /// holds it, that Type's hotkey is cleared atomically (move semantics). Single
     /// `mutateTypes` snapshot so undo restores both Types' hotkeys in one step.
@@ -74,6 +97,70 @@ extension CueCommands {
                 return copy
             }
         }
+    }
+
+    /// Wide undo seam: snapshots the entire (cuePointTypes, items, activeItemID) tuple
+    /// and restores all three on undo. Used by mutations that cross the Type/cue boundary
+    /// (currently only `removeCuePointType`, which both deletes a Type and rewrites
+    /// referenced cues' typeIDs).
+    fileprivate static func mutateProject(
+        _ document: CueListDocument,
+        undoManager: UndoManager?,
+        actionName: String,
+        _ change: (inout ProjectModel) -> Void
+    ) {
+        undoManager?.beginUndoGrouping()
+        defer { undoManager?.endUndoGrouping() }
+
+        let beforeTypes = document.model.cuePointTypes
+        let beforeItems = document.model.items
+        let beforeActive = document.model.activeItemID
+
+        change(&document.model)
+
+        undoManager?.registerUndo(withTarget: document) { doc in
+            Self.restoreProject(
+                types: beforeTypes,
+                items: beforeItems,
+                activeID: beforeActive,
+                document: doc,
+                undoManager: undoManager,
+                actionName: actionName
+            )
+        }
+        undoManager?.setActionName(actionName)
+    }
+
+    fileprivate static func restoreProject(
+        types oldTypes: [CuePointType],
+        items oldItems: [MediaItem],
+        activeID oldActive: MediaItem.ID?,
+        document: CueListDocument,
+        undoManager: UndoManager?,
+        actionName: String
+    ) {
+        undoManager?.beginUndoGrouping()
+        defer { undoManager?.endUndoGrouping() }
+
+        let currentTypes = document.model.cuePointTypes
+        let currentItems = document.model.items
+        let currentActive = document.model.activeItemID
+
+        document.model.cuePointTypes = oldTypes
+        document.model.items = oldItems
+        document.model.activeItemID = oldActive
+
+        undoManager?.registerUndo(withTarget: document) { doc in
+            Self.restoreProject(
+                types: currentTypes,
+                items: currentItems,
+                activeID: currentActive,
+                document: doc,
+                undoManager: undoManager,
+                actionName: actionName
+            )
+        }
+        undoManager?.setActionName(actionName)
     }
 
     fileprivate static func mutateTypes(

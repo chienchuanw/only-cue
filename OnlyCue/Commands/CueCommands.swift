@@ -3,8 +3,6 @@ import Foundation
 @MainActor
 enum CueCommands {
 
-    static let defaultCueColorHex = "#4ECDC4"
-
     // MARK: - Cue mutations (scoped to the active item)
 
     static func addCueAtPlayhead(
@@ -12,13 +10,16 @@ enum CueCommands {
         document: CueListDocument,
         undoManager: UndoManager?
     ) {
-        let typeID = document.model.defaultCuePointTypeID ?? UUID()
+        guard let defaultType = document.model.cuePointTypes.first else {
+            assertionFailure("Project has no CuePointTypes — invariant violated by upstream code")
+            return
+        }
         let cue = Cue(
             id: UUID(),
-            typeID: typeID,
+            typeID: defaultType.id,
             name: "Cue",
             time: max(time, 0),
-            colorHex: defaultCueColorHex,
+            colorHex: defaultType.colorHex,
             notes: ""
         )
         mutateCues(document, undoManager: undoManager, actionName: "Add Cue") { cues in

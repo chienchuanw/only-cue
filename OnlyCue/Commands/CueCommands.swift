@@ -23,7 +23,8 @@ enum CueCommands {
             name: "Cue",
             time: clampedTime,
             colorHex: defaultType.colorHex,
-            notes: ""
+            notes: "",
+            fadeTime: .symmetric(0)
         )
         mutateCues(document, undoManager: undoManager, actionName: "Add Cue") { cues in
             (cues + [cue]).sorted { $0.time < $1.time }

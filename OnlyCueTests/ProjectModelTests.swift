@@ -31,7 +31,8 @@ final class ProjectModelTests: XCTestCase {
                     name: "Spot up SR",
                     time: 4.250,
                     colorHex: "#FF6B6B",
-                    notes: "Wait for breath"
+                    notes: "Wait for breath",
+                    fadeTime: .symmetric(0)
                 ),
                 Cue(
                     id: cueTwoID,
@@ -40,7 +41,8 @@ final class ProjectModelTests: XCTestCase {
                     name: "Wash full",
                     time: 12.000,
                     colorHex: "#4ECDC4",
-                    notes: ""
+                    notes: "",
+                    fadeTime: FadeTime(fadeIn: 1.0, fadeOut: 2.0)
                 )
             ]
         )
@@ -88,11 +90,28 @@ final class ProjectModelTests: XCTestCase {
             name: "Spot up SR",
             time: 4.25,
             colorHex: "#FF6B6B",
-            notes: ""
+            notes: "",
+            fadeTime: .symmetric(0)
         )
         let data = try JSONEncoder().encode(cue)
         let decoded = try JSONDecoder().decode(Cue.self, from: data)
         XCTAssertEqual(decoded.cueNumber, 1.5)
+    }
+
+    func test_cueFadeTimeRoundTripsThroughJSON_split() throws {
+        let cue = Cue(
+            id: UUID(),
+            typeID: UUID(),
+            cueNumber: 1,
+            name: "Wash full",
+            time: 12.0,
+            colorHex: "#4ECDC4",
+            notes: "",
+            fadeTime: FadeTime(fadeIn: 1.0, fadeOut: 2.0)
+        )
+        let data = try JSONEncoder().encode(cue)
+        let decoded = try JSONDecoder().decode(Cue.self, from: data)
+        XCTAssertEqual(decoded.fadeTime, FadeTime(fadeIn: 1.0, fadeOut: 2.0))
     }
 
     func test_jsonRoundTrip_withCuePointTypeAndCueReference() throws {
@@ -109,7 +128,8 @@ final class ProjectModelTests: XCTestCase {
             name: "Spot up SR",
             time: 4.25,
             colorHex: "#FF6B6B",
-            notes: ""
+            notes: "",
+            fadeTime: .symmetric(0)
         )
         let item = MediaItem(
             id: itemID,

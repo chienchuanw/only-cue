@@ -7,6 +7,11 @@ struct FadeTime: Codable, Equatable, Hashable {
 
 extension FadeTime {
 
+    /// Symmetric fade where `fadeIn == fadeOut == t`. Use `.symmetric(0)` as the no-fade default.
+    static func symmetric(_ t: TimeInterval) -> FadeTime {
+        FadeTime(fadeIn: t, fadeOut: t)
+    }
+
     /// Parses a fade-time string. Accepts `"1"`, `"1.5"` (symmetric) and `"1/2"` (split: in=1, out=2).
     /// Trims surrounding whitespace; rejects empty, non-numeric, negative, multi-slash, or half-empty inputs.
     static func parse(_ s: String) -> FadeTime? {

@@ -146,12 +146,12 @@ enum MediaKind: String, Codable {
 | `item.media.duration` | Cached so we can render UI before the asset finishes loading. |
 | `item.cues` | Cue list scoped to this item. Cues are not shared between items. |
 | `cue.id` | Stable; never reused even after delete. |
-| `cue.typeID` | Required. References a `CuePointType.id` in `cuePointTypes`. |
-| `cue.cueNumber` | User-facing cue number consumed by lighting consoles. Required. Assigned by `CueCommands.addCueAtPlayhead`: empty list → 1.0; insertion at end → time-predecessor's number + 1; between two cues → mid-point of their numbers; before all → time-successor's number − 1 (may go negative on repeated inserts before the minimum; the future cue inspector will provide a "renumber from 1" command). Existing cues' numbers are never shifted on insert. |
+| `cue.typeID` | Required. References a `CuePointType.id` in `cuePointTypes`. Editable via the cue inspector pane (Type picker → `CueCommands.setType`). |
+| `cue.cueNumber` | User-facing cue number consumed by lighting consoles. Required. Assigned by `CueCommands.addCueAtPlayhead`: empty list → 1.0; insertion at end → time-predecessor's number + 1; between two cues → mid-point of their numbers; before all → time-successor's number − 1 (may go negative on repeated inserts before the minimum; a future "renumber from 1" command is still pending). Existing cues' numbers are never shifted on insert. Manually editable via the cue inspector (text field → `CueCommands.setCueNumber`). |
 | `cue.time` | Seconds, double precision. Must be `>= 0` and `<= item.media.duration`. |
 | `cue.colorHex` | `#RRGGBB`, uppercase, validated on decode. Transitional duplication of the Type's color until the UI is updated to read from the Type. |
-| `cue.notes` | Free text, may be empty. |
-| `cue.fadeTime` | Required. `FadeTime(fadeIn:fadeOut:)`. New cues default to `.symmetric(0)` (no fade); v4 → v5 migration backfills the same. UI input is parsed via `FadeTime.parse(_:)` which accepts `"1"` / `"1.5"` (symmetric) and `"1/2"` (split: in=1, out=2), trims surrounding whitespace, rejects empty/non-numeric/negative/multi-slash/half-empty inputs. The struct itself does not trap on negative values; the parser is the gate. |
+| `cue.notes` | Free text, may be empty. Editable via the cue inspector (multi-line editor → `CueCommands.setNotes`). |
+| `cue.fadeTime` | Required. `FadeTime(fadeIn:fadeOut:)`. New cues default to `.symmetric(0)` (no fade); v4 → v5 migration backfills the same. The cue inspector parses input via `FadeTime.parse(_:)` (accepts `"1"` / `"1.5"` symmetric and `"1/2"` split, trims whitespace, rejects empty/non-numeric/negative/multi-slash/half-empty), routes valid edits through `CueCommands.setFadeTime`, and reverts the field to `FadeTime.format()`'s canonical form on rejection. The struct itself does not trap on negative values; the parser is the gate. |
 
 ## Versioning policy
 
@@ -183,6 +183,5 @@ These are out of scope. Adding any of them is a `schemaVersion` bump.
 - Per-cue OSC/MIDI payloads
 - Cross-item cue references or shared cue lists
 - Per-item playhead memory (active-item switch resets transport to 0)
-- Manual edit / "renumber all" of `cueNumber` — comes with the cue inspector leaf under epic #32
-- UI for editing `fadeTime` (text field that calls `FadeTime.parse(_:)`) — comes with the cue inspector leaf under epic #32
+- A "renumber all from 1" command on `cueNumber` — manual per-cue editing exists via the cue inspector, but a bulk normalize command is still pending
 - `CuePointType.defaultFadeTime` applied at cue creation — currently unused; wiring is a separate leaf that may also convert that field to `FadeTime`

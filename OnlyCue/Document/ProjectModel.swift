@@ -131,7 +131,6 @@ extension ProjectModel {
         let id: UUID
         let name: String
         let time: TimeInterval
-        let colorHex: String
         let notes: String
 
         func toPendingCue(typeID: UUID) -> PendingCue {
@@ -223,7 +222,6 @@ extension ProjectModel {
         let typeID: UUID
         let name: String
         let time: TimeInterval
-        let colorHex: String
         let notes: String
 
         func toPendingCue() -> PendingCue {
@@ -278,7 +276,6 @@ extension ProjectModel {
         let cueNumber: Double
         let name: String
         let time: TimeInterval
-        let colorHex: String
         let notes: String
 
         func toCue() -> Cue {
@@ -333,7 +330,6 @@ extension ProjectModel {
         let cueNumber: Double
         let name: String
         let time: TimeInterval
-        let colorHex: String
         let notes: String
         let fadeTime: FadeTime
 

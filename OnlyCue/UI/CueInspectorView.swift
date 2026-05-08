@@ -145,8 +145,9 @@ struct CueInspectorView: View {
         switch CueInspectorCommit.commitCueNumber(draft: numberDraft, current: cue.cueNumber) {
         case .parsed(let value):
             CueCommands.setCueNumber(cueId: cue.id, to: value, document: document, undoManager: undoManager)
+            numberDraft = FadeTime.formatNumber(value)
         case .noChange:
-            break
+            numberDraft = FadeTime.formatNumber(cue.cueNumber)
         case .revert(let canonical):
             numberDraft = canonical
         }

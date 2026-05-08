@@ -52,7 +52,7 @@ Filed 2026-05-08 from the CuePoints competitive-gap brainstorm. Positioning: "pr
 
 | Issue | Title | Pri | Status |
 |---|---|---|---|
-| [#32](https://github.com/chienchuanw/only-cue/issues/32) | Cue model rework — CuePoint Types, Cue ID, fade time | p1 | 🟡 in progress (leaf [#44](https://github.com/chienchuanw/only-cue/issues/44) shipped via PR #45 — CuePointType + schema v3) |
+| [#32](https://github.com/chienchuanw/only-cue/issues/32) | Cue model rework — CuePoint Types, Cue ID, fade time | p1 | 🟡 in progress (leaves [#44](https://github.com/chienchuanw/only-cue/issues/44) → PR #45 [CuePointType + schema v3], [#46](https://github.com/chienchuanw/only-cue/issues/46) → PR #47 [Cue.cueNumber + schema v4]) |
 | [#33](https://github.com/chienchuanw/only-cue/issues/33) | LTC generation + audio routing | p1 | ⚪ open |
 | [#34](https://github.com/chienchuanw/only-cue/issues/34) | Console export — CSV, MA2, MA3 (depends on #32) | p1 | ⚪ open |
 | [#35](https://github.com/chienchuanw/only-cue/issues/35) | OSC remote control (Companion / MA3 / StreamDeck) | p1 | ⚪ open |
@@ -66,14 +66,19 @@ Filed 2026-05-08 from the CuePoints competitive-gap brainstorm. Positioning: "pr
 
 Filed JIT via `gh-dev` as work picks up. Each becomes its own issue + PR.
 
-- [x] spec — `docs/data-model.md#schema-v3` + ADR-009 (bundled into #44)
-- [x] model — introduce `CuePointType` (#44)
-- [x] migration — v2→v3 transform (#44)
-- [ ] model — editable `Cue.id` with auto-increment + ripple-down on insert/move
+- [x] spec — `docs/data-model.md#schema-v3` + ADR-009 (bundled into #44 → PR #45)
+- [x] model — introduce `CuePointType` (#44 → PR #45)
+- [x] migration — v2→v3 transform (#44 → PR #45)
+- [x] model — editable `Cue.cueNumber` with mid-point insertion rule + schema v4 + v3→v4 migration (#46 → PR #47)
 - [ ] model — `Cue.fadeTime` with split-fade syntax (`1/2` → `(in: 1.0, out: 2.0)`)
 - [ ] shortcut — number-key cue creation (1–0 binds to a Type via the keymap)
-- [ ] ui — cue inspector pane (edit Type, ID, fade, notes)
+- [ ] ui — cue inspector pane (edit Type, cueNumber, fade, notes)
 - [ ] cleanup — UI reads color from Type; remove transitional `Cue.colorHex`
+
+### Carry-overs from PR #47 review (deferred substantive notes)
+
+- [ ] [#48](https://github.com/chienchuanw/only-cue/issues/48) — stable-sort tie-breaker on equal `cue.time` in `assignCueNumbersBySort`
+- [ ] [#49](https://github.com/chienchuanw/only-cue/issues/49) — drop the `cueNumber: 0` placeholder in `LegacyCue.toCue` / `LegacyV3Cue.toCue` (PendingCue tuple / struct so the type system enforces the invariant)
 
 ## Phase 3 milestone — Differentiator
 

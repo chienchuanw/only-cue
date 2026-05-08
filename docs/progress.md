@@ -4,6 +4,50 @@ Append-only session log. Newer entries on top.
 
 ---
 
+## 2026-05-08 — Editable Cue.cueNumber with mid-point insertion rule, schema v4 (PR #47, leaf #46 of epic #32)
+
+**Shipped:** issue #46 (second leaf of epic #32). PR #47 merged into `dev` (rebase, head `19713f9`). `Cue` now carries a user-facing `cueNumber: Double` distinct from `Cue.id: UUID`. `addCueAtPlayhead` assigns the number by an "insert without ripple" rule: empty list → 1.0; at-end → predecessor's number + 1; between two cues → mid-point; before all → successor's number − 1 (may go negative on repeated inserts before the minimum). Schema bumped to v4 with a v3→v4 migration that assigns sequential numbers by time order; v1 and v2 paths chain through the same shared `assignCueNumbersBySort` helper.
+
+**Why required `Double`, not `Optional<Double>`:** modelling it as required keeps every downstream consumer (export #34, the future cue inspector, breakdown view #37) free of `Optional` plumbing. The schema bump is a one-time cost; `Optional` plumbing is forever. Captured as **ADR-010**.
+
+**Why mid-point insertion, not renumber-on-insert:** existing cue numbers are stable. A console operator who wrote down "GO 4" doesn't see it become "GO 5" because someone added a cue earlier in the timeline. The future cue inspector will provide a "renumber from 1" command to normalize the negatives that accumulate from repeated before-all inserts.
+
+**What landed (5 TDD commits + 1 simplify + 4 review-fix commits = 10 commits):**
+- `OnlyCue/Document/Cue.swift` — gains required `cueNumber: Double`.
+- `OnlyCue/Document/ProjectModel.swift` — `currentSchemaVersion` 3 → 4. New private `LegacyV3` / `LegacyV3Item` / `LegacyV3Cue` decoder shapes. New `migrateFromV3`. New private `assignCueNumbersBySort(_:)` that every migrate function (v1/v2/v3) calls on its return value — v1/v2/v3 cues all land sorted by time with sequential `cueNumber`s `1.0, 2.0, ...`.
+- `OnlyCue/Commands/CueNumberAssignment.swift` (new file, landed during review-fix cycle) — `enum CueNumberAssignment { static func next(forInsertionAt:in:) -> Double }`. Pure function, naturally reusable from a future "Renumber from 1" command. Extracted from `CueCommands` to keep that enum body under SwiftLint's `type_body_length` cap.
+- `OnlyCue/Commands/CueCommands.swift` — `addCueAtPlayhead` calls `CueNumberAssignment.next(forInsertionAt: clampedTime, in: existingCues)` for the new cue's number. Pre-existing `defaultCueColorHex` constant gone (sourced from active default Type per PR #45).
+- 6 new unit tests across `CueCommandsTests` (5 algorithm cases: empty / at-end / mid / at-start / repeated-at-start-goes-negative) and 1 new `ProjectModelMigrationTests.test_v3_assignsCueNumbersBySortOrder` (uses out-of-time-order JSON to verify the migration sorts cues). Existing v1/v2 migration tests grew assertions on cueNumber. Schema-version sentinel renamed v3 → v4. Codable round-trip for cueNumber added. **115/115 unit tests green.**
+- `docs/data-model.md` — schema v4 throughout: example JSON, Swift types, field rules with the `cue.cueNumber` assignment-rule entry, versioning policy describing all three migration chains (v1→current, v2→current, v3→current) all ending in `assignCueNumbersBySort`.
+- `docs/decisions.md` — **ADR-010** (after ADR-009 CuePoint Types).
+
+**Simplify pass — 3 fixes (commit `e9c9d09`, before review):**
+1. Unreachable `(nil, nil)` case in `nextCueNumber` → `preconditionFailure` with a descriptive message. Quality reviewer's call: silent-return-1.0 was masking an invariant break.
+2. Trim `assignCueNumbersBySort` doc comment from three lines to one. Restating the body was noise; only the "predates the field" why-context was load-bearing.
+3. Add `// overwritten by assignCueNumbersBySort` comments at each `cueNumber: 0` placeholder in `LegacyCue.toCue` and `LegacyV3Cue.toCue`. After this leaf, `0` is a legitimate value (`addCueAtPlayhead` produces it for "before all when min was 1"), so the sentinel had become indistinguishable from data.
+
+**Skipped from simplify:**
+- "Drop the redundant `.sorted` in `CueNumberAssignment.next`" — efficiency reviewer wanted it gone (caller's input is invariant-sorted), quality reviewer wanted it kept (helper self-containment). Kept for safety; cost is trivial at OnlyCue's scales.
+- "Drop `cuePointTypes: [CuePointType] = []` default" — quality reviewer claimed all callers pass it explicitly; verified false (3 tests rely on it for empty-project fixtures).
+
+**Review cycle — 4 SwiftLint blockers + 3 substantive notes** (one round, all blockers resolved in 4 fix commits + 1 piggybacked tweak):
+1. **`identifier_name`** (`var c` in `assignCueNumbersBySort`) → renamed to `var updated`. Commit `a3827c4`.
+2. **`type_body_length`** (`CueCommands` enum body 251/250) → reviewer's structural suggestion: extract `nextCueNumber` to its own file rather than nudge the cap. Created `OnlyCue/Commands/CueNumberAssignment.swift`. Commit `b304eb6`.
+3. **`line_length`** 144 chars at `ProjectModelTests:27` → broke the `Cue(...)` initializer across lines. Commit `830a629`.
+4. **`function_body_length`** 66/50 at `test_v3_assignsCueNumbersBySortOrder` → hoisted the v3 JSON literal to a private static `let v3FixtureWithUnsortedCues` above the test. Same commit also trimmed a 143-char `preconditionFailure` message in the new `CueNumberAssignment.swift` that the extract had introduced. Commit `21e6767` (rebase-mapped to `19713f9`).
+
+**Substantive notes deferred:**
+- Issue [#48](https://github.com/chienchuanw/only-cue/issues/48) — stable-sort tie-breaker on equal `cue.time` in `assignCueNumbersBySort`.
+- Issue [#49](https://github.com/chienchuanw/only-cue/issues/49) — drop the `cueNumber: 0` placeholder in `LegacyCue.toCue` / `LegacyV3Cue.toCue` via a `PendingCue` tuple or struct so the type system enforces "every Cue gets a real cueNumber".
+
+**Workflow gotcha — gh-fix's "fetch unresolved review threads" came back empty.** The reviewer's feedback was an issue-level PR comment (`gh pr view --json comments`), not a review thread. Always check both surfaces. Cross-referenced with the failed CI run's `gh run view --log-failed` output to confirm all 4 violations.
+
+**Workflow gotcha — re-running `swiftlint --strict` between fix commits caught one self-inflicted regression.** Extracting `nextCueNumber` introduced a 143-char line in the new file (the `preconditionFailure` message). Caught locally before push by re-running lint, not just at the end of the fix cycle.
+
+**Closing note — second leaf of #32 done.** Remaining leaves under epic #32: `Cue.fadeTime` with split-fade syntax (`1/2`), number-key cue creation (1–0), cue inspector pane, and the UI rewire to read color from the Type + remove transitional `Cue.colorHex`.
+
+---
+
 ## 2026-05-08 — Phase 2 epics filed + first leaf shipped: CuePointType schema v3 (PR #45, leaf #44 of epic #32)
 
 **Shipped:** the parity-push slate for Phase 2 (9 epics, [#32–#40](https://github.com/chienchuanw/only-cue/issues?q=is%3Aissue+milestone%3A%22Phase+2+%E2%80%94+Pro+handoff%22)) and the first leaf of #32. PR #45 merged into `dev`. `ProjectModel` now carries a `cuePointTypes` catalog and every `Cue` references a Type by `typeID`. Schema bumped to **v3** with a v2→v3 migration that seeds a default Type "General" carrying the previous `defaultCueColorHex` and assigns its id to every existing cue. v1→current chains through the same default-Type seeding.

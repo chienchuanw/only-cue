@@ -4,6 +4,20 @@ Non-obvious things learned during development. Things you'd want to remember nex
 
 ---
 
+## `.id(input)` only helps if the input itself is fresh
+
+Multi-item sidebar landed. User reports: "the waveform is inconsistent. It will become some other waveform for some reasons." We had already added `.id(asset.url)` on `WaveformContainer` — supposedly belt-and-suspenders against `@State` carrying over between item switches.
+
+Root cause was deeper. `PreviewPane` was reading the asset from `engine.player.currentItem?.asset`. When the user clicks item B in the sidebar, `setActiveItem(B)` updates `activeItemID` synchronously and SwiftUI invalidates immediately. But the engine reload runs in `DocumentView.task(id: activeItemID) { MediaImporter.loadActive(...) }` — asynchronous, lags by several frames. During that gap, `PreviewPane.body` sees `activeItem = B` (correct, fresh) but `engine.player.currentItem.asset = A` (still the old one). So `WaveformContainer(asset: A-asset)` builds with B's cues, and `.id(A.url)` keeps the old instance alive — A's peaks paint with B's markers.
+
+Fix: source the waveform's URL from the model, not the engine. `PreviewPane` resolves the active item's bookmark on `task(id: activeItemID)` and passes the URL directly. The engine still drives playback, but display identity is decoupled from playback state.
+
+The pattern is general: `.id(x)` only forces a fresh instance when `x` actually represents the new identity. If `x` is sourced from a dependency that lags through async work, `.id` will keep returning the stale value during the gap. When the displayed identity should change atomically with model state, source it from the model — not from a downstream consumer of that model.
+
+Sister insight from the same PR: "I added @State to dedup framework events" usually means the framework already dedups and you didn't read the docs carefully. SwiftUI's `task(id:)` already cancels and re-runs only when the id changes; the `loadedItemID` `@State` cache and the `onActiveItemChange` callback I'd added were both belt-and-suspenders that duplicated SwiftUI's own behavior. Trust framework primitives by default; add caches only with measured evidence.
+
+---
+
 ## Hoisting `@Observable` reads into a leaf subview to scope re-evaluation
 
 `PlayerEngine` is `@Observable` and ticks `currentTime` every 100 ms via `AVPlayer.addPeriodicTimeObserver`. The first cut of the playhead read `engine.currentTime` directly inside `WaveformContainer.body` (via two `@ViewBuilder` computed properties for the playhead overlay and the drag grabber). That worked, but every tick invalidated `WaveformContainer.body`, which in turn re-walked the sibling `CueMarkersOverlay` (a `GeometryReader` containing a `ForEach` over cues) — even though no cue had changed.

@@ -4,6 +4,40 @@ Append-only session log. Newer entries on top.
 
 ---
 
+## 2026-05-08 — Multi-media items per project (PR #41, issue #31)
+
+**Shipped:** issue #31 (post-MVP enhancement). PR #41 merged into `dev`. A `.cuelist` document now represents an entire show: it holds a list of `MediaItem`s, each with its own media reference and its own cue list. Multi-file imports append items in selection/drop order. A left sidebar lets the user switch the active item, drag-reorder, and ⌫-delete with undo.
+
+**What landed (8 commits + 1 user `.gitignore`):**
+- Schema bumped to **v2**. `ProjectModel` now exposes `items: [MediaItem]` and `activeItemID: UUID?`. New `MediaItem` wraps a non-optional `MediaReference` plus its own `cues: [Cue]`. `ProjectModel.decode(from:)` probes the version and migrates v1 forward — v1+media wraps into one `MediaItem`; v1+nil yields empty items. One-way upgrade (v0.1.0 readers cannot open v2). Captured as **ADR-008**.
+- `OnlyCue/Document/{ProjectModel,MediaItem,CueListDocument}.swift` carry the new types and the migration entry point.
+- `OnlyCue/Commands/CueCommands.swift` — existing cue mutations now scope to the active item via `mutateCues` (no-op when `activeItemID == nil`). New item-level commands: `addItem`, `addItems` (one undo group per batch), `removeItem` (advance active to next or previous if last), `renameItem`, `reorderItems`. `setActiveItem` and `refreshBookmark` are intentionally NOT undoable — selection is view state; stale-bookmark refresh is OS-driven.
+- `OnlyCue/Commands/MediaImporter.swift` — accepts `[URL]`. `withTaskGroup` parallelizes per-file `AVURLAsset.load(.duration)` so N-file import scales by the slowest file rather than the sum. Per-file failures collected as `MediaImportError.batch(unsupported:)`; valid imports still append. After import, kicks off a detached background-priority `WaveformPrewarmer`.
+- `OnlyCue/Media/PlayerEngine.swift` — added `unload()` for clean teardown on item switch.
+- `OnlyCue/Media/WaveformPrewarmer.swift` (new) — runs `WaveformGenerator.peaks` + `WaveformCache.write` for each new item in the background. Cache hits are skipped (verified by `cacheHit_isANoOp` test asserting mtime is unchanged).
+- `OnlyCue/UI/DocumentView.swift` — three-pane `NavigationSplitView` (items | preview | cues). `task(id: activeItemID)` drives engine reload; SwiftUI's task-id dedup is sufficient.
+- `OnlyCue/UI/{ItemListPane,ItemRowView}.swift` (new) — sidebar list, `.onMove` drag-reorder, multi-URL drop, ⌫ to remove.
+- `OnlyCue/UI/PreviewPane.swift` — waveform now resolves the active item's bookmark on `task(id: activeItemID)` and feeds the resulting URL into `WaveformContainer` keyed with `.id(url)`. Source of truth shifted from `engine.player.currentItem?.asset` (which lags through engine reload) to the model.
+- `OnlyCue/UI/{CueListPane}.swift` — binds to active item's cues.
+- 16 new unit tests: `ProjectModelMigrationTests` (3), `CueCommandsItemTests` (11), `WaveformPrewarmerTests` (2). Updated `ProjectModelTests`, `CueCommandsTests`, `MediaImporterTests` for the new model. **67/67 unit tests green.**
+- `docs/data-model.md` rewritten for v2; `docs/architecture.md` three-pane diagram + new component map; `docs/decisions.md` ADR-008; `docs/verification.md` step 14 covers multi-import + per-item cue isolation + drag-reorder persistence; `docs/build-sequence.md` post-MVP row #13.
+
+**Simplify pass — 4 fixes (commit `aed3e5d`):**
+1. Parallelized `MediaImporter.makeItem` via `withTaskGroup` (HIGH-priority efficiency win flagged in review).
+2. Routed stale-bookmark refresh through new `CueCommands.refreshBookmark` seam (was directly mutating `document.model.items[index].media.bookmarkData`, violating CLAUDE.md hard rule "No direct mutations of `ProjectModel`").
+3. Dropped `loadedItemID` belt-and-suspenders cache and the `onActiveItemChange` callback. SwiftUI's `task(id:)` is already idempotent — the `@State` cache and the parent-callback ping were duplicating its own dedup.
+4. Stopped rewriting `schemaVersion` in `snapshot(contentType:)`; it is set at decode/init time.
+
+**Two real bugs caught in user testing, fixed in-PR:**
+1. **Wrong waveform on item switch.** Even with `.id(asset.url)` on `WaveformContainer`, the waveform briefly painted the previous item's peaks against the new item's cue markers and playhead. Root cause: `PreviewPane` was reading the asset from `engine.player.currentItem?.asset`, which lags through `MediaImporter.loadActive`. Fix (commit `a16b179`): `PreviewPane` resolves the active item's bookmark on `task(id: activeItemID)` and feeds the URL to the waveform — model-sourced, not engine-sourced. Captured in `findings.md` as a SwiftUI invalidation pattern: when a leaf view's identity is conceptually tied to one of its inputs, `.id` that input — but make sure the input itself isn't sourced from a stale-by-design dependency.
+2. **Slow first render of each item's waveform.** Cache miss path was paid on every first click. Fix (commit `a60e697`): `WaveformPrewarmer` warms the cache in the background right after import. Subsequent clicks are cache hits.
+
+**SwiftLint cleanup (commit `8603b76`):** 6 warnings cleared — shorthand `[T]` over `Array<T>`, `V1`→`LegacyV1` (type-name length), `a`/`b`/`c` test variables → `first`/`middle`/`last`/`only`/`second`, multiline argument formatting, `v` → `version` in catch binding, comma spacing.
+
+**Closing note — third post-MVP enhancement landed.** The data model now supports the way real shows are organized (one project = N items). Phase 2 epics still unscoped on the issue board. Roadmap unchanged.
+
+---
+
 ## 2026-05-08 — Waveform playhead with drag-to-scrub (PR #30, issue #29)
 
 **Shipped:** issue #29 (post-MVP enhancement). PR #30 merged into `dev`. The waveform now shows the play position as a draggable vertical line with a floating HH:MM:SS label, on both the audio-only waveform and the audio strip beneath the video preview.

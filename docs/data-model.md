@@ -10,7 +10,7 @@ UTType: `com.onlycue.cuelist`, conforms to `public.json`.
 
 ```json
 {
-  "schemaVersion": 3,
+  "schemaVersion": 4,
   "id": "9F2E0F8A-9C2D-4F2A-9E1A-0E1A2D3C4B5A",
   "name": "Show A",
   "activeItemID": "AABBCCDD-1111-2222-3333-444455556666",
@@ -39,6 +39,7 @@ UTType: `com.onlycue.cuelist`, conforms to `public.json`.
         {
           "id": "11111111-1111-1111-1111-111111111111",
           "typeID": "CCCC3333-CCCC-3333-CCCC-3333CCCC3333",
+          "cueNumber": 1,
           "name": "Spot up SR",
           "time": 4.250,
           "colorHex": "#FF6B6B",
@@ -47,6 +48,7 @@ UTType: `com.onlycue.cuelist`, conforms to `public.json`.
         {
           "id": "22222222-2222-2222-2222-222222222222",
           "typeID": "CCCC3333-CCCC-3333-CCCC-3333CCCC3333",
+          "cueNumber": 2,
           "name": "Wash full",
           "time": 12.000,
           "colorHex": "#4ECDC4",
@@ -62,7 +64,7 @@ UTType: `com.onlycue.cuelist`, conforms to `public.json`.
 
 ```swift
 struct ProjectModel: Codable {
-    static let currentSchemaVersion = 3
+    static let currentSchemaVersion = 4
 
     var schemaVersion: Int
     var id: UUID
@@ -94,6 +96,7 @@ struct MediaItem: Codable, Identifiable, Equatable {
 struct Cue: Codable, Identifiable, Equatable {
     var id: UUID
     var typeID: UUID              // references CuePointType.id; required
+    var cueNumber: Double         // user-facing cue number (1, 1.5, 2, ...); console-consumable; required
     var name: String
     var time: TimeInterval        // seconds from item's media start
     var colorHex: String          // "#RRGGBB" — kept transitionally; UI will read color from the Type in a follow-up leaf
@@ -134,19 +137,21 @@ enum MediaKind: String, Codable {
 | `item.cues` | Cue list scoped to this item. Cues are not shared between items. |
 | `cue.id` | Stable; never reused even after delete. |
 | `cue.typeID` | Required. References a `CuePointType.id` in `cuePointTypes`. |
+| `cue.cueNumber` | User-facing cue number consumed by lighting consoles. Required. Assigned by `CueCommands.addCueAtPlayhead`: empty list → 1.0; insertion at end → time-predecessor's number + 1; between two cues → mid-point of their numbers; before all → time-successor's number − 1 (may go negative on repeated inserts before the minimum; the future cue inspector will provide a "renumber from 1" command). Existing cues' numbers are never shifted on insert. |
 | `cue.time` | Seconds, double precision. Must be `>= 0` and `<= item.media.duration`. |
 | `cue.colorHex` | `#RRGGBB`, uppercase, validated on decode. Transitional duplication of the Type's color until the UI is updated to read from the Type. |
 | `cue.notes` | Free text, may be empty. |
 
 ## Versioning policy
 
-- `schemaVersion: 3` is the current file. We will **never** mutate v3 semantics; new fields go in v4.
+- `schemaVersion: 4` is the current file. We will **never** mutate v4 semantics; new fields go in v5.
 - Adding optional fields → old readers ignore unknown keys via `Codable`; no version bump required.
-- Removing or repurposing a field → bump `schemaVersion` and write a migration.
-- Migrations are pure functions `(JSONvN) -> ProjectModel`, applied during `ProjectModel.decode(from:)`:
+- Adding a required field, or removing / repurposing a field → bump `schemaVersion` and write a migration.
+- Migrations are pure functions `(JSONvN) -> ProjectModel`, applied during `ProjectModel.decode(from:)`. Every migration ends with a `assignCueNumbersBySort` pass so cues from any pre-v4 source land with sequential `cueNumber` values:
   - **v1 → current**: wraps the v1 (media, cues) into a single `MediaItem`; seeds a default `CuePointType` "General" with `colorHex` `#4ECDC4`; assigns that Type's id to every cue. v1 documents with no media decode to `items: []`.
   - **v2 → current**: keeps `items` and `activeItemID` as-is; seeds the default `CuePointType` "General"; assigns that Type's id to every existing cue.
-- v3 is a one-way upgrade: v0.1.0 (v1) and the multi-items build (v2) cannot open v3 files.
+  - **v3 → current**: keeps `cuePointTypes`, `items`, and `activeItemID` as-is; assigns sequential `cueNumber`s by time order within each item.
+- v4 is a one-way upgrade: v0.1.0 (v1), the multi-items build (v2), and the CuePoint-Types build (v3) cannot open v4 files.
 
 ## Bookmark behavior
 
@@ -166,5 +171,5 @@ These are out of scope. Adding any of them is a `schemaVersion` bump.
 - Per-cue OSC/MIDI payloads
 - Cross-item cue references or shared cue lists
 - Per-item playhead memory (active-item switch resets transport to 0)
-- Editable `Cue.id` (cue number) with auto-increment + ripple-down — separate leaf under epic #32
 - `Cue.fadeTime` with split-fade syntax (e.g. `1/2`) — separate leaf under epic #32
+- Manual edit / "renumber all" of `cueNumber` — comes with the cue inspector leaf under epic #32

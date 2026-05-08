@@ -4,6 +4,78 @@ Append-only session log. Newer entries on top.
 
 ---
 
+## 2026-05-08 — Type management sheet (PR #57, leaf #56 of epic #32)
+
+**Shipped:** issue #56 (sixth leaf of epic #32). PR #57 merged into `dev` (rebase, head `70411c7`). The cue inspector now exposes a "Manage Types…" button that opens a modal sheet for full `CuePointType` CRUD: SwiftUI `ColorPicker` per row, name `TextField`, hotkey `Picker` (none / 0–9), `✕` delete with a confirm dialog that reassigns referenced cues to the default Type. UI-only — no schema bump (every `CuePointType` field already existed from PR #45). **161/161 unit tests green; 0 SwiftLint violations; Release build clean (warnings-as-errors).**
+
+**Why this leaf was the natural follow-up to PR #55:** PR #55 made color a Type-derived fact and removed the per-row palette popover, leaving the default project with one Type ("General" `#4ECDC4`) and no UI to add more — only JSON hand-edits. ADR-012 captured this as the accepted transitional cost. The user verified the gap was real on the merged `dev` branch within minutes of PR #55 landing, and this leaf closes it. It also unblocks the only remaining leaf under #32 (number-key cue creation), which depends on `Type.hotkey` being settable.
+
+**Why two new undo seams:**
+- `mutateTypes(_:undoManager:actionName:_:)` — narrow seam. Snapshots only `cuePointTypes`. Used by `addCuePointType`, `setCuePointTypeName`, `setCuePointTypeColor`, and `setCuePointTypeHotkey`.
+- `mutateProject(_:undoManager:actionName:_:)` — wide seam. Snapshots `(cuePointTypes, items)` via a fileprivate `ProjectSnapshot` value type. Used only by `removeCuePointType`, which mutates both the Type catalog *and* per-cue `typeID`s in the same undo group.
+
+**Why `ProjectSnapshot` deliberately excludes `activeItemID`:** caught by the simplify pass as a latent correctness bug. If we'd captured the active item id in the snapshot, undoing a Type deletion *after* the user switched to a different item would silently revert their selection. The snapshot's doc comment now documents this exclusion explicitly.
+
+**Why `setCuePointTypeHotkey` uses move semantics on conflict:** lighting consoles map digits 0–9 to Types one-to-one. Letting two Types claim the same hotkey is ambiguous. The command iterates `cuePointTypes`, sets the target Type's hotkey to the new value, and clears any other Type currently holding that digit — all in one `mutateTypes` snapshot. ⌘Z restores both Types' hotkeys atomically. Tested by `test_setCuePointTypeHotkey_clearsPriorHolder_undoRestoresBoth`.
+
+**Why a pure `TypeDeletionPlan` helper:** the delete-confirm dialog needs (typeID, typeName, referencedCueCount, reassignTargetID, reassignTargetName) — all derivable from `(ProjectModel, CuePointType.ID)`. Centralizing the math in a value type lets us TDD the edge cases (returns nil when only one Type remains; reassign target = `cuePointTypes[1]` when deleting the default; correct count across all items × cues) without spinning up a SwiftUI host. The view consumes the plan and feeds it to `.confirmationDialog(presenting:)`.
+
+**What landed in PR #57 (9 commits):**
+- `OnlyCue/Commands/CueCommands+Types.swift` (new) — five public mutations + private `updateType` helper + `mutateTypes`/`restoreTypes` (narrow recursive seam) + `mutateProject`/`restoreProject` (wide recursive seam) + `ProjectSnapshot` fileprivate struct
+- `OnlyCue/UI/TypeManagementSheet.swift` (new) — sheet view + `TypeManagementRow` + `.confirmationDialog(presenting:)` for delete
+- `OnlyCue/UI/TypeDeletionPlan.swift` (new) — pure helper for the dialog math
+- `OnlyCue/UI/CueInspectorView.swift` — added "Manage Types…" button below a Divider; `@State var showTypesSheet`; `.sheet(isPresented:)` modifier
+- `OnlyCue/Document/CuePointType+DefaultPalette.swift` (new) — shared 8-color palette extracted from the simplify pass; same hex values as the pre-PR-55 `CueRowView.palette`
+- `OnlyCue/Utilities/Color+Hex.swift` — added `Color.toHex() -> String?` (inverse of `init?(hex:)`) via `NSColor` sRGB conversion. Components clamped to `0...1` before scaling so wide-gamut (P3) colors round to a valid hex byte
+- `OnlyCueTests/CueCommandsTypesTests.swift` (new) — 6 tests: add / rename / recolor / setHotkey + setHotkey-move-semantics + remove-with-reassign-and-undo
+- `OnlyCueTests/TypeDeletionPlanTests.swift` (new) — 4 tests: returns-nil-when-only-one-Type, counts-across-items, targets-types-index-1-when-deleting-default, zero-count-when-unreferenced
+- `docs/data-model.md` — `cuePointType.colorHex` and `cuePointType.hotkey` field-rules rows now reference the Manage Types sheet
+
+**Simplify pass — 5 fixes applied (commit `70411c7`), 6 deferred:**
+
+Applied:
+1. **BUG**: dead `@State private var colorBinding` in `TypeManagementRow` — declared but never read or written. Deleted.
+2. **EDGE CASE**: `Color.toHex()` could produce out-of-range values for wide-gamut colors. Fix: clamp components to `0...1` before `* 255` scaling.
+3. **CORRECTNESS**: `ProjectSnapshot.activeItemID` was a latent undo bug (would silently revert post-delete item selection on undo). Dropped from the snapshot.
+4. **REUSE**: default-color palette extracted to `CuePointType.defaultPalette` so the next caller can't re-introduce drift (the same 8 hex values had already drifted once between `CueRowView.palette` pre-PR-55 and the inline static in `TypeManagementSheet`).
+5. **NIT**: `TypeDeletionPlan.make` allocated intermediate arrays via `filter.count` — switched to `reduce(0) { $0 + ($1.typeID == id ? 1 : 0) }` for clarity + zero-alloc.
+
+Deferred:
+- Collapsing `CueCommands+Items.swift`'s `restoreItems` into the new `mutateProject` seam — bigger refactor, only theoretical risk today.
+- Generic mutate-seam helper across `mutateCues` / `mutateTypes` / `mutateProject` — defer until 4th seam appears.
+- `updateCue` / `updateType` generic — cosmetic at two callsites.
+- `addType` name collision (delete "Type 2", add → new "Type 2") — UX limitation; users can rename.
+- `setCuePointTypeHotkey` nil-to-nil short-circuit — not hot.
+- `updateType` full-array map perf — bounded at M=1–10 Types.
+
+**SwiftLint hits caught locally before commit:**
+1. `Prefer Self in Static References` on `TypeDeletionPlan.make` — return type `TypeDeletionPlan?` → `Self?`; `return TypeDeletionPlan(...)` → `return Self(...)`.
+2. `function_parameter_count` on `restoreProject` (6 params, cap 5) — bundled (types, items, activeItemID) into `ProjectSnapshot` fileprivate struct (which simultaneously enabled the correctness fix above).
+3. `multiline_arguments` in `TypeManagementSheet`'s `ForEach` callbacks — extracted helper methods (`rename`, `recolor`, `setHotkey`) to keep call sites short.
+
+**TDD discipline — 9 separate cycles:**
+1. `addCuePointType` + `mutateTypes` recursive seam
+2. `setCuePointTypeName` + `updateType` private helper
+3. `setCuePointTypeColor`
+4. `setCuePointTypeHotkey` + move semantics test
+5. `removeCuePointType` + `mutateProject` wide seam + `ProjectSnapshot` (later narrowed in simplify)
+6. `TypeDeletionPlan` pure helper
+7. `TypeManagementSheet` + `TypeManagementRow` + `Color.toHex()` + `CueInspectorView` button integration
+8. Docs (`data-model.md` field rules)
+9. Simplify pass (5 fixes)
+
+Each cycle: red (verified failure), green (minimum impl), commit.
+
+**Manual verification (PR test plan):** open the inspector, click "Manage Types…", verify sheet appears; add 2 Types; assign hotkey 1 successively to each, verify move semantics; pick a P3 color via the picker on a wide-gamut display, verify the resulting hex round-trips losslessly; assign cues to a non-default Type, delete that Type, verify confirm dialog and reassignment.
+
+**XCUITest deferred** per `OnlyCueUITests` harness flakiness on this machine. The pure-logic parts (`TypeDeletionPlan`, the five new `CueCommands`) are fully covered by unit tests.
+
+**Closing note — sixth leaf of #32 done; the schema cleanup, the inspector, and the Type CRUD are all in.** One leaf remains under #32: number-key cue creation (1–0 → key event listener → create cue at playhead using the Type bound to that digit). It's now unblocked because `Type.hotkey` is settable through this sheet — the user verified end-to-end on the merged `dev` branch and confirmed the hotkey persists; only the keymap dispatch remains.
+
+Carry-overs from PR #47 review still open: [#48](https://github.com/chienchuanw/only-cue/issues/48) (stable-sort tie-breaker on equal `cue.time`) and [#49](https://github.com/chienchuanw/only-cue/issues/49) (drop the `cueNumber: 0` placeholder via a `PendingCue` helper across `LegacyCue.toCue` / `LegacyV3Cue.toCue` / `LegacyV4Cue.toCue` / `LegacyV5Cue.toCue` — now four sites, growing each schema bump).
+
+---
+
 ## 2026-05-08 — Color from CuePointType, drop Cue.colorHex, schema v6 (PR #55, leaf #54 of epic #32)
 
 **Shipped:** issue #54 (fifth leaf of epic #32). PR #55 merged into `dev` (rebase, head `39a30e8`). Every UI site that paints a cue color now resolves via the cue's `CuePointType` through a new `ProjectModel.colorHex(for:)` helper. The transitional `Cue.colorHex` field is gone. Schema bumped to **v6** with a `migrateFromV5` that decodes the v5 envelope and constructs v6 cues without colorHex; v1/v2/v3/v4 chains all drop the field at their `toCue()` boundary so every pre-v6 source lands at v6. **151/151 unit tests green; 0 SwiftLint violations; Release build clean (warnings-as-errors).**

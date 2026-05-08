@@ -52,7 +52,7 @@ Filed 2026-05-08 from the CuePoints competitive-gap brainstorm. Positioning: "pr
 
 | Issue | Title | Pri | Status |
 |---|---|---|---|
-| [#32](https://github.com/chienchuanw/only-cue/issues/32) | Cue model rework — CuePoint Types, Cue ID, fade time | p1 | 🟡 in progress (leaves [#44](https://github.com/chienchuanw/only-cue/issues/44) → PR #45 [CuePointType + schema v3], [#46](https://github.com/chienchuanw/only-cue/issues/46) → PR #47 [Cue.cueNumber + schema v4], [#50](https://github.com/chienchuanw/only-cue/issues/50) → PR #51 [Cue.fadeTime + schema v5], [#52](https://github.com/chienchuanw/only-cue/issues/52) → PR #53 [cue inspector pane], [#54](https://github.com/chienchuanw/only-cue/issues/54) → PR #55 [color from Type + schema v6]) |
+| [#32](https://github.com/chienchuanw/only-cue/issues/32) | Cue model rework — CuePoint Types, Cue ID, fade time | p1 | 🟡 in progress (leaves [#44](https://github.com/chienchuanw/only-cue/issues/44) → PR #45 [CuePointType + schema v3], [#46](https://github.com/chienchuanw/only-cue/issues/46) → PR #47 [Cue.cueNumber + schema v4], [#50](https://github.com/chienchuanw/only-cue/issues/50) → PR #51 [Cue.fadeTime + schema v5], [#52](https://github.com/chienchuanw/only-cue/issues/52) → PR #53 [cue inspector pane], [#54](https://github.com/chienchuanw/only-cue/issues/54) → PR #55 [color from Type + schema v6], [#56](https://github.com/chienchuanw/only-cue/issues/56) → PR #57 [Type management sheet]) |
 | [#33](https://github.com/chienchuanw/only-cue/issues/33) | LTC generation + audio routing | p1 | ⚪ open |
 | [#34](https://github.com/chienchuanw/only-cue/issues/34) | Console export — CSV, MA2, MA3 (depends on #32) | p1 | ⚪ open |
 | [#35](https://github.com/chienchuanw/only-cue/issues/35) | OSC remote control (Companion / MA3 / StreamDeck) | p1 | ⚪ open |
@@ -72,8 +72,9 @@ Filed JIT via `gh-dev` as work picks up. Each becomes its own issue + PR.
 - [x] model — editable `Cue.cueNumber` with mid-point insertion rule + schema v4 + v3→v4 migration (#46 → PR #47)
 - [x] model — `Cue.fadeTime` with split-fade syntax (`1/2` → `(in: 1.0, out: 2.0)`) + schema v5 + v4→v5 migration (#50 → PR #51)
 - [x] ui — cue inspector pane (edit Type, cueNumber, fade, notes) — VSplitView below cue list, four new `CueCommands` setters, pure `CueInspectorCommit` parse-or-revert helper, focused-aware draft sync (#52 → PR #53)
-- [x] cleanup — UI reads color from Type; remove transitional `Cue.colorHex` — `ProjectModel.colorHex(for:)` resolver, `CueRowView`/`CueMarkersOverlay` rewired, palette popover and `CueCommands.recolor` deleted, schema v6 with v5→v6 migration (#54 → PR #55). Type management UI is the natural follow-up leaf to restore per-cue color flexibility.
-- [ ] shortcut — number-key cue creation (1–0 binds to a Type via the keymap)
+- [x] cleanup — UI reads color from Type; remove transitional `Cue.colorHex` — `ProjectModel.colorHex(for:)` resolver, `CueRowView`/`CueMarkersOverlay` rewired, palette popover and `CueCommands.recolor` deleted, schema v6 with v5→v6 migration (#54 → PR #55).
+- [x] ui — Type management sheet — "Manage Types…" button in cue inspector opens a modal with `ColorPicker` / name / hotkey / delete per row; five new `CueCommands` mutations through narrow `mutateTypes` and wide `mutateProject` undo seams; `TypeDeletionPlan` pure helper; `Color.toHex()` for sRGB-clamped round-trip; shared `CuePointType.defaultPalette` (#56 → PR #57).
+- [ ] shortcut — number-key cue creation (1–0 binds to a Type via the keymap) — last leaf under #32, now unblocked because Type.hotkey is settable through the Manage Types sheet.
 
 ### Carry-overs from PR #47 review (deferred substantive notes)
 

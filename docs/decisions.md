@@ -15,6 +15,13 @@ ADR template:
 
 ---
 
+## ADR-012 — Color resolves from `CuePointType`; drop transitional `Cue.colorHex` (schema v6)
+**Date**: 2026-05-08
+**Status**: Accepted
+**Decision**: Remove `Cue.colorHex` from the model. Every UI site that paints a cue color (the row swatch, the waveform marker overlay) resolves color from the cue's `CuePointType` via a new `ProjectModel.colorHex(for cue: Cue) -> String?` helper. The per-row palette popover and `CueCommands.recolor` are deleted; users change a cue's color by picking a different Type from the inspector picker. Bump `schemaVersion` 5 → 6 with a deterministic `migrateFromV5` that decodes the v5 envelope and constructs v6 cues without the field. v1, v2, v3, v4 chains keep their legacy `colorHex` decode for backward-compat parsing but their `toCue()` methods drop it; every pre-v6 source lands on a v6 model.
+**Why**: PR #53 (cue inspector) made the staleness of per-cue color visible: changing Type via the inspector picker only mutates `cue.typeID`, leaving `cue.colorHex` on the previous Type's color. Color is a Type-derived fact, not per-cue state, so the field was redundant from PR #45 (when CuePointType landed) and now actively harmful as a UI/model disagreement source. The transitional duplication kept the MVP's color-picker UX working through #45/#47/#51/#53; the inspector now provides the single editing surface for Type membership and the popover's per-cue palette is deprecated. Snapshotting the Type's color into `cue.colorHex` at `setType` time was considered but rejected: it would convert the disagreement into stale-cache drift (recoloring a Type wouldn't update existing cues) and add two failure modes without removing the underlying issue. UX trade-off accepted: until a Type management UI ships, users only have whatever Types exist (default project has one, "General"), so per-cue color choice is temporarily reduced to "pick from existing Types".
+**Reversal cost**: Medium. The migration is one-way (pre-v6 readers cannot open v6 files). Reverting would require a v6 → v5 down-migration that synthesizes per-cue `colorHex` from the Type at decode — losslessly recoverable, but the popover and `recolor` would need to come back to give users editing power again.
+
 ## ADR-011 — `Cue.fadeTime` as a struct with synthesized Codable; symmetric vs split is derived (schema v5)
 **Date**: 2026-05-08
 **Status**: Accepted

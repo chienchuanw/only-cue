@@ -15,6 +15,13 @@ ADR template:
 
 ---
 
+## ADR-009 — CuePoint Types as first-class entities (schema v3)
+**Date**: 2026-05-08
+**Status**: Accepted
+**Decision**: Introduce `CuePointType` as a first-class entity in `ProjectModel`. Every `Cue` references a Type by `typeID`. Bump `schemaVersion` to 3 with a v2 → v3 migration that seeds a default Type "General" (`#4ECDC4`) and assigns it to every existing cue. v1 → current chains through the same default-Type seeding.
+**Why**: CuePoints organises shows by Type — lighting, sound, video, blocking, choreography — and this is what consoles consume on import. A flat per-cue color cannot express shared properties (default fade, hotkey 0–9, visibility, export-include) that belong to a category. Modelling Types as their own entity is the foundation for console export (#34), the breakdown view (#37), templates (#39), and number-key cue creation (later leaf of #32). Routing all of those through a single `cuePointTypes` array means no per-feature schema bumps later.
+**Reversal cost**: Medium. The migration is one-way (v0.1.0 / multi-items v2 cannot open v3 files). Reverting would require a v3 → v2 down-migration that discards `cuePointTypes` and per-cue `typeID` — losing user organisation, but `colorHex` still survives on the cue.
+
 ## ADR-008 — Multi-media items live in one `.cuelist` (vs N documents)
 **Date**: 2026-05-08
 **Status**: Accepted

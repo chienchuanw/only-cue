@@ -22,6 +22,13 @@ struct ProjectModel: Codable, Equatable {
         guard let id = activeItemID else { return nil }
         return items.firstIndex { $0.id == id }
     }
+
+    /// Resolves the cue's display color from its `CuePointType`. Returns `nil` when the
+    /// `typeID` doesn't match any Type in `cuePointTypes` (a programmer error in production
+    /// but tolerated so views can fall back to `.accentColor`).
+    func colorHex(for cue: Cue) -> String? {
+        cuePointTypes.first(where: { $0.id == cue.typeID })?.colorHex
+    }
 }
 
 extension ProjectModel {

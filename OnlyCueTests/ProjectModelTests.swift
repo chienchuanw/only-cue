@@ -9,6 +9,54 @@ final class ProjectModelTests: XCTestCase {
     private static let cueTwoID  = "22222222-2222-2222-2222-222222222222"
     private static let templateProjectID = "00000000-0000-0000-0000-000000000001"
 
+    func test_colorHex_for_returnsMatchingTypeColor() throws {
+        let typeID = UUID()
+        let lighting = CuePointType(id: typeID, name: "Lighting", colorHex: "#FF6B6B")
+        let cue = Cue(
+            id: UUID(),
+            typeID: typeID,
+            cueNumber: 1,
+            name: "Cue",
+            time: 0,
+            colorHex: "#000000",
+            notes: "",
+            fadeTime: .zero
+        )
+        let model = ProjectModel(
+            schemaVersion: ProjectModel.currentSchemaVersion,
+            id: UUID(),
+            name: "x",
+            cuePointTypes: [lighting],
+            items: [],
+            activeItemID: nil
+        )
+
+        XCTAssertEqual(model.colorHex(for: cue), "#FF6B6B")
+    }
+
+    func test_colorHex_for_danglingTypeID_returnsNil() throws {
+        let cue = Cue(
+            id: UUID(),
+            typeID: UUID(),
+            cueNumber: 1,
+            name: "Cue",
+            time: 0,
+            colorHex: "#000000",
+            notes: "",
+            fadeTime: .zero
+        )
+        let model = ProjectModel(
+            schemaVersion: ProjectModel.currentSchemaVersion,
+            id: UUID(),
+            name: "x",
+            cuePointTypes: [],
+            items: [],
+            activeItemID: nil
+        )
+
+        XCTAssertNil(model.colorHex(for: cue))
+    }
+
     func test_jsonRoundTrip_preservesAllFields() throws {
         let projectID = try XCTUnwrap(UUID(uuidString: Self.projectID))
         let itemID    = try XCTUnwrap(UUID(uuidString: Self.itemID))

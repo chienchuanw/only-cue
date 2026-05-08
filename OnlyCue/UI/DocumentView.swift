@@ -63,6 +63,7 @@ struct DocumentView: View {
             }
 
             transportShortcuts
+            digitShortcuts
 
             Text("Drop files on the sidebar or press ⌘O to import.")
                 .multilineTextAlignment(.center)
@@ -173,6 +174,29 @@ struct DocumentView: View {
         .frame(width: 0, height: 0)
         .opacity(0)
         .accessibilityHidden(true)
+    }
+
+    private var digitShortcuts: some View {
+        ZStack {
+            ForEach(0...9, id: \.self) { digit in
+                Button("Cue Type \(digit)") { triggerHotkey(digit) }
+                    .keyboardShortcut(KeyEquivalent(Character("\(digit)")), modifiers: [])
+            }
+        }
+        .frame(width: 0, height: 0)
+        .opacity(0)
+        .accessibilityHidden(true)
+        .disabled(document.model.activeItem == nil)
+    }
+
+    private func triggerHotkey(_ digit: Int) {
+        guard let type = document.model.cuePointType(forHotkey: digit) else { return }
+        CueCommands.addCueAtPlayhead(
+            time: engine.currentTime,
+            typeID: type.id,
+            document: document,
+            undoManager: undoManager
+        )
     }
 
     private func jump(by seconds: TimeInterval) {

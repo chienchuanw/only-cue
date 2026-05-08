@@ -11,6 +11,12 @@ enum CueInspectorCommit {
         case revert(canonical: String)
     }
 
+    enum NumberOutcome: Equatable {
+        case parsed(Double)
+        case noChange
+        case revert(canonical: String)
+    }
+
     static func commitFadeTime(draft: String, current: FadeTime) -> FadeOutcome {
         guard let parsed = FadeTime.parse(draft) else {
             return .revert(canonical: current.format())
@@ -19,5 +25,23 @@ enum CueInspectorCommit {
             return .noChange
         }
         return .parsed(parsed)
+    }
+
+    static func commitCueNumber(draft: String, current: Double) -> NumberOutcome {
+        let trimmed = draft.trimmingCharacters(in: .whitespaces)
+        guard !trimmed.isEmpty, let parsed = Double(trimmed), parsed.isFinite else {
+            return .revert(canonical: formatNumber(current))
+        }
+        if parsed == current {
+            return .noChange
+        }
+        return .parsed(parsed)
+    }
+
+    private static func formatNumber(_ value: Double) -> String {
+        if value == value.rounded() {
+            return String(Int(value))
+        }
+        return String(value)
     }
 }

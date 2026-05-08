@@ -4,6 +4,68 @@ Append-only session log. Newer entries on top.
 
 ---
 
+## 2026-05-08 — Color from CuePointType, drop Cue.colorHex, schema v6 (PR #55, leaf #54 of epic #32)
+
+**Shipped:** issue #54 (fifth leaf of epic #32). PR #55 merged into `dev` (rebase, head `39a30e8`). Every UI site that paints a cue color now resolves via the cue's `CuePointType` through a new `ProjectModel.colorHex(for:)` helper. The transitional `Cue.colorHex` field is gone. Schema bumped to **v6** with a `migrateFromV5` that decodes the v5 envelope and constructs v6 cues without colorHex; v1/v2/v3/v4 chains all drop the field at their `toCue()` boundary so every pre-v6 source lands at v6. **151/151 unit tests green; 0 SwiftLint violations; Release build clean (warnings-as-errors).**
+
+**Why this leaf surfaced now:** PR #53 (cue inspector) made the staleness of per-cue color visible. The inspector picker calls `CueCommands.setType` which only mutates `cue.typeID` — `cue.colorHex` continued to hold the previous Type's color. Result: changing Type via the picker left the row swatch on the old color. The transitional `colorHex` was kept on `Cue` through PR #45 (when `CuePointType` landed) to avoid breaking the MVP's color-picker UX in one go; with the inspector now the editing surface for Type membership, the per-cue field was redundant and actively harmful as a UI/model disagreement source.
+
+**Why the layout order matters:** dropping `Cue.colorHex` first would break every UI site that reads it. The TDD cycles ran in dependency order — helper first → row rewire → marker rewire → popover deletion → schema bump last — so each cycle stayed compile-green. The schema bump in cycle 5 was the atomic structural change once the field was unused everywhere except construction sites.
+
+**Why a closure for the marker overlay's resolver:** `CueMarkersOverlay` takes a `resolveColorHex: (Cue) -> String?` closure rather than the array of `CuePointType`s or a precomputed `[UUID: String]` map. The closure stays at the call-site abstraction level — the overlay doesn't need to know about the project model — and lets `PreviewPane` build the resolver inline as `{ document.model.colorHex(for: $0) }`. SwiftUI rebuilds the closure each render but `document` is `@ObservedObject`, so closures pick up fresh state correctly. Bounded-OK at current scale (M=1–10 Types, N=tens of cues per render).
+
+**Why the popover is deleted entirely (UX trade-off, captured in ADR-012):** the existing per-row palette popover wrote to `cue.colorHex` via `CueCommands.recolor`. Both the field and the command are gone. Users now change a cue's color by picking a different Type via the inspector. Until a Type management UI ships, the default project has only one Type ("General" `#4ECDC4`), so per-cue color flexibility is temporarily reduced. ADR-012 documents this as accepted transitional cost. Snapshotting `Type.colorHex` into `Cue.colorHex` at `setType` time was rejected — converts disagreement into stale-cache drift (recoloring a Type wouldn't update existing cues) without removing the underlying issue.
+
+**Why `LegacyV5*` mirrors `LegacyV4*` plus `fadeTime`:** same frozen-snapshot pattern as the prior chains. Each `LegacyVN` is a frozen JSON envelope; generalizing them would couple frozen formats and create regression risk on every future schema bump. Pattern is intentional, kept across all four migration chains.
+
+**What landed in PR #55 (7 commits):**
+- `OnlyCue/Document/Cue.swift` — drop `var colorHex: String`.
+- `OnlyCue/Document/ProjectModel.swift` — bump `currentSchemaVersion` 5 → 6; add `case 5: migrateFromV5` to the decode switch; new private `LegacyV5` / `LegacyV5Item` / `LegacyV5Cue` (the v5 envelope mirrors v4 plus `fadeTime`); `migrateFromV5(_:)` constructs v6 cues without colorHex; existing `LegacyCue.toCue` / `LegacyV3Cue.toCue` / `LegacyV4Cue.toCue` updated to drop the `colorHex:` arg from their `Cue(...)` constructors. New instance helper `func colorHex(for cue: Cue) -> String?` resolves via `cuePointTypes.first(where: { $0.id == cue.typeID })?.colorHex`.
+- `OnlyCue/Commands/CueCommands.swift` — drop `colorHex:` from `addCueAtPlayhead`'s `Cue(...)`; delete `recolor(cueId:to:)`.
+- `OnlyCue/UI/CueRowView.swift` — add `resolvedColorHex: String?` prop; replace inline `Circle()` swatch with shared `CueColorSwatch`; delete the `colorMenu` view, the static `palette`, the `onRecolor` callback, the `showColorPopover` state, the popover, and the `swatchColor` computed property.
+- `OnlyCue/UI/CueListPane.swift` — drop the `onRecolor` row callback wiring; pass `resolvedColorHex: document.model.colorHex(for: cue)` to each row.
+- `OnlyCue/UI/CueMarkersOverlay.swift` — `CueMarkerView` takes `resolvedColorHex: String?`; `CueMarkersOverlay` takes `resolveColorHex: (Cue) -> String?` closure and forwards per cue.
+- `OnlyCue/UI/WaveformContainer.swift` — accept and plumb the resolver closure through to `CueMarkersOverlay`.
+- `OnlyCue/UI/PreviewPane.swift` — build the closure inline at the `WaveformContainer` call site.
+- `OnlyCue/UI/CueColorSwatch.swift` — `hex` becomes `String?`; new `fallback` parameter defaulting to `.accentColor` (restores the cue row's prior fallback behavior); doc comment updated to drop the deleted-popover reference.
+- `OnlyCueTests/ProjectModelTests.swift` — new `test_colorHex_for_returnsMatchingTypeColor` and `test_colorHex_for_danglingTypeID_returnsNil`; rename `…IsFive` → `…IsSix`; drop `colorHex:` from 5 `Cue(...)` fixtures.
+- `OnlyCueTests/CueCommandsTests.swift` — delete `test_recolor_updatesColorHex_undoRestoresPriorColor`; drop `colorHex:` from the `Cue` fixture.
+- `OnlyCueTests/ProjectModelMigrationTests.swift` — new file-scope `private let v5FixtureWithColorHex` and `test_v5_dropsColorHex_preservesEverythingElse`.
+- `docs/data-model.md` — schema example v6, `Cue` struct loses `colorHex` field, `colorHex(for:)` listed on `ProjectModel`, field-rules row removed for `cue.colorHex`, versioning policy adds v5→v6 entry covering all five chains.
+- `docs/decisions.md` — **ADR-012** capturing the decision (color is Type-derived, popover removal accepted as transitional UX cost, alternative "snapshot at setType" rejected for stale-cache drift).
+
+**Simplify pass — 3 fixes applied (commit `39a30e8`), 4 deferred:**
+
+Applied:
+1. **Reuse + Quality + Taste:** `CueColorSwatch` was inconsistent. Its fallback was `.gray`; `CueMarkerView`'s fallback was `.accentColor`; the prior row swatch used `.accentColor`. Refactored `CueColorSwatch` to take `let hex: String?` (instead of `String` with `?? ""` workaround) and added `var fallback: Color = .accentColor`. Now `CueRowView` passes `hex: resolvedColorHex` directly with `.accentColor` restored as the row fallback. Inspector Type picker still works (passes non-optional String which coerces to String?).
+2. Stale doc comment on `CueColorSwatch` referenced the now-deleted "color popover" — rewrote to mention "row swatch" instead.
+3. Drop the `?? ""` escape hatch at the `CueRowView` call site once `CueColorSwatch.hex` was `String?`.
+
+Deferred (with reasoning per finding):
+- `cuePointType(for:) -> CuePointType?` companion helper alongside `colorHex(for:)` — no current caller, YAGNI per CLAUDE.md "Don't add features beyond what the task requires". The Type management leaf can add it then.
+- `resolveColorHex` default closure `{ _ in nil }` swallowing future caller omissions — theoretical; currently one caller threading correctly.
+- Non-Equatable closure on `WaveformContainer` prevents SwiftUI short-circuit — theoretical; only matters if `PreviewPane` re-renders frequently (it doesn't; the engine timer doesn't pass through it).
+- Precomputed `[UUID: String]` map for color resolution — bounded-OK at M=1–10 Types and N=tens of cues per render.
+
+**TDD discipline — 7 separate cycles:**
+1. `ProjectModel.colorHex(for:)` helper + pair of tests (matching Type / dangling typeID)
+2. `CueRowView.resolvedColorHex` prop + `CueListPane` resolves from `document.model`
+3. `CueMarkersOverlay` resolver closure + `WaveformContainer`/`PreviewPane` plumbing
+4. Delete popover, `Self.palette`, `colorMenu`, `onRecolor`, `showColorPopover` state, `CueCommands.recolor`, `test_recolor`
+5. Schema v5 → v6, drop `Cue.colorHex`, add `LegacyV5` envelope + `migrateFromV5`, update 4 legacy `toCue` methods, update test fixtures, new `test_v5_dropsColorHex_preservesEverythingElse`
+6. Docs (data-model.md schema v6 + ADR-012)
+7. Simplify pass (CueColorSwatch String? refactor + accentColor fallback + drop `?? ""`)
+
+Each cycle: red (verified failure), green (minimum impl), commit.
+
+**Manual verification (PR test plan):** open a v5 `.cuelist`, verify it migrates to v6 with the seeded "General" Type's color (#4ECDC4); select a cue, change Type via inspector, verify row swatch and waveform marker both update; save v6 file and reopen, verify lossless round-trip.
+
+**XCUITest deferred** per `OnlyCueUITests` harness flakiness on this machine. Resolver behavior is fully covered by `colorHex(for:)` model tests + `migrateFromV5` migration test. View rendering verified manually through the test plan above.
+
+**Closing note — fifth leaf of #32 done; the schema cleanup is complete.** One leaf remains under #32, both UI-shaped: number-key cue creation (1–0 binds to a Type via `Type.hotkey` — model layer already accepts the value, just needs keymap wiring). It depends on a Type management UI to be useful (no current UI sets `Type.hotkey`), so the natural ordering is **Type management leaf → number-key leaf**. Carry-overs from PR #47 review still open: [#48](https://github.com/chienchuanw/only-cue/issues/48) (stable-sort tie-breaker on equal `cue.time`) and [#49](https://github.com/chienchuanw/only-cue/issues/49) (drop the `cueNumber: 0` placeholder via a `PendingCue` helper across `LegacyCue.toCue` / `LegacyV3Cue.toCue` / `LegacyV4Cue.toCue` / `LegacyV5Cue.toCue` — now four sites, growing each schema bump).
+
+---
+
 ## 2026-05-08 — Cue inspector pane (PR #53, leaf #52 of epic #32)
 
 **Shipped:** issue #52 (fourth leaf of epic #32). PR #53 merged into `dev` (rebase, head `091ce02`). The right-side `.inspector` slot now shows a draggable vertical split: the existing cue list on top, a new `CueInspectorView` below, both inside `CueListPane`. Selecting a cue in the list populates the inspector with editable Type / cueNumber / name / fadeTime / notes — finally surfacing the four schema fields the prior three leaves of #32 added. UI-only; zero schema change. **150/150 unit tests green; 0 SwiftLint violations; Release build clean (warnings-as-errors).**

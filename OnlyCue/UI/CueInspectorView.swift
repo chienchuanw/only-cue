@@ -91,9 +91,7 @@ struct CueInspectorView: View {
             Picker("", selection: selection) {
                 ForEach(types) { type in
                     HStack(spacing: 6) {
-                        Circle()
-                            .fill(Color(hex: type.colorHex) ?? .gray)
-                            .frame(width: 10, height: 10)
+                        CueColorSwatch(hex: type.colorHex, diameter: 10)
                         Text(type.name)
                     }
                     .tag(type.id)
@@ -115,11 +113,13 @@ struct CueInspectorView: View {
         }
     }
 
+    /// Sync drafts from the cue, but skip the field the user is currently editing —
+    /// otherwise an external mutation (marker drag retime, undo) clobbers in-progress input.
     private func syncDrafts(from cue: Cue) {
-        nameDraft = cue.name
-        numberDraft = CueInspectorCommit.formatNumber(cue.cueNumber)
-        fadeDraft = cue.fadeTime.format()
-        notesDraft = cue.notes
+        if focused != .name { nameDraft = cue.name }
+        if focused != .number { numberDraft = FadeTime.formatNumber(cue.cueNumber) }
+        if focused != .fade { fadeDraft = cue.fadeTime.format() }
+        if focused != .notes { notesDraft = cue.notes }
     }
 
     private func commitOnFocusLeave(field: Field?, cue: Cue) {

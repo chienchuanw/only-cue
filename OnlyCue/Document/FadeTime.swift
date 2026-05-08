@@ -52,7 +52,9 @@ extension FadeTime {
         return value
     }
 
-    private static func formatNumber(_ seconds: TimeInterval) -> String {
+    /// Drops trailing `.0` on whole numbers; otherwise returns `String(value)`.
+    /// Reused by the cue inspector to display `cueNumber` in the same canonical form.
+    static func formatNumber(_ seconds: TimeInterval) -> String {
         if seconds == seconds.rounded() {
             return String(Int(seconds))
         }

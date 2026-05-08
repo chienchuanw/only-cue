@@ -9,6 +9,36 @@ final class ProjectModelTests: XCTestCase {
     private static let cueTwoID  = "22222222-2222-2222-2222-222222222222"
     private static let templateProjectID = "00000000-0000-0000-0000-000000000001"
 
+    func test_cuePointTypeForHotkey_returnsMatching() throws {
+        let lighting = CuePointType(id: UUID(), name: "Lighting", colorHex: "#FF6B6B", hotkey: 1)
+        let sound = CuePointType(id: UUID(), name: "Sound", colorHex: "#4D96FF", hotkey: 2)
+        let model = ProjectModel(
+            schemaVersion: ProjectModel.currentSchemaVersion,
+            id: UUID(),
+            name: "x",
+            cuePointTypes: [lighting, sound],
+            items: [],
+            activeItemID: nil
+        )
+
+        XCTAssertEqual(model.cuePointType(forHotkey: 1)?.id, lighting.id)
+        XCTAssertEqual(model.cuePointType(forHotkey: 2)?.id, sound.id)
+    }
+
+    func test_cuePointTypeForHotkey_returnsNilWhenUnbound() throws {
+        let general = CuePointType(id: UUID(), name: "General", colorHex: "#4ECDC4")
+        let model = ProjectModel(
+            schemaVersion: ProjectModel.currentSchemaVersion,
+            id: UUID(),
+            name: "x",
+            cuePointTypes: [general],
+            items: [],
+            activeItemID: nil
+        )
+
+        XCTAssertNil(model.cuePointType(forHotkey: 5))
+    }
+
     func test_currentSchemaVersionIsSix() {
         XCTAssertEqual(ProjectModel.currentSchemaVersion, 6)
     }

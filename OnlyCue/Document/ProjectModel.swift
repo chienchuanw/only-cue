@@ -29,6 +29,13 @@ struct ProjectModel: Codable, Equatable {
     func colorHex(for cue: Cue) -> String? {
         cuePointTypes.first(where: { $0.id == cue.typeID })?.colorHex
     }
+
+    /// Returns the Type bound to a digit hotkey, if any. Used by the number-key
+    /// cue-creation dispatch in `DocumentView`. Returns nil for unbound digits;
+    /// the caller no-ops in that case.
+    func cuePointType(forHotkey digit: Int) -> CuePointType? {
+        cuePointTypes.first(where: { $0.hotkey == digit })
+    }
 }
 
 extension ProjectModel {

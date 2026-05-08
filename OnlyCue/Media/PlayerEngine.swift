@@ -38,6 +38,14 @@ final class PlayerEngine {
         }
     }
 
+    func unload() async {
+        player.pause()
+        player.replaceCurrentItem(with: nil)
+        rate = 0
+        currentTime = 0
+        duration = 0
+    }
+
     func play() {
         player.play()
         rate = player.rate

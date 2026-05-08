@@ -24,6 +24,17 @@ extension CueCommands {
         }
     }
 
+    static func setCuePointTypeColor(
+        id: CuePointType.ID,
+        to newColorHex: String,
+        document: CueListDocument,
+        undoManager: UndoManager?
+    ) {
+        updateType(id: id, document: document, undoManager: undoManager, actionName: "Change Type Color") {
+            $0.colorHex = newColorHex
+        }
+    }
+
     // MARK: - Internals
 
     private static func updateType(

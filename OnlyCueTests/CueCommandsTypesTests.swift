@@ -31,6 +31,19 @@ final class CueCommandsTypesTests: XCTestCase {
         XCTAssertEqual(document.model.cuePointTypes.first?.name, originalName)
     }
 
+    func test_setCuePointTypeColor_updates_undoRestores() throws {
+        let document = CueListDocument()
+        let undo = makeUndoManager()
+        let typeID = try XCTUnwrap(document.model.cuePointTypes.first?.id)
+        let originalColor = try XCTUnwrap(document.model.cuePointTypes.first?.colorHex)
+
+        CueCommands.setCuePointTypeColor(id: typeID, to: "#FF6B6B", document: document, undoManager: undo)
+        XCTAssertEqual(document.model.cuePointTypes.first?.colorHex, "#FF6B6B")
+
+        undo.undo()
+        XCTAssertEqual(document.model.cuePointTypes.first?.colorHex, originalColor)
+    }
+
     private func makeUndoManager() -> UndoManager {
         let undo = UndoManager()
         undo.groupsByEvent = false

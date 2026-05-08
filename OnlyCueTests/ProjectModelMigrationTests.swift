@@ -149,64 +149,7 @@ final class ProjectModelMigrationTests: XCTestCase {
     }
 
     func test_v3_assignsCueNumbersBySortOrder() throws {
-        let json = """
-        {
-          "schemaVersion": 3,
-          "id": "9F2E0F8A-9C2D-4F2A-9E1A-0E1A2D3C4B5A",
-          "name": "Show",
-          "cuePointTypes": [
-            {
-              "id": "CCCC3333-CCCC-3333-CCCC-3333CCCC3333",
-              "name": "General",
-              "colorHex": "#4ECDC4",
-              "defaultFadeTime": 0,
-              "defaultNamePattern": "Cue",
-              "isVisible": true,
-              "isExportEnabled": true
-            }
-          ],
-          "items": [
-            {
-              "id": "AABBCCDD-1111-2222-3333-444455556666",
-              "media": {
-                "displayName": "act1.wav",
-                "kind": "audio",
-                "duration": 100,
-                "bookmarkData": "AQID"
-              },
-              "cues": [
-                {
-                  "id": "11111111-1111-1111-1111-111111111111",
-                  "typeID": "CCCC3333-CCCC-3333-CCCC-3333CCCC3333",
-                  "name": "C",
-                  "time": 30.0,
-                  "colorHex": "#FF6B6B",
-                  "notes": ""
-                },
-                {
-                  "id": "22222222-2222-2222-2222-222222222222",
-                  "typeID": "CCCC3333-CCCC-3333-CCCC-3333CCCC3333",
-                  "name": "A",
-                  "time": 5.0,
-                  "colorHex": "#4ECDC4",
-                  "notes": ""
-                },
-                {
-                  "id": "33333333-3333-3333-3333-333333333333",
-                  "typeID": "CCCC3333-CCCC-3333-CCCC-3333CCCC3333",
-                  "name": "B",
-                  "time": 15.0,
-                  "colorHex": "#4ECDC4",
-                  "notes": ""
-                }
-              ]
-            }
-          ],
-          "activeItemID": "AABBCCDD-1111-2222-3333-444455556666"
-        }
-        """
-
-        let model = try ProjectModel.decode(from: Data(json.utf8))
+        let model = try ProjectModel.decode(from: Data(Self.v3FixtureWithUnsortedCues.utf8))
 
         XCTAssertEqual(model.schemaVersion, ProjectModel.currentSchemaVersion)
         let cues = try XCTUnwrap(model.items.first?.cues)
@@ -218,6 +161,63 @@ final class ProjectModelMigrationTests: XCTestCase {
         XCTAssertEqual(cues[2].name, "C")
         XCTAssertEqual(cues[2].cueNumber, 3.0)
     }
+
+    private static let v3FixtureWithUnsortedCues = """
+    {
+      "schemaVersion": 3,
+      "id": "9F2E0F8A-9C2D-4F2A-9E1A-0E1A2D3C4B5A",
+      "name": "Show",
+      "cuePointTypes": [
+        {
+          "id": "CCCC3333-CCCC-3333-CCCC-3333CCCC3333",
+          "name": "General",
+          "colorHex": "#4ECDC4",
+          "defaultFadeTime": 0,
+          "defaultNamePattern": "Cue",
+          "isVisible": true,
+          "isExportEnabled": true
+        }
+      ],
+      "items": [
+        {
+          "id": "AABBCCDD-1111-2222-3333-444455556666",
+          "media": {
+            "displayName": "act1.wav",
+            "kind": "audio",
+            "duration": 100,
+            "bookmarkData": "AQID"
+          },
+          "cues": [
+            {
+              "id": "11111111-1111-1111-1111-111111111111",
+              "typeID": "CCCC3333-CCCC-3333-CCCC-3333CCCC3333",
+              "name": "C",
+              "time": 30.0,
+              "colorHex": "#FF6B6B",
+              "notes": ""
+            },
+            {
+              "id": "22222222-2222-2222-2222-222222222222",
+              "typeID": "CCCC3333-CCCC-3333-CCCC-3333CCCC3333",
+              "name": "A",
+              "time": 5.0,
+              "colorHex": "#4ECDC4",
+              "notes": ""
+            },
+            {
+              "id": "33333333-3333-3333-3333-333333333333",
+              "typeID": "CCCC3333-CCCC-3333-CCCC-3333CCCC3333",
+              "name": "B",
+              "time": 15.0,
+              "colorHex": "#4ECDC4",
+              "notes": ""
+            }
+          ]
+        }
+      ],
+      "activeItemID": "AABBCCDD-1111-2222-3333-444455556666"
+    }
+    """
 
     func test_unknownFutureVersion_throws() {
         let json = """

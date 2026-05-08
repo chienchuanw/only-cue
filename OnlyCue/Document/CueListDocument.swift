@@ -15,11 +15,11 @@ final class CueListDocument: ReferenceFileDocument {
 
     init() {
         self.model = ProjectModel(
-            schemaVersion: 1,
+            schemaVersion: ProjectModel.currentSchemaVersion,
             id: UUID(),
             name: "Untitled",
-            media: nil,
-            cues: []
+            items: [],
+            activeItemID: nil
         )
     }
 
@@ -27,11 +27,13 @@ final class CueListDocument: ReferenceFileDocument {
         guard let data = configuration.file.regularFileContents else {
             throw CocoaError(.fileReadCorruptFile)
         }
-        self.model = try JSONDecoder().decode(ProjectModel.self, from: data)
+        self.model = try ProjectModel.decode(from: data)
     }
 
     func snapshot(contentType: UTType) throws -> ProjectModel {
-        model
+        var snapshot = model
+        snapshot.schemaVersion = ProjectModel.currentSchemaVersion
+        return snapshot
     }
 
     func fileWrapper(snapshot: ProjectModel, configuration: WriteConfiguration) throws -> FileWrapper {

@@ -16,7 +16,7 @@ Render a playhead indicator on the audio waveform that:
 2. Displays a floating HH:MM:SS label near the playhead.
 3. Supports drag-to-scrub: pause on drag start, seek on release, resume playback if it was playing.
 
-Out of scope: video-strip playhead, live audio scrubbing, snap-to-cue, keyboard nudge.
+Out of scope: live audio scrubbing, snap-to-cue, keyboard nudge.
 
 ## Design
 
@@ -39,21 +39,20 @@ The overlay does not own any state and has no engine dependency — it's a deter
 
 **`WaveformContainer`** (modified)
 
-Add two parameters:
+Adds one optional parameter `engine: PlayerEngine? = nil`. Passing an engine opts the container into showing the playhead and accepting scrub gestures. Without it, behavior is byte-identical to before.
 
-- `showsPlayhead: Bool = false` — opt-in flag. Default false preserves today's behavior.
-- `engine: PlayerEngine? = nil` — required when `showsPlayhead` is true; ignored otherwise.
+**`WaveformPlayheadLayer`** (new, `OnlyCue/UI/WaveformPlayheadLayer.swift`)
 
-When `showsPlayhead` is true and `engine != nil`, the container:
+When `engine != nil`, the container hosts this subview as a sibling overlay to `CueMarkersOverlay`. It owns the read of `engine.currentTime`, the `PlayheadOverlay` rendering, and the 12pt-wide drag grabber. Hoisting it into a separate view keeps the 10 Hz `currentTime` ticks from re-evaluating `CueMarkersOverlay`.
 
-- Layers `PlayheadOverlay` over `WaveformView`, driven by `engine.currentTime` (or `scrubState.scrubTime` while dragging — see below).
-- Attaches a drag gesture to a 12pt-wide invisible grabber centered on the playhead line. The grabber's narrow hit zone is what avoids stealing drags from cue markers and from the existing tap-to-seek surface.
+Inside the layer:
 
-When `showsPlayhead` is false (the video-strip waveform), behavior is byte-identical to today.
+- The grabber is a `Color.clear` rectangle with `contentShape(Rectangle())` constrained to a 12pt frame, centered on the playhead's x. Its narrow hit zone avoids stealing drags from cue markers and from the existing tap-to-seek surface.
+- The displayed time is `scrub.state?.scrubTime ?? engine.currentTime`.
 
 **`PreviewPane`** (modified)
 
-In `audioContent`, pass `showsPlayhead: true, engine: engine` to `WaveformContainer`. `videoContent` continues to pass the defaults, so the 100pt video strip stays a plain waveform.
+Both `audioContent` and `videoContent` pass `engine` to the waveform helper. The video-strip waveform gets the same playhead and scrub treatment as the audio-only waveform — the waveform doesn't care whether the asset has a video track being rendered above it.
 
 ### Scrub interaction
 

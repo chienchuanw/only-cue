@@ -38,7 +38,7 @@ struct PreviewPane: View {
         if let asset = engine.player.currentItem?.asset as? AVURLAsset {
             VStack(spacing: 0) {
                 videoPlayer
-                waveform(for: asset)
+                waveform(for: asset, withPlayhead: true)
                     .frame(height: 100)
                     .accessibilityIdentifier("videoWaveform")
             }

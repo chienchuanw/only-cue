@@ -188,6 +188,31 @@ final class CueCommandsTests: XCTestCase {
         XCTAssertEqual(cues[3].cueNumber, 1.0)
     }
 
+    func test_setType_updatesTypeID_undoRestoresPriorTypeID() throws {
+        let document = makeDocumentWithItem()
+        let undo = makeUndoManager()
+        let originalTypeID = try XCTUnwrap(document.model.defaultCuePointTypeID)
+        let newType = CuePointType(
+            id: UUID(),
+            name: "Sound",
+            colorHex: "#FF6B6B",
+            defaultFadeTime: 0,
+            defaultNamePattern: "Sound",
+            hotkey: nil,
+            isVisible: true,
+            isExportEnabled: true
+        )
+        document.model.cuePointTypes.append(newType)
+        CueCommands.addCueAtPlayhead(time: 1.0, document: document, undoManager: undo)
+        let cueId = try XCTUnwrap(activeCues(document).first?.id)
+
+        CueCommands.setType(cueId: cueId, to: newType.id, document: document, undoManager: undo)
+        XCTAssertEqual(activeCues(document)[0].typeID, newType.id)
+
+        undo.undo()
+        XCTAssertEqual(activeCues(document)[0].typeID, originalTypeID)
+    }
+
     func test_cueMutations_noActiveItem_areNoOps() {
         let document = CueListDocument()
         let undo = makeUndoManager()

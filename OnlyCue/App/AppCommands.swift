@@ -6,6 +6,23 @@ struct AppCommands: Commands {
         CommandGroup(replacing: .appInfo) {
             Button("About OnlyCue") { Self.showAboutPanel() }
         }
+
+        CommandMenu("View") {
+            Button("Zoom In") {
+                NotificationCenter.default.post(name: .waveformZoomIn, object: nil)
+            }
+            .keyboardShortcut("=", modifiers: .command)
+
+            Button("Zoom Out") {
+                NotificationCenter.default.post(name: .waveformZoomOut, object: nil)
+            }
+            .keyboardShortcut("-", modifiers: .command)
+
+            Button("Actual Size") {
+                NotificationCenter.default.post(name: .waveformZoomReset, object: nil)
+            }
+            .keyboardShortcut("0", modifiers: .command)
+        }
     }
 
     private static func showAboutPanel() {

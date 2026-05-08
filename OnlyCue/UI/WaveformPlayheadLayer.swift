@@ -6,6 +6,10 @@ struct WaveformPlayheadLayer: View {
     let duration: TimeInterval
     @Binding var scrub: ScrubController
     @Binding var seekTask: Task<Void, Never>?
+    var zoom: WaveformZoomController?
+    var viewportWidth: CGFloat = 0
+    var scrollOffset: CGFloat = 0
+    var applyAutoFollow: ((CGFloat, CGFloat) -> Void)?
 
     private static let grabberWidth: CGFloat = 12
 
@@ -29,6 +33,22 @@ struct WaveformPlayheadLayer: View {
                     .gesture(scrubGesture(width: width))
                     .accessibilityIdentifier("playheadGrabber")
             }
+            .onChange(of: displayedTime) { _, _ in maybeAutoFollow() }
+        }
+    }
+
+    private func maybeAutoFollow() {
+        guard let zoom,
+              let applyAutoFollow,
+              viewportWidth > 0 else { return }
+        let target = zoom.autoFollowAdjustment(
+            playheadTime: scrub.state?.scrubTime ?? engine.currentTime,
+            duration: duration,
+            viewportWidth: viewportWidth,
+            currentScrollOffset: scrollOffset
+        )
+        if let target {
+            applyAutoFollow(target, viewportWidth)
         }
     }
 

@@ -15,32 +15,18 @@ struct WaveformContainer: View {
     @State private var loadedDuration: TimeInterval = 0
     @State private var scrub = ScrubController()
     @State private var seekTask: Task<Void, Never>?
+    @State private var zoom = WaveformZoomController()
+    @State private var scrollOffset: CGFloat = 0
+    @State private var leadingAnchor: Int? = 0
+    @State private var pinchBaseline: CGFloat = 1
+    @State private var viewportWidth: CGFloat = 0
+
+    private static let maxAnchorCount = 200
 
     var body: some View {
         Group {
             if let peaks {
-                WaveformView(peaks: peaks)
-                    .overlay(alignment: .topLeading) {
-                        if loadedDuration > 0 {
-                            CueMarkersOverlay(
-                                cues: cues,
-                                duration: loadedDuration,
-                                onSeek: onSeek,
-                                onRetime: onRetime
-                            )
-                        }
-                    }
-                    .overlay(alignment: .topLeading) {
-                        if let engine, loadedDuration > 0 {
-                            WaveformPlayheadLayer(
-                                engine: engine,
-                                duration: loadedDuration,
-                                scrub: $scrub,
-                                seekTask: $seekTask
-                            )
-                        }
-                    }
-                    .padding(.horizontal, 8)
+                loaded(peaks: peaks)
             } else if failed {
                 Text("Could not generate waveform")
                     .font(.callout)
@@ -52,11 +38,161 @@ struct WaveformContainer: View {
             }
         }
         .task(id: asset.url) { await load() }
+        .onReceive(NotificationCenter.default.publisher(for: .waveformZoomIn)) { _ in
+            applyZoomIn()
+        }
+        .onReceive(NotificationCenter.default.publisher(for: .waveformZoomOut)) { _ in
+            applyZoomOut()
+        }
+        .onReceive(NotificationCenter.default.publisher(for: .waveformZoomReset)) { _ in
+            applyZoomReset()
+        }
+    }
+
+    @ViewBuilder
+    private func loaded(peaks: [Float]) -> some View {
+        GeometryReader { proxy in
+            let width = proxy.size.width
+            let contentWidth = max(width * zoom.zoom, width)
+
+            ScrollView(.horizontal, showsIndicators: zoom.zoom > 1) {
+                ZStack(alignment: .topLeading) {
+                    WaveformView(peaks: peaks)
+                    if loadedDuration > 0 {
+                        CueMarkersOverlay(
+                            cues: cues,
+                            duration: loadedDuration,
+                            onSeek: onSeek,
+                            onRetime: onRetime
+                        )
+                    }
+                    if let engine, loadedDuration > 0 {
+                        WaveformPlayheadLayer(
+                            engine: engine,
+                            duration: loadedDuration,
+                            scrub: $scrub,
+                            seekTask: $seekTask,
+                            zoom: zoom,
+                            viewportWidth: width,
+                            scrollOffset: scrollOffset,
+                            applyAutoFollow: applyAutoFollow
+                        )
+                    }
+                    if zoom.zoom > 1 && loadedDuration > 0 {
+                        anchorRail(contentWidth: contentWidth)
+                    }
+                }
+                .frame(width: contentWidth, height: proxy.size.height, alignment: .leading)
+            }
+            .scrollPosition(id: $leadingAnchor, anchor: .leading)
+            .scrollDisabled(zoom.zoom <= 1)
+            .gesture(magnifyGesture(viewportWidth: width))
+            .onChange(of: leadingAnchor) { _, new in
+                guard zoom.zoom > 1, let new, loadedDuration > 0 else { return }
+                let pxPerAnchor = contentWidth / CGFloat(anchorCount())
+                scrollOffset = CGFloat(new) * pxPerAnchor
+            }
+            .onAppear { viewportWidth = width }
+            .onChange(of: width) { _, new in viewportWidth = new }
+        }
+        .padding(.horizontal, 8)
+    }
+
+    private func anchorRail(contentWidth: CGFloat) -> some View {
+        let count = anchorCount()
+        let segmentWidth = contentWidth / CGFloat(count)
+        return HStack(spacing: 0) {
+            ForEach(0..<count, id: \.self) { index in
+                Color.clear
+                    .frame(width: segmentWidth, height: 1)
+                    .id(index)
+            }
+        }
+        .frame(height: 1)
+        .allowsHitTesting(false)
+    }
+
+    private func anchorCount() -> Int {
+        let raw = max(Int(loadedDuration.rounded(.up)), 1)
+        return min(raw, Self.maxAnchorCount)
+    }
+
+    private func magnifyGesture(viewportWidth: CGFloat) -> some Gesture {
+        MagnifyGesture()
+            .onChanged { value in
+                let next = pinchBaseline * CGFloat(value.magnification)
+                let anchorFraction = max(min(value.startLocation.x / viewportWidth, 1), 0)
+                var temp = scrollOffset
+                zoom.setZoom(
+                    next,
+                    anchorFraction: anchorFraction,
+                    viewportWidth: viewportWidth,
+                    scrollOffset: &temp
+                )
+                scrollOffset = temp
+                syncAnchorFromOffset(viewportWidth: viewportWidth)
+            }
+            .onEnded { _ in
+                pinchBaseline = zoom.zoom
+            }
+    }
+
+    private func applyZoomIn() {
+        mutateZoom { width, offset in
+            zoom.zoomIn(viewportWidth: width, scrollOffset: &offset)
+        }
+    }
+
+    private func applyZoomOut() {
+        mutateZoom { width, offset in
+            zoom.zoomOut(viewportWidth: width, scrollOffset: &offset)
+        }
+    }
+
+    private func applyZoomReset() {
+        var offset = scrollOffset
+        zoom.reset(scrollOffset: &offset)
+        scrollOffset = offset
+        leadingAnchor = 0
+        pinchBaseline = 1
+    }
+
+    private func mutateZoom(_ block: (CGFloat, inout CGFloat) -> Void) {
+        guard viewportWidth > 0 else { return }
+        var offset = scrollOffset
+        block(viewportWidth, &offset)
+        scrollOffset = offset
+        pinchBaseline = zoom.zoom
+        syncAnchorFromOffset(viewportWidth: viewportWidth)
+    }
+
+    private func syncAnchorFromOffset(viewportWidth: CGFloat) {
+        guard zoom.zoom > 1, loadedDuration > 0 else {
+            leadingAnchor = 0
+            return
+        }
+        let contentWidth = viewportWidth * zoom.zoom
+        let pxPerAnchor = contentWidth / CGFloat(anchorCount())
+        leadingAnchor = max(Int((scrollOffset / pxPerAnchor).rounded()), 0)
+    }
+
+    private func applyAutoFollow(targetOffset: CGFloat, viewportWidth: CGFloat) {
+        scrollOffset = targetOffset
+        guard zoom.zoom > 1 else { return }
+        let contentWidth = viewportWidth * zoom.zoom
+        let pxPerAnchor = contentWidth / CGFloat(anchorCount())
+        leadingAnchor = max(Int((targetOffset / pxPerAnchor).rounded()), 0)
     }
 
     private func load() async {
         peaks = nil
         failed = false
+        var resetOffset: CGFloat = 0
+        zoom.reset(scrollOffset: &resetOffset)
+        scrollOffset = resetOffset
+        leadingAnchor = 0
+        pinchBaseline = 1
+
         let cache = WaveformCache.shared
         let target = resolution
         let url = asset.url
@@ -91,4 +227,10 @@ struct WaveformContainer: View {
             failed = true
         }
     }
+}
+
+extension Notification.Name {
+    static let waveformZoomIn = Notification.Name("OnlyCue.waveformZoomIn")
+    static let waveformZoomOut = Notification.Name("OnlyCue.waveformZoomOut")
+    static let waveformZoomReset = Notification.Name("OnlyCue.waveformZoomReset")
 }

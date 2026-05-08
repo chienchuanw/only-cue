@@ -7,19 +7,14 @@ struct DocumentView: View {
     @State private var engine = PlayerEngine()
     @State private var showImporter = false
     @State private var pendingAlert: DocumentAlert?
-    @State private var loadedItemID: MediaItem.ID?
     @State private var seekTask: Task<Void, Never>?
     @AppStorage(FirstLaunchFlag.key) private var didShowFirstLaunch = false
     @Environment(\.undoManager) private var undoManager
 
     var body: some View {
         NavigationSplitView {
-            ItemListPane(
-                document: document,
-                onDropURLs: importURLs,
-                onActiveItemChange: { Task { await reloadActive() } }
-            )
-            .navigationSplitViewColumnWidth(min: 200, ideal: 240, max: 320)
+            ItemListPane(document: document, onDropURLs: importURLs)
+                .navigationSplitViewColumnWidth(min: 200, ideal: 240, max: 320)
         } detail: {
             mainPane
                 .inspector(isPresented: .constant(true)) {
@@ -38,17 +33,18 @@ struct DocumentView: View {
     }
 
     private var mainPane: some View {
-        VStack(spacing: 12) {
+        let activeItem = document.model.activeItem
+        return VStack(spacing: 12) {
             Text("OnlyCue")
                 .font(.title)
                 .accessibilityIdentifier("documentTitle")
 
-            mediaSummary
+            mediaSummary(activeItem)
                 .accessibilityIdentifier("mediaSummary")
 
             PreviewPane(document: document, engine: engine)
 
-            Text("\(activeCueCount) cue\(activeCueCount == 1 ? "" : "s")")
+            Text("\(activeItem?.cues.count ?? 0) cue\((activeItem?.cues.count ?? 0) == 1 ? "" : "s")")
                 .foregroundStyle(.secondary)
                 .accessibilityIdentifier("cueCount")
 
@@ -63,7 +59,7 @@ struct DocumentView: View {
                 Button("Add Cue") { addCueAtPlayhead() }
                     .accessibilityIdentifier("addCueButton")
                     .keyboardShortcut("m", modifiers: [])
-                    .disabled(document.model.activeItem == nil)
+                    .disabled(activeItem == nil)
             }
 
             transportShortcuts
@@ -89,8 +85,6 @@ struct DocumentView: View {
         .alert(item: $pendingAlert, content: alertContent)
     }
 
-    private var activeCueCount: Int { document.model.activeItem?.cues.count ?? 0 }
-
     private func alertContent(_ alert: DocumentAlert) -> Alert {
         switch alert {
         case .unsupported(let message):
@@ -110,10 +104,7 @@ struct DocumentView: View {
     }
 
     private func reloadActive() async {
-        let activeID = document.model.activeItemID
-        guard activeID != loadedItemID else { return }
-        loadedItemID = activeID
-        guard activeID != nil else {
+        guard document.model.activeItemID != nil else {
             await engine.unload()
             return
         }
@@ -125,8 +116,8 @@ struct DocumentView: View {
     }
 
     @ViewBuilder
-    private var mediaSummary: some View {
-        if let item = document.model.activeItem {
+    private func mediaSummary(_ item: MediaItem?) -> some View {
+        if let item {
             Text("\(item.media.displayName) — \(TimeFormat.hms(item.media.duration))")
                 .font(.system(.body, design: .monospaced))
                 .foregroundStyle(.secondary)
@@ -157,8 +148,6 @@ struct DocumentView: View {
                 )
             } catch let MediaImportError.batch(unsupported) {
                 pendingAlert = .unsupported(unsupportedMessage(unsupported))
-            } catch let MediaImportError.unsupportedType(filename) {
-                pendingAlert = .unsupported("\(filename) isn't a supported audio or video file.")
             } catch {
                 pendingAlert = .unsupported(error.localizedDescription)
             }

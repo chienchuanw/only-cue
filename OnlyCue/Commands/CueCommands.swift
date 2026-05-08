@@ -170,6 +170,14 @@ enum CueCommands {
         document.model.activeItemID = id
     }
 
+    /// Stale-bookmark refresh routed through the seam so all `ProjectModel`
+    /// writes stay in this file. Not undoable: the user didn't ask for this,
+    /// the OS did.
+    static func refreshBookmark(itemID: MediaItem.ID, to data: Data, in document: CueListDocument) {
+        guard let index = document.model.items.firstIndex(where: { $0.id == itemID }) else { return }
+        document.model.items[index].media.bookmarkData = data
+    }
+
     // MARK: - Internals
 
     private static func mutateCues(

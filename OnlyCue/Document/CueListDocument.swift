@@ -31,9 +31,7 @@ final class CueListDocument: ReferenceFileDocument {
     }
 
     func snapshot(contentType: UTType) throws -> ProjectModel {
-        var snapshot = model
-        snapshot.schemaVersion = ProjectModel.currentSchemaVersion
-        return snapshot
+        model
     }
 
     func fileWrapper(snapshot: ProjectModel, configuration: WriteConfiguration) throws -> FileWrapper {

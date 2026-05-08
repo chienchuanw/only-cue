@@ -2,7 +2,7 @@ import Foundation
 
 struct ProjectModel: Codable, Equatable {
 
-    static let currentSchemaVersion = 4
+    static let currentSchemaVersion = 5
 
     var schemaVersion: Int
     var id: UUID
@@ -42,6 +42,8 @@ extension ProjectModel {
             return migrateFromV2(try JSONDecoder().decode(LegacyV2.self, from: data))
         case 3:
             return migrateFromV3(try JSONDecoder().decode(LegacyV3.self, from: data))
+        case 4:
+            return migrateFromV4(try JSONDecoder().decode(LegacyV4.self, from: data))
         case currentSchemaVersion:
             return try JSONDecoder().decode(ProjectModel.self, from: data)
         default:
@@ -214,5 +216,61 @@ extension ProjectModel {
             activeItemID: legacy.activeItemID
         )
         return assignCueNumbersBySort(model)
+    }
+
+    private struct LegacyV4: Decodable {
+        let schemaVersion: Int
+        let id: UUID
+        let name: String
+        let cuePointTypes: [CuePointType]
+        let items: [LegacyV4Item]
+        let activeItemID: UUID?
+    }
+
+    private struct LegacyV4Item: Decodable {
+        let id: UUID
+        let media: MediaReference
+        let cues: [LegacyV4Cue]
+    }
+
+    private struct LegacyV4Cue: Decodable {
+        let id: UUID
+        let typeID: UUID
+        let cueNumber: Double
+        let name: String
+        let time: TimeInterval
+        let colorHex: String
+        let notes: String
+
+        func toCue() -> Cue {
+            Cue(
+                id: id,
+                typeID: typeID,
+                cueNumber: cueNumber,
+                name: name,
+                time: time,
+                colorHex: colorHex,
+                notes: notes,
+                fadeTime: .symmetric(0)
+            )
+        }
+    }
+
+    private static func migrateFromV4(_ legacy: LegacyV4) -> ProjectModel {
+        let items = legacy.items.map { legacyItem in
+            MediaItem(
+                id: legacyItem.id,
+                media: legacyItem.media,
+                cues: legacyItem.cues.map { $0.toCue() }
+            )
+        }
+        return ProjectModel(
+            schemaVersion: currentSchemaVersion,
+            id: legacy.id,
+            name: legacy.name,
+            cuePointTypes: legacy.cuePointTypes,
+            items: items,
+            activeItemID: legacy.activeItemID
+        )
     }
 }

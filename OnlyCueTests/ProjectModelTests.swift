@@ -78,8 +78,8 @@ final class ProjectModelTests: XCTestCase {
         XCTAssertEqual(decoded, original)
     }
 
-    func test_currentSchemaVersionIsFour() {
-        XCTAssertEqual(ProjectModel.currentSchemaVersion, 4)
+    func test_currentSchemaVersionIsFive() {
+        XCTAssertEqual(ProjectModel.currentSchemaVersion, 5)
     }
 
     func test_cueNumberRoundTripsThroughJSON() throws {

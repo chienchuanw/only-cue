@@ -14,17 +14,39 @@ enum CueCommands {
             assertionFailure("Project has no CuePointTypes — invariant violated by upstream code")
             return
         }
+        let clampedTime = max(time, 0)
+        let existingCues = document.model.activeItem?.cues ?? []
         let cue = Cue(
             id: UUID(),
             typeID: defaultType.id,
-            cueNumber: 0,
+            cueNumber: nextCueNumber(forInsertionAt: clampedTime, in: existingCues),
             name: "Cue",
-            time: max(time, 0),
+            time: clampedTime,
             colorHex: defaultType.colorHex,
             notes: ""
         )
         mutateCues(document, undoManager: undoManager, actionName: "Add Cue") { cues in
             (cues + [cue]).sorted { $0.time < $1.time }
+        }
+    }
+
+    /// Pick the cueNumber for a new cue inserted at `time` into a list of existing cues.
+    /// Existing cues' numbers are never shifted — the rule produces a fractional value
+    /// when needed so the new cue slots between its time-neighbors.
+    static func nextCueNumber(forInsertionAt time: TimeInterval, in cues: [Cue]) -> Double {
+        if cues.isEmpty { return 1.0 }
+        let sorted = cues.sorted { $0.time < $1.time }
+        let earlier = sorted.last { $0.time <= time }
+        let later = sorted.first { $0.time > time }
+        switch (earlier, later) {
+        case (nil, .some(let next)):
+            return next.cueNumber - 1.0
+        case (.some(let prev), nil):
+            return prev.cueNumber + 1.0
+        case (.some(let prev), .some(let next)):
+            return (prev.cueNumber + next.cueNumber) / 2.0
+        case (nil, nil):
+            return 1.0
         }
     }
 

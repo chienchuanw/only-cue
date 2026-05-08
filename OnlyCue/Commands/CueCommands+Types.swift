@@ -112,29 +112,17 @@ extension CueCommands {
         undoManager?.beginUndoGrouping()
         defer { undoManager?.endUndoGrouping() }
 
-        let beforeTypes = document.model.cuePointTypes
-        let beforeItems = document.model.items
-        let beforeActive = document.model.activeItemID
-
+        let snapshot = ProjectSnapshot(model: document.model)
         change(&document.model)
 
         undoManager?.registerUndo(withTarget: document) { doc in
-            Self.restoreProject(
-                types: beforeTypes,
-                items: beforeItems,
-                activeID: beforeActive,
-                document: doc,
-                undoManager: undoManager,
-                actionName: actionName
-            )
+            Self.restoreProject(snapshot, document: doc, undoManager: undoManager, actionName: actionName)
         }
         undoManager?.setActionName(actionName)
     }
 
     fileprivate static func restoreProject(
-        types oldTypes: [CuePointType],
-        items oldItems: [MediaItem],
-        activeID oldActive: MediaItem.ID?,
+        _ snapshot: ProjectSnapshot,
         document: CueListDocument,
         undoManager: UndoManager?,
         actionName: String
@@ -142,25 +130,31 @@ extension CueCommands {
         undoManager?.beginUndoGrouping()
         defer { undoManager?.endUndoGrouping() }
 
-        let currentTypes = document.model.cuePointTypes
-        let currentItems = document.model.items
-        let currentActive = document.model.activeItemID
-
-        document.model.cuePointTypes = oldTypes
-        document.model.items = oldItems
-        document.model.activeItemID = oldActive
+        let current = ProjectSnapshot(model: document.model)
+        snapshot.apply(to: &document.model)
 
         undoManager?.registerUndo(withTarget: document) { doc in
-            Self.restoreProject(
-                types: currentTypes,
-                items: currentItems,
-                activeID: currentActive,
-                document: doc,
-                undoManager: undoManager,
-                actionName: actionName
-            )
+            Self.restoreProject(current, document: doc, undoManager: undoManager, actionName: actionName)
         }
         undoManager?.setActionName(actionName)
+    }
+
+    fileprivate struct ProjectSnapshot {
+        let cuePointTypes: [CuePointType]
+        let items: [MediaItem]
+        let activeItemID: MediaItem.ID?
+
+        init(model: ProjectModel) {
+            self.cuePointTypes = model.cuePointTypes
+            self.items = model.items
+            self.activeItemID = model.activeItemID
+        }
+
+        func apply(to model: inout ProjectModel) {
+            model.cuePointTypes = cuePointTypes
+            model.items = items
+            model.activeItemID = activeItemID
+        }
     }
 
     fileprivate static func mutateTypes(

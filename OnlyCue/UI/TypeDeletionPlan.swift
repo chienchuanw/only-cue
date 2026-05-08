@@ -13,7 +13,7 @@ struct TypeDeletionPlan: Equatable {
     let reassignTargetID: CuePointType.ID
     let reassignTargetName: String
 
-    static func make(forTypeID id: CuePointType.ID, in model: ProjectModel) -> TypeDeletionPlan? {
+    static func make(forTypeID id: CuePointType.ID, in model: ProjectModel) -> Self? {
         guard model.cuePointTypes.count > 1 else { return nil }
         guard let target = model.cuePointTypes.first(where: { $0.id == id }) else { return nil }
 
@@ -30,7 +30,7 @@ struct TypeDeletionPlan: Equatable {
             acc + item.cues.filter { $0.typeID == id }.count
         }
 
-        return TypeDeletionPlan(
+        return Self(
             typeID: target.id,
             typeName: target.name,
             referencedCueCount: referencedCount,

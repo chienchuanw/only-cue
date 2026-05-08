@@ -65,9 +65,9 @@ extension ProjectModel {
         for itemIndex in copy.items.indices {
             let sorted = copy.items[itemIndex].cues.sorted { $0.time < $1.time }
             copy.items[itemIndex].cues = sorted.enumerated().map { index, cue in
-                var c = cue
-                c.cueNumber = Double(index + 1)
-                return c
+                var updated = cue
+                updated.cueNumber = Double(index + 1)
+                return updated
             }
         }
         return copy

@@ -15,6 +15,13 @@ ADR template:
 
 ---
 
+## ADR-008 — Multi-media items live in one `.cuelist` (vs N documents)
+**Date**: 2026-05-08
+**Status**: Accepted
+**Decision**: A single `.cuelist` document holds an array of `MediaItem`s, each with its own media reference and its own cue list. Multi-file imports append items in selection order. The previous one-media-per-document model is migrated forward via schema v2.
+**Why**: A show is one project, not N. Forcing one window per media file leaves no place for show-level state (item order, active selection) and prevents users from drag-reordering across files. A workspace-of-files alternative was considered and rejected because it doubles the file count on disk and complicates sharing/version control. The schema bump is one-way (v0.1.0 readers cannot open v2), accepted because v0.1.0 is recent and the migration is deterministic.
+**Reversal cost**: Medium. Reverting to single-media documents would require splitting existing v2 documents on save and adding either workspace files or external item ordering — both larger than the original change.
+
 ## ADR-007 — Sandbox off for MVP, ship via Developer ID DMG
 **Date**: 2026-05-07
 **Status**: Accepted

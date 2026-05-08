@@ -18,13 +18,14 @@ extension Color {
     }
 
     /// Returns the canonical `#RRGGBB` form (uppercase) by converting through the sRGB
-    /// color space. Returns nil only when the color has no representable RGB components
-    /// (which shouldn't happen for any color produced by this app).
+    /// color space. Components are clamped to `0...1` before scaling so wide-gamut colors
+    /// (e.g., P3 values that fall outside sRGB) round to a valid hex byte.
+    /// Returns nil only when the color has no representable RGB components.
     func toHex() -> String? {
         guard let srgb = NSColor(self).usingColorSpace(.sRGB) else { return nil }
-        let red = Int((srgb.redComponent * 255).rounded())
-        let green = Int((srgb.greenComponent * 255).rounded())
-        let blue = Int((srgb.blueComponent * 255).rounded())
+        let red = Int((min(max(srgb.redComponent, 0), 1) * 255).rounded())
+        let green = Int((min(max(srgb.greenComponent, 0), 1) * 255).rounded())
+        let blue = Int((min(max(srgb.blueComponent, 0), 1) * 255).rounded())
         return String(format: "#%02X%02X%02X", red, green, blue)
     }
 }

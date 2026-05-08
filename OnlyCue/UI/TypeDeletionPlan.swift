@@ -27,7 +27,7 @@ struct TypeDeletionPlan: Equatable {
         }
 
         let referencedCount = model.items.reduce(0) { acc, item in
-            acc + item.cues.filter { $0.typeID == id }.count
+            acc + item.cues.reduce(0) { $0 + ($1.typeID == id ? 1 : 0) }
         }
 
         return Self(

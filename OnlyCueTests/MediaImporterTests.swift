@@ -26,7 +26,7 @@ final class MediaImporterTests: XCTestCase {
         let document = CueListDocument()
         let engine = PlayerEngine()
 
-        try await MediaImporter.importMedia(from: url, into: document, engine: engine)
+        try await MediaImporter.importMedia(from: [url], into: document, engine: engine)
 
         XCTAssertEqual(document.model.items.count, 1)
         let item = try XCTUnwrap(document.model.activeItem)
@@ -90,10 +90,10 @@ final class MediaImporterTests: XCTestCase {
 
         let document = CueListDocument()
         let engine = PlayerEngine()
-        try await MediaImporter.importMedia(from: url1, into: document, engine: engine)
+        try await MediaImporter.importMedia(from: [url1], into: document, engine: engine)
         let firstID = try XCTUnwrap(document.model.activeItemID)
 
-        try await MediaImporter.importMedia(from: url2, into: document, engine: engine)
+        try await MediaImporter.importMedia(from: [url2], into: document, engine: engine)
 
         XCTAssertEqual(document.model.items.count, 2)
         XCTAssertEqual(document.model.activeItemID, firstID, "second import does not steal focus")
@@ -105,7 +105,7 @@ final class MediaImporterTests: XCTestCase {
 
         let document = CueListDocument()
         let engine = PlayerEngine()
-        try await MediaImporter.importMedia(from: url, into: document, engine: engine)
+        try await MediaImporter.importMedia(from: [url], into: document, engine: engine)
 
         let freshEngine = PlayerEngine()
         try await MediaImporter.loadActive(into: document, engine: freshEngine)
@@ -117,7 +117,7 @@ final class MediaImporterTests: XCTestCase {
         let url = try SilentAudioFixture.makeWAV(duration: 1)
         let document = CueListDocument()
         let engine = PlayerEngine()
-        try await MediaImporter.importMedia(from: url, into: document, engine: engine)
+        try await MediaImporter.importMedia(from: [url], into: document, engine: engine)
 
         try FileManager.default.removeItem(at: url)
 
@@ -150,7 +150,7 @@ final class MediaImporterTests: XCTestCase {
         let engine = PlayerEngine()
 
         do {
-            try await MediaImporter.importMedia(from: url, into: document, engine: engine)
+            try await MediaImporter.importMedia(from: [url], into: document, engine: engine)
             XCTFail("expected batch error")
         } catch let MediaImportError.batch(unsupported) {
             XCTAssertEqual(unsupported, [url.lastPathComponent])

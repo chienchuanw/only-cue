@@ -17,19 +17,10 @@ enum MediaImporter {
         engine: PlayerEngine,
         undoManager: UndoManager? = nil
     ) async throws {
-        var newItems: [MediaItem] = []
-        var unsupported: [String] = []
-
-        for url in urls {
-            do {
-                newItems.append(try await makeItem(from: url))
-            } catch let MediaImportError.unsupportedType(filename) {
-                unsupported.append(filename)
-            }
-        }
+        let (newItems, unsupported) = await makeItems(from: urls)
 
         if !newItems.isEmpty {
-            let firstNewID = newItems.first!.id
+            let firstNewID = newItems[0].id
             let documentWasEmpty = document.model.items.isEmpty
             CueCommands.addItems(newItems, to: document, undoManager: undoManager)
             if documentWasEmpty {
@@ -44,15 +35,6 @@ enum MediaImporter {
     }
 
     @MainActor
-    static func importMedia(
-        from url: URL,
-        into document: CueListDocument,
-        engine: PlayerEngine
-    ) async throws {
-        try await importMedia(from: [url], into: document, engine: engine)
-    }
-
-    @MainActor
     static func loadActive(
         into document: CueListDocument,
         engine: PlayerEngine
@@ -64,19 +46,11 @@ enum MediaImporter {
         let resolution = try Bookmarks.resolve(item.media.bookmarkData)
         let asset = AVURLAsset(url: resolution.url)
         _ = try await asset.load(.duration)
-        if resolution.isStale, let index = document.model.activeItemIndex {
+        if resolution.isStale {
             let refreshed = try Bookmarks.create(for: resolution.url)
-            document.model.items[index].media.bookmarkData = refreshed
+            CueCommands.refreshBookmark(itemID: item.id, to: refreshed, in: document)
         }
         await engine.load(asset: asset)
-    }
-
-    @MainActor
-    static func reload(
-        into document: CueListDocument,
-        engine: PlayerEngine
-    ) async throws {
-        try await loadActive(into: document, engine: engine)
     }
 
     static func mediaKind(for url: URL) -> MediaKind? {
@@ -86,7 +60,46 @@ enum MediaImporter {
         return nil
     }
 
+    /// Build `MediaItem`s in parallel, preserving the original `urls` order.
+    /// Asset duration loads (`.load(.duration)`) are I/O-bound, so a serial
+    /// `for await` would scale linearly with N; a task group keeps wall time
+    /// bounded by the slowest single item.
     @MainActor
+    private static func makeItems(from urls: [URL]) async -> (items: [MediaItem], unsupported: [String]) {
+        enum Outcome { case ok(MediaItem); case unsupported(String) }
+
+        let outcomes: [Outcome] = await withTaskGroup(of: (Int, Outcome).self) { group in
+            for (index, url) in urls.enumerated() {
+                group.addTask {
+                    do {
+                        let item = try await makeItem(from: url)
+                        return (index, .ok(item))
+                    } catch let MediaImportError.unsupportedType(filename) {
+                        return (index, .unsupported(filename))
+                    } catch {
+                        return (index, .unsupported(url.lastPathComponent))
+                    }
+                }
+            }
+
+            var collected = Array<Outcome?>(repeating: nil, count: urls.count)
+            for await (index, outcome) in group {
+                collected[index] = outcome
+            }
+            return collected.compactMap { $0 }
+        }
+
+        var items: [MediaItem] = []
+        var unsupported: [String] = []
+        for outcome in outcomes {
+            switch outcome {
+            case .ok(let item): items.append(item)
+            case .unsupported(let name): unsupported.append(name)
+            }
+        }
+        return (items, unsupported)
+    }
+
     private static func makeItem(from url: URL) async throws -> MediaItem {
         guard let kind = mediaKind(for: url) else {
             throw MediaImportError.unsupportedType(filename: url.lastPathComponent)

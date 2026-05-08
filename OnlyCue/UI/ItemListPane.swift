@@ -4,7 +4,6 @@ struct ItemListPane: View {
 
     @ObservedObject var document: CueListDocument
     let onDropURLs: ([URL]) -> Void
-    let onActiveItemChange: () -> Void
 
     @Environment(\.undoManager) private var undoManager
 
@@ -57,11 +56,7 @@ struct ItemListPane: View {
     private var selectionBinding: Binding<MediaItem.ID?> {
         Binding(
             get: { document.model.activeItemID },
-            set: { newID in
-                guard newID != document.model.activeItemID else { return }
-                CueCommands.setActiveItem(id: newID, in: document)
-                onActiveItemChange()
-            }
+            set: { newID in CueCommands.setActiveItem(id: newID, in: document) }
         )
     }
 
@@ -83,12 +78,10 @@ struct ItemListPane: View {
                 undoManager: undoManager
             )
         }
-        onActiveItemChange()
     }
 
     private func deleteSelected() {
         guard let id = document.model.activeItemID else { return }
         CueCommands.removeItem(id: id, document: document, undoManager: undoManager)
-        onActiveItemChange()
     }
 }

@@ -213,6 +213,20 @@ final class CueCommandsTests: XCTestCase {
         XCTAssertEqual(activeCues(document)[0].typeID, originalTypeID)
     }
 
+    func test_setCueNumber_updatesNumber_undoRestoresPriorNumber() throws {
+        let document = makeDocumentWithItem()
+        let undo = makeUndoManager()
+        CueCommands.addCueAtPlayhead(time: 1.0, document: document, undoManager: undo)
+        let cueId = try XCTUnwrap(activeCues(document).first?.id)
+        let originalNumber = activeCues(document)[0].cueNumber
+
+        CueCommands.setCueNumber(cueId: cueId, to: 1.5, document: document, undoManager: undo)
+        XCTAssertEqual(activeCues(document)[0].cueNumber, 1.5, accuracy: 0.0001)
+
+        undo.undo()
+        XCTAssertEqual(activeCues(document)[0].cueNumber, originalNumber, accuracy: 0.0001)
+    }
+
     func test_cueMutations_noActiveItem_areNoOps() {
         let document = CueListDocument()
         let undo = makeUndoManager()

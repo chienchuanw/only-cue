@@ -4,6 +4,57 @@ Append-only session log. Newer entries on top.
 
 ---
 
+## 2026-05-08 — Number-key cue creation (PR #59, last leaf of epic #32)
+
+**Shipped:** issue #58 (seventh and final leaf of epic #32). PR #59 merged into `dev` (rebase, head `f524b31`). Pressing plain digit keys `1`–`0` in the document window now creates a cue at the playhead, typed by whichever `CuePointType` holds that digit as its `hotkey`. UI + commands only — no schema bump (`CuePointType.hotkey` already shipped in PR #45). **164/164 unit tests green; 0 SwiftLint violations; Release build clean (warnings-as-errors).** Closes the Type-driven cue-creation loop end-to-end across PRs #45 / #47 / #51 / #53 / #55 / #57 / #59 — epic #32 is now complete.
+
+**Why plain digits and not modified digits (Shift/Cmd):** plain digits match CuePoints' UX and the existing `M`-key for "add cue" at `OnlyCue/UI/DocumentView.swift:61`. The fear with plain digits — that they'd swallow keystrokes inside text fields — turned out to be unfounded: SwiftUI's `.keyboardShortcut(_:modifiers:)` automatically yields to any focused `TextField`, so typing into the inspector's name field or the Manage Types sheet's hotkey picker still routes the digit to the field, not the dispatch. Modifier-key variants are explicitly out of scope and covered by epic #40 (Custom keyboard shortcuts editor).
+
+**Why a no-op when the digit is unbound:** quietest contract. No beep, no fallback, no flash. If the user presses `5` and no Type holds hotkey 5, nothing happens — same as pressing any other unmapped key. The `triggerHotkey(_:)` handler returns early after `cuePointType(forHotkey:)` returns nil.
+
+**Why an explicit-typeID overload on `addCueAtPlayhead` instead of an Optional parameter:** avoids forcing every existing caller (the `M`-key shortcut) to spell out `typeID: nil`. The default-Type form keeps its current shape (uses `cuePointTypes.first`) and the new explicit-typeID form is what the digit dispatch calls. Both share a private `appendCue(time:typeID:document:undoManager:)` helper so the cue-creation logic (clamp time, compute cueNumber, build Cue, append-and-sort) lives in one place.
+
+**Why an `assertionFailure` guard on the explicit-typeID overload:** caught by the simplify pass. The new overload was accepting any `UUID` without checking it actually existed in `cuePointTypes` — a stale id (e.g. from a deleted Type that was never garbage-collected from a dispatcher's snapshot) would silently produce a cue that resolves to `.accentColor` forever, with no UI affordance to tell the user why. Symmetric to the default-Type form's "no Types in project" guard.
+
+**What landed in PR #59 (5 commits):**
+- `OnlyCue/Document/ProjectModel.swift` — added `func cuePointType(forHotkey digit: Int) -> CuePointType?` (commit `2e04ec5`)
+- `OnlyCue/Commands/CueCommands.swift` — extracted private `appendCue` helper, added explicit-typeID overload of `addCueAtPlayhead` (commit `71187b4`); guarded the overload against dangling typeIDs (commit `f524b31`)
+- `OnlyCue/UI/DocumentView.swift` — added `digitShortcuts` view (10 hidden zero-frame Buttons in a `ZStack`) + `triggerHotkey(_:)` handler; mounted in `mainPane` `VStack` alongside `transportShortcuts`; disabled when `activeItem == nil` (commit `e4767e0`)
+- `OnlyCueTests/ProjectModelTests.swift` — added `test_cuePointTypeForHotkey_returnsMatching` and `test_cuePointTypeForHotkey_returnsNilWhenUnbound`
+- `OnlyCueTests/CueCommandsTests.swift` — added `test_addCueAtPlayhead_withExplicitTypeID_assignsThatTypeID_undoRemoves`
+- `docs/data-model.md` — `cuePointType.hotkey` field-rules row now documents the dispatch path through `DocumentView.digitShortcuts` → `cuePointType(forHotkey:)` → `addCueAtPlayhead(time:typeID:...)`, including the TextField-yield behavior (commit `51af9ba`)
+
+**Simplify pass — 1 fix applied (commit `f524b31`), 3 deferred:**
+
+Applied:
+1. **CORRECTNESS**: explicit-typeID overload accepted any UUID without verification — a stale id could silently produce a cue with no resolvable color and no UI signal explaining why. Added `assertionFailure` guard symmetric to the default-Type form's "no Types in project" guard.
+
+Deferred:
+- Generic mutate-seam helper across `mutateCues` / `mutateTypes` / `mutateProject` — same reasoning as PR #57 (defer until the 4th seam appears).
+- Hoisting the `0...9` digit range into a constant — over-abstraction at one call site.
+- Splitting `digitShortcuts` into a separate file — mirrors the existing `transportShortcuts` pattern at `DocumentView.swift:165`, fine in place.
+
+**TDD discipline — 5 separate cycles:**
+1. `ProjectModel.cuePointType(forHotkey:)` — RED on missing helper, GREEN with one-liner
+2. `CueCommands.addCueAtPlayhead(time:typeID:...)` overload — RED on undeclared identifier, GREEN by extracting `appendCue` and adding the overload
+3. `DocumentView.digitShortcuts` — manual verification (XCUITest deferred per harness flakiness)
+4. Docs (`data-model.md` field rule)
+5. Simplify pass: dangling-typeID guard
+
+Each cycle: red (verified failure), green (minimum impl), commit.
+
+**Manual verification (PR test plan):** launched the app on `issues/58`, opened the Manage Types sheet, set hotkey `1` on a non-default Type, dismissed the sheet, started playback, pressed `1` → cue appeared at the playhead with the bound Type's color via `colorHex(for:)`; pressed `5` (unbound) → nothing happened; focused the inspector's name field, pressed `1` → digit landed in the field, no cue created; opened the Manage Types sheet, focused the new-Type name field, pressed `1` → digit landed in the field; pressed ⌘Z → both cues reverted. The closed loop works: create Type → assign hotkey → press digit → cue with correct color.
+
+**XCUITest deferred** per `OnlyCueUITests` harness flakiness on this machine. The pure-logic parts (`ProjectModel.cuePointType(forHotkey:)`, the new `CueCommands.addCueAtPlayhead` overload) are fully covered by unit tests.
+
+**Closing note — epic #32 is complete (7/7 leaves shipped) and the Type-driven cue-creation loop is now end-to-end navigable from the UI alone (no JSON hand-edits required):** PR #45 introduced `CuePointType` as a first-class entity (schema v3), PR #47 added `Cue.cueNumber` (schema v4), PR #51 added `Cue.fadeTime` (schema v5), PR #53 added the cue inspector pane that surfaces all of the above, PR #55 dropped `Cue.colorHex` and made color a Type-derived fact (schema v6), PR #57 added the Manage Types sheet for full Type CRUD, and PR #59 wired the digit-key dispatch. No further schema bumps planned for #32 — the data model has settled at v6.
+
+Carry-overs from PR #47 review still open: [#48](https://github.com/chienchuanw/only-cue/issues/48) (stable-sort tie-breaker on equal `cue.time`) and [#49](https://github.com/chienchuanw/only-cue/issues/49) (drop the `cueNumber: 0` placeholder via a `PendingCue` helper across `LegacyCue.toCue` / `LegacyV3Cue.toCue` / `LegacyV4Cue.toCue` / `LegacyV5Cue.toCue` — now four sites, growing each schema bump).
+
+Phase 2 candidates remaining: [#33](https://github.com/chienchuanw/only-cue/issues/33) (LTC + audio routing), [#34](https://github.com/chienchuanw/only-cue/issues/34) (console export — depended on #32, now unblocked), [#35](https://github.com/chienchuanw/only-cue/issues/35) (OSC remote), [#36](https://github.com/chienchuanw/only-cue/issues/36) (timeline UX polish), [#37](https://github.com/chienchuanw/only-cue/issues/37) (timeline breakdown — depended on #32, now unblocked), [#38](https://github.com/chienchuanw/only-cue/issues/38) (notes overlay), [#39](https://github.com/chienchuanw/only-cue/issues/39) (templates — depended on #32, now unblocked), [#40](https://github.com/chienchuanw/only-cue/issues/40) (custom shortcuts editor).
+
+---
+
 ## 2026-05-08 — Type management sheet (PR #57, leaf #56 of epic #32)
 
 **Shipped:** issue #56 (sixth leaf of epic #32). PR #57 merged into `dev` (rebase, head `70411c7`). The cue inspector now exposes a "Manage Types…" button that opens a modal sheet for full `CuePointType` CRUD: SwiftUI `ColorPicker` per row, name `TextField`, hotkey `Picker` (none / 0–9), `✕` delete with a confirm dialog that reassigns referenced cues to the default Type. UI-only — no schema bump (every `CuePointType` field already existed from PR #45). **161/161 unit tests green; 0 SwiftLint violations; Release build clean (warnings-as-errors).**

@@ -94,9 +94,17 @@ extension ProjectModel {
     /// Sorts pending cues by time and assigns 1-based sequential `cueNumber`s, producing the
     /// final `[Cue]` ready to plug into a `MediaItem`. Used by v1/v2/v3 migrations whose source
     /// documents predate `Cue.cueNumber`.
+    ///
+    /// When two cues share a `time`, the tie-break is `id.uuidString` lexicographic order.
+    /// Swift's `Array.sorted(by:)` is *not* spec-guaranteed stable, so without this rule the
+    /// `cueNumber` assigned to equal-time cues would be implementation-defined; with it,
+    /// re-running the migration on the same JSON always produces the identical assignment.
     private static func assignCueNumbersBySort(_ pending: [PendingCue]) -> [Cue] {
         pending
-            .sorted { $0.time < $1.time }
+            .sorted { lhs, rhs in
+                if lhs.time != rhs.time { return lhs.time < rhs.time }
+                return lhs.id.uuidString < rhs.id.uuidString
+            }
             .enumerated()
             .map { index, pendingCue in
                 Cue(

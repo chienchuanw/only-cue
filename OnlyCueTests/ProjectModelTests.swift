@@ -60,6 +60,10 @@ final class ProjectModelTests: XCTestCase {
         XCTAssertEqual(decoded, original)
     }
 
+    func test_currentSchemaVersionIsThree() {
+        XCTAssertEqual(ProjectModel.currentSchemaVersion, 3)
+    }
+
     func test_jsonRoundTrip_withCuePointTypeAndCueReference() throws {
         let projectID = try XCTUnwrap(UUID(uuidString: Self.projectID))
         let itemID    = try XCTUnwrap(UUID(uuidString: Self.itemID))

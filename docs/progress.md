@@ -4,6 +4,36 @@ Append-only session log. Newer entries on top.
 
 ---
 
+## 2026-05-08 — PendingCue helper refactor (PR #60, first carry-over from PR #47 review)
+
+**Shipped:** issue #49 (first of two carry-overs filed during PR #47's review). PR #60 merged into `dev` (rebase, head `b8f69b3`). Pure structural refactor of the v1/v2/v3 schema migrations in `OnlyCue/Document/ProjectModel.swift`. **164/164 unit tests green throughout (no test modifications); 0 SwiftLint violations; Release build clean (warnings-as-errors).**
+
+**Why now:** PR #47's review surfaced this as a substantive non-blocking note. After PR #47 added `Cue.cueNumber: Double`, `addCueAtPlayhead` learned to produce `cueNumber: 0` when inserting before the cue numbered 1 — at which point the `cueNumber: 0` placeholder that `LegacyCue.toCue(typeID:)` and `LegacyV3Cue.toCue()` had been writing as a sentinel became indistinguishable from real, user-facing data. The mitigation was a `// overwritten by assignCueNumbersBySort` comment at each call site; comments rot. Right after epic #32 settled the model at schema v6 was the cheapest moment to fix it — every legacy `toCue` site was freshly in cache and the conversion shape was consistent.
+
+**The structural fix:** a new `private struct PendingCue` carries every `Cue` field *except* `cueNumber`, and `assignCueNumbersBySort` takes `[PendingCue]` and returns `[Cue]` per-item, sorting by time and assigning `cueNumber = Double(index + 1)` in a single pass. The two legacy `toCue` methods are renamed to `toPendingCue` and lose the placeholder. The migrate functions build per-item `[PendingCue]` arrays, run them through the helper, and plug the result directly into `MediaItem` — the post-construction model-level renumber pass is gone. Net property: a `PendingCue` cannot become a `Cue` without going through `assignCueNumbersBySort`. A future `migrateFromVN` that builds `[PendingCue]` and forgets to call the helper has nothing to plug into `MediaItem.cues: [Cue]` — fails to compile rather than silently producing zeros.
+
+**Why option (b) — named struct — over option (a) — tuple:** more extensible if more fields shift in future migrations, self-documenting, easier to add a doc comment explaining the invariant. The issue body offered both shapes; the named struct won on clarity.
+
+**Scope correction vs the issue body:** issue #49 cited "`LegacyCue.toCue` and `LegacyV3Cue.toCue`" — still accurate. The repo now has four `toCue()` sites total (PRs #51 and #45 added `LegacyV5Cue` and `LegacyV4Cue` respectively), but only `LegacyCue` and `LegacyV3Cue` had the placeholder problem. `LegacyV4Cue` and `LegacyV5Cue` carry real `cueNumber` values from the legacy field — they're untouched by this PR.
+
+**What landed in PR #60 (1 commit, single file):**
+- `OnlyCue/Document/ProjectModel.swift` (+48 / −31): added `private struct PendingCue` with structural-invariant doc comment; renamed `LegacyCue.toCue(typeID:) -> Cue` → `toPendingCue(typeID:) -> PendingCue` (dropped placeholder + `// overwritten` comment); renamed `LegacyV3Cue.toCue() -> Cue` → `toPendingCue() -> PendingCue` (same drop); changed `assignCueNumbersBySort(_ ProjectModel) -> ProjectModel` to `assignCueNumbersBySort(_ [PendingCue]) -> [Cue]`; restructured `migrateFromV1` / `migrateFromV2` / `migrateFromV3` to call the per-item helper inline; deleted the post-construction model-level renumber pass.
+
+**Test strategy — refactor under existing test cover:** no new runtime tests added. The contract is structural — enforced by the type system, not by a runtime assertion. The issue body explicitly says: *"existing migration tests continue to pass"*. The Gherkin scenario "a future migration that forgets to seed cueNumbers fails to compile" is a structural property; Swift has no negative-compile-test framework. Existing migration tests served as the regression net (`test_v1_withMedia_migratesToSingleItem`, `test_v2_seedsDefaultType_andAssignsToExistingCues`, `test_v1_chainsThroughV2_seedsDefaultType_andAssignsToCue`, `test_v3_assignsCueNumbersBySortOrder` all continued to pass without modification).
+
+**Simplify pass — 3 parallel agents (reuse / quality / efficiency), 0 high-confidence findings:**
+- **Reuse**: clean. Specifically considered whether `LegacyV4Cue.toCue()` / `LegacyV5Cue.toCue()` should also route through `PendingCue` for uniformity — answered no, they don't have the placeholder problem and `PendingCue` is the wrong indirection for cues that already have real cueNumbers.
+- **Quality**: clean. Specifically considered whether the two `toPendingCue` variants (with vs. without `typeID` parameter) should be unified — answered no, the asymmetry is inherent (V3 cues carry `typeID` on the struct; V1/V2 cues don't); unification would add indirection without removing duplication.
+- **Efficiency**: clean. Confirmed the duplicate-pass cost actually dropped (model-level second pass eliminated). The `[PendingCue]` then `[Cue]` two-array pattern is acceptable (intermediate goes out of scope before `MediaItem` construction). The `.sorted.enumerated().map` chain is the idiomatic Swift expression.
+
+**Deferred (pre-existing, surfaced by simplify but out-of-scope):** the `colorHex` field on `LegacyCue`, `LegacyV3Cue`, and `LegacyV4Cue` is decoded from the JSON but never read after `toCue` / `toPendingCue` (which strip it). This is dead-stored property bloat that pre-dates this commit (originated when `Cue.colorHex` was still alive pre-v6) and is a candidate for a separate small PR.
+
+**Manual verification:** none required — the test suite covers the through-line for every legacy schema version, and the SwiftLint + Release-WAE gates are clean.
+
+**Closing note — first carry-over from PR #47 review now done.** One carry-over remains: [#48](https://github.com/chienchuanw/only-cue/issues/48) (stable-sort tie-breaker on equal `cue.time` in `assignCueNumbersBySort`). Now that `assignCueNumbersBySort` operates on `[PendingCue]`, the tie-breaker would slot in cleanly as a secondary sort key (e.g., `id` or insertion-order) — small, ~1 line of change plus a test. The recommendation is to either fold #48 into the next migration-touching PR or do it standalone before brainstorming epic #34 (console export, the highest-value remaining Phase 2 leaf, depended on #32 ✅ which is now complete).
+
+---
+
 ## 2026-05-08 — Number-key cue creation (PR #59, last leaf of epic #32)
 
 **Shipped:** issue #58 (seventh and final leaf of epic #32). PR #59 merged into `dev` (rebase, head `f524b31`). Pressing plain digit keys `1`–`0` in the document window now creates a cue at the playhead, typed by whichever `CuePointType` holds that digit as its `hotkey`. UI + commands only — no schema bump (`CuePointType.hotkey` already shipped in PR #45). **164/164 unit tests green; 0 SwiftLint violations; Release build clean (warnings-as-errors).** Closes the Type-driven cue-creation loop end-to-end across PRs #45 / #47 / #51 / #53 / #55 / #57 / #59 — epic #32 is now complete.

@@ -81,6 +81,17 @@ enum CueCommands {
         }
     }
 
+    static func setFadeTime(cueId: Cue.ID, to newFade: FadeTime, document: CueListDocument, undoManager: UndoManager?) {
+        mutateCues(document, undoManager: undoManager, actionName: "Change Cue Fade") { cues in
+            cues.map { cue in
+                guard cue.id == cueId else { return cue }
+                var copy = cue
+                copy.fadeTime = newFade
+                return copy
+            }
+        }
+    }
+
     static func retime(cueId: Cue.ID, to newTime: TimeInterval, document: CueListDocument, undoManager: UndoManager?) {
         mutateCues(document, undoManager: undoManager, actionName: "Retime Cue") { cues in
             cues

@@ -227,6 +227,21 @@ final class CueCommandsTests: XCTestCase {
         XCTAssertEqual(activeCues(document)[0].cueNumber, originalNumber, accuracy: 0.0001)
     }
 
+    func test_setFadeTime_updatesFade_undoRestoresPriorFade() throws {
+        let document = makeDocumentWithItem()
+        let undo = makeUndoManager()
+        CueCommands.addCueAtPlayhead(time: 1.0, document: document, undoManager: undo)
+        let cueId = try XCTUnwrap(activeCues(document).first?.id)
+        let originalFade = activeCues(document)[0].fadeTime
+
+        let split = FadeTime(fadeIn: 1.0, fadeOut: 2.0)
+        CueCommands.setFadeTime(cueId: cueId, to: split, document: document, undoManager: undo)
+        XCTAssertEqual(activeCues(document)[0].fadeTime, split)
+
+        undo.undo()
+        XCTAssertEqual(activeCues(document)[0].fadeTime, originalFade)
+    }
+
     func test_cueMutations_noActiveItem_areNoOps() {
         let document = CueListDocument()
         let undo = makeUndoManager()

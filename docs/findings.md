@@ -4,6 +4,22 @@ Non-obvious things learned during development. Things you'd want to remember nex
 
 ---
 
+## Hoisting `@Observable` reads into a leaf subview to scope re-evaluation
+
+`PlayerEngine` is `@Observable` and ticks `currentTime` every 100 ms via `AVPlayer.addPeriodicTimeObserver`. The first cut of the playhead read `engine.currentTime` directly inside `WaveformContainer.body` (via two `@ViewBuilder` computed properties for the playhead overlay and the drag grabber). That worked, but every tick invalidated `WaveformContainer.body`, which in turn re-walked the sibling `CueMarkersOverlay` (a `GeometryReader` containing a `ForEach` over cues) — even though no cue had changed.
+
+Fix: extract the playhead + grabber into their own `WaveformPlayheadLayer` view that takes `engine: PlayerEngine` and bindings to the scrub state directly. Now only that subview's body re-evaluates on each tick; `CueMarkersOverlay` and the parent `WaveformContainer.body` stay stable.
+
+General rule for `@Observable` (or `ObservableObject`) properties that change frequently:
+
+- The view that *reads* the property is the unit of invalidation.
+- If you read it inside a parent that also hosts unrelated children, those children re-evaluate too.
+- Pull the read down into a leaf view dedicated to that property — you trade one extra struct for a much smaller invalidation surface.
+
+This is the SwiftUI analogue of "lift state up; push reads down."
+
+---
+
 ## macOS distribution: ad-hoc signed beats truly unsigned
 
 There are three states for a `.app` on first launch from a download:

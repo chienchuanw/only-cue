@@ -42,6 +42,7 @@ Targeted gap fixes on the shipped MVP. Not part of phase 2 epics.
 | Issue | Title | Status |
 |---|---|---|
 | [#27](https://github.com/chienchuanw/only-cue/issues/27) | Display waveform for video imports — stack waveform strip beneath video frame | ✅ shipped (PR #28) |
+| [#29](https://github.com/chienchuanw/only-cue/issues/29) | Waveform playhead indicator with drag-to-scrub — vertical line + HH:MM:SS label, both audio and video strips | ✅ shipped (PR #30) |
 
 ## Phase 2 / Phase 3 milestones
 

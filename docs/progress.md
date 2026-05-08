@@ -4,6 +4,35 @@ Append-only session log. Newer entries on top.
 
 ---
 
+## 2026-05-08 — Waveform playhead with drag-to-scrub (PR #30, issue #29)
+
+**Shipped:** issue #29 (post-MVP enhancement). PR #30 merged into `dev`. The waveform now shows the play position as a draggable vertical line with a floating HH:MM:SS label, on both the audio-only waveform and the audio strip beneath the video preview.
+
+**What landed:**
+- `OnlyCue/UI/PlayheadOverlay.swift` (new) — pure SwiftUI view: vertical line at `CueMarkersGeometry.position(...)` plus a frosted-material HH:MM:SS pill via `TimeFormat.hms`, label x clamped to waveform bounds. Hit-test free.
+- `OnlyCue/UI/ScrubController.swift` (new) — value-type state machine with `begin(originalTime:isPlaying:)`, `update(dx:width:duration:)`, `end()`. Reuses `CueMarkersGeometry.time(...)` for clamped time math. Unit-tested without SwiftUI.
+- `OnlyCue/UI/WaveformPlayheadLayer.swift` (new) — owns the `engine.currentTime` read, the `PlayheadOverlay`, and a 12pt-wide `Color.clear` drag grabber. Hoisted into its own subview so 10 Hz ticks don't re-evaluate `CueMarkersOverlay` (see findings).
+- `OnlyCue/UI/WaveformContainer.swift` — gains one optional `engine: PlayerEngine?`. Passing it opts into the playhead+grabber overlay; absence preserves prior behavior.
+- `OnlyCue/UI/PreviewPane.swift` — both `audioContent` and `videoContent` pass `engine` to the waveform helper.
+- `OnlyCue/Media/PlayerEngine.swift` — added `var isPlaying: Bool { rate > 0 }` to retire the `rate > 0` magic at call sites.
+- `OnlyCueTests/PlayheadOverlayTests.swift` (4 tests, label-clamp behavior) and `OnlyCueTests/ScrubControllerTests.swift` (7 tests, state transitions). 65/65 unit tests green.
+- `docs/superpowers/specs/2026-05-08-waveform-playhead-design.md` (new) — spec captured before implementation; updated mid-PR for the scope flip and the simplify refactor.
+- `docs/verification.md` — new step 4 covers playhead + scrub on the audio waveform; step 12 updated to expect the same on the video strip.
+
+**TDD discipline:** red commit (`82e95b1` — failing playhead + scrub tests with build error proving they ran) → green commit (`4f62750` — implementations land, tests pass) committed separately, per project convention.
+
+**Simplify pass — 4 fixes (commit `ea8bfc6`):**
+1. Hoisted playhead + grabber into `WaveformPlayheadLayer` so `engine.currentTime` ticks no longer re-evaluate `CueMarkersOverlay`. Single biggest perf win in the diff.
+2. Dropped the redundant `showsPlayhead: Bool` flag on `WaveformContainer`. Engine presence (`engine != nil`) now implies the playhead — one fewer parameter to keep in sync between caller and callee.
+3. Added `PlayerEngine.isPlaying` and used it in the scrub gesture. Also useful for `TransportBar`'s `rate > 0` check next time we touch it.
+4. Cancel any in-flight seek `Task` before starting a new one on rapid re-scrub, so out-of-order seeks can't land.
+
+**Mid-PR scope flip:** brainstorm originally locked the playhead to audio-only on the assumption video had an "implicit" playhead via the moving frame. User testing immediately disagreed: "I see PlayheadOverlay only in imported audio. Check and fix it." One-line fix in `PreviewPane.videoContent` (`waveform(for:asset, withPlayhead: true)`), plus spec + verification doc reconciled. Lesson: scope-by-assumption survives spec review but not the first run on the actual artifact.
+
+**Closing note — second post-MVP enhancement landed.** Phase 2 epics still unscoped on the issue board. Roadmap unchanged.
+
+---
+
 ## 2026-05-08 — Video waveform display (PR #28, issue #27)
 
 **Shipped:** issue #27 (post-MVP enhancement). PR #28 merged into `dev`. First post-MVP feature — corrects an asymmetry the MVP shipped with: cue-marker drag-to-retime and click-to-seek lived only on the audio waveform, so video imports had no timeline editing affordance. Now video imports show the picture stacked above a 100pt waveform strip; cue markers, drag, and seek work identically to the audio path.

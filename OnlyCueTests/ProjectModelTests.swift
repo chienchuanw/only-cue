@@ -24,8 +24,24 @@ final class ProjectModelTests: XCTestCase {
                 bookmarkData: Data([0x01, 0x02, 0x03, 0x04])
             ),
             cues: [
-                Cue(id: cueOneID, typeID: UUID(), cueNumber: 1, name: "Spot up SR", time: 4.250, colorHex: "#FF6B6B", notes: "Wait for breath"),
-                Cue(id: cueTwoID, typeID: UUID(), cueNumber: 2, name: "Wash full", time: 12.000, colorHex: "#4ECDC4", notes: "")
+                Cue(
+                    id: cueOneID,
+                    typeID: UUID(),
+                    cueNumber: 1,
+                    name: "Spot up SR",
+                    time: 4.250,
+                    colorHex: "#FF6B6B",
+                    notes: "Wait for breath"
+                ),
+                Cue(
+                    id: cueTwoID,
+                    typeID: UUID(),
+                    cueNumber: 2,
+                    name: "Wash full",
+                    time: 12.000,
+                    colorHex: "#4ECDC4",
+                    notes: ""
+                )
             ]
         )
 

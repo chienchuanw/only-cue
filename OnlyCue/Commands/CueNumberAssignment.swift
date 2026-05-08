@@ -17,7 +17,9 @@ enum CueNumberAssignment {
         case (.some(let prev), .some(let next)):
             return (prev.cueNumber + next.cueNumber) / 2.0
         case (nil, nil):
-            preconditionFailure("CueNumberAssignment.next: cues non-empty but neither neighbor found — every cue's time partitions on \(time)")
+            preconditionFailure(
+                "CueNumberAssignment.next: cues non-empty but neither neighbor found at time \(time)"
+            )
         }
     }
 }

@@ -63,9 +63,7 @@ struct CueRowView: View {
                         showColorPopover = false
                     } label: {
                         HStack(spacing: 8) {
-                            Circle()
-                                .fill(Color(hex: entry.hex) ?? .gray)
-                                .frame(width: 12, height: 12)
+                            CueColorSwatch(hex: entry.hex)
                             Text(entry.name)
                             Spacer(minLength: 12)
                         }

@@ -30,18 +30,11 @@ enum CueInspectorCommit {
     static func commitCueNumber(draft: String, current: Double) -> NumberOutcome {
         let trimmed = draft.trimmingCharacters(in: .whitespaces)
         guard !trimmed.isEmpty, let parsed = Double(trimmed), parsed.isFinite else {
-            return .revert(canonical: formatNumber(current))
+            return .revert(canonical: FadeTime.formatNumber(current))
         }
         if parsed == current {
             return .noChange
         }
         return .parsed(parsed)
-    }
-
-    static func formatNumber(_ value: Double) -> String {
-        if value == value.rounded() {
-            return String(Int(value))
-        }
-        return String(value)
     }
 }

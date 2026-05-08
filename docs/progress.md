@@ -4,6 +4,39 @@ Append-only session log. Newer entries on top.
 
 ---
 
+## 2026-05-08 — Phase 2 epics filed + first leaf shipped: CuePointType schema v3 (PR #45, leaf #44 of epic #32)
+
+**Shipped:** the parity-push slate for Phase 2 (9 epics, [#32–#40](https://github.com/chienchuanw/only-cue/issues?q=is%3Aissue+milestone%3A%22Phase+2+%E2%80%94+Pro+handoff%22)) and the first leaf of #32. PR #45 merged into `dev`. `ProjectModel` now carries a `cuePointTypes` catalog and every `Cue` references a Type by `typeID`. Schema bumped to **v3** with a v2→v3 migration that seeds a default Type "General" carrying the previous `defaultCueColorHex` and assigns its id to every existing cue. v1→current chains through the same default-Type seeding.
+
+**Why now (brainstorm session):** competitive analysis of CuePoints (the reference product) surfaced 9 gaps that block a programmer from leaving CuePoints — `CuePoint Types` as shared organising primitive (this leaf), editable `Cue.id` with ripple-down, `Cue.fadeTime` with split syntax, LTC + audio routing, console export (CSV/MA2/MA3), OSC remote control (Companion / MA3 / StreamDeck), timeline UX polish, breakdown view, notes overlay, plus the already-roadmap'd templates and custom shortcuts editor. User picked **pro-handoff parity** as the positioning (vs. full-clone or differentiate-first); Tier-C differentiator (AI cueing / collaboration / console round-trip) deferred to Phase 3. Filed 9 epics + 4 new area labels (`area:types`, `area:ltc`, `area:export`, `area:osc`) in one batch; all assigned to the **Phase 2 — Pro handoff** milestone.
+
+**What landed in PR #45 (8 commits):**
+- `OnlyCue/Document/CuePointType.swift` (new) — `{id, name, colorHex, defaultFadeTime, defaultNamePattern, hotkey, isVisible, isExportEnabled}` with property-level defaults so callers normally only pass `(id, name, colorHex)`. Reserved fields (`hotkey`, `isVisible`, `isExportEnabled`) anchor the future leaves (number-key creation, breakdown view, export filter) so each one adds behavior, not schema.
+- `OnlyCue/Document/Cue.swift` — gains required `typeID: UUID`. Initially had a `UUID()` default; the simplify pass dropped it after agents flagged it as both an orphan-id hazard *and* a per-decode UUID-allocation cost (Swift `Decodable` synthesis still computes default expressions on present-key decode for missing-key fallback).
+- `OnlyCue/Document/ProjectModel.swift` — `cuePointTypes: [CuePointType]` (invariant: ≥ 1; index `[0]` is the default), computed `defaultCuePointTypeID`, `currentSchemaVersion = 3`, `LegacyV2`/`LegacyCue` shapes, both migrations, public `makeDefaultCuePointType()` factory.
+- `OnlyCue/Document/CueListDocument.swift` — `init()` seeds a default Type unconditionally so untitled documents are valid v3 from creation.
+- `OnlyCue/Commands/CueCommands.swift` — `addCueAtPlayhead` sources the new cue's color from `document.model.cuePointTypes.first?.colorHex` (single source of truth) and `assertionFailure` + no-op if the Types invariant is broken upstream.
+- `OnlyCueTests/CuePointTypeTests.swift` (new), `CueListDocumentTests.swift` (new) — Codable round-trip, default seeding.
+- `OnlyCueTests/ProjectModelTests.swift` + `ProjectModelMigrationTests.swift` — schema-version sentinel, Type-aware round-trip, v2→v3 migration test, v1→current regression. **108/108 unit tests green.**
+- `docs/data-model.md` rewritten for schema v3 (example JSON, Swift types, field rules, versioning policy with both migration paths). New ADR-009 in `docs/decisions.md`. Removed the "all cues are generic" line from "deliberately NOT in the model".
+
+**Simplify pass — 5 fixes (commit `6e5aae0`):**
+1. Dropped the unsafe `Cue.typeID = UUID()` default. Three reviewers converged: orphan-id hazard (a Cue could silently reference no Type) + per-decode UUID cost. Now required at construction.
+2. Collapsed byte-identical `LegacyV1Cue` / `LegacyV2Cue` into a single shared `LegacyCue` struct used by both migration paths.
+3. Replaced `?? UUID()` fallback in `addCueAtPlayhead` with `assertionFailure` + no-op (matches the pre-existing `mutateCues` no-op pattern when `activeItemID == nil`). The fallback was masking a real invariant violation with a dangling id that no Type could resolve.
+4. Sourced new cue's color from the active default Type instead of duplicating `defaultCueColorHex` on `CueCommands`. One source of truth — the duplication would have rotted as soon as the Types editor lets users change the default color.
+5. Replaced `CuePointType`'s explicit init (mirror of the synthesized memberwise init, only adding defaults) with property-level defaults. Same shape, fewer lines.
+
+**TDD discipline:** 7 separate red→green commits before the simplify pass. Each cycle: write failing test → confirm it fails for the expected reason (e.g. "Cannot find 'CuePointType' in scope" for cycle 1, "Extra argument 'typeID'" for cycle 2, decode `keyNotFound` for cycle 3) → minimal implementation → green → next cycle. The full-suite check after each green caught the v1-migration `keyNotFound` regression (cue's `typeID` not in v1 JSON) in cycle 2 itself, fixed by introducing `LegacyV1Cue` immediately rather than letting it cascade.
+
+**Discovery during grounding:** the codebase had already shipped `currentSchemaVersion = 2` (PR #41 multi-media items merged earlier today). The leaf body originally said "schema v2"; corrected to v3 mid-design when reading `OnlyCue/Document/ProjectModel.swift` revealed actual current state. Also fixed issue #44's title v2→v3 alongside the PR. **Lesson:** when picking up a project after a brainstorm-only session gap, refresh code state (`Read` the model files; `git log` since the last familiar commit) before locking the design — assumptions about schema version or in-flight features rot fast in active repos.
+
+**Filing rhythm:** the brainstorm session filed 9 epics in parallel via `gh issue create` after creating 4 new `area:*` labels. Each epic body includes leaf checklists; leaves get filed as separate issues when picked up via `gh-dev`, matching the MVP convention (epics #4–#11 each spawned 5–8 leaf PRs). Leaf #44 here is the first such filing under #32 — the original "Leaf: spec — schema v3 + ADR" and "Leaf: model — introduce CuePointType" lines bundled into one TDD-friendly PR (a docs-only spec leaf doesn't fit `/feature`'s strict TDD requirement).
+
+**Closing note — Phase 2 has begun.** The data model is now Type-aware; the foundation under #34 (export), #37 (breakdown view), and #39 (templates) is in place. Remaining leaves of #32: editable `Cue.id` with ripple-down, `Cue.fadeTime` with split syntax, number-key cue creation, cue inspector pane, UI rewire to read color from the Type (and remove transitional `Cue.colorHex`).
+
+---
+
 ## 2026-05-08 — Multi-media items per project (PR #41, issue #31)
 
 **Shipped:** issue #31 (post-MVP enhancement). PR #41 merged into `dev`. A `.cuelist` document now represents an entire show: it holds a list of `MediaItem`s, each with its own media reference and its own cue list. Multi-file imports append items in selection/drop order. A left sidebar lets the user switch the active item, drag-reorder, and ⌫-delete with undo.

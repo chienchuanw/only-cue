@@ -44,7 +44,37 @@ Targeted gap fixes on the shipped MVP. Not part of phase 2 epics.
 | [#27](https://github.com/chienchuanw/only-cue/issues/27) | Display waveform for video imports — stack waveform strip beneath video frame | ✅ shipped (PR #28) |
 | [#29](https://github.com/chienchuanw/only-cue/issues/29) | Waveform playhead indicator with drag-to-scrub — vertical line + HH:MM:SS label, both audio and video strips | ✅ shipped (PR #30) |
 | [#31](https://github.com/chienchuanw/only-cue/issues/31) | Multi-media items per project — schema v2 with auto-migration, left sidebar with drag-reorder, multi-file import, per-item cues, waveform prewarm | ✅ shipped (PR #41) |
+| [#42](https://github.com/chienchuanw/only-cue/issues/42) | Waveform horizontal zoom (1×–16× via trackpad pinch + ⌘=/⌘-/⌘0) with auto-follow during playback; thinner playhead line | ✅ shipped (PR #43) |
 
-## Phase 2 / Phase 3 milestones
+## Active milestone — Phase 2 — Pro handoff (parity push)
 
-Empty placeholders. Phase 2 (LTC, templates, export, custom shortcuts) and Phase 3 (the differentiator — TBD) get their own epics added when scoped. See `docs/roadmap.md`.
+Filed 2026-05-08 from the CuePoints competitive-gap brainstorm. Positioning: "pro-handoff parity" — the smallest set that lets a programmer leave CuePoints. Tier-C differentiator deferred to Phase 3.
+
+| Issue | Title | Pri | Status |
+|---|---|---|---|
+| [#32](https://github.com/chienchuanw/only-cue/issues/32) | Cue model rework — CuePoint Types, Cue ID, fade time | p1 | 🟡 in progress (leaf [#44](https://github.com/chienchuanw/only-cue/issues/44) shipped via PR #45 — CuePointType + schema v3) |
+| [#33](https://github.com/chienchuanw/only-cue/issues/33) | LTC generation + audio routing | p1 | ⚪ open |
+| [#34](https://github.com/chienchuanw/only-cue/issues/34) | Console export — CSV, MA2, MA3 (depends on #32) | p1 | ⚪ open |
+| [#35](https://github.com/chienchuanw/only-cue/issues/35) | OSC remote control (Companion / MA3 / StreamDeck) | p1 | ⚪ open |
+| [#36](https://github.com/chienchuanw/only-cue/issues/36) | Timeline UX polish (zoom/gain/snap/nudge/multi-select/inter-cue nav) | p1 | ⚪ open |
+| [#37](https://github.com/chienchuanw/only-cue/issues/37) | Timeline breakdown view (depends on #32) | p1 | ⚪ open |
+| [#38](https://github.com/chienchuanw/only-cue/issues/38) | Notes overlay on video preview | p1 | ⚪ open |
+| [#39](https://github.com/chienchuanw/only-cue/issues/39) | Templates — CuePoint Type sets (depends on #32) | p2 | ⚪ open |
+| [#40](https://github.com/chienchuanw/only-cue/issues/40) | Custom keyboard shortcuts editor | p2 | ⚪ open |
+
+### Remaining leaves of #32
+
+Filed JIT via `gh-dev` as work picks up. Each becomes its own issue + PR.
+
+- [x] spec — `docs/data-model.md#schema-v3` + ADR-009 (bundled into #44)
+- [x] model — introduce `CuePointType` (#44)
+- [x] migration — v2→v3 transform (#44)
+- [ ] model — editable `Cue.id` with auto-increment + ripple-down on insert/move
+- [ ] model — `Cue.fadeTime` with split-fade syntax (`1/2` → `(in: 1.0, out: 2.0)`)
+- [ ] shortcut — number-key cue creation (1–0 binds to a Type via the keymap)
+- [ ] ui — cue inspector pane (edit Type, ID, fade, notes)
+- [ ] cleanup — UI reads color from Type; remove transitional `Cue.colorHex`
+
+## Phase 3 milestone — Differentiator
+
+Empty until Phase 2 ships. Three candidates from the roadmap: AI-assisted cueing, real-time collaboration, push/pull console integration. We pick one when Phase 2 is in user hands and we know which gap matters most.

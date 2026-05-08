@@ -17,6 +17,7 @@ enum CueCommands {
         let cue = Cue(
             id: UUID(),
             typeID: defaultType.id,
+            cueNumber: 0,
             name: "Cue",
             time: max(time, 0),
             colorHex: defaultType.colorHex,

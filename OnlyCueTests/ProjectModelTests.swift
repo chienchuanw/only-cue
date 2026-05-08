@@ -24,8 +24,8 @@ final class ProjectModelTests: XCTestCase {
                 bookmarkData: Data([0x01, 0x02, 0x03, 0x04])
             ),
             cues: [
-                Cue(id: cueOneID, typeID: UUID(), name: "Spot up SR", time: 4.250, colorHex: "#FF6B6B", notes: "Wait for breath"),
-                Cue(id: cueTwoID, typeID: UUID(), name: "Wash full", time: 12.000, colorHex: "#4ECDC4", notes: "")
+                Cue(id: cueOneID, typeID: UUID(), cueNumber: 1, name: "Spot up SR", time: 4.250, colorHex: "#FF6B6B", notes: "Wait for breath"),
+                Cue(id: cueTwoID, typeID: UUID(), cueNumber: 2, name: "Wash full", time: 12.000, colorHex: "#4ECDC4", notes: "")
             ]
         )
 
@@ -60,8 +60,23 @@ final class ProjectModelTests: XCTestCase {
         XCTAssertEqual(decoded, original)
     }
 
-    func test_currentSchemaVersionIsThree() {
-        XCTAssertEqual(ProjectModel.currentSchemaVersion, 3)
+    func test_currentSchemaVersionIsFour() {
+        XCTAssertEqual(ProjectModel.currentSchemaVersion, 4)
+    }
+
+    func test_cueNumberRoundTripsThroughJSON() throws {
+        let cue = Cue(
+            id: UUID(),
+            typeID: UUID(),
+            cueNumber: 1.5,
+            name: "Spot up SR",
+            time: 4.25,
+            colorHex: "#FF6B6B",
+            notes: ""
+        )
+        let data = try JSONEncoder().encode(cue)
+        let decoded = try JSONDecoder().decode(Cue.self, from: data)
+        XCTAssertEqual(decoded.cueNumber, 1.5)
     }
 
     func test_jsonRoundTrip_withCuePointTypeAndCueReference() throws {
@@ -74,6 +89,7 @@ final class ProjectModelTests: XCTestCase {
         let cue = Cue(
             id: cueID,
             typeID: typeID,
+            cueNumber: 1,
             name: "Spot up SR",
             time: 4.25,
             colorHex: "#FF6B6B",

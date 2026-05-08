@@ -19,12 +19,19 @@ enum CueCommands {
 
     /// Explicit-Type variant used by the number-key cue-creation dispatch. The caller
     /// resolves the Type via `ProjectModel.cuePointType(forHotkey:)` and passes its id.
+    /// Guards against a typeID that no longer exists in the project — without the guard,
+    /// a stale id would produce a cue that resolves to `.accentColor` forever with no
+    /// way for the user to tell why the swatch looks wrong.
     static func addCueAtPlayhead(
         time: TimeInterval,
         typeID: CuePointType.ID,
         document: CueListDocument,
         undoManager: UndoManager?
     ) {
+        guard document.model.cuePointTypes.contains(where: { $0.id == typeID }) else {
+            assertionFailure("addCueAtPlayhead called with a typeID that doesn't exist in cuePointTypes")
+            return
+        }
         appendCue(time: time, typeID: typeID, document: document, undoManager: undoManager)
     }
 

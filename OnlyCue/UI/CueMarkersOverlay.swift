@@ -75,7 +75,14 @@ struct CueMarkerView: View {
                     .frame(width: Self.capWidth, height: Self.capHeight)
             }
         }
+        // Pin the layout column to hitWidth so wide cueNumber labels (e.g. "99.5",
+        // "100") don't expand the VStack and pull the line off baseX. The label's
+        // `.fixedSize()` lets it overflow visually around the column's center while
+        // the line stays anchored at the cue's exact time.
+        .frame(width: Self.hitWidth)
         .offset(x: baseX + dragOffset - Self.hitWidth / 2)
+        // Gesture intentionally on the VStack (not the inner ZStack) so clicking
+        // anywhere — line, cap, label, or hit-capsule — drags or seeks the marker.
         .gesture(dragOrTapGesture)
         .accessibilityIdentifier("cueMarker-\(cue.id.uuidString)")
     }

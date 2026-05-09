@@ -4,6 +4,54 @@ Append-only session log. Newer entries on top.
 
 ---
 
+## 2026-05-10 — Auto-scroll cue list to selected row on selection change (PR #102, closes [#101](https://github.com/chienchuanw/only-cue/issues/101))
+
+**Shipped:** issue [#101](https://github.com/chienchuanw/only-cue/issues/101) closed by PR [#102](https://github.com/chienchuanw/only-cue/pull/102) (rebase-merged into `dev` at `278fb1b`). Single commit `363edea`. When the cue list selection changes via *any* trigger — clicking a row, clicking a waveform marker (PR [#100](https://github.com/chienchuanw/only-cue/pull/100)), pressing `S` to snap (PR [#91](https://github.com/chienchuanw/only-cue/pull/91)), pressing Option+arrow to nudge (PR [#93](https://github.com/chienchuanw/only-cue/pull/93)) — the cue list pane now auto-scrolls to bring the selected row into view, centered, with a 200 ms ease-out animation. **221/221 unit tests green; 0 SwiftLint violations across 90 files.** 20th consecutive bypass-mode shipment.
+
+**The feature-cascade observation (worth recording for future cycles):** PR #102 closes a real navigation gap that didn't exist before PR #100 — once clicking a marker started selecting its row, with 30+ cues the row could end up offscreen with no indication. The marker highlights, the inspector updates, but the row stays unseen until the user manually scrolls. Auto-scroll closes that loop. Same pattern as PR [#96](https://github.com/chienchuanw/only-cue/pull/96) → PR [#98](https://github.com/chienchuanw/only-cue/pull/98) (cueNumber labels exposed the gap that *which marker is selected* wasn't visible) → PR #100 (selection-aware highlight exposed the gap that you couldn't *initiate* a marker → row navigation) → this PR. **Heuristic to remember:** when a feature changes user behavior, it immediately surfaces the *next* gap. Worth scanning for that gap as part of the next-leaf survey rather than reaching into the open-leaf list at random.
+
+**Implementation — extending the existing `.onChange(of: selection)`:** `CueListPane.cueList` had `List(selection: $selection)` with rows `.tag(cue.id)`. Wrapped the `List` in `ScrollViewReader { proxy in ... }` and extended the existing `.onChange(of: selection)` (which has called `engine.seek(to: cue.time)` since the MVP) with a single `proxy.scrollTo(id, anchor: .center)` inside `withAnimation(.easeOut(duration: 0.2))`. One handler, two side effects (seek + scroll), each independent.
+
+\`\`\`swift
+.onChange(of: selection) { _, newValue in
+    guard
+        let id = newValue,
+        let cue = cues.first(where: { $0.id == id })
+    else { return }
+    Task { await engine.seek(to: cue.time) }
+    // Centered scroll-to-selection brings offscreen rows into view when
+    // selection is driven externally (marker click, snap/nudge). For
+    // already-visible rows the re-center is a mild flicker — acceptable
+    // per the issue body's UX trade-off analysis.
+    withAnimation(.easeOut(duration: 0.2)) {
+        proxy.scrollTo(id, anchor: .center)
+    }
+}
+\`\`\`
+
+**Why `.center` anchor (vs `.top` / `.bottom` / `nil`):** places the selected row in the middle of the visible area, preserving spatial context — the user sees the selected row plus surrounding cues. Standard for navigate-by-marker UX in DAWs / NLEs. `.top` / `.bottom` lose context. `nil` (default) lands the row at the edge of the visible area when scrolled in from offscreen — harder to read than centered.
+
+**Why animate the scroll (200 ms ease-out):** instant scroll \"teleports\" the list and is disorienting at high cue density. 200 ms is short enough not to feel sluggish during rapid arrow-key navigation. ease-out matches the natural deceleration of a tracked scroll gesture.
+
+**Why scroll on every selection change (not just \"external\" ones):** the `.onChange` handler can't easily distinguish \"user clicked row\" from \"external trigger\" without adding a source-of-change flag. In practice:
+- Click an offscreen row → row scrolls into view. Desired.
+- Click a marker → row scrolls into view. Desired.
+- Snap / nudge → row stays selected; scroll re-centers if it's drifted, no-op if already centered.
+- Click an already-visible row → mild re-center flicker. Acceptable.
+
+DAWs / NLEs all do unconditional scroll-to-selection. Tracking source-of-change would be premature optimization for an acceptable UX edge case.
+
+**Why no new test (continuing the sentinel-test discipline from PR #96 / PR #100):** `ScrollViewReader` and `proxy.scrollTo(_:anchor:)` are SwiftUI primitives. Unit-testing the actual scroll behavior requires ViewInspector / snapshot infrastructure not in the project. The handler is a 3-line addition (`guard`, `withAnimation`, `proxy.scrollTo`); failure modes would surface as compile errors (wrong API) or visible misbehavior (manually verifiable). The sentinel-test precedent established in earlier PR reviews holds: when the type system already guarantees the wiring and a real behavior test would need infra not in the project, skip the test rather than write a sentinel that re-asserts what the compiler already enforces.
+
+**What landed in PR #102 (1 commit, 1 file modified):**
+- `363edea feat(ui): auto-scroll cue list to selected row when selection changes` — `OnlyCue/UI/CueListPane.swift::cueList` wrapped existing `List` in `ScrollViewReader { proxy in ... }`. Extended the existing `.onChange(of: selection)` with `withAnimation(.easeOut(duration: 0.2)) { proxy.scrollTo(id, anchor: .center) }`. Added inline comment explaining the unconditional-scroll trade-off so a future reader doesn't try to optimize it away.
+
+**No follow-up issue from PR #102 review** — merged clean with no comments, no review threads.
+
+**Manual verification (PR test plan):** imported a project with 30+ cues, scrolled the cue list pane so cue 25's row was offscreen. Clicked the waveform marker for cue 25 — list smoothly scrolled to center cue 25's row; inspector updated; marker emphasis (PR #98) followed. Pressed `S` with cue 25 still selected (snap to playhead) — list re-centered if it had drifted. Pressed Option+→ — cue 25's time advanced; row stays selected; list re-centers. Clicked an already-visible row — mild re-center flicker visible (acceptable per UX trade-off analysis); selection updates normally. Used arrow keys to navigate cue rows top-to-bottom — list smoothly tracks the moving selection without lag. Drag-to-retime, tap-to-seek, cueNumber labels (PR #96), marker emphasis (PR #98) — all unchanged.
+
+---
+
 ## 2026-05-09 — Click waveform marker to select its cue in the cue list (PR #100, closes [#99](https://github.com/chienchuanw/only-cue/issues/99))
 
 **Shipped:** issue [#99](https://github.com/chienchuanw/only-cue/issues/99) closed by PR [#100](https://github.com/chienchuanw/only-cue/pull/100) (rebase-merged into `dev` at `49e0a32`). Single commit `c6a23ed`. Tapping any cue marker on the waveform now selects that cue in the cue list pane (in addition to seeking the playhead). Closes the cycle started by PR [#98](https://github.com/chienchuanw/only-cue/pull/98) — selection state lifted to `DocumentView` flows in both directions: row click → marker emphasis (PR #98); marker click → row selection (this PR). **221/221 unit tests green; 0 SwiftLint violations across 90 files.** 19th consecutive bypass-mode shipment.

@@ -25,7 +25,7 @@ struct PreviewPane: View {
                 NotesOverlayView(
                     activeCue: activeCue,
                     prefs: overlayPrefs,
-                    cueNumberLabel: activeCue.flatMap(formattedCueNumber)
+                    cueNumberLabel: activeCue.map { FadeTime.formatNumber($0.cueNumber) }
                 )
                 .padding(overlayPadding, 12)
             }
@@ -54,13 +54,6 @@ struct PreviewPane: View {
         case .center: []
         case .bottom: .bottom
         }
-    }
-
-    private func formattedCueNumber(_ cue: Cue) -> String {
-        let value = cue.cueNumber
-        return value.truncatingRemainder(dividingBy: 1) == 0
-            ? String(format: "%.0f", value)
-            : String(format: "%.1f", value)
     }
 
     @ViewBuilder

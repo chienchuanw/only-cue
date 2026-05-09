@@ -6,8 +6,15 @@ import SwiftUI
 /// rather than showing an empty card / placeholder text.
 ///
 /// Appearance is driven entirely by `prefs` (`NotesOverlayPreferences`). When `prefs == .default`
-/// the rendering matches the original PR #72 visual: white `.title`-sized text on
+/// the rendering visually matches the original PR #72 baseline: white `.title`-sized text on
 /// `.ultraThinMaterial`, no cue-ID prefix.
+///
+/// Note on Dynamic Type: this overlay deliberately uses a fixed-point font size
+/// (`28 * fontScale`) rather than the `.title` semantic style. The customisation sheet's
+/// "Font Scale" slider (0.75×–3×) is the user-facing size knob; layering `.scaleEffect`
+/// over a Dynamic-Type-aware style would make the slider's "1.50×" label lie about the
+/// rendered size. Users who need larger text should raise the Font Scale slider rather
+/// than rely on macOS's system text-size preference.
 struct NotesOverlayView: View {
 
     let activeCue: Cue?

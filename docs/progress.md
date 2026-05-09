@@ -4,6 +4,18 @@ Append-only session log. Newer entries on top.
 
 ---
 
+## 2026-05-09 — ⌘⇧N keyboard shortcut for Show Notes Overlay toggle (PR #89, closes [#88](https://github.com/chienchuanw/only-cue/issues/88))
+
+**Shipped:** issue [#88](https://github.com/chienchuanw/only-cue/issues/88) closed by PR [#89](https://github.com/chienchuanw/only-cue/pull/89) (rebase-merged into `dev` at `d002f5b`). Adds `⌘⇧N` as the keyboard shortcut for the existing **View → Show Notes Overlay** toggle that shipped in PR #72. Single-line change appending `.keyboardShortcut("n", modifiers: [.command, .shift])` to the `Toggle` in `OnlyCue/App/AppCommands.swift`. Show callers no longer need the menu bar to flip the overlay mid-show. **Merged clean — no comments, no review threads.** 13th consecutive bypass-mode shipment.
+
+**Why ⌘⇧N:** ⌘N is owned by `DocumentGroup` for "New", so ⌘⇧N is the cleanest sibling for "show **N**otes overlay". Verified no existing binding via grep across the codebase. Macro-style modifier (⌘⇧) is the standard macOS convention for the power-user variant of a regular shortcut. The shortcut renders next to the menu item label, so menu-first users still discover it.
+
+**Why a one-line PR (vs bundling more polish):** smallest meaningful improvement to the notes-overlay surface that doesn't require fresh design judgment. The other candidates surveyed before opening #88 were either already-shipped (Open Recent free via `DocumentGroup`, active-cue tests via existing `MediaItem.activeCue(at:)` coverage) or scope-creep (accessibility audit, customisable shortcuts editor — deferred to epic [#40](https://github.com/chienchuanw/only-cue/issues/40)). Keeping the PR boundary at the shortcut itself respects the "narrow scope" discipline that's held across the bypass-mode streak.
+
+**No follow-up issue from PR #89 review** — merged clean.
+
+---
+
 ## 2026-05-09 — File > Import Media… menu entry (PR #80, closes [#76](https://github.com/chienchuanw/only-cue/issues/76))
 
 **Shipped:** issue [#76](https://github.com/chienchuanw/only-cue/issues/76) closed by PR [#80](https://github.com/chienchuanw/only-cue/pull/80) (rebase-merged into `dev` at `dbbe0bf`). Adds a canonical macOS-style **File → Import Media…** menu entry (after the standard New entries) with ⌘O as its sole owner — the existing in-app `Import Media…` button keeps its visible affordance but drops its own ⌘O binding to eliminate duplicate-shortcut ambiguity. The system file picker, importer pipeline, and drag-drop are all unchanged. **200/200 unit tests green (1 new in `ImportMediaCommandTests`); 0 SwiftLint violations across 80 files.** 9th consecutive bypass-mode shipment, 3rd consecutive against a user-pre-authored spec + plan.

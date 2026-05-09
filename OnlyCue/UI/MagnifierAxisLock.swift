@@ -4,10 +4,11 @@ import CoreGraphics
 /// a magnifier drag. Lives outside SwiftUI so the decision branches can be
 /// unit-tested without spinning up a view host.
 ///
-/// The lock is one-shot per drag: once `.lockedHorizontal` or `.lockedVertical`
-/// is decided, it sticks for the rest of the drag, even if Shift is released
-/// mid-drag. This is a deliberate UX choice — flipping axes mid-drag would be
-/// surprising. The view resets `state` to `.unresolved` on `DragGesture.onEnded`.
+/// The decision is one-shot per drag in BOTH directions: once `.lockedHorizontal`,
+/// `.lockedVertical`, or `.unlocked` is decided, it sticks for the rest of the drag
+/// regardless of subsequent changes to `isShiftHeld`. Flipping axis-lock state
+/// mid-drag would be surprising. The view resets `state` to `.unresolved` on
+/// `DragGesture.onEnded`.
 enum MagnifierAxisLock {
 
     enum State: Equatable {
@@ -28,6 +29,7 @@ enum MagnifierAxisLock {
     /// regardless of `isShiftHeld`, and `nextState` stays `.unresolved`.
     static let decisionThreshold: CGFloat = 10
 
+    /// When `|translationX| == |translationY|` at or above threshold, horizontal wins (tiebreak).
     static func resolve(
         translationX: CGFloat,
         translationY: CGFloat,

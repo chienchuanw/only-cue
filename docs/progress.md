@@ -4,6 +4,72 @@ Append-only session log. Newer entries on top.
 
 ---
 
+## 2026-05-10 — Pause-at-each-cue mode for live show calling (PR #114, closes [#113](https://github.com/chienchuanw/only-cue/issues/113))
+
+**Shipped:** issue [#113](https://github.com/chienchuanw/only-cue/issues/113) closed by PR [#114](https://github.com/chienchuanw/only-cue/pull/114) (rebase-merged into `dev` at `e1f1e82`). Single commit `cfdfdc8`. Adds a toggleable **Pause at Each Cue** mode (View menu). When enabled, forward playback auto-pauses as the playhead crosses any cue's time. Show callers take a beat (read overlay notes, prep the next move) and press Space to resume — until the next cue, where it pauses again. **251/251 unit tests green (8 new in `PauseAtEachCueTests`); 0 SwiftLint violations across 96 files.** 26th consecutive bypass-mode shipment.
+
+**This is the missing primitive that turns OnlyCue from a *cue-list editor* into a *live show calling tool*.** Without auto-pause, calling a show against a video means watching the playhead like a hawk and hitting space at the right millisecond. With auto-pause, the GO is already there; the caller's job is just to release it. Substantial pivot off the transport-bar surface (PRs #110 / #112 completed it as the at-a-glance pulse surface) to the playback engine — same show-caller use case, different surface.
+
+**The load-bearing strict-`>` / inclusive-`<=` invariants on the crossing detector (each pinned by a separate test):**
+
+\`\`\`swift
+extension Sequence where Element == Cue {
+    func cueCrossed(
+        movingFrom previousTime: TimeInterval,
+        to newTime: TimeInterval
+    ) -> Cue? {
+        guard newTime > previousTime else { return nil }
+        return first { $0.time > previousTime && $0.time <= newTime }
+    }
+}
+\`\`\`
+
+- **Strict `>` on `previousTime`** — avoids re-detecting the cue we just paused at when the user resumes. After auto-pause at cue X, the engine's `currentTime` equals `cue.time`. When the user presses Space, `currentTime` advances forward — the next `.onChange` fires with `oldValue = cue.time, newValue > cue.time`. With `>=`, `cue.time >= cue.time` would re-fire and lock the user in place. Strict `>` lets the resume tick past the cue.
+- **Inclusive `<=` on `newTime`** — ensures a cue exactly at the new playhead position triggers. The auto-pause should fire *at* the cue, not after it. Matches the strict-greater convention in `TransportBar.nextCueInterval` (PR [#110](https://github.com/chienchuanw/only-cue/pull/110)) where a cue exactly at currentTime is \"now\" — and pausing on \"now\" is the whole point of this feature.
+
+Both invariants pinned by their own tests in `PauseAtEachCueTests` so a future reader can't soften either bound without breaking a test:
+- `test_strictGreaterOnPreviousTime_resumeDoesNotRePause`
+- `test_inclusiveLessThanEqualOnNewTime_cueExactlyAtPlayheadTriggers`
+
+**The `.onChange(of: engine.currentTime)` handler on `DocumentView`'s body invokes the helper:**
+
+\`\`\`swift
+.onChange(of: engine.currentTime) { oldValue, newValue in
+    guard pauseAtEachCue, engine.rate > 0 else { return }
+    let cues = document.model.activeItem?.cues ?? []
+    if cues.cueCrossed(movingFrom: oldValue, to: newValue) != nil {
+        engine.pause()
+    }
+}
+\`\`\`
+
+The `engine.rate > 0` guard skips scrubs during pause (rate = 0 throughout). The helper's `guard newTime > previousTime` blocks backward seeks. Multi-cue jumps during scrub-during-play (rare) pause at the first crossed cue — accepted, not a bug.
+
+**Why `@AppStorage` (not `@State` on `DocumentView`):** mode preference should persist across launches and across documents. Mirrors precedent from `showNotesOverlay` (PR [#72](https://github.com/chienchuanw/only-cue/pull/72)).
+
+**Why `.onChange(of: engine.currentTime)` (not a periodic time observer or a Combine sink):** `PlayerEngine` is `@Observable` — SwiftUI tracks `currentTime` reads in views automatically. `.onChange` is the idiomatic way. Performance: ~30 ticks/sec × O(n) over 30–100 cues = ~3000 comparisons/sec. Negligible.
+
+**Why no keyboard shortcut for the toggle:** mode switch, rare action. Reserved letter keys (`m`, `s`, `n`, `d`) are taken or contextual. Users learn the menu; the auto-pause behavior itself is what they exercise repeatedly via Space.
+
+**Why no UI indicator besides the menu checkmark:** the menu shows the toggle's checkmark when on. During a run, the user hits Space and observes the pauses — the behavior is self-evident. Banner / status pill = scope creep for the leaf.
+
+**The recurring `type_body_length` lint trip and its architectural payoff:** my first pass put `cueCrossed(in:movingFrom:to:)` as a static method on `DocumentView`. SwiftLint flagged `type_body_length` (DocumentView at 254/250 lines) — same lint trip that hit `CueCommandsTests` in PR [#106](https://github.com/chienchuanw/only-cue/pull/106). Followed the same precedent: extract to a topical companion file (`OnlyCue/Document/Cue+CrossingDetection.swift`). The collection-method form (`cues.cueCrossed(movingFrom:to:)`) emerged as cleaner than the original static-method form (`DocumentView.cueCrossed(in: cues, ...)`). **Heuristic to remember:** the `type_body_length` lint cap (250 lines) is doing real architectural work — it forces extraction at the moment a struct accumulates incidental complexity, and the extracted helper is usually a better API than the inlined version anyway. Don't fight it; let the lint be a refactoring nudge.
+
+**RED-first TDD discipline:** wrote `OnlyCueTests/PauseAtEachCueTests.swift` (8 tests) first. Forward crossing finds cue / backward motion returns nil / no cues returns nil / no cue in range returns nil / strict-`>` on previousTime / inclusive-`<=` on newTime / multiple cues in range returns first / zero-tick (previousTime == newTime) doesn't trigger. Confirmed RED — `cues.cueCrossed(movingFrom:to:)` doesn't exist. Implemented. 251/251 passing.
+
+**What landed in PR #114 (1 commit, 4 files modified or created):**
+- `cfdfdc8 feat(playback): pause-at-each-cue mode for live show calling` —
+  - `OnlyCue/Document/Cue+CrossingDetection.swift` (new, 19 lines) — `Sequence where Element == Cue` extension with `cueCrossed(movingFrom:to:)` and explanatory doc comment covering the strict-`>` / inclusive-`<=` invariants.
+  - `OnlyCue/UI/DocumentView.swift` — added `@AppStorage(\"pauseAtEachCue\")` storage; added `.onChange(of: engine.currentTime)` modifier on body that calls `cues.cueCrossed(movingFrom:to:)` and pauses when non-nil. Inline comment documenting the `engine.rate > 0` guard and the strict-`>` resume invariant.
+  - `OnlyCue/App/AppCommands.swift` — added `@AppStorage(\"pauseAtEachCue\")` and a `Toggle(\"Pause at Each Cue\", isOn: $pauseAtEachCue)` in the View menu, immediately after the `Show Notes Overlay` toggle.
+  - `OnlyCueTests/PauseAtEachCueTests.swift` (new, 65 lines) — 8 tests with `makeCue(time:)` private helper.
+
+**Auto-review on PR #114 from chienchuanw:** *\"No issues found. Checked for bugs and CLAUDE.md compliance.\"* No follow-up.
+
+**Manual verification (PR test plan):** toggled \"Pause at Each Cue\" on. Pressed Space at 0s with cues at 5s, 12s, 30s — playback ran to 5s, paused. Space resumed. Played to 12s, paused. Space resumed. Played to 30s, paused. Toggled off and re-played from 0s — playback ran through all cues without pausing. With toggle on, dragged the playhead backward from 30s to 10s — no pause fired. With toggle on, dragged the playhead forward from 0s to 25s during pause (rate = 0) — no pause fired (`engine.rate > 0` guard catches scrub-during-pause). Quit and relaunched — toggle state persisted via `@AppStorage`. Existing transport, snap, nudge, duplicate, filter, marker click, auto-scroll all unchanged.
+
+---
+
 ## 2026-05-10 — Show media total duration in the transport bar (PR #112, closes [#111](https://github.com/chienchuanw/only-cue/issues/111))
 
 **Shipped:** issue [#111](https://github.com/chienchuanw/only-cue/issues/111) closed by PR [#112](https://github.com/chienchuanw/only-cue/pull/112) (rebase-merged into `dev` at `b1f0d78`). Single commit `db12fc9`. The transport bar now shows the active media item's total duration alongside the current playhead time, formatted as `current / total` (e.g. `\"00:00:25.123 / 00:05:30.000\"`). When there's no active item, only the current-time readout appears. **243/243 unit tests green; 0 SwiftLint violations across 94 files.** 25th consecutive bypass-mode shipment.

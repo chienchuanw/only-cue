@@ -55,7 +55,6 @@ struct DocumentView: View {
             HStack {
                 Button("Import Media…") { showImporter = true }
                     .accessibilityIdentifier("importMediaButton")
-                    .keyboardShortcut("o", modifiers: .command)
 
                 Button("Add Cue") { addCueAtPlayhead() }
                     .accessibilityIdentifier("addCueButton")
@@ -86,6 +85,9 @@ struct DocumentView: View {
             return true
         }
         .alert(item: $pendingAlert, content: alertContent)
+        .onReceive(NotificationCenter.default.publisher(for: .importMediaRequested)) { _ in
+            showImporter = true
+        }
     }
 
     private func alertContent(_ alert: DocumentAlert) -> Alert {

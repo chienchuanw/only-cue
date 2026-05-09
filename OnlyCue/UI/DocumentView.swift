@@ -12,6 +12,7 @@ struct DocumentView: View {
     @State private var selectedCueID: Cue.ID?
     @AppStorage(FirstLaunchFlag.key) private var didShowFirstLaunch = false
     @AppStorage(NotesOverlayPreferences.storageKey) private var overlayPrefsData = NotesOverlayPreferences.defaultEncoded
+    @AppStorage("pauseAtEachCue") private var pauseAtEachCue = false
     @Environment(\.undoManager) private var undoManager
 
     var body: some View {
@@ -38,6 +39,17 @@ struct DocumentView: View {
             // contain the previous item's selected Cue.ID, so leaving it set
             // produces a silent inspector-empty state with no visual indication.
             selectedCueID = nil
+        }
+        .onChange(of: engine.currentTime) { oldValue, newValue in
+            // Pause-at-each-cue: when enabled, auto-pause as the playhead crosses
+            // any cue during forward playback. The `engine.rate > 0` guard skips
+            // scrubs during pause; the helper's strict-`>` on previousTime avoids
+            // re-pausing on resume from a previously-paused-at cue.
+            guard pauseAtEachCue, engine.rate > 0 else { return }
+            let cues = document.model.activeItem?.cues ?? []
+            if cues.cueCrossed(movingFrom: oldValue, to: newValue) != nil {
+                engine.pause()
+            }
         }
         .resignFirstResponderOnOutsideClick()
         .onReceive(NotificationCenter.default.publisher(for: .editNotesOverlayAppearance)) { _ in

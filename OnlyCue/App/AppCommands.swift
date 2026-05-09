@@ -4,6 +4,7 @@ import SwiftUI
 struct AppCommands: Commands {
 
     @AppStorage("showNotesOverlay") private var showNotesOverlay = false
+    @AppStorage("pauseAtEachCue") private var pauseAtEachCue = false
 
     var body: some Commands {
         CommandGroup(replacing: .appInfo) {
@@ -58,6 +59,8 @@ struct AppCommands: Commands {
 
             Toggle("Show Notes Overlay", isOn: $showNotesOverlay)
                 .keyboardShortcut("n", modifiers: [.command, .shift])
+
+            Toggle("Pause at Each Cue", isOn: $pauseAtEachCue)
 
             Divider()
 

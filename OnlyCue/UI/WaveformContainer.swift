@@ -54,24 +54,12 @@ struct WaveformContainer: View {
             }
         }
         .task(id: asset.url) { await load() }
-        .onReceive(NotificationCenter.default.publisher(for: .waveformZoomIn)) { _ in
-            applyZoomIn()
-        }
-        .onReceive(NotificationCenter.default.publisher(for: .waveformZoomOut)) { _ in
-            applyZoomOut()
-        }
-        .onReceive(NotificationCenter.default.publisher(for: .waveformZoomReset)) { _ in
-            applyZoomReset()
-        }
-        .onReceive(NotificationCenter.default.publisher(for: .waveformVerticalZoomIn)) { _ in
-            verticalZoom.zoomIn()
-        }
-        .onReceive(NotificationCenter.default.publisher(for: .waveformVerticalZoomOut)) { _ in
-            verticalZoom.zoomOut()
-        }
-        .onReceive(NotificationCenter.default.publisher(for: .waveformVerticalZoomReset)) { _ in
-            verticalZoom.reset()
-        }
+        .onReceive(NotificationCenter.default.publisher(for: .waveformZoomIn)) { _ in applyZoomIn() }
+        .onReceive(NotificationCenter.default.publisher(for: .waveformZoomOut)) { _ in applyZoomOut() }
+        .onReceive(NotificationCenter.default.publisher(for: .waveformZoomReset)) { _ in applyZoomReset() }
+        .onReceive(NotificationCenter.default.publisher(for: .waveformVerticalZoomIn)) { _ in verticalZoom.zoomIn() }
+        .onReceive(NotificationCenter.default.publisher(for: .waveformVerticalZoomOut)) { _ in verticalZoom.zoomOut() }
+        .onReceive(NotificationCenter.default.publisher(for: .waveformVerticalZoomReset)) { _ in verticalZoom.reset() }
     }
 
     @ViewBuilder

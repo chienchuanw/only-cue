@@ -63,6 +63,14 @@ struct WaveformContainer: View {
 
     @ViewBuilder
     private func loaded(peaks: [Float]) -> some View {
+        VStack(spacing: 0) {
+            waveformBody(peaks: peaks)
+            VerticalZoomDragHandle(controller: verticalZoom)
+        }
+    }
+
+    @ViewBuilder
+    private func waveformBody(peaks: [Float]) -> some View {
         GeometryReader { proxy in
             let width = proxy.size.width
             let contentWidth = max(width * zoom.zoom, width)

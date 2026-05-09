@@ -70,6 +70,9 @@ struct WaveformZoomRail: View {
                     .onChanged { value in
                         if dragBaseline == nil { dragBaseline = zoom }
                         if let baseline = dragBaseline {
+                            // 0.5 is unused on the vertical axis — the controller path scales
+                            // amplitude in place and ignores anchorFraction. Passed only to
+                            // satisfy the shared closure signature.
                             onDrag(value.translation.height, baseline, 0.5)
                         }
                     }

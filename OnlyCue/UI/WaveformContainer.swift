@@ -16,13 +16,15 @@ struct WaveformContainer: View {
     @State private var loadedDuration: TimeInterval = 0
     @State private var scrub = ScrubController()
     @State private var seekTask: Task<Void, Never>?
-    @State private var zoom = WaveformZoomController()
-    @State private var verticalZoom = WaveformVerticalZoomController()
-    @State private var scrollOffset: CGFloat = 0
+    @State var zoom = WaveformZoomController()
+    @State var verticalZoom = WaveformVerticalZoomController()
+    @State var scrollOffset: CGFloat = 0
     @State private var leadingAnchor: Int? = 0
-    @State private var pinchBaseline: CGFloat = 1
-    @State private var viewportWidth: CGFloat = 0
+    @State var pinchBaseline: CGFloat = 1
+    @State var viewportWidth: CGFloat = 0
     @State private var isProgrammaticAnchor = false
+    @State var isHoveringWaveform = false
+    @State private var hasShownFirstLaunchHint = false
 
     private static let maxAnchorCount = 200
 
@@ -63,11 +65,23 @@ struct WaveformContainer: View {
 
     @ViewBuilder
     private func loaded(peaks: [Float]) -> some View {
-        VStack(spacing: 0) {
+        ZStack(alignment: .bottomTrailing) {
             waveformBody(peaks: peaks)
-            VerticalZoomDragHandle(controller: verticalZoom)
+            verticalRail
+            horizontalRail
         }
         .padding(.horizontal, 8)
+        .onHover { hovering in
+            isHoveringWaveform = hovering
+        }
+        .onAppear {
+            guard !hasShownFirstLaunchHint else { return }
+            hasShownFirstLaunchHint = true
+            isHoveringWaveform = true
+            DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) {
+                isHoveringWaveform = false
+            }
+        }
     }
 
     @ViewBuilder
@@ -174,7 +188,7 @@ struct WaveformContainer: View {
         }
     }
 
-    private func applyZoomReset() {
+    func applyZoomReset() {
         var offset = scrollOffset
         zoom.reset(scrollOffset: &offset)
         scrollOffset = offset
@@ -192,7 +206,7 @@ struct WaveformContainer: View {
         syncAnchorFromOffset(viewportWidth: viewportWidth)
     }
 
-    private func syncAnchorFromOffset(viewportWidth: CGFloat) {
+    func syncAnchorFromOffset(viewportWidth: CGFloat) {
         guard zoom.zoom > 1, loadedDuration > 0 else {
             isProgrammaticAnchor = true
             leadingAnchor = 0

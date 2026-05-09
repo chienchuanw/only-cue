@@ -33,6 +33,12 @@ struct DocumentView: View {
             FirstLaunchSheet { didShowFirstLaunch = true }
         }
         .task(id: document.model.activeItemID) { await reloadActive() }
+        .onChange(of: document.model.activeItemID) { _, _ in
+            // Clear stale selection on item switch — the new item's cues won't
+            // contain the previous item's selected Cue.ID, so leaving it set
+            // produces a silent inspector-empty state with no visual indication.
+            selectedCueID = nil
+        }
         .resignFirstResponderOnOutsideClick()
         .onReceive(NotificationCenter.default.publisher(for: .editNotesOverlayAppearance)) { _ in
             showOverlayAppearance = true

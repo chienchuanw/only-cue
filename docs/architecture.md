@@ -136,6 +136,18 @@ Sidebar selection → `CueCommands.setActiveItem(id:)` (not undoable) → `Docum
 - Waveform peak extraction runs on a background task; result is published once and cached.
 - Document save runs on the main actor (cheap, JSON only).
 
+## Notes overlay
+
+Toggleable HUD layer rendering the active cue's notes on top of `PreviewPane` so a show caller can read them during a run-through. UI surface, no schema impact.
+
+| Aspect | Rule |
+|---|---|
+| Active-cue resolution | `MediaItem.activeCue(at: TimeInterval) -> Cue?` — the cue with the largest `time <= playhead`. Inclusive on `currentTime` (boundary cue IS active). Returns `nil` when the playhead is before the first cue or `cues` is empty; returns the last cue when the playhead is past it (notes persist until show end). |
+| Toggle | `View > Show Notes Overlay`, persisted via `@AppStorage("showNotesOverlay")`. Default OFF. Both `AppCommands` and `PreviewPane` bind to the same UserDefaults key — SwiftUI keeps them in sync. |
+| Render contract | When the toggle is ON and the active cue has non-empty notes, the overlay renders a centered `Text(cue.notes)` card on `.ultraThinMaterial` background. When the active cue is `nil` or its notes are empty, the layer renders nothing — the toggle stays on but the card disappears (no placeholder text). |
+| Default visual | Bottom-center alignment, `.title` font, `.primary` foreground on `.ultraThinMaterial` rounded card, max-width 600pt, multi-line wrap, 12pt bottom padding inside the preview clip rect. |
+| Customisation | Deferred. The customisation sheet (font scaling, position, color, optional cue-ID prefix) and restore-defaults button are separate leaves of [#38](https://github.com/chienchuanw/only-cue/issues/38). When that leaf lands, an ADR will lock the persistence shape (per-app vs per-document tuning). |
+
 ## Phase-2 seams
 
 These are explicit extension points so future features don't require rewrites. See [`roadmap.md`](roadmap.md) for what plugs in here.

@@ -8,6 +8,7 @@ struct PreviewPane: View {
 
     @Environment(\.undoManager) private var undoManager
     @State private var waveformURL: URL?
+    @AppStorage("showNotesOverlay") private var showNotesOverlay = false
 
     var body: some View {
         ZStack {
@@ -18,6 +19,14 @@ struct PreviewPane: View {
         .clipShape(RoundedRectangle(cornerRadius: 6))
         .accessibilityIdentifier("previewPane")
         .task(id: document.model.activeItemID) { await resolveWaveformURL() }
+        .overlay(alignment: .bottom) {
+            if showNotesOverlay {
+                NotesOverlayView(
+                    activeCue: document.model.activeItem?.activeCue(at: engine.currentTime)
+                )
+                .padding(.bottom, 12)
+            }
+        }
     }
 
     @ViewBuilder

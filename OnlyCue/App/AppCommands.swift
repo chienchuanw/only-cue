@@ -2,6 +2,9 @@ import AppKit
 import SwiftUI
 
 struct AppCommands: Commands {
+
+    @AppStorage("showNotesOverlay") private var showNotesOverlay = false
+
     var body: some Commands {
         CommandGroup(replacing: .appInfo) {
             Button("About OnlyCue") { Self.showAboutPanel() }
@@ -39,6 +42,10 @@ struct AppCommands: Commands {
                 NotificationCenter.default.post(name: .waveformVerticalZoomReset, object: nil)
             }
             .keyboardShortcut("0", modifiers: [.command, .option])
+
+            Divider()
+
+            Toggle("Show Notes Overlay", isOn: $showNotesOverlay)
         }
     }
 

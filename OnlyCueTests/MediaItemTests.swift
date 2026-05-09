@@ -82,4 +82,40 @@ final class MediaItemTests: XCTestCase {
         XCTAssertNil(item.cue(steppingFrom: 5, direction: .previous))
         XCTAssertNil(item.cue(steppingFrom: 5, direction: .next))
     }
+
+    // MARK: - activeCue(at:)
+
+    func test_activeCue_returnsLatestCueAtOrBeforePlayhead() {
+        let item = makeItem(cueTimes: [5, 10, 15])
+        XCTAssertEqual(item.activeCue(at: 12)?.time, 10)
+    }
+
+    func test_activeCue_returnsNilWhenPlayheadBeforeFirstCue() {
+        let item = makeItem(cueTimes: [5, 10, 15])
+        XCTAssertNil(item.activeCue(at: 0))
+    }
+
+    func test_activeCue_returnsCueAtExactPlayheadTime() {
+        let item = makeItem(cueTimes: [5, 10, 15])
+        XCTAssertEqual(
+            item.activeCue(at: 10)?.time,
+            10,
+            "the cue at the exact playhead time IS the active cue (inclusive `<=`), "
+                + "different from cue(steppingFrom:) which excludes the playhead cue"
+        )
+    }
+
+    func test_activeCue_returnsLastCueWhenPlayheadAfterAll() {
+        let item = makeItem(cueTimes: [5, 10, 15])
+        XCTAssertEqual(
+            item.activeCue(at: 999)?.time,
+            15,
+            "notes from the last cue persist past it until the show ends"
+        )
+    }
+
+    func test_activeCue_emptyCues_returnsNil() {
+        let item = makeItem(cueTimes: [])
+        XCTAssertNil(item.activeCue(at: 5))
+    }
 }

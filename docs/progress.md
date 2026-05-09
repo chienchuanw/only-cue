@@ -36,6 +36,27 @@ Append-only session log. Newer entries on top.
 
 ---
 
+## 2026-05-09 — Notes overlay polish — formatter consistency + Dynamic Type doc (PR #87, closes [#84](https://github.com/chienchuanw/only-cue/issues/84))
+
+**Shipped:** issue [#84](https://github.com/chienchuanw/only-cue/issues/84) closed by PR [#87](https://github.com/chienchuanw/only-cue/pull/87) (rebase-merged into `dev` at `5b63bcf`). Two non-blocking observations from the PR #83 senior review: cue-number formatter divergence (consolidated to `FadeTime.formatNumber`) and Dynamic Type loss (locked in via doc comment). Single commit, 9 lines net, 2 files touched. **Smallest PR of the bypass-mode streak to date.**
+
+**Why consolidate `formattedCueNumber` into `FadeTime.formatNumber`:** the canonical renderer at `OnlyCue/Document/FadeTime.swift:57` is reused by `CueInspectorView.swift:133/:161/:163`. The new private helper rounded to one decimal — a cue numbered `1.25` would prefix in the overlay as `[1.3]` while the inspector showed `1.25` (visual inconsistency on the same data). Hidden today because `showCueIDPrefix` defaults off, but worth fixing while we're touching the file. `flatMap` → `map` because `FadeTime.formatNumber` returns non-optional `String`.
+
+**Why doc-only fix for Dynamic Type (vs. revert to `.font(.title)` or layer `.scaleEffect`):** the customisation sheet's Font Scale slider (0.75×–3×) is the user-facing size knob. `.font(.title)` would make `fontScale` redundant; `.font(.title.weight(.semibold))` + `.scaleEffect(prefs.fontScale)` would make the slider's "1.50×" label LIE about the rendered size (because the macOS system text-size preference would multiply on top, producing e.g. "1.50× × 1.2 system" = 1.8× actual). The fix is to lock in the deliberate trade-off explicitly so future readers don't see this as accidental regression. Doc note added to `NotesOverlayView`'s top-level doc comment pointing users at the Font Scale slider as the canonical size knob.
+
+**Behavioral impact (one latent inconsistency fixed):** when `showCueIDPrefix` is enabled AND a cue has a non-half-step decimal number (e.g. `1.25`), overlay now renders `[1.25]` instead of the rounded `[1.3]`. Matches the cue inspector exactly. Default state unchanged (prefix off, fontScale 1.0).
+
+**What landed in PR #87 (1 commit, 2 files modified):**
+- `c1e9a76 fix(ui): use FadeTime.formatNumber for cue-id prefix; doc Dynamic Type trade-off` — replaced 5-line private `formattedCueNumber` helper with single-line `FadeTime.formatNumber($0.cueNumber)` call at the only call site (`PreviewPane.swift`), and added a "Note on Dynamic Type" paragraph to `NotesOverlayView`'s doc comment.
+
+**No new tests** — `FadeTime.formatNumber`'s rounding contract is already covered by existing `FadeTimeTests`.
+
+**Bypass-mode pattern observation (12th consecutive shipment, smallest to date):** sub-pattern (b) — issue body as spec, no separate spec/plan. Bypass-mode at its leanest: read merged PR comment, archive, file follow-up, branch, fix, push, PR. Confirms the workflow scales DOWN as cleanly as it scales up — small chores don't need ceremony.
+
+**Closing note — `FadeTime.formatNumber` is now the single canonical cue-number renderer** across `CueInspectorView` and `NotesOverlayView`'s prefix label. Any future surface that needs to render a cue number should call it; do NOT introduce another `String(format: "%.0f"/"%.1f")` site.
+
+---
+
 ## 2026-05-09 — README status section reorganized (PR #86, closes [#85](https://github.com/chienchuanw/only-cue/issues/85))
 
 **Shipped:** issue [#85](https://github.com/chienchuanw/only-cue/issues/85) closed by PR [#86](https://github.com/chienchuanw/only-cue/pull/86) (rebase-merged into `dev` at `ec3c032`). Pure-docs cleanup: the README's `## Status` section had grown to a single ~3,500-word paragraph listing every PR ever shipped. Restructured into three scannable subsections (current release / shipped beyond MVP / in progress / next) with detail delegated to existing source-of-truth files (`docs/task_plan.md` for live phases, `docs/progress.md` for per-PR narrative).

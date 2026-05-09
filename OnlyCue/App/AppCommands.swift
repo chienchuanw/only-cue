@@ -55,6 +55,7 @@ struct AppCommands: Commands {
             Divider()
 
             Toggle("Show Notes Overlay", isOn: $showNotesOverlay)
+                .keyboardShortcut("n", modifiers: [.command, .shift])
         }
 
         CommandMenu("Tools") {

@@ -11,8 +11,10 @@ struct AppCommands: Commands {
         }
 
         CommandGroup(after: .newItem) {
-            Button("Import Media…") {
+            Button {
                 NotificationCenter.default.post(name: .importMediaRequested, object: nil)
+            } label: {
+                Label("Import Media…", systemImage: "square.and.arrow.down")
             }
             .keyboardShortcut("o", modifiers: .command)
         }

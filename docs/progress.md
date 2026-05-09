@@ -4,6 +4,29 @@ Append-only session log. Newer entries on top.
 
 ---
 
+## 2026-05-10 — Show media total duration in the transport bar (PR #112, closes [#111](https://github.com/chienchuanw/only-cue/issues/111))
+
+**Shipped:** issue [#111](https://github.com/chienchuanw/only-cue/issues/111) closed by PR [#112](https://github.com/chienchuanw/only-cue/pull/112) (rebase-merged into `dev` at `b1f0d78`). Single commit `db12fc9`. The transport bar now shows the active media item's total duration alongside the current playhead time, formatted as `current / total` (e.g. `\"00:00:25.123 / 00:05:30.000\"`). When there's no active item, only the current-time readout appears. **243/243 unit tests green; 0 SwiftLint violations across 94 files.** 25th consecutive bypass-mode shipment.
+
+**The 2-PR transport-bar mini-arc completes:** PR [#110](https://github.com/chienchuanw/only-cue/pull/110) added the *anticipation* readout (`Next: 5.2`); this PR adds the *overall context* readout (`current / total`). Together they answer the two questions a show caller wants in one glance at the transport bar: *where am I right now?* and *how long is this thing?* Architectural framing worth recording: the transport bar is the at-a-glance \"pulse\" surface — short, glanceable, no controls beyond play/pause. Future polish to this surface should answer similar pulse-style questions, not introduce new controls.
+
+**Why hide the duration when zero:** `mediaDuration == 0` only happens when there's no active item (project just opened, all items deleted). Showing `\"00:00:25.123 / 00:00:00.000\"` is misleading — current/total only makes sense when a media item is loaded. The `guard` in `timeReadout` falls back to the existing pre-PR shape.
+
+**Why a single `Text` (not concatenation or HStack of separate Texts):** keeps the format atomic, kerns correctly with monospaced digits, and stays aligned on resize. Concatenated `Text`s (`Text(...) + Text(...)`) would render correctly but cost more for SwiftUI to layout. Separate Texts in an HStack would let the slash drift on resize and break monospaced alignment.
+
+**Why no new test:** the change is a 1-line conditional (`guard mediaDuration > 0`) and a string interpolation. The format itself comes from `TimeFormat.hms`, which has its own unit tests. Adding a sentinel test that re-asserts the format would be redundant. Continuing the precedent established across PR #96 / PR #100 / PR #102 / PR #104 / PR #110 reviews.
+
+**What landed in PR #112 (1 commit, 2 files modified):**
+- `db12fc9 feat(ui): show media total duration in the transport bar` —
+  - `OnlyCue/UI/TransportBar.swift` — added `var mediaDuration: TimeInterval = 0` parameter; added private `timeReadout` computed prop; the existing `Text(TimeFormat.hms(engine.currentTime))` now reads `Text(timeReadout)`.
+  - `OnlyCue/UI/DocumentView.swift` — `TransportBar(engine:cues:)` → multi-line literal initializer also passing `mediaDuration: activeItem?.media.duration ?? 0`.
+
+**Auto-review on PR #112 from chienchuanw:** *\"No issues found. Checked for bugs and CLAUDE.md compliance.\"* No follow-up.
+
+**Manual verification (PR test plan):** imported a 5:30 video — transport bar showed `00:00:00.000 / 00:05:30.000`. Played to 25s — readout updated to `00:00:25.000 / 00:05:30.000`; the slash stayed kerned with the digits. Resized the document window — readout stayed left-aligned with no slash drift. Opened a fresh project (no media) — readout showed `00:00:00.000` only. Switched items — readout updated to that item's duration; selection-clear from PR #104 still applied. Next-cue countdown (PR #110) and play/pause unchanged.
+
+---
+
 ## 2026-05-10 — Time-until-next-cue countdown in transport bar (PR #110, closes [#109](https://github.com/chienchuanw/only-cue/issues/109))
 
 **Shipped:** issue [#109](https://github.com/chienchuanw/only-cue/issues/109) closed by PR [#110](https://github.com/chienchuanw/only-cue/pull/110) (rebase-merged into `dev` at `166a36d`). Single commit `22df90c`. Adds a live countdown to the transport bar showing the time remaining until the next cue based on `engine.currentTime` and the active item's cues. Format scales with magnitude — `\"5.2\"` for sub-minute, `\"1:23.5\"` for sub-hour, `\"1:23:45.6\"` for longer. Hidden when no future cue exists. **243/243 unit tests green (11 new in `NextCueCountdownTests`); 0 SwiftLint violations across 94 files.** 24th consecutive bypass-mode shipment.

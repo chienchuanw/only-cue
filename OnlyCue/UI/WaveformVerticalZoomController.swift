@@ -12,6 +12,7 @@ final class WaveformVerticalZoomController {
     static let minZoom: CGFloat = 1
     static let maxZoom: CGFloat = 8
     static let zoomStep: CGFloat = 1.5
+    static let dragPixelsPerStep: CGFloat = 60
 
     private(set) var zoom: CGFloat = 1
 
@@ -22,4 +23,14 @@ final class WaveformVerticalZoomController {
     func zoomIn() { setZoom(zoom * Self.zoomStep) }
     func zoomOut() { setZoom(zoom / Self.zoomStep) }
     func reset() { zoom = 1 }
+
+    /// Apply a continuous drag translation to a baseline zoom captured at drag start.
+    /// Negative `translation` = drag up = zoom in; `dragPixelsPerStep` of drag in either
+    /// direction multiplies (or divides) the baseline by `zoomStep`. Final value is
+    /// clamped to `[minZoom, maxZoom]`. Capturing baseline (vs delta-from-current) avoids
+    /// clamping artifacts during a single continuous drag.
+    func applyDrag(translation: CGFloat, baseline: CGFloat) {
+        let raw = baseline * pow(Self.zoomStep, -translation / Self.dragPixelsPerStep)
+        setZoom(raw)
+    }
 }

@@ -4,6 +4,29 @@ Append-only session log. Newer entries on top.
 
 ---
 
+## 2026-05-09 — Press S to snap selected cue to playhead (PR #91, closes [#90](https://github.com/chienchuanw/only-cue/issues/90))
+
+**Shipped:** issue [#90](https://github.com/chienchuanw/only-cue/issues/90) closed by PR [#91](https://github.com/chienchuanw/only-cue/pull/91) (rebase-merged into `dev` at `897170c`). Adds the bare-`S` keyboard shortcut: when a cue is selected in the cue list, pressing `S` retimes that cue to the current playhead time. Fully undoable via the existing `CueCommands.retime` seam. First leaf landed under epic [#36](https://github.com/chienchuanw/only-cue/issues/36) since the magnifier (PR #81) — picks up another item from the open-leaf list (snap-to-playhead, Option+arrow nudge, multi-select, gain control). **216/216 unit tests green (1 new in `SnapCueCommandTests`); 0 SwiftLint violations across 88 files.** 14th consecutive bypass-mode shipment.
+
+**Why CueListPane is the right receiver (vs DocumentView or a new shared selection model):** CueListPane already holds both `selection: Cue.ID?` (local `@State`) and `engine: PlayerEngine`, and already calls `CueCommands.retime(cueId:to:document:undoManager:)` from the waveform marker drag flow. Snap-to-playhead is the same call with `to: engine.currentTime`. Routing the notification through DocumentView would have required either bubbling `selection` up or duplicating it — both worse than terminating the notification where the state already lives. The single notification post stays scoped to the pane that has all the context to handle it.
+
+**Why bare `S` (no modifier):** convention in CuePoints, Logic, and most timeline editors — bare letters for transport-style commands. Bare-letter SwiftUI shortcuts only fire when no text field is the first responder, so the cue inspector's text fields will swallow `S` while editing — that's the correct macOS behavior, not a bug to work around. Verified `S` is unbound across the OnlyCue keyboard inventory (`grep -rn 'keyboardShortcut.*"s"' OnlyCue/` — zero matches before this PR).
+
+**Why View menu (vs new Cue menu):** the View menu already hosts cue-related toggles (`Show Notes Overlay`); a one-item `CommandMenu("Cue")` would feel light. The Cue menu can split out later as a refactor when the second cue-related command lands — Option+arrow nudge is the natural sibling and the obvious split-trigger.
+
+**Why no-op when no cue is selected:** silent — no beep, no banner, no error. Matches the `↑`/`↓` cue-step navigation precedent (PR #65) which no-ops when no active cue exists. Don't punish the user for hitting a shortcut at the wrong moment.
+
+**RED-first TDD discipline:** wrote `OnlyCueTests/SnapCueCommandTests.swift` (1 test pinning `Notification.Name.snapSelectedCueToPlayhead.rawValue` to `"OnlyCue.snapSelectedCueToPlayhead"`) first. Confirmed RED (compile error: `Type 'Notification.Name' has no member 'snapSelectedCueToPlayhead'`). Then added the `extension Notification.Name { static let snapSelectedCueToPlayhead = ... }` at the bottom of `CueListPane.swift`, the `.onReceive` and handler in the body, and the menu `Button` in `AppCommands.swift`. Re-ran — 1/1 passing, all 216 unit tests green. The handler logic is a single-line delegation to the already-tested `CueCommands.retime` seam, which has full coverage in `CueCommandsTests` (retime + undo round-trips already verified there) — so the new test pins the wiring (notification name) and the existing tests cover the mutation semantics.
+
+**What landed in PR #91 (1 commit, 3 files modified or created):**
+- `69ff8c5 feat(ui): press S to snap selected cue to playhead` — `OnlyCueTests/SnapCueCommandTests.swift` (new, 13 lines), `OnlyCue/UI/CueListPane.swift` (+10 lines: `.onReceive` + `snapSelectedToPlayhead()` handler + `extension Notification.Name` at file tail per receiver-owns-the-name convention), `OnlyCue/App/AppCommands.swift` (+8 lines: new `Divider()` + `Button("Snap Selected Cue to Playhead")` with `.keyboardShortcut("s", modifiers: [])` after the notes-overlay toggle in the View menu).
+
+**No follow-up issue from PR #91 review** — merged with self-LGTM, no review threads.
+
+**Manual verification (PR test plan):** selected a cue, parked the playhead at a different time, pressed `S` — cue marker jumped to the playhead position immediately. Pressed ⌘Z after the snap — cue restored to its previous time. Pressed `S` with no cue selected — no-op, no beep, no error. Selected a cue, focused the inspector's notes text field, typed `S` — letter inserted into the field, cue time unchanged. Drag-to-retime on the waveform marker still works (no regression).
+
+---
+
 ## 2026-05-09 — ⌘⇧N keyboard shortcut for Show Notes Overlay toggle (PR #89, closes [#88](https://github.com/chienchuanw/only-cue/issues/88))
 
 **Shipped:** issue [#88](https://github.com/chienchuanw/only-cue/issues/88) closed by PR [#89](https://github.com/chienchuanw/only-cue/pull/89) (rebase-merged into `dev` at `d002f5b`). Adds `⌘⇧N` as the keyboard shortcut for the existing **View → Show Notes Overlay** toggle that shipped in PR #72. Single-line change appending `.keyboardShortcut("n", modifiers: [.command, .shift])` to the `Toggle` in `OnlyCue/App/AppCommands.swift`. Show callers no longer need the menu bar to flip the overlay mid-show. **Merged clean — no comments, no review threads.** 13th consecutive bypass-mode shipment.

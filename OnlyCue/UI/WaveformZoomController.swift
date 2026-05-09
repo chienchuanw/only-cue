@@ -18,17 +18,22 @@ final class WaveformZoomController {
     /// helpers that touch scroll position; read by drag / magnifier extensions.
     /// Stored here (on the `@Observable` reference type) so the value persists
     /// across SwiftUI struct re-creations and is directly mutable in tests.
+    ///
+    /// Trade-off: the auto-follow path writes this every playback frame. Because
+    /// `WaveformZoomController` is `@Observable`, those writes notify every view
+    /// that observes any property of this controller — including views that only
+    /// read `zoom`. SwiftUI's diff may suppress actual redraws when no relevant
+    /// input changed, but the isolation guarantee that `@State var scrollOffset`
+    /// gave us (re-render scope limited to the property's reader) is gone. If
+    /// scroll-tick re-renders ever measure as a problem, split `scrollOffset`
+    /// and `viewportWidth` into a separate `@Observable` `WaveformScrollState`
+    /// class.
     var scrollOffset: CGFloat = 0
 
     /// Width of the visible viewport in points. Set by `GeometryReader` on each
     /// layout pass. Stored on the reference type so it survives struct copies and
     /// is directly settable from tests without going through `@State`.
     var viewportWidth: CGFloat = 0
-
-    /// Zoom level captured at the start of each pinch/drag gesture; used as the
-    /// baseline for continuous-drag math. Stored alongside scroll state for the
-    /// same testability reason.
-    var pinchBaseline: CGFloat = 1
 
     func setZoom(
         _ next: CGFloat,

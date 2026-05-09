@@ -17,13 +17,13 @@ final class WaveformZoomMagnifierTests: XCTestCase {
     /// expecting it to be a value; the controller IS the shared mutable state.
     private func makeContainer() -> WaveformContainer {
         let url = URL(fileURLWithPath: "/dev/null")
-        var container = WaveformContainer(asset: AVURLAsset(url: url))
+        let container = WaveformContainer(asset: AVURLAsset(url: url))
         container.viewportWidth = 400
         return container
     }
 
     func test_applyMagnifierDrag_pureHorizontal_zoomsHorizontalOnly_andAnchorsAtCenter() {
-        var container = makeContainer()
+        let container = makeContainer()
 
         // dragPixelsPerStep = 60; one full step = 1.5× zoom.
         container.applyMagnifierDrag(MagnifierDrag(
@@ -44,7 +44,7 @@ final class WaveformZoomMagnifierTests: XCTestCase {
     }
 
     func test_applyMagnifierDrag_pureVertical_zoomsVerticalOnly() {
-        var container = makeContainer()
+        let container = makeContainer()
 
         container.applyMagnifierDrag(MagnifierDrag(
             translationX: 0,
@@ -64,7 +64,7 @@ final class WaveformZoomMagnifierTests: XCTestCase {
     }
 
     func test_applyMagnifierDrag_diagonal_appliesBoth() {
-        var container = makeContainer()
+        let container = makeContainer()
 
         container.applyMagnifierDrag(MagnifierDrag(
             translationX: 60,
@@ -78,7 +78,7 @@ final class WaveformZoomMagnifierTests: XCTestCase {
     }
 
     func test_applyMagnifierReset_resetsBothAxes() {
-        var container = makeContainer()
+        let container = makeContainer()
 
         // Pre-zoom both axes via the drag helper (avoids touching internals).
         container.applyMagnifierDrag(MagnifierDrag(

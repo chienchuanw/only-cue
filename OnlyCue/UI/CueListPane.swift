@@ -40,9 +40,22 @@ struct CueListPane: View {
         .onReceive(NotificationCenter.default.publisher(for: .nudgeSelectedCueForward)) { _ in
             nudgeSelected(by: Self.nudgeStep)
         }
+        .onReceive(NotificationCenter.default.publisher(for: .duplicateSelectedCueAtPlayhead)) { _ in
+            duplicateSelectedAtPlayhead()
+        }
     }
 
     private static let nudgeStep: TimeInterval = 1.0 / 30.0
+
+    private func duplicateSelectedAtPlayhead() {
+        guard let id = selection else { return }
+        CueCommands.duplicateAtPlayhead(
+            cueId: id,
+            time: engine.currentTime,
+            document: document,
+            undoManager: undoManager
+        )
+    }
 
     private func snapSelectedToPlayhead() {
         guard let id = selection else { return }
@@ -139,4 +152,5 @@ extension Notification.Name {
     static let snapSelectedCueToPlayhead = Notification.Name("OnlyCue.snapSelectedCueToPlayhead")
     static let nudgeSelectedCueBack = Notification.Name("OnlyCue.nudgeSelectedCueBack")
     static let nudgeSelectedCueForward = Notification.Name("OnlyCue.nudgeSelectedCueForward")
+    static let duplicateSelectedCueAtPlayhead = Notification.Name("OnlyCue.duplicateSelectedCueAtPlayhead")
 }

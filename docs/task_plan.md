@@ -58,7 +58,7 @@ Filed 2026-05-08 from the CuePoints competitive-gap brainstorm. Positioning: "pr
 | [#35](https://github.com/chienchuanw/only-cue/issues/35) | OSC remote control (Companion / MA3 / StreamDeck) | p1 | ⚪ open |
 | [#36](https://github.com/chienchuanw/only-cue/issues/36) | Timeline UX polish (zoom/gain/snap/nudge/multi-select/inter-cue nav) | p1 | 🟡 in progress (3 leaves shipped: [#64](https://github.com/chienchuanw/only-cue/issues/64) → PR [#65](https://github.com/chienchuanw/only-cue/pull/65) ↑/↓ playhead step; [#66](https://github.com/chienchuanw/only-cue/issues/66) → PR [#67](https://github.com/chienchuanw/only-cue/pull/67) ⌘⌥ vertical zoom keyboard; [#68](https://github.com/chienchuanw/only-cue/issues/68) → PR [#69](https://github.com/chienchuanw/only-cue/pull/69) drag-below-waveform vertical zoom — vertical-zoom bullet complete) |
 | [#37](https://github.com/chienchuanw/only-cue/issues/37) | Timeline breakdown view (depends on #32) | p1 | ⚪ open |
-| [#38](https://github.com/chienchuanw/only-cue/issues/38) | Notes overlay on video preview | p1 | ⚪ open |
+| [#38](https://github.com/chienchuanw/only-cue/issues/38) | Notes overlay on video preview | p1 | 🟡 in progress (1 leaf shipped: [#70](https://github.com/chienchuanw/only-cue/issues/70) → PR [#72](https://github.com/chienchuanw/only-cue/pull/72) `MediaItem.activeCue(at:)` helper + `NotesOverlayView` + View-menu `@AppStorage` toggle + architecture-doc section) |
 | [#39](https://github.com/chienchuanw/only-cue/issues/39) | Templates — CuePoint Type sets (depends on #32) | p2 | ⚪ open |
 | [#40](https://github.com/chienchuanw/only-cue/issues/40) | Custom keyboard shortcuts editor | p2 | ⚪ open |
 

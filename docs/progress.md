@@ -4,6 +4,57 @@ Append-only session log. Newer entries on top.
 
 ---
 
+## 2026-05-09 — Notes overlay first implementation leaf (PR #72, leaf 1 of epic #38)
+
+**Shipped:** issue #70 (first implementation leaf of [epic #38](https://github.com/chienchuanw/only-cue/issues/38) — notes overlay for show callers reading large cue notes during run-throughs). PR #72 merged into `dev` (rebase, head `a9d2739`, with the helper at `da0d152`). A toggleable HUD-style overlay now renders the active cue's notes on top of the preview pane: bottom-center alignment, `.title` font, `.primary` foreground on `.ultraThinMaterial` rounded card, max-width 600pt, multiline-centered. Toggle in the View menu, persisted via `@AppStorage("showNotesOverlay")`, default OFF. UI only — no schema bump. **189/189 unit tests green (184 baseline + 5 new active-cue tests in `MediaItemTests`); 0 SwiftLint violations across 75 files; Release build clean (warnings-as-errors).**
+
+**Why pivoted to #38 over remaining #36 leaves:** after PR #69 closed #36's vertical-zoom bullet, the remaining selection-independent #36 leaves had ambiguity. Waveform gain control overlaps with the just-shipped vertical zoom (the held-zoom state already provides persistent visualization), so it needed user direction before shipping autonomously. Multi-select model is bigger and would risk a checkpoint-required design pause. #38's first leaves are cleanly defined in the issue body and the active-cue lookup mirrors PR #65's pattern — natural next autonomous bypass-mode leaf.
+
+**Why `<=` (inclusive) on `MediaItem.activeCue(at:)`:** the cue at the exact playhead time IS the cue the user just stepped to / created, so it should be the active one. Different from `cue(steppingFrom:direction:)` (which uses strict `<` / `>` to avoid getting stuck on the same cue when stepping). Both helpers serve different semantic queries — `activeCue` answers "what cue am I in" (inclusive), `cue(steppingFrom:)` answers "what cue do I step to next" (exclusive). The doc comment on the new helper explicitly notes the distinction.
+
+**Why notes from the last cue persist past it:** show callers' last cue might be "GO Bow Cue" or similar — the operator's holding it until the show ends. Returning the last cue (rather than nil) past the final marker matches that expectation. Locked by `test_activeCue_returnsLastCueWhenPlayheadAfterAll`.
+
+**Why bottom-center positioning** (applied at the consumer site via `.overlay(alignment: .bottom)`)**:** matches broadcast lower-thirds convention; less intrusive than top-center; preserves the video frame's central composition for video-mode previews. The 12pt bottom padding pulls the card up off the very edge of the rounded preview clip rect.
+
+**Why `.font(.title)` (~28pt):** large enough to read across a stage / from across a control booth. `.title` is the largest semantic style that still respects user font-size preferences, vs hardcoded points — gets Dynamic Type compliance for free.
+
+**Why `.ultraThinMaterial` background:** standard macOS HUD pattern; legible against any underlying preview content (audio waveform, video frame, even bright cue colors); plays cleanly with both light and dark mode without manual tuning.
+
+**Why `maxWidth: 600`:** prevents the overlay from spanning the full preview width on wide windows, preserving the bottom-center "card" feel rather than a full-width band.
+
+**Why empty-notes / nil-active-cue → render nothing:** the overlay layer is intentionally invisible when there's nothing to show. No empty card, no placeholder text. Toggle state stays independent from layer visibility — turn it on, it stays on, the card just appears or disappears as cue boundaries cross.
+
+**Why `@AppStorage` cross-view binding (vs notification plumbing):** both `AppCommands` and `PreviewPane` declare `@AppStorage("showNotesOverlay") private var showNotesOverlay = false`. Both views bind to the same UserDefaults key. SwiftUI handles cross-view synchronization automatically — toggle in one place updates everywhere. Removes the need for `Notification.Name` entries (used elsewhere for the zoom plumbing). Persistence-across-restart comes for free.
+
+**Why `Toggle` in `CommandMenu` (not Button with dynamic title):** `Toggle("Show Notes Overlay", isOn: $showNotesOverlay)` in a `CommandMenu` renders as a checkable menu item — the user sees a checkmark when the overlay is on. Standard macOS UX. A `Button` with a dynamic title ("Hide Notes Overlay" ↔ "Show Notes Overlay") would feel less idiomatic.
+
+**RED-first TDD discipline:** wrote 5 new tests in `OnlyCueTests/MediaItemTests.swift` (12 total, up from 7 in PR #65) covering returns-latest-at-or-before-playhead, returns-nil-before-first-cue, returns-cue-at-exact-playhead-time (boundary case — locks the inclusive `<=`), returns-last-cue-when-playhead-after-all (notes persist past last marker), returns-nil-on-empty-cues. Ran `xcodebuild test -only-testing:OnlyCueTests/MediaItemTests` — failed to compile with `value of type 'MediaItem' has no member 'activeCue'`. Confirmed RED. Then added the `activeCue(at:)` extension to `MediaItem.swift`; re-ran — 12/12 passing in 0.007s. Confirmed GREEN.
+
+**What landed in PR #72 (2 commits, 5 files):**
+- `OnlyCue/Document/MediaItem.swift` (+10 lines): `func activeCue(at currentTime: TimeInterval) -> Cue?` extension with `cues.filter { $0.time <= currentTime }.max(by: { $0.time < $1.time })`. Doc comment captures the inclusive-vs-exclusive distinction from `cue(steppingFrom:direction:)`.
+- `OnlyCue/UI/NotesOverlayView.swift` (new, 23 lines): the overlay view — `Text(cue.notes)` with `.font(.title)`, `.foregroundStyle(.primary)`, `.multilineTextAlignment(.center)`, `.padding(.horizontal, 16).padding(.vertical, 12)`, `.frame(maxWidth: 600)`, `.background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 12))`, `.accessibilityIdentifier("notesOverlay")`, gated on `if let cue = activeCue, !cue.notes.isEmpty`.
+- `OnlyCue/UI/PreviewPane.swift` (+10 lines): `@AppStorage("showNotesOverlay")` toggle, `.overlay(alignment: .bottom)` modifier on the `ZStack` with `if showNotesOverlay { NotesOverlayView(activeCue: document.model.activeItem?.activeCue(at: engine.currentTime)).padding(.bottom, 12) }`.
+- `OnlyCue/App/AppCommands.swift` (+5 lines): `@AppStorage("showNotesOverlay")` declaration on the struct, `Divider()` and `Toggle("Show Notes Overlay", isOn: $showNotesOverlay)` appended to the existing View menu after the vertical-zoom items.
+- `OnlyCueTests/MediaItemTests.swift` (+45 lines): 5 new active-cue tests with the existing `makeCue` / `makeItem` factory helpers.
+- `docs/architecture.md` (+13 lines): new `## Notes overlay` section above `## Phase-2 seams` documenting active-cue resolution rule, toggle persistence, render contract, default visual choices, and the deferral of customisation + ADR to follow-up leaves.
+
+**Simplify pass — skipped (full 3-agent dispatch).** ~52 lines of new production code, all closely matching established patterns:
+- Reuse: `activeCue(at:)` is a clean sibling of `cue(steppingFrom:direction:)` — same shape (`cues.filter { ... }.max(by: ...)`), different semantic.
+- Quality: the `if let cue = activeCue, !cue.notes.isEmpty` short-circuit cleanly handles all three null cases (no active item, no cues, empty notes) at the view layer.
+- Efficiency: O(n) per render, where n is cues-per-item — bounded at typical cue counts (tens to maybe a hundred). Same complexity as the existing `cue(steppingFrom:direction:)`.
+
+Nothing to simplify.
+
+**Manual verification (PR test plan):** launched the app on `issues/70`, imported a 100s test audio file, dropped 3 cues at 5s / 10s / 15s. Set notes on cue 1 to "GO Wash", cue 2 to "GO Spots", left cue 3 notes empty. View menu → Show Notes Overlay → verified the menu item gained a checkmark. Verified nothing rendered at playhead 0s (before cue 1). Scrubbed to 7s → overlay showed "GO Wash" ✓. Scrubbed to 12s → overlay showed "GO Spots" ✓. Scrubbed to 17s → cue 3 active but empty notes → overlay disappeared ✓. Toggled off via menu → overlay disappeared ✓. Quit and re-launched → toggle persisted ✓. Verified horizontal/vertical zoom and other shortcuts still work alongside the overlay.
+
+**XCUITest deferred** per `OnlyCueUITests` harness flakiness on this machine. The pure-logic helper is fully covered by 5 unit tests; the overlay rendering and toggle wiring are SwiftUI plumbing that XCUITest would brittle around.
+
+**Bypass-mode pattern observation (6th consecutive use):** PR-62→63 → PR-64→65 → PR-66→67 (with `f7dbcf1` fix) → PR-68→69 (with `b59c87d` fix) → PR-70→72. Pattern continues to converge on sub-100-line leaves. PR #72 is the first time the autonomous shipment **pivoted across epic boundaries** (from #36 to #38) rather than continuing the previous epic's bullets. The user merged without pushback, validating the pivot — a useful signal that bypass mode tolerates cross-epic moves when the next-most-shippable leaf lives elsewhere.
+
+**Closing note — one implementation leaf of #38 done, four explicit follow-up leaves remain.** The customisation sheet (Tools → Edit Note Overlay Appearance… with font / position / color / cue-ID-prefix knobs), the restore-defaults button on that sheet, an ADR locking the persistence shape (per-app vs per-document tuning), and dedicated XCUITest coverage for "overlay updates as the cue changes" are all called out in the issue body. Each becomes its own future leaf when ready. Other open epic candidates: #36 still has waveform gain control and the multi-select model + downstream `S` snap / `Option+arrow` nudge leaves; [#34](https://github.com/chienchuanw/only-cue/issues/34) (console export — CSV / MA2 / MA3, depended on #32 ✅) is still the highest-value Phase 2 push but needs a brainstorm / decomposition session before any leaf can ship. **The user has authored a spec and an implementation plan for hover-revealed waveform zoom rails (`docs/superpowers/specs/2026-05-09-hover-zoom-rails-design.md` + `docs/superpowers/plans/2026-05-09-hover-zoom-rails.md`), explicitly superseding the bottom-edge `VerticalZoomDragHandle` from PR #69 with axis-aligned hover rails — that's the next leaf after this archive.**
+
+---
+
 ## 2026-05-09 — Drag-below-waveform vertical zoom gesture (PR #69, completes epic #36's vertical-zoom bullet)
 
 **Shipped:** issue #68 (second sub-leaf of [epic #36](https://github.com/chienchuanw/only-cue/issues/36)'s "vertical waveform zoom (drag below the waveform)" bullet — completes what PR #67 deferred). PR #69 merged into `dev` (rebase, head `7984e18`). A 10pt drag handle below the waveform now translates vertical drag into live `WaveformVerticalZoomController` updates — drag up = zoom in, drag down = zoom out, multiplicative mapping calibrated so 60pt of drag = one 1.5× zoom step (one keyboard press equivalent). UI only — no schema bump, no rendering pipeline changes (the same `min(_, midY)` clip rule from PR #67 still gates overflow). **184/184 unit tests green (179 baseline + 5 new drag-math tests in `WaveformVerticalZoomControllerTests`); 0 SwiftLint violations across 74 files; Release build clean (warnings-as-errors).** With this leaf, the full `⌘⌥` keyboard + drag-below-waveform vertical zoom surface is end-to-end navigable.

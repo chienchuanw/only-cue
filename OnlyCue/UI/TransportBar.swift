@@ -3,6 +3,20 @@ import SwiftUI
 struct TransportBar: View {
 
     let engine: PlayerEngine
+    var cues: [Cue] = []
+
+    /// Strictly-greater filter: a cue exactly at `currentTime` is "now," not "next."
+    /// Returns nil when no future cue exists (past last cue, or empty list).
+    /// Doesn't assume `cues` is time-sorted (it is in practice, but the helper
+    /// shouldn't depend on that — `min()` over the post-filter set picks the
+    /// nearest regardless of input order).
+    static func nextCueInterval(currentTime: TimeInterval, cues: [Cue]) -> TimeInterval? {
+        cues
+            .map(\.time)
+            .filter { $0 > currentTime }
+            .min()
+            .map { $0 - currentTime }
+    }
 
     var body: some View {
         HStack(spacing: 12) {
@@ -19,6 +33,13 @@ struct TransportBar: View {
                 .font(.system(.body, design: .monospaced))
                 .foregroundStyle(.secondary)
                 .accessibilityIdentifier("currentTimeReadout")
+
+            if let interval = Self.nextCueInterval(currentTime: engine.currentTime, cues: cues) {
+                Text("Next: \(TimeFormat.compactCountdown(interval))")
+                    .font(.system(.body, design: .monospaced))
+                    .foregroundStyle(.secondary)
+                    .accessibilityIdentifier("nextCueCountdown")
+            }
         }
     }
 }

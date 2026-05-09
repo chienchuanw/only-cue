@@ -4,6 +4,52 @@ Append-only session log. Newer entries on top.
 
 ---
 
+## 2026-05-09 — Highlight selected cue's waveform marker (PR #98, closes [#97](https://github.com/chienchuanw/only-cue/issues/97))
+
+**Shipped:** issue [#97](https://github.com/chienchuanw/only-cue/issues/97) closed by PR [#98](https://github.com/chienchuanw/only-cue/pull/98) (rebase-merged into `dev` at `a57cc1c`). Single commit `b060ccf`. When a cue is selected in the cue list, its waveform marker now renders with a thicker line (3 pt vs 2 pt) and larger cap (14 × 12 pt vs 10 × 8 pt). The cue's CuePointType color is preserved on the line and cap — selection emphasizes the marker without overriding type identity. Natural follow-up to PR [#96](https://github.com/chienchuanw/only-cue/pull/96): labels told the user *which* cue each marker is, this PR closes the gap by showing *which one is selected*. **221/221 unit tests green (3 new in `CueMarkerStyleTests`); 0 SwiftLint violations across 90 files.** 18th consecutive bypass-mode shipment.
+
+**The state-lift refactor (`CueListPane` → `DocumentView`):** selection state had been local to `CueListPane` as `@State private var selection: Cue.ID?`. Two consumers now need it: the cue list (read-write, existing) and the waveform marker overlay (read-only, new). Lifted to `DocumentView` as `@State private var selectedCueID: Cue.ID?`, passed via `@Binding var selection: Cue.ID?` to `CueListPane` (existing read-write usage preserved — all internal references unchanged) and via value `Cue.ID?` down through `PreviewPane(selectedCueID:)` → `WaveformContainer(selectedCueID:)` → `CueMarkersOverlay(selectedCueID:)` → `CueMarkerView(isSelected: cue.id == selectedCueID)`. Confirms the pattern: **`DocumentView` is the canonical owner of session-scoped UI state** (engine, showImporter, pendingAlert, seekTask, showOverlayAppearance, and now selectedCueID); state lives at the highest level needed by all consumers, with `@Binding` for read-write consumers and value for read-only consumers.
+
+**Why thicker line + larger cap (vs color change or halo):** color is the cue's CuePointType identity — changing it on selection would misrepresent the type. Halo / glow would require offscreen rendering and additional layout bookkeeping; visually heavy for a polish leaf. Thicker line + larger cap is the most macOS-native treatment for "selected" state, same shape used by Logic, Final Cut, and CuePoints. Reads as "emphasized version of the same marker" without losing type-color identity.
+
+**Why both line and cap change (not just one):** ensures the selection state is visible whether the user is looking at the line on a quiet waveform region or the cap region above. Single-axis emphasis would be hard to spot at zoom levels where the line is very short.
+
+**Why nested `MarkerStyle` struct (vs free function or enum):** groups the three correlated dimensions (lineWidth, capWidth, capHeight), guarantees they stay in sync when adjusted, and exposes a clean dispatch surface (`MarkerStyle.style(isSelected:)`) that's testable without ViewInspector. The struct is `Equatable` for direct test assertions on the style values.
+
+\`\`\`swift
+struct MarkerStyle: Equatable {
+    let lineWidth: CGFloat
+    let capWidth: CGFloat
+    let capHeight: CGFloat
+    static let normal = Self(lineWidth: 2, capWidth: 10, capHeight: 8)
+    static let selected = Self(lineWidth: 3, capWidth: 14, capHeight: 12)
+    static func style(isSelected: Bool) -> Self {
+        isSelected ? .selected : .normal
+    }
+}
+\`\`\`
+
+The view body resolves `private var style: MarkerStyle { MarkerStyle.style(isSelected: isSelected) }` and reads `style.lineWidth` / `style.capWidth` / `style.capHeight` in the `Rectangle().frame(width:)` and `Capsule().frame(width:height:)` calls. The previous static `Self.lineWidth` / `Self.capHeight` / `Self.capWidth` constants on `CueMarkerView` were removed (now live on `MarkerStyle`).
+
+**RED-first TDD discipline:** wrote `OnlyCueTests/CueMarkerStyleTests.swift` (3 tests) first. Test 1: `MarkerStyle.style(isSelected: false)` returns the normal-dimension struct (`lineWidth: 2, capWidth: 10, capHeight: 8`). Test 2: `style(isSelected: true)` returns the selected-dimension struct (`lineWidth: 3, capWidth: 14, capHeight: 12`). Test 3: `selected.lineWidth > normal.lineWidth && selected.capWidth > normal.capWidth && selected.capHeight > normal.capHeight` — uses `>` not `==` so a future tweak to specific values can't accidentally erase emphasis. Confirmed RED (compile error: `MarkerStyle` not found). Implemented. 221/221 passing. The `>` invariant test in particular protects against a future change that, say, makes normal larger but forgets to bump selected to keep the gap — the test fails, surfacing the regression at lint time rather than runtime.
+
+**Recurring `prefer_self_in_static_references` lint trip during impl:** SwiftLint flagged 3 violations on `MarkerStyle`'s static instance initializers — `static let normal = MarkerStyle(...)` should be `static let normal = Self(...)` because the type name is the surrounding scope. Same rule that bit `NotesOverlayPreferences` in PR #83. Fixed before push. **Pattern to remember:** inside a type body, use `Self` for its own static-instance / static-method references — `MyType` is correct outside the body, `Self` is correct inside.
+
+**What landed in PR #98 (1 commit, 6 files modified or created):**
+- `b060ccf feat(ui): highlight selected cue's waveform marker` —
+  - `OnlyCue/UI/CueMarkersOverlay.swift` — added `var selectedCueID: Cue.ID?` to `CueMarkersOverlay`; passed `isSelected: cue.id == selectedCueID` to each `CueMarkerView`. Added nested `MarkerStyle` struct on `CueMarkerView` with `.normal` / `.selected` static instances and `style(isSelected:)` dispatch. Removed the static `lineWidth` / `capHeight` / `capWidth` constants (moved to `MarkerStyle`). Body reads `style.lineWidth` / `style.capWidth` / `style.capHeight`.
+  - `OnlyCue/UI/WaveformContainer.swift` — added `var selectedCueID: Cue.ID?` parameter; forwarded to the `CueMarkersOverlay` call site.
+  - `OnlyCue/UI/PreviewPane.swift` — added `var selectedCueID: Cue.ID?` parameter; forwarded to `WaveformContainer`.
+  - `OnlyCue/UI/CueListPane.swift` — replaced `@State private var selection: Cue.ID?` with `@Binding var selection: Cue.ID?`. All existing internal references unchanged (drag-on-tap seek, delete-on-⌫, .onChange(of: selection) seek-on-row-select all carried over).
+  - `OnlyCue/UI/DocumentView.swift` — added `@State private var selectedCueID: Cue.ID?`. Passed `selection: $selectedCueID` to `CueListPane` and `selectedCueID: selectedCueID` to `PreviewPane`.
+  - `OnlyCueTests/CueMarkerStyleTests.swift` (new, 30 lines) — three tests pinning the dispatch.
+
+**No follow-up issue from PR #98 review** — merged clean with no comments, no review threads.
+
+**Manual verification (PR test plan):** imported a project with cues at cueNumber 1, 1.5, 2, 2.5, 3 — selecting each one in turn highlighted only its marker; all others returned to normal. Click between cues in the cue list — marker emphasis follows immediately, no flicker. Drag-to-retime on a non-selected marker still works (no regression). Drag-to-retime on the selected marker — the emphasized dimensions move with the marker; no flicker on the dimension change. Tap-to-seek on a non-selected marker — playhead seeks; selection in the cue list is unchanged (tap-to-select is a separate leaf, deferred). cueNumber labels (PR #96) unchanged for both selected and non-selected markers — the `.caption2` `.secondary` Text is identical regardless of selection.
+
+---
+
 ## 2026-05-09 — Cue number labels above each waveform marker (PR #96, closes [#95](https://github.com/chienchuanw/only-cue/issues/95))
 
 **Shipped:** issue [#95](https://github.com/chienchuanw/only-cue/issues/95) closed by PR [#96](https://github.com/chienchuanw/only-cue/pull/96) (rebase-merged into `dev` at `0705db7`). Two commits: feature implementation (`7b5cc09`) + post-self-review layout fix (`0705db7`). Adds a small `.caption2` `.secondary` text label with the cue's `cueNumber` directly above each waveform marker (centered above the cap). Closes a real navigation gap — without labels the user had to drag-and-glance at the inspector or scroll the cue list to identify which marker was which on a dense waveform. Polish leaf adjacent to (but not enumerated under) epic [#36](https://github.com/chienchuanw/only-cue/issues/36)'s *done-when* clause about timeline readability. **218/218 unit tests green; 0 SwiftLint violations across 89 files.** 17th consecutive bypass-mode shipment.

@@ -78,4 +78,32 @@ final class MagnifierAxisLockTests: XCTestCase {
         XCTAssertEqual(result.effectiveY, 20)
         XCTAssertEqual(result.nextState, .lockedVertical)
     }
+
+    func test_unlocked_passThroughWithShiftIgnored() {
+        let result = MagnifierAxisLock.resolve(
+            translationX: 25,
+            translationY: 8,
+            isShiftHeld: true,
+            currentState: .unlocked
+        )
+        XCTAssertEqual(result.effectiveX, 25)
+        XCTAssertEqual(
+            result.effectiveY,
+            8,
+            "once .unlocked, the drag stays unlocked for the rest of the gesture even if Shift is held mid-drag"
+        )
+        XCTAssertEqual(result.nextState, .unlocked)
+    }
+
+    func test_shift_exactMagnitudeTie_locksHorizontal() {
+        let result = MagnifierAxisLock.resolve(
+            translationX: 12,
+            translationY: 12,
+            isShiftHeld: true,
+            currentState: .unresolved
+        )
+        XCTAssertEqual(result.nextState, .lockedHorizontal, "tie breaks toward horizontal")
+        XCTAssertEqual(result.effectiveX, 12)
+        XCTAssertEqual(result.effectiveY, 0)
+    }
 }

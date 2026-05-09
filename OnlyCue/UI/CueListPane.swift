@@ -7,8 +7,25 @@ struct CueListPane: View {
     @Binding var selection: Cue.ID?
 
     @Environment(\.undoManager) private var undoManager
+    @State private var searchQuery: String = ""
 
     private var cues: [Cue] { document.model.activeItem?.cues ?? [] }
+    private var visibleCues: [Cue] { Self.filtered(cues, by: searchQuery) }
+
+    /// Pure filter helper — case-insensitive localized contains on name OR notes.
+    /// Whitespace-only queries return the unfiltered list (matches macOS spotlight
+    /// behavior). Selection state is intentionally independent of this filter:
+    /// callers continue to look up `selectedCue` against the full `cues` array,
+    /// so a cue can stay selected (and emphasized on the waveform) while filtered
+    /// out of the rendered list.
+    static func filtered(_ cues: [Cue], by query: String) -> [Cue] {
+        let trimmed = query.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmed.isEmpty else { return cues }
+        return cues.filter { cue in
+            cue.name.localizedCaseInsensitiveContains(trimmed) ||
+            cue.notes.localizedCaseInsensitiveContains(trimmed)
+        }
+    }
 
     private var selectedCue: Cue? {
         guard let id = selection else { return nil }
@@ -99,10 +116,26 @@ struct CueListPane: View {
         .accessibilityIdentifier("cueListEmptyState")
     }
 
+    private var searchField: some View {
+        TextField("Search cues", text: $searchQuery)
+            .textFieldStyle(.roundedBorder)
+            .padding(.horizontal, 8)
+            .padding(.vertical, 6)
+            .accessibilityIdentifier("cueListSearchField")
+    }
+
     private var cueList: some View {
+        VStack(spacing: 0) {
+            searchField
+            Divider()
+            scrollableList
+        }
+    }
+
+    private var scrollableList: some View {
         ScrollViewReader { proxy in
             List(selection: $selection) {
-                ForEach(Array(cues.enumerated()), id: \.element.id) { index, cue in
+                ForEach(Array(visibleCues.enumerated()), id: \.element.id) { index, cue in
                     CueRowView(
                         index: index + 1,
                         cue: cue,
@@ -134,9 +167,12 @@ struct CueListPane: View {
     }
 
     private func deleteAtOffsets(_ offsets: IndexSet) {
+        // ForEach iterates `visibleCues`, so swipe-to-delete offsets index into
+        // the filtered list — resolve via `visibleCues` to get the right cue ID.
+        let target = visibleCues
         for index in offsets {
-            guard cues.indices.contains(index) else { continue }
-            let cue = cues[index]
+            guard target.indices.contains(index) else { continue }
+            let cue = target[index]
             CueCommands.delete(cueId: cue.id, document: document, undoManager: undoManager)
         }
     }

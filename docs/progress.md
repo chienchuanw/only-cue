@@ -4,6 +4,48 @@ Append-only session log. Newer entries on top.
 
 ---
 
+## 2026-05-10 — Filter cue list by name or notes (PR #108, closes [#107](https://github.com/chienchuanw/only-cue/issues/107))
+
+**Shipped:** issue [#107](https://github.com/chienchuanw/only-cue/issues/107) closed by PR [#108](https://github.com/chienchuanw/only-cue/pull/108) (rebase-merged into `dev` at `361176c`). Single commit `ba20f2c`. Adds a search field at the top of the cue list pane that filters rows by query string matching against `cue.name` or `cue.notes` (case-insensitive, localized contains). **232/232 unit tests green (7 new in `CueListFilterTests`); 0 SwiftLint violations across 93 files.** 23rd consecutive bypass-mode shipment.
+
+**The selection-decoupled-from-presentation-filter pattern (architectural generalization worth noting):** the user can select cue A, type a query that filters cue A out, then clear the query — selection on cue A is still valid (the inspector kept showing it, the marker emphasis kept showing it). The filter is presentation-only. This is the same shape as the value-cascade / closure-cascade pattern from PRs [#98](https://github.com/chienchuanw/only-cue/pull/98) / [#100](https://github.com/chienchuanw/only-cue/pull/100) but applied to a *view filter* rather than a cross-pane state lift: `cues` is the unfiltered source of truth read by selection lookups (`selectedCue`, snap / nudge / duplicate handlers, marker overlay's `cue.id == selectedCueID` check); `visibleCues` is a derived filtered view used only by the `ForEach` rendering. **Heuristic to remember:** any future \"view filter\" feature (e.g. filter by type, filter by time range, filter by has-notes) should follow this — derive the filtered list for rendering only, never narrow the source-of-truth for selection / state lookups.
+
+**The pure static filter helper (testable without ViewInspector):** extracted as a static method on `CueListPane` rather than an inline closure so the contract can be exercised directly via XCTest. Whitespace-only queries return the unfiltered list (matches macOS spotlight behavior); case-insensitive localized `.contains` on `name` *or* `notes`.
+
+\`\`\`swift
+static func filtered(_ cues: [Cue], by query: String) -> [Cue] {
+    let trimmed = query.trimmingCharacters(in: .whitespacesAndNewlines)
+    guard !trimmed.isEmpty else { return cues }
+    return cues.filter { cue in
+        cue.name.localizedCaseInsensitiveContains(trimmed) ||
+        cue.notes.localizedCaseInsensitiveContains(trimmed)
+    }
+}
+\`\`\`
+
+**Why localized case-insensitive contains (not regex / fuzzy / prefix):** simplest match shape that covers the real workflow. Users remember a word from the *middle* of a cue name (\"act 2 wash\" → typing `wash`). Localized respects user locale (German `ß` matches `SS`). Regex is overkill; fuzzy is overkill for a 30–100-cue list; prefix-only would miss \"wash\" in \"GO Wash\".
+
+**Why search both name AND notes (not name only):** `notes` carry show-caller annotations (\"GO on the downbeat\"). Searching them turns *\"I know I wrote a note about this scene somewhere\"* into a navigation gesture. `cueNumber` is excluded — it's a number, navigated by the existing `↑`/`↓` cue-step shortcut and the column-sort order.
+
+**Why a manual `TextField` (not `.searchable`):** `.searchable(text:)` would render the search field in the navigation bar / inspector title bar, but `CueListPane` is hosted inside `.inspector(isPresented:)` on `DocumentView`. Placement of `.searchable` in nested split-view contexts on macOS is finicky — search fields can land in unexpected places (top-of-window, title-of-column) depending on which container claims the modifier. A manual `TextField` at the top of the cue list view is more predictable and visually clearer.
+
+**Why no-op on whitespace-only query:** a user who types a space and pauses shouldn't see an empty filtered list. The trimmed-then-empty branch returns the unfiltered list.
+
+**The bug exposed by the change (caught and fixed in the same commit):** `deleteAtOffsets(_ offsets:)` had been resolving via `cues`, but with `ForEach` over `visibleCues`, swipe-to-delete `IndexSet` indexes into the *filtered* list. Resolving against `cues` would either delete the wrong cue or crash via index-out-of-bounds when the filtered list is shorter than the index. Fix: `let target = visibleCues; for index in offsets { ... target[index] ... }`. Documented inline.
+
+**RED-first TDD discipline:** wrote `OnlyCueTests/CueListFilterTests.swift` (7 tests) first. Each test exercises `CueListPane.filtered(_:by:)` directly with constructed `Cue` values. Confirmed RED — `CueListPane.filtered` doesn't exist yet. Implemented the helper, the layout refactor, the `visibleCues` plumbing, and the `deleteAtOffsets` fix. Re-ran — 232/232 passing.
+
+**What landed in PR #108 (1 commit, 2 files modified or created):**
+- `ba20f2c feat(ui): filter cue list by name or notes` —
+  - `OnlyCue/UI/CueListPane.swift` — added `@State private var searchQuery: String = \"\"`; `visibleCues: [Cue]` computed prop reading from `Self.filtered(cues, by: searchQuery)`; static `filtered(_:by:)` helper with explanatory doc comment; `searchField` private view with manual `TextField`, `.roundedBorder` style, padding, and `accessibilityIdentifier(\"cueListSearchField\")` for UI-test reachability; refactored `cueList` into a `VStack(searchField, Divider, scrollableList)` with the existing `ScrollViewReader` + `List` extracted into `scrollableList`; `ForEach` now iterates `visibleCues`; fixed `deleteAtOffsets` to resolve via `visibleCues` (was `cues`).
+  - `OnlyCueTests/CueListFilterTests.swift` (new, 73 lines) — 7 tests: empty query, whitespace-only query, name match, notes match, case-insensitivity, no-match, matches-either-name-or-notes.
+
+**No follow-up issue from PR #108 review** — merged clean with no comments, no review threads.
+
+**Manual verification (PR test plan):** imported a project with cues \"GO Wash\", \"Crossfade\", \"Blackout\", \"Wash on Bart\". Typed `wash` — list filtered to GO Wash + Wash on Bart. Selected GO Wash, typed `crossfade` — list filtered to Crossfade only; inspector still showed GO Wash; waveform marker emphasis on GO Wash still rendered. Cleared the query — list returned to all 4 cues; selection unchanged. Typed a single space — list shows all cues. Typed `wash` then deleted Wash on Bart with `⌫` — correct cue deleted (without the deleteAtOffsets fix this would have deleted the wrong cue). Snap / nudge / duplicate / arrow-key navigation all worked on the unfiltered selection state.
+
+---
+
 ## 2026-05-10 — Duplicate selected cue at playhead with ⌘D (PR #106, closes [#105](https://github.com/chienchuanw/only-cue/issues/105))
 
 **Shipped:** issue [#105](https://github.com/chienchuanw/only-cue/issues/105) closed by PR [#106](https://github.com/chienchuanw/only-cue/pull/106) (rebase-merged into `dev` at `d474a20`). Single commit `3b31762`. Adds the `⌘D` keyboard shortcut: when a cue is selected, drops a new cue at the current playhead with the same `typeID`, `name`, `notes`, and `fadeTime` as the selected cue. New `id` (UUID), new `cueNumber` (auto-assigned via `CueNumberAssignment.next`). Undoable via the existing `CueCommands` mutation seam. **225/225 unit tests green (4 new — 3 in `CueCommandsDuplicateTests` + 1 notification-name pin in `DuplicateCueCommandTests`); 0 SwiftLint violations across 92 files.** 22nd consecutive bypass-mode shipment.

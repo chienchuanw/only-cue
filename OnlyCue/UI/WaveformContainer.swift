@@ -67,6 +67,7 @@ struct WaveformContainer: View {
             waveformBody(peaks: peaks)
             VerticalZoomDragHandle(controller: verticalZoom)
         }
+        .padding(.horizontal, 8)
     }
 
     @ViewBuilder
@@ -120,7 +121,6 @@ struct WaveformContainer: View {
             .onAppear { viewportWidth = width }
             .onChange(of: width) { _, new in viewportWidth = new }
         }
-        .padding(.horizontal, 8)
     }
 
     private func anchorRail(contentWidth: CGFloat) -> some View {

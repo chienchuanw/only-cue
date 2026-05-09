@@ -61,6 +61,7 @@ struct AppCommands: Commands {
                 .keyboardShortcut("n", modifiers: [.command, .shift])
 
             Toggle("Pause at Each Cue", isOn: $pauseAtEachCue)
+                .keyboardShortcut("p", modifiers: [.command, .shift])
 
             Divider()
 

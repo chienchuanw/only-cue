@@ -50,12 +50,15 @@ enum MagnifierAxisLock {
         let absX = abs(translationX)
         let absY = abs(translationY)
 
-        guard isShiftHeld else {
-            return Resolution(nextState: .unlocked, effectiveX: translationX, effectiveY: translationY)
-        }
-
+        // Sub-threshold movement keeps the state machine `.unresolved` regardless of
+        // `isShiftHeld`. Otherwise an accidental jitter at drag start (no Shift)
+        // would commit to `.unlocked` and silently ignore Shift held mid-drag.
         if max(absX, absY) < Self.decisionThreshold {
             return Resolution(nextState: .unresolved, effectiveX: translationX, effectiveY: translationY)
+        }
+
+        guard isShiftHeld else {
+            return Resolution(nextState: .unlocked, effectiveX: translationX, effectiveY: translationY)
         }
 
         if absX >= absY {

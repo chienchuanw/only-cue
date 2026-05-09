@@ -211,6 +211,7 @@ struct WaveformContainer: View {
         var resetOffset = scrollOffset
         zoom.reset(scrollOffset: &resetOffset)
         scrollOffset = resetOffset
+        verticalZoom.reset()
         if leadingAnchor != 0 {
             isProgrammaticAnchor = true
             leadingAnchor = 0

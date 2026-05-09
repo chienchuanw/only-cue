@@ -4,6 +4,75 @@ Append-only session log. Newer entries on top.
 
 ---
 
+## 2026-05-10 — Time-until-next-cue countdown in transport bar (PR #110, closes [#109](https://github.com/chienchuanw/only-cue/issues/109))
+
+**Shipped:** issue [#109](https://github.com/chienchuanw/only-cue/issues/109) closed by PR [#110](https://github.com/chienchuanw/only-cue/pull/110) (rebase-merged into `dev` at `166a36d`). Single commit `22df90c`. Adds a live countdown to the transport bar showing the time remaining until the next cue based on `engine.currentTime` and the active item's cues. Format scales with magnitude — `\"5.2\"` for sub-minute, `\"1:23.5\"` for sub-hour, `\"1:23:45.6\"` for longer. Hidden when no future cue exists. **243/243 unit tests green (11 new in `NextCueCountdownTests`); 0 SwiftLint violations across 94 files.** 24th consecutive bypass-mode shipment.
+
+**The deliberate pivot off the cue list surface (search filter, PR [#108](https://github.com/chienchuanw/only-cue/pull/108)) to the transport bar:** the cue list pane already shows cues by time; the transport bar's existing readout shows current playhead position. The gap was the *delta* — how soon is the next cue. Doing that math by eye during a fast-paced run is error-prone; surfacing it as a live readout makes anticipation a glance away.
+
+**Architectural pattern (worth recording): anticipation displays differ from position displays in precision and format.** The existing `TimeFormat.hms` (used for the playhead readout, cue row times, etc.) renders `HH:MM:SS.mmm` with millisecond precision because position needs precision. The new `TimeFormat.compactCountdown` renders decisecond precision with magnitude-scaled format because countdowns are *trend* displays where the digit visibly changes as time approaches without being a frenetic blur. Sub-100 ms precision in a countdown adds visual noise without informational value — show callers track cues at ~30–50 ms human reaction granularity for *triggering*, but *anticipation* lives at the 100 ms cadence. **Heuristic to remember:** when adding a future readout, ask whether it's a position display (precision matters) or a trend display (cadence matters) and pick the format granularity to match.
+
+**The two pure helpers (testable without view inspection):** both extracted as static methods so the contracts can be exercised directly via XCTest. Following the precedent established across PR [#93](https://github.com/chienchuanw/only-cue/pull/93) / PR [#98](https://github.com/chienchuanw/only-cue/pull/98) / PR [#106](https://github.com/chienchuanw/only-cue/pull/106) / PR #108.
+
+\`\`\`swift
+// On TransportBar — strict > filter so a cue exactly at currentTime is "now,"
+// not "next" (transition is crisp during playback). min() over post-filter
+// set picks the nearest regardless of input order — cues are time-sorted in
+// practice but the helper shouldn't depend on it.
+static func nextCueInterval(currentTime: TimeInterval, cues: [Cue]) -> TimeInterval? {
+    cues
+        .map(\.time)
+        .filter { $0 > currentTime }
+        .min()
+        .map { $0 - currentTime }
+}
+\`\`\`
+
+\`\`\`swift
+// On TimeFormat — alongside the existing hms.
+static func compactCountdown(_ seconds: TimeInterval) -> String {
+    let clamped = max(0, seconds)
+    let totalDeciseconds = Int((clamped * 10).rounded(.toNearestOrAwayFromZero))
+    let totalSeconds = totalDeciseconds / 10
+    let decisecond = totalDeciseconds % 10
+    let hours = totalSeconds / 3600
+    let minutes = (totalSeconds % 3600) / 60
+    let secs = totalSeconds % 60
+    if hours > 0 {
+        return String(format: \"%d:%02d:%02d.%d\", hours, minutes, secs, decisecond)
+    }
+    if minutes > 0 {
+        return String(format: \"%d:%02d.%d\", minutes, secs, decisecond)
+    }
+    return String(format: \"%d.%d\", secs, decisecond)
+}
+\`\`\`
+
+**Why decisecond precision (not centisecond or millisecond):** show callers track cues at ~30–50 ms granularity for *triggering*, but for *anticipation* of an upcoming cue, sub-100 ms precision adds visual noise without informational value. 0.1 s is the right cadence for a glanceable display — the digit visibly changes as time approaches without being a frenetic blur.
+
+**Why hide when no future cue (vs `\"Next: —\"`):** `\"Next: —\"` would be visual noise. `if let interval = ...` lets SwiftUI omit the entire `Text` when nil. Also handles the no-cues-yet state at document open.
+
+**Why strictly-greater filter (vs `>=`):** during playback, the playhead crosses a cue's time and the user expects the countdown to immediately switch to the *following* cue, not display 0.0 for a frame. Strict `>` makes the transition crisp.
+
+**Why `min()` over post-filter (not relying on cue-list sort order):** cues are time-sorted in `ProjectModel.items[i].cues` in practice (every mutation re-sorts), but the helper is decoupled from that invariant. If a future change ever inserts an unsorted cue array, the helper still works correctly.
+
+**The view body addition is minimal:** an `if let interval = Self.nextCueInterval(...)` branch in the existing HStack rendering `Text(\"Next: \\(TimeFormat.compactCountdown(interval))\")` with the same `.system(.body, design: .monospaced)` font and `.secondary` foreground style as the existing time readout. `accessibilityIdentifier(\"nextCueCountdown\")` for UI-test reachability. The view re-renders on `engine.currentTime` ticks for free via `PlayerEngine`'s `@Observable` — no explicit timers or subscriptions.
+
+**RED-first TDD discipline:** wrote `OnlyCueTests/NextCueCountdownTests.swift` (11 tests) first. 6 for `nextCueInterval` (no cues, all passed, picks nearest, before-first, exactly-on-cue picks next, unsorted input still picks nearest). 5 for `compactCountdown` (sub-second, sub-minute, sub-hour, hour-or-more, negative clamps). Confirmed RED — `TransportBar.nextCueInterval` doesn't exist; `TimeFormat.compactCountdown` doesn't exist. Implemented both helpers, the view body branch, and the `DocumentView.mainPane` parameter forwarding. Re-ran — 243/243 passing.
+
+**What landed in PR #110 (1 commit, 4 files modified or created):**
+- `22df90c feat(ui): show time-until-next-cue countdown in transport bar` —
+  - `OnlyCue/UI/TransportBar.swift` — added `var cues: [Cue] = []` parameter; added static `nextCueInterval(currentTime:cues:)` helper with explanatory doc comment; added `if let interval = ...` branch rendering the `\"Next: ...\"` Text in the existing HStack.
+  - `OnlyCue/Utilities/Time+Format.swift` — added `TimeFormat.compactCountdown(_:)` static method alongside the existing `hms`, with explanatory doc comment.
+  - `OnlyCue/UI/DocumentView.swift` — `TransportBar(engine: engine)` → `TransportBar(engine: engine, cues: activeItem?.cues ?? [])`. The `activeItem` local was already in scope from `mainPane`'s prologue.
+  - `OnlyCueTests/NextCueCountdownTests.swift` (new, 89 lines) — 11 tests covering both helpers.
+
+**No follow-up issue from PR #110 review** — merged clean with no comments, no review threads.
+
+**Manual verification (PR test plan):** imported a project with cues at 5s, 12s, 30s. Played from 0s — countdown showed `Next: 5.0` and ticked down to `0.0` at the cue boundary, then jumped to `Next: 7.0` and continued. Played past the last cue (30s) — countdown disappeared. Imported a project with no cues — no countdown text. Cued at 0s, paused — countdown showed the constant value to the first cue. Created a cue at 75s and parked at 0s — countdown showed `Next: 1:15.0` (minute-boundary format). Created a cue at 3725s and parked at 0s — countdown showed `Next: 1:02:05.0` (hour format). Existing time readout, play/pause, drag-retime, snap, nudge, duplicate, filter, scroll, etc. all unchanged.
+
+---
+
 ## 2026-05-10 — Filter cue list by name or notes (PR #108, closes [#107](https://github.com/chienchuanw/only-cue/issues/107))
 
 **Shipped:** issue [#107](https://github.com/chienchuanw/only-cue/issues/107) closed by PR [#108](https://github.com/chienchuanw/only-cue/pull/108) (rebase-merged into `dev` at `361176c`). Single commit `ba20f2c`. Adds a search field at the top of the cue list pane that filters rows by query string matching against `cue.name` or `cue.notes` (case-insensitive, localized contains). **232/232 unit tests green (7 new in `CueListFilterTests`); 0 SwiftLint violations across 93 files.** 23rd consecutive bypass-mode shipment.

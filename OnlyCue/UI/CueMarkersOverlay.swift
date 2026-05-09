@@ -53,19 +53,27 @@ struct CueMarkerView: View {
     private static let capWidth: CGFloat = 10
     private static let hitWidth: CGFloat = 14
     private static let dragThreshold: CGFloat = 4
+    private static let labelGap: CGFloat = 1
 
     var body: some View {
-        ZStack(alignment: .top) {
-            Capsule()
-                .fill(.clear)
-                .frame(width: Self.hitWidth)
-            Rectangle()
-                .fill(markerColor)
-                .frame(width: Self.lineWidth)
-                .opacity(0.85)
-            Capsule()
-                .fill(markerColor)
-                .frame(width: Self.capWidth, height: Self.capHeight)
+        VStack(spacing: Self.labelGap) {
+            Text(FadeTime.formatNumber(cue.cueNumber))
+                .font(.caption2)
+                .foregroundStyle(.secondary)
+                .fixedSize()
+                .accessibilityIdentifier("cueMarkerLabel-\(cue.id.uuidString)")
+            ZStack(alignment: .top) {
+                Capsule()
+                    .fill(.clear)
+                    .frame(width: Self.hitWidth)
+                Rectangle()
+                    .fill(markerColor)
+                    .frame(width: Self.lineWidth)
+                    .opacity(0.85)
+                Capsule()
+                    .fill(markerColor)
+                    .frame(width: Self.capWidth, height: Self.capHeight)
+            }
         }
         .offset(x: baseX + dragOffset - Self.hitWidth / 2)
         .gesture(dragOrTapGesture)

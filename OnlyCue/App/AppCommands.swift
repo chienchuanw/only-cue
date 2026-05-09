@@ -10,6 +10,13 @@ struct AppCommands: Commands {
             Button("About OnlyCue") { Self.showAboutPanel() }
         }
 
+        CommandGroup(after: .newItem) {
+            Button("Import Media…") {
+                NotificationCenter.default.post(name: .importMediaRequested, object: nil)
+            }
+            .keyboardShortcut("o", modifiers: .command)
+        }
+
         CommandMenu("View") {
             Button("Zoom In") {
                 NotificationCenter.default.post(name: .waveformZoomIn, object: nil)

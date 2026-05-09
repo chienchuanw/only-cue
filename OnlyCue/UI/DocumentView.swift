@@ -42,13 +42,17 @@ struct DocumentView: View {
         }
         .onChange(of: engine.currentTime) { oldValue, newValue in
             // Pause-at-each-cue: when enabled, auto-pause as the playhead crosses
-            // any cue during forward playback. The `engine.rate > 0` guard skips
-            // scrubs during pause; the helper's strict-`>` on previousTime avoids
-            // re-pausing on resume from a previously-paused-at cue.
+            // any cue during forward playback. Selecting the crossed cue aligns
+            // the inspector / cue-list highlight / marker emphasis / auto-scroll
+            // on the cue the player just paused at — full UI context matches the
+            // cue the show caller is now sitting on. The `engine.rate > 0` guard
+            // skips scrubs during pause; the helper's strict-`>` on previousTime
+            // avoids re-pausing on resume from a previously-paused-at cue.
             guard pauseAtEachCue, engine.rate > 0 else { return }
             let cues = document.model.activeItem?.cues ?? []
-            if cues.cueCrossed(movingFrom: oldValue, to: newValue) != nil {
+            if let crossed = cues.cueCrossed(movingFrom: oldValue, to: newValue) {
                 engine.pause()
+                selectedCueID = crossed.id
             }
         }
         .resignFirstResponderOnOutsideClick()

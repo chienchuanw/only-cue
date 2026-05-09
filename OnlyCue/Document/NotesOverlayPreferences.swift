@@ -24,7 +24,7 @@ struct NotesOverlayPreferences: Codable, Equatable {
     var backgroundColorHex: String?
     var showCueIDPrefix: Bool
 
-    static let `default` = NotesOverlayPreferences(
+    static let `default` = Self(
         position: .bottom,
         fontScale: 1.0,
         textColorHex: "#FFFFFF",
@@ -58,4 +58,25 @@ struct NotesOverlayPreferences: Codable, Equatable {
     private static func clamp(_ value: Double) -> Double {
         min(max(value, fontScaleRange.lowerBound), fontScaleRange.upperBound)
     }
+
+    static let storageKey = "notesOverlayPreferences"
+
+    /// Encoded `default` for use as `@AppStorage` initial value. Computed once.
+    static let defaultEncoded: Data = {
+        (try? JSONEncoder().encode(Self.default)) ?? Data()
+    }()
+
+    var encoded: Data {
+        (try? JSONEncoder().encode(self)) ?? Self.defaultEncoded
+    }
+
+    /// Decode prefs from `@AppStorage` data; falls back to `.default` on failure
+    /// (corrupt data, schema drift) so the UI always has something sensible.
+    static func decode(_ data: Data) -> Self {
+        (try? JSONDecoder().decode(Self.self, from: data)) ?? .default
+    }
+}
+
+extension Notification.Name {
+    static let editNotesOverlayAppearance = Notification.Name("OnlyCue.editNotesOverlayAppearance")
 }

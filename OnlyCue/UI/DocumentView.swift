@@ -8,7 +8,9 @@ struct DocumentView: View {
     @State private var showImporter = false
     @State private var pendingAlert: DocumentAlert?
     @State private var seekTask: Task<Void, Never>?
+    @State private var showOverlayAppearance = false
     @AppStorage(FirstLaunchFlag.key) private var didShowFirstLaunch = false
+    @AppStorage(NotesOverlayPreferences.storageKey) private var overlayPrefsData = NotesOverlayPreferences.defaultEncoded
     @Environment(\.undoManager) private var undoManager
 
     var body: some View {
@@ -31,6 +33,19 @@ struct DocumentView: View {
         }
         .task(id: document.model.activeItemID) { await reloadActive() }
         .resignFirstResponderOnOutsideClick()
+        .onReceive(NotificationCenter.default.publisher(for: .editNotesOverlayAppearance)) { _ in
+            showOverlayAppearance = true
+        }
+        .sheet(isPresented: $showOverlayAppearance) {
+            NotesOverlayPreferencesSheet(prefs: overlayPrefsBinding)
+        }
+    }
+
+    private var overlayPrefsBinding: Binding<NotesOverlayPreferences> {
+        Binding(
+            get: { NotesOverlayPreferences.decode(overlayPrefsData) },
+            set: { overlayPrefsData = $0.encoded }
+        )
     }
 
     private var mainPane: some View {

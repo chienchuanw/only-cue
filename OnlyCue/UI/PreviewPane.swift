@@ -9,6 +9,7 @@ struct PreviewPane: View {
     @Environment(\.undoManager) private var undoManager
     @State private var waveformURL: URL?
     @AppStorage("showNotesOverlay") private var showNotesOverlay = false
+    @AppStorage(NotesOverlayPreferences.storageKey) private var overlayPrefsData = NotesOverlayPreferences.defaultEncoded
 
     var body: some View {
         ZStack {
@@ -19,14 +20,47 @@ struct PreviewPane: View {
         .clipShape(RoundedRectangle(cornerRadius: 6))
         .accessibilityIdentifier("previewPane")
         .task(id: document.model.activeItemID) { await resolveWaveformURL() }
-        .overlay(alignment: .bottom) {
+        .overlay(alignment: overlayAlignment) {
             if showNotesOverlay {
                 NotesOverlayView(
-                    activeCue: document.model.activeItem?.activeCue(at: engine.currentTime)
+                    activeCue: activeCue,
+                    prefs: overlayPrefs,
+                    cueNumberLabel: activeCue.flatMap(formattedCueNumber)
                 )
-                .padding(.bottom, 12)
+                .padding(overlayPadding, 12)
             }
         }
+    }
+
+    private var activeCue: Cue? {
+        document.model.activeItem?.activeCue(at: engine.currentTime)
+    }
+
+    private var overlayPrefs: NotesOverlayPreferences {
+        NotesOverlayPreferences.decode(overlayPrefsData)
+    }
+
+    private var overlayAlignment: Alignment {
+        switch overlayPrefs.position {
+        case .top: .top
+        case .center: .center
+        case .bottom: .bottom
+        }
+    }
+
+    private var overlayPadding: Edge.Set {
+        switch overlayPrefs.position {
+        case .top: .top
+        case .center: []
+        case .bottom: .bottom
+        }
+    }
+
+    private func formattedCueNumber(_ cue: Cue) -> String {
+        let value = cue.cueNumber
+        return value.truncatingRemainder(dividingBy: 1) == 0
+            ? String(format: "%.0f", value)
+            : String(format: "%.1f", value)
     }
 
     @ViewBuilder

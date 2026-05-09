@@ -87,27 +87,36 @@ struct CueListPane: View {
     }
 
     private var cueList: some View {
-        List(selection: $selection) {
-            ForEach(Array(cues.enumerated()), id: \.element.id) { index, cue in
-                CueRowView(
-                    index: index + 1,
-                    cue: cue,
-                    resolvedColorHex: document.model.colorHex(for: cue),
-                    onRename: { newName in
-                        CueCommands.rename(cueId: cue.id, to: newName, document: document, undoManager: undoManager)
-                    }
-                )
-                .tag(cue.id)
+        ScrollViewReader { proxy in
+            List(selection: $selection) {
+                ForEach(Array(cues.enumerated()), id: \.element.id) { index, cue in
+                    CueRowView(
+                        index: index + 1,
+                        cue: cue,
+                        resolvedColorHex: document.model.colorHex(for: cue),
+                        onRename: { newName in
+                            CueCommands.rename(cueId: cue.id, to: newName, document: document, undoManager: undoManager)
+                        }
+                    )
+                    .tag(cue.id)
+                }
+                .onDelete(perform: deleteAtOffsets)
             }
-            .onDelete(perform: deleteAtOffsets)
-        }
-        .onDeleteCommand { deleteSelected() }
-        .onChange(of: selection) { _, newValue in
-            guard
-                let id = newValue,
-                let cue = cues.first(where: { $0.id == id })
-            else { return }
-            Task { await engine.seek(to: cue.time) }
+            .onDeleteCommand { deleteSelected() }
+            .onChange(of: selection) { _, newValue in
+                guard
+                    let id = newValue,
+                    let cue = cues.first(where: { $0.id == id })
+                else { return }
+                Task { await engine.seek(to: cue.time) }
+                // Centered scroll-to-selection brings offscreen rows into view when
+                // selection is driven externally (marker click, snap/nudge). For
+                // already-visible rows the re-center is a mild flicker — acceptable
+                // per the issue body's UX trade-off analysis.
+                withAnimation(.easeOut(duration: 0.2)) {
+                    proxy.scrollTo(id, anchor: .center)
+                }
+            }
         }
     }
 

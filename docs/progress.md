@@ -36,6 +36,38 @@ Append-only session log. Newer entries on top.
 
 ---
 
+## 2026-05-09 — README status section reorganized (PR #86, closes [#85](https://github.com/chienchuanw/only-cue/issues/85))
+
+**Shipped:** issue [#85](https://github.com/chienchuanw/only-cue/issues/85) closed by PR [#86](https://github.com/chienchuanw/only-cue/pull/86) (rebase-merged into `dev` at `ec3c032`). Pure-docs cleanup: the README's `## Status` section had grown to a single ~3,500-word paragraph listing every PR ever shipped. Restructured into three scannable subsections (current release / shipped beyond MVP / in progress / next) with detail delegated to existing source-of-truth files (`docs/task_plan.md` for live phases, `docs/progress.md` for per-PR narrative).
+
+**Status section measurements:** ~3,500 words → ~340 words. Total README: 18,227 bytes → ~5,200 bytes; word count 5,500 → 829; line count 64 → 101 (more lines because the new structure has more headings/table rows even though prose dropped).
+
+**Why delegate to docs/ instead of inlining:** repo already follows the planning-with-files pattern. `docs/task_plan.md` is the live phase tracker; `docs/progress.md` is the append-only per-PR narrative. The README's wall-of-text duplicated both, drifting whenever README updates lagged. Audiences are different: README is the entry point (newcomers, contributors evaluating), `docs/` is the working memory (active contributors). The wall-of-PRs pattern conflated the two.
+
+**Why a 6-row "shipped beyond MVP" table (vs. prose):** scannable. Each row groups by area (post-MVP enhancements, three Phase 2 epics, stand-alone leaves, release pipeline). Each cell summarises in one or two sentences. Per-PR narrative for any cell lives in `docs/progress.md` and is one click away.
+
+**Why kept macOS keyboard symbols (⌘ ⌥ ⇧ ↑ ↓) but removed decorative emojis (✅ 🟡):** Unicode-wise they overlap (both non-ASCII), but functionally they serve different purposes. ⌘ ⌥ ⇧ are typography for keyboard shortcuts (the ⌘ symbol is on every Mac keyboard); ✅ 🟡 are decorative status badges. The `/readme` skill's "no emojis" hard rule applies to decorative emojis; keyboard symbols are technical typography.
+
+**Skills used (5th bypass-mode sub-pattern):**
+- `/readme` skill — followed the template structure (Title → TOC → Status → Build → Documents → Stack → Reference). Hard rule "no emojis" enforced after distinguishing keyboard symbols from decorative emojis.
+- `/planning-with-files` skill — the framing insight: confirmed the repo already implements the pattern (`docs/task_plan.md` + `docs/progress.md` are the equivalents), so the cleanup explicitly delegates to those files instead of duplicating their content.
+
+**Other README structural improvements:**
+- `## Table of Contents` added (README now long enough to warrant one).
+- `### Run tests and lint locally` subsection added under `## Build` (canonical xcodebuild + swiftlint commands new contributors need).
+- `## Documents` list extended with `docs/task_plan.md` (entry 9) and `docs/progress.md` (entry 10) so readers know where to find live status.
+
+**What landed in PR #86 (1 commit, 1 file modified):**
+- `e7939de docs(readme): split status into release/shipped/up-next; delegate detail to docs/` — single-commit pure-docs PR. No tests, no lint impact, no build impact.
+
+**Manual verification:** read the rewritten README end-to-end in under 2 minutes; every link resolves (issue links, doc links, releases link); every still-relevant claim from the previous status section is preserved (delegated to `docs/`, not lost).
+
+**Bypass-mode pattern observation (12th consecutive shipment, 5th sub-pattern emerged):** PR #86 introduces a new sub-pattern: skill-driven docs cleanup. User explicitly invoked specific skills (`/readme` + `/planning-with-files`) AND the standard ship-next-leaf instruction concurrently in the same message. Single-commit PR, no tests, no plan file, no review cycle, just rule-application. Distinguishes from prior 4 sub-patterns (user-pre-authored spec+plan files, detailed issue body, inline-during-execution, brainstorm-driven agent-authored spec+plan). Sub-pattern (e) is the lightest of the five — appropriate for pure-docs work where the content already exists elsewhere and needs reorganisation, not authoring.
+
+**Closing note — README is now under-control entry point:** the project's docs ecosystem is now: README for newcomers, `docs/vision.md` + `docs/architecture.md` + 7 other doc files for design context, `docs/task_plan.md` for live status, `docs/progress.md` for history, `docs/superpowers/specs/` for approved specs, `docs/superpowers/plans/` for implementation plans. Five layers, each with its own audience and update cadence. The README's single job is now "first 90 seconds for a new reader."
+
+---
+
 ## 2026-05-09 — Notes overlay customisation sheet (PR #83, closes [#82](https://github.com/chienchuanw/only-cue/issues/82))
 
 **Shipped:** issue [#82](https://github.com/chienchuanw/only-cue/issues/82) closed by PR [#83](https://github.com/chienchuanw/only-cue/pull/83) (rebase-merged into `dev` at `6c5f055`). Tools-menu-driven sheet ("Edit Note Overlay Appearance…") for customising the notes overlay introduced in PR #72: position (top/center/bottom), font scale (0.75×–3.0×), text color, optional solid background color, optional cue-number prefix, restore-defaults button. **Continues epic #38 — leaf 2 of 5; folds in restore-defaults sub-leaf** (epic's leaf 4) since it's a single button on the same sheet. **3 commits, ~250 lines net.** 5 new RED-first tests covering encode/decode round-trip, fontScale clamping, and Position case round-trip. Single source of truth: `NotesOverlayPreferences` value type persisted via `@AppStorage("notesOverlayPreferences")` as JSON-encoded `Data`.

@@ -93,6 +93,33 @@ enum CueCommands {
         }
     }
 
+    /// Drop a new cue at `time` inheriting `typeID`, `name`, `notes`, and `fadeTime`
+    /// from the cue with `cueId`. New `id` (UUID) and `cueNumber` (auto-assigned via
+    /// `CueNumberAssignment.next` for the new time slot). Silent no-op if `cueId`
+    /// doesn't resolve in the active item's cues.
+    static func duplicateAtPlayhead(
+        cueId: Cue.ID,
+        time: TimeInterval,
+        document: CueListDocument,
+        undoManager: UndoManager?
+    ) {
+        let existingCues = document.model.activeItem?.cues ?? []
+        guard let source = existingCues.first(where: { $0.id == cueId }) else { return }
+        let clampedTime = max(time, 0)
+        let cue = Cue(
+            id: UUID(),
+            typeID: source.typeID,
+            cueNumber: CueNumberAssignment.next(forInsertionAt: clampedTime, in: existingCues),
+            name: source.name,
+            time: clampedTime,
+            notes: source.notes,
+            fadeTime: source.fadeTime
+        )
+        mutateCues(document, undoManager: undoManager, actionName: "Duplicate Cue") { cues in
+            (cues + [cue]).sorted { $0.time < $1.time }
+        }
+    }
+
     static func retime(cueId: Cue.ID, to newTime: TimeInterval, document: CueListDocument, undoManager: UndoManager?) {
         mutateCues(document, undoManager: undoManager, actionName: "Retime Cue") { cues in
             cues

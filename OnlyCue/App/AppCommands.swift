@@ -66,6 +66,11 @@ struct AppCommands: Commands {
             }
             .keyboardShortcut("s", modifiers: [])
 
+            Button("Duplicate Cue at Playhead") {
+                NotificationCenter.default.post(name: .duplicateSelectedCueAtPlayhead, object: nil)
+            }
+            .keyboardShortcut("d", modifiers: .command)
+
             Button("Nudge Selected Cue Back") {
                 NotificationCenter.default.post(name: .nudgeSelectedCueBack, object: nil)
             }

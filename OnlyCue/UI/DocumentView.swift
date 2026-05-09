@@ -237,6 +237,10 @@ struct DocumentView: View {
     }
 }
 
+extension Notification.Name {
+    static let importMediaRequested = Notification.Name("OnlyCue.importMediaRequested")
+}
+
 private enum DocumentAlert: Identifiable {
     case unsupported(String)
     case relink(String)

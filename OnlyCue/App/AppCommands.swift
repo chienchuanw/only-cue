@@ -56,6 +56,13 @@ struct AppCommands: Commands {
 
             Toggle("Show Notes Overlay", isOn: $showNotesOverlay)
                 .keyboardShortcut("n", modifiers: [.command, .shift])
+
+            Divider()
+
+            Button("Snap Selected Cue to Playhead") {
+                NotificationCenter.default.post(name: .snapSelectedCueToPlayhead, object: nil)
+            }
+            .keyboardShortcut("s", modifiers: [])
         }
 
         CommandMenu("Tools") {

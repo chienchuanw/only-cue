@@ -31,6 +31,19 @@ struct CueListPane: View {
         }
         .frame(minWidth: 240)
         .accessibilityIdentifier("cueListPane")
+        .onReceive(NotificationCenter.default.publisher(for: .snapSelectedCueToPlayhead)) { _ in
+            snapSelectedToPlayhead()
+        }
+    }
+
+    private func snapSelectedToPlayhead() {
+        guard let id = selection else { return }
+        CueCommands.retime(
+            cueId: id,
+            to: engine.currentTime,
+            document: document,
+            undoManager: undoManager
+        )
     }
 
     private var emptyState: some View {
@@ -90,4 +103,8 @@ struct CueListPane: View {
         CueCommands.delete(cueId: id, document: document, undoManager: undoManager)
         selection = nil
     }
+}
+
+extension Notification.Name {
+    static let snapSelectedCueToPlayhead = Notification.Name("OnlyCue.snapSelectedCueToPlayhead")
 }

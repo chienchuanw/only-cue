@@ -8,6 +8,13 @@ final class WaveformZoomMagnifierTests: XCTestCase {
     /// Build a container in a state ready for drag dispatch. Sets `viewportWidth`
     /// to a stable test value (400pt) so horizontal scroll-anchor math is
     /// deterministic.
+    ///
+    /// Note: `WaveformContainer` is a struct, but the test mutates state via
+    /// `container.zoom` and `container.verticalZoom` — both reference-typed
+    /// `@Observable` controllers. Mutations through those references survive
+    /// struct copies, which is what makes these tests work outside the SwiftUI
+    /// runtime. Don't refactor by extracting `let zoom = container.zoom` and
+    /// expecting it to be a value; the controller IS the shared mutable state.
     private func makeContainer() -> WaveformContainer {
         let url = URL(fileURLWithPath: "/dev/null")
         var container = WaveformContainer(asset: AVURLAsset(url: url))

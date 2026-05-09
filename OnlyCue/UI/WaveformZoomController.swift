@@ -14,6 +14,22 @@ final class WaveformZoomController {
     private(set) var zoom: CGFloat = 1
     var followsPlayhead: Bool = true
 
+    /// Cached pixel-offset of the scroll view's leading edge. Updated by zoom
+    /// helpers that touch scroll position; read by drag / magnifier extensions.
+    /// Stored here (on the `@Observable` reference type) so the value persists
+    /// across SwiftUI struct re-creations and is directly mutable in tests.
+    var scrollOffset: CGFloat = 0
+
+    /// Width of the visible viewport in points. Set by `GeometryReader` on each
+    /// layout pass. Stored on the reference type so it survives struct copies and
+    /// is directly settable from tests without going through `@State`.
+    var viewportWidth: CGFloat = 0
+
+    /// Zoom level captured at the start of each pinch/drag gesture; used as the
+    /// baseline for continuous-drag math. Stored alongside scroll state for the
+    /// same testability reason.
+    var pinchBaseline: CGFloat = 1
+
     func setZoom(
         _ next: CGFloat,
         anchorFraction: CGFloat,

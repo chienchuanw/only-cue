@@ -76,22 +76,21 @@ struct WaveformContainer: View {
 
     @ViewBuilder
     private func loaded(peaks: [Float]) -> some View {
-        ZStack(alignment: .bottomTrailing) {
-            waveformBody(peaks: peaks)
-            verticalRail
-            horizontalRail
-        }
-        .padding(.horizontal, 8)
-        .onHover { hovering in
-            isHoveringWaveform = hovering
-        }
-        .task {
-            guard !FirstLaunchHintTracker.shared.hasShownWaveformZoomHint else { return }
-            FirstLaunchHintTracker.shared.markShown()
-            hintShowing = true
-            try? await Task.sleep(for: .seconds(1.5))
-            hintShowing = false
-        }
+        waveformBody(peaks: peaks)
+            .padding(.horizontal, 8)
+            .overlay(alignment: .bottomTrailing) {
+                magnifier.padding(8)
+            }
+            .onHover { hovering in
+                isHoveringWaveform = hovering
+            }
+            .task {
+                guard !FirstLaunchHintTracker.shared.hasShownWaveformZoomHint else { return }
+                FirstLaunchHintTracker.shared.markShown()
+                hintShowing = true
+                try? await Task.sleep(for: .seconds(1.5))
+                hintShowing = false
+            }
     }
 
     @ViewBuilder

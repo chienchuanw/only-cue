@@ -4,21 +4,45 @@ import SwiftUI
 /// Show callers read this during run-throughs. Renders nothing when there's no active cue
 /// or when the active cue's notes are empty — the toggle stays on but the layer disappears
 /// rather than showing an empty card / placeholder text.
+///
+/// Appearance is driven entirely by `prefs` (`NotesOverlayPreferences`). When `prefs == .default`
+/// the rendering matches the original PR #72 visual: white `.title`-sized text on
+/// `.ultraThinMaterial`, no cue-ID prefix.
 struct NotesOverlayView: View {
 
     let activeCue: Cue?
+    var prefs: NotesOverlayPreferences = .default
+    var cueNumberLabel: String?
 
     var body: some View {
         if let cue = activeCue, !cue.notes.isEmpty {
-            Text(cue.notes)
-                .font(.title)
-                .foregroundStyle(.primary)
+            Text(displayText(for: cue))
+                .font(.system(size: 28 * prefs.fontScale, weight: .semibold))
+                .foregroundStyle(textColor)
                 .multilineTextAlignment(.center)
                 .padding(.horizontal, 16)
                 .padding(.vertical, 12)
                 .frame(maxWidth: 600)
-                .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 12))
+                .background(background)
                 .accessibilityIdentifier("notesOverlay")
+        }
+    }
+
+    private func displayText(for cue: Cue) -> String {
+        guard prefs.showCueIDPrefix, let label = cueNumberLabel else { return cue.notes }
+        return "[\(label)] \(cue.notes)"
+    }
+
+    private var textColor: Color {
+        Color(hex: prefs.textColorHex) ?? .primary
+    }
+
+    @ViewBuilder
+    private var background: some View {
+        if let hex = prefs.backgroundColorHex, let color = Color(hex: hex) {
+            RoundedRectangle(cornerRadius: 12).fill(color)
+        } else {
+            RoundedRectangle(cornerRadius: 12).fill(.ultraThinMaterial)
         }
     }
 }

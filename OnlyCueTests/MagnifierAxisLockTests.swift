@@ -15,6 +15,22 @@ final class MagnifierAxisLockTests: XCTestCase {
         XCTAssertEqual(result.nextState, .unlocked)
     }
 
+    func test_noShift_belowThreshold_staysUnresolved() {
+        let result = MagnifierAxisLock.resolve(
+            translationX: 4,
+            translationY: 2,
+            isShiftHeld: false,
+            currentState: .unresolved
+        )
+        XCTAssertEqual(result.effectiveX, 4)
+        XCTAssertEqual(result.effectiveY, 2)
+        XCTAssertEqual(
+            result.nextState,
+            .unresolved,
+            "sub-threshold drag-start jitter (no Shift) must NOT commit to .unlocked — Shift pressed mid-drag should still engage axis-lock"
+        )
+    }
+
     func test_shift_belowThreshold_passThroughAndStaysUnresolved() {
         let result = MagnifierAxisLock.resolve(
             translationX: 5,

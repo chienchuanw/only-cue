@@ -19,7 +19,9 @@ struct AppCommands: Commands {
             .keyboardShortcut("o", modifiers: .command)
         }
 
-        CommandMenu("View") {
+        CommandGroup(after: .sidebar) {
+            Divider()
+
             Button("Zoom In") {
                 NotificationCenter.default.post(name: .waveformZoomIn, object: nil)
             }

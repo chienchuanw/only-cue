@@ -4,6 +4,49 @@ Append-only session log. Newer entries on top.
 
 ---
 
+## 2026-05-09 — Click waveform marker to select its cue in the cue list (PR #100, closes [#99](https://github.com/chienchuanw/only-cue/issues/99))
+
+**Shipped:** issue [#99](https://github.com/chienchuanw/only-cue/issues/99) closed by PR [#100](https://github.com/chienchuanw/only-cue/pull/100) (rebase-merged into `dev` at `49e0a32`). Single commit `c6a23ed`. Tapping any cue marker on the waveform now selects that cue in the cue list pane (in addition to seeking the playhead). Closes the cycle started by PR [#98](https://github.com/chienchuanw/only-cue/pull/98) — selection state lifted to `DocumentView` flows in both directions: row click → marker emphasis (PR #98); marker click → row selection (this PR). **221/221 unit tests green; 0 SwiftLint violations across 90 files.** 19th consecutive bypass-mode shipment.
+
+**The 4-PR thematic arc on the cue marker UX surface (PR #96 → #98 → #100) is now complete:** PR [#96](https://github.com/chienchuanw/only-cue/pull/96) added cueNumber labels above each marker (you know *which* cue each marker is); PR #98 added selection emphasis (you see *which one is selected*, with state lifted from `CueListPane` `@State` to `DocumentView` `@State`); PR #100 closes the bidirectional loop (clicking a marker selects its cue, mirroring the existing row-click → seek behavior). Each PR builds on the previous: cueNumber labels are visible from any selection state; the `MarkerStyle` struct from #98 distinguishes selected from non-selected; the closure cascade from #100 uses the same path the value cascade from #98 established. Architectural pattern reinforced — *read-only value cascade + write-through closure cascade = full bidirectional sync without polluting the document model with UI state*.
+
+**The closure-cascade architecture (mirror of PR #98's value cascade):** `selectedCueID: Cue.ID?` lives on `DocumentView` as `@State`. PR #98 plumbed the value down (read-only): `DocumentView.selectedCueID` → `PreviewPane(selectedCueID:)` → `WaveformContainer(selectedCueID:)` → `CueMarkersOverlay(selectedCueID:)` → `CueMarkerView(isSelected:)`. This PR plumbs a callback up (write-through): `CueMarkerView(onSelect:)` → `CueMarkersOverlay(onSelectCue:)` → `WaveformContainer(onSelectCue:)` → `PreviewPane(onSelectCue:)` → `DocumentView` (closure source: `{ selectedCueID = $0 }`). Each layer adds one parameter and forwards. Compile-time-checked at every layer transition.
+
+**The select-then-seek tap-handler change:** `CueMarkerView`'s existing `dragOrTapGesture` already distinguishes tap vs drag via `Self.dragThreshold = 4`. On tap (`abs(dx) < dragThreshold`), changed from `onSeek()` only to `onSelect(); onSeek()`. Drag-to-retime path is unchanged.
+
+\`\`\`swift
+// Tap branch of dragOrTapGesture.onEnded
+if abs(dx) < Self.dragThreshold {
+    // Select first so the cue list highlight + inspector update
+    // land before the seek; engine.seek is idempotent so the
+    // CueListPane.onChange(of: selection) seek that follows is
+    // a redundant no-op against the same target time.
+    onSelect()
+    onSeek()
+}
+\`\`\`
+
+**Why select-then-seek (order matters):** when selection changes via the binding, `CueListPane.onChange(of: selection)` *also* fires `engine.seek(to: cue.time)`. Two seek calls land for the same target time — `engine.seek` is idempotent (existing behavior whenever the user clicks a cue row, since both the row selection and any other concurrent seek path can compete), so this is accepted, not a regression. Calling `onSelect()` *before* `onSeek()` keeps the visual selection and playhead update synchronous from the user's perspective; reversing it would mean the playhead jumps before the inspector catches up. Documented inline at the gesture site so a future reader doesn't reorder them.
+
+**Why no Cmd / Shift handling here:** multi-selection is gated on the multi-select leaf under epic [#36](https://github.com/chienchuanw/only-cue/issues/36). This PR covers the single-selection case. The closure signature `(Cue.ID) -> Void` can absorb a richer dispatch (click / Cmd-click / Shift-click) when multi-select lands — the marker layer would need to read `NSEvent.modifierFlags` and pass an event/intent type instead of a bare ID. Defer.
+
+**Why no new test (a deliberate departure from the project's TDD-strict rule, with precedent):** the change is a 1-line addition to the existing `dragOrTapGesture.onEnded` handler — no decision logic, no new types, no new code paths. The closure plumbing is compile-time-checked across 4 layers (each adds a parameter and forwards it). A unit test pinning the wiring would either be a sentinel that re-asserts what the type system already guarantees, or a SwiftUI gesture-test that needs ViewInspector / snapshot infrastructure not currently in the project. The precedent for skipping sentinel tests was established in PR #96's review thread: *"strong typing prevents accidental divergence; if a future change reintroduces a private formatter / gesture path, it'll fail to compile or surface in the canonical tests."* Existing `CueMarkerStyleTests` (PR #98) pin the rendering contract; existing `CueCommandsTests` cover the seek/retime path. Manual verification documented in the PR test plan. *Lesson:* TDD-strict is the project rule, but TDD-thoughtful means recognizing when the test would have negative information value (sentinel that re-asserts type-system guarantees).
+
+**What landed in PR #100 (1 commit, 4 files modified):**
+- `c6a23ed feat(ui): click waveform marker to select its cue in the cue list` —
+  - `OnlyCue/UI/CueMarkersOverlay.swift` — added `var onSelectCue: (Cue.ID) -> Void = { _ in }` to `CueMarkersOverlay`; passed `onSelect: { onSelectCue(cue.id) }` to each `CueMarkerView`. Added `var onSelect: () -> Void = {}` on `CueMarkerView`. Tap branch of `dragOrTapGesture.onEnded` now calls `onSelect()` then `onSeek()` with explanatory inline comment.
+  - `OnlyCue/UI/WaveformContainer.swift` — added `var onSelectCue: (Cue.ID) -> Void = { _ in }`; forwarded to overlay.
+  - `OnlyCue/UI/PreviewPane.swift` — added `var onSelectCue: (Cue.ID) -> Void = { _ in }`; forwarded to `WaveformContainer`.
+  - `OnlyCue/UI/DocumentView.swift` — passed `onSelectCue: { selectedCueID = $0 }` into `PreviewPane` (multi-line literal initializer).
+
+**Verbatim self-LGTM on PR #100 from chienchuanw:** *"Clean closure-plumbing addition; ordering of onSelect→onSeek and the idempotent-seek note are well-justified. Matches the existing default-closure pattern across pane layers. CI green, no regressions on retime path. LGTM — proceeding to rebase merge."*
+
+**No follow-up issue from PR #100 review** — merged with self-LGTM, no review threads.
+
+**Manual verification (PR test plan):** imported a project with cues at cueNumber 1, 1.5, 2, 2.5, 3 — clicking each marker in turn highlighted both the marker (per PR #98) and the corresponding row in the cue list pane; inspector updated for each. Clicked the marker of an already-selected cue — selection unchanged, playhead seeks to that cue's time. Clicked a cue list row — selection moves; corresponding marker highlights; playhead seeks (no regression on PR #98's row → marker direction). Drag-to-retime on a marker (more than the dragThreshold) — cue retimes; selection is unchanged (no regression). cueNumber labels (PR #96) unchanged for both selected and non-selected markers. No SwiftUI runtime warnings; no double-seek visible in the playhead motion (idempotency holds in practice).
+
+---
+
 ## 2026-05-09 — Highlight selected cue's waveform marker (PR #98, closes [#97](https://github.com/chienchuanw/only-cue/issues/97))
 
 **Shipped:** issue [#97](https://github.com/chienchuanw/only-cue/issues/97) closed by PR [#98](https://github.com/chienchuanw/only-cue/pull/98) (rebase-merged into `dev` at `a57cc1c`). Single commit `b060ccf`. When a cue is selected in the cue list, its waveform marker now renders with a thicker line (3 pt vs 2 pt) and larger cap (14 × 12 pt vs 10 × 8 pt). The cue's CuePointType color is preserved on the line and cap — selection emphasizes the marker without overriding type identity. Natural follow-up to PR [#96](https://github.com/chienchuanw/only-cue/pull/96): labels told the user *which* cue each marker is, this PR closes the gap by showing *which one is selected*. **221/221 unit tests green (3 new in `CueMarkerStyleTests`); 0 SwiftLint violations across 90 files.** 18th consecutive bypass-mode shipment.

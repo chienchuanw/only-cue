@@ -17,6 +17,7 @@ struct WaveformContainer: View {
     @State private var scrub = ScrubController()
     @State private var seekTask: Task<Void, Never>?
     @State private var zoom = WaveformZoomController()
+    @State private var verticalZoom = WaveformVerticalZoomController()
     @State private var scrollOffset: CGFloat = 0
     @State private var leadingAnchor: Int? = 0
     @State private var pinchBaseline: CGFloat = 1
@@ -49,6 +50,15 @@ struct WaveformContainer: View {
         .onReceive(NotificationCenter.default.publisher(for: .waveformZoomReset)) { _ in
             applyZoomReset()
         }
+        .onReceive(NotificationCenter.default.publisher(for: .waveformVerticalZoomIn)) { _ in
+            verticalZoom.zoomIn()
+        }
+        .onReceive(NotificationCenter.default.publisher(for: .waveformVerticalZoomOut)) { _ in
+            verticalZoom.zoomOut()
+        }
+        .onReceive(NotificationCenter.default.publisher(for: .waveformVerticalZoomReset)) { _ in
+            verticalZoom.reset()
+        }
     }
 
     @ViewBuilder
@@ -59,7 +69,7 @@ struct WaveformContainer: View {
 
             ScrollView(.horizontal, showsIndicators: zoom.zoom > 1) {
                 ZStack(alignment: .topLeading) {
-                    WaveformView(peaks: peaks)
+                    WaveformView(peaks: peaks, verticalZoom: verticalZoom.zoom)
                     if loadedDuration > 0 {
                         CueMarkersOverlay(
                             cues: cues,
@@ -247,4 +257,7 @@ extension Notification.Name {
     static let waveformZoomIn = Notification.Name("OnlyCue.waveformZoomIn")
     static let waveformZoomOut = Notification.Name("OnlyCue.waveformZoomOut")
     static let waveformZoomReset = Notification.Name("OnlyCue.waveformZoomReset")
+    static let waveformVerticalZoomIn = Notification.Name("OnlyCue.waveformVerticalZoomIn")
+    static let waveformVerticalZoomOut = Notification.Name("OnlyCue.waveformVerticalZoomOut")
+    static let waveformVerticalZoomReset = Notification.Name("OnlyCue.waveformVerticalZoomReset")
 }

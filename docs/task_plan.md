@@ -56,7 +56,7 @@ Filed 2026-05-08 from the CuePoints competitive-gap brainstorm. Positioning: "pr
 | [#33](https://github.com/chienchuanw/only-cue/issues/33) | LTC generation + audio routing | p1 | ⚪ open |
 | [#34](https://github.com/chienchuanw/only-cue/issues/34) | Console export — CSV, MA2, MA3 (depends on #32) | p1 | ⚪ open |
 | [#35](https://github.com/chienchuanw/only-cue/issues/35) | OSC remote control (Companion / MA3 / StreamDeck) | p1 | ⚪ open |
-| [#36](https://github.com/chienchuanw/only-cue/issues/36) | Timeline UX polish (zoom/gain/snap/nudge/multi-select/inter-cue nav) | p1 | ⚪ open |
+| [#36](https://github.com/chienchuanw/only-cue/issues/36) | Timeline UX polish (zoom/gain/snap/nudge/multi-select/inter-cue nav) | p1 | 🟡 in progress (1 leaf shipped: [#64](https://github.com/chienchuanw/only-cue/issues/64) → PR [#65](https://github.com/chienchuanw/only-cue/pull/65) ↑/↓ playhead step) |
 | [#37](https://github.com/chienchuanw/only-cue/issues/37) | Timeline breakdown view (depends on #32) | p1 | ⚪ open |
 | [#38](https://github.com/chienchuanw/only-cue/issues/38) | Notes overlay on video preview | p1 | ⚪ open |
 | [#39](https://github.com/chienchuanw/only-cue/issues/39) | Templates — CuePoint Type sets (depends on #32) | p2 | ⚪ open |
@@ -84,6 +84,16 @@ Filed JIT via `gh-dev` as work picks up. Each becomes its own issue + PR.
 ### Post-#32 simplify-deferred cleanups
 
 - [x] [#62](https://github.com/chienchuanw/only-cue/issues/62) → PR [#63](https://github.com/chienchuanw/only-cue/pull/63) — drop dead `let colorHex: String` from all four legacy cue Decodable structs (`LegacyCue` / `LegacyV3Cue` / `LegacyV4Cue` / `LegacyV5Cue`); the field had been decoded since pre-v6 days but never read after `toCue` / `toPendingCue`; removing it makes the legacy decoders lenient (pre-v6 JSON whose cues are missing `colorHex` now decodes cleanly instead of throwing `DecodingError.keyNotFound`); 1 new lenient-decode test in `ProjectModelMigrationLegacyDecodeTests.swift` (RED-first verified — pre-fix threw the keyNotFound error). **Three pre-existing simplify findings now done in three back-to-back PRs (#60 / #61 / #63); migration code at `ProjectModel.swift` is settled.**
+
+### Epic #36 — Timeline UX polish (in progress)
+
+- [x] [#64](https://github.com/chienchuanw/only-cue/issues/64) → PR [#65](https://github.com/chienchuanw/only-cue/pull/65) — `↑` / `↓` step playhead to prev / next cue (by `time`) in active media item; pure-function `MediaItem.cue(steppingFrom:direction:) -> Cue?` helper with `PlayheadStep` enum (strict `<`/`>` comparison so cue at exact playhead time is skipped; no wrap-around at ends); new `playheadStepShortcuts` ZStack mirrors `transportShortcuts` / `digitShortcuts` (3rd use confirms hidden-button pattern as canonical); 7 unit tests in new `MediaItemTests.swift`. UI + commands only — no schema bump. First Phase 2 leaf since post-#32 cleanup track wrapped.
+- [ ] Vertical waveform zoom (drag below the waveform) — direct analog of PR #43's horizontal zoom; selection-model-independent
+- [ ] Waveform gain control — selection-model-independent; needs UI surface decision
+- [ ] Multi-select model (Cmd-click + Shift-click) — gates `S` snap-to-playhead, `Option+arrow` nudge
+- [ ] `S` snap selected cue(s) to playhead — depends on multi-select model
+- [ ] `Option+←` / `Option+→` nudge selected cue(s) — depends on multi-select model
+- [ ] tests — gesture handlers, selection state, batch-nudge undo
 
 ## Phase 3 milestone — Differentiator
 

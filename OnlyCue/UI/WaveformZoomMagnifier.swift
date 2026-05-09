@@ -1,10 +1,10 @@
 import AppKit
 import SwiftUI
 
-/// Hover-revealed magnifier overlay rendered at the bottom-right corner of the
-/// waveform. Single affordance for both horizontal and vertical zoom — exposes
-/// each axis through a single `DragGesture` (X delta → horizontal, Y delta →
-/// vertical). Holding Shift locks to the dominant axis (one-shot per drag, see
+/// Hover-revealed magnifier glyph rendered on the right edge of the waveform.
+/// Single affordance for both horizontal and vertical zoom — exposes each axis
+/// through a single `DragGesture` (X delta → horizontal, Y delta → vertical).
+/// Holding Shift locks to the dominant axis (one-shot per drag, see
 /// `MagnifierAxisLock`). Double-click resets both axes.
 ///
 /// Owns no zoom math. Captures both baselines at drag start and forwards the
@@ -23,19 +23,11 @@ struct WaveformZoomMagnifier: View {
     @State private var isHovering: Bool = false
 
     var body: some View {
-        HStack(spacing: 4) {
-            Image(systemName: "magnifyingglass")
-            VStack(alignment: .trailing, spacing: 0) {
-                Text(String(format: "H %.1f×", Double(horizontalZoom)))
-                Text(String(format: "V %.1f×", Double(verticalZoom)))
-            }
-            .font(.caption2.monospacedDigit())
-        }
-        .foregroundStyle(.secondary)
-        .padding(.horizontal, 6)
-        .padding(.vertical, 3)
-        .background(isHovering ? .thinMaterial : .ultraThinMaterial, in: Capsule())
-        .contentShape(Capsule())
+        Image(systemName: "magnifyingglass")
+            .foregroundStyle(.secondary)
+            .padding(6)
+            .background(isHovering ? .thinMaterial : .ultraThinMaterial, in: Circle())
+            .contentShape(Circle())
         .opacity(isVisible || dragBaseline != nil ? 1 : 0)
         .animation(.easeInOut(duration: isVisible ? 0.12 : 0.20), value: isVisible)
         .onHover { hovering in

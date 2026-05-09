@@ -66,8 +66,8 @@ struct WaveformContainer: View {
     private func loaded(peaks: [Float]) -> some View {
         waveformBody(peaks: peaks)
             .padding(.horizontal, 8)
-            .overlay(alignment: .bottomTrailing) {
-                magnifier.padding(8)
+            .overlay(alignment: .trailing) {
+                magnifier.padding(.trailing, 8)
             }
             .onHover { hovering in
                 isHoveringWaveform = hovering

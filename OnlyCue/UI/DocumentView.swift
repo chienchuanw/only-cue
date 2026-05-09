@@ -30,6 +30,7 @@ struct DocumentView: View {
             FirstLaunchSheet { didShowFirstLaunch = true }
         }
         .task(id: document.model.activeItemID) { await reloadActive() }
+        .resignFirstResponderOnOutsideClick()
     }
 
     private var mainPane: some View {

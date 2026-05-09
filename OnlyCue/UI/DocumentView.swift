@@ -76,7 +76,11 @@ struct DocumentView: View {
                 .foregroundStyle(.secondary)
                 .accessibilityIdentifier("cueCount")
 
-            TransportBar(engine: engine, cues: activeItem?.cues ?? [])
+            TransportBar(
+                engine: engine,
+                cues: activeItem?.cues ?? [],
+                mediaDuration: activeItem?.media.duration ?? 0
+            )
                 .padding(.top, 4)
 
             HStack {

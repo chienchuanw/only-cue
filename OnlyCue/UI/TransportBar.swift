@@ -4,6 +4,16 @@ struct TransportBar: View {
 
     let engine: PlayerEngine
     var cues: [Cue] = []
+    var mediaDuration: TimeInterval = 0
+
+    /// Single-Text readout so the slash kerns correctly with monospaced digits and
+    /// stays aligned on resize. When `mediaDuration` is 0 (no active item) the slash
+    /// and total are omitted — `"00:00:00.000 / 00:00:00.000"` would be misleading.
+    private var timeReadout: String {
+        let current = TimeFormat.hms(engine.currentTime)
+        guard mediaDuration > 0 else { return current }
+        return "\(current) / \(TimeFormat.hms(mediaDuration))"
+    }
 
     /// Strictly-greater filter: a cue exactly at `currentTime` is "now," not "next."
     /// Returns nil when no future cue exists (past last cue, or empty list).
@@ -29,7 +39,7 @@ struct TransportBar: View {
             .accessibilityIdentifier("playPauseButton")
             .accessibilityLabel(engine.rate > 0 ? "Pause" : "Play")
 
-            Text(TimeFormat.hms(engine.currentTime))
+            Text(timeReadout)
                 .font(.system(.body, design: .monospaced))
                 .foregroundStyle(.secondary)
                 .accessibilityIdentifier("currentTimeReadout")

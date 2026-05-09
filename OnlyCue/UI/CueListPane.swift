@@ -4,9 +4,9 @@ struct CueListPane: View {
 
     @ObservedObject var document: CueListDocument
     let engine: PlayerEngine
+    @Binding var selection: Cue.ID?
 
     @Environment(\.undoManager) private var undoManager
-    @State private var selection: Cue.ID?
 
     private var cues: [Cue] { document.model.activeItem?.cues ?? [] }
 

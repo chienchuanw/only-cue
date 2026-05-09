@@ -5,6 +5,7 @@ struct PreviewPane: View {
 
     @ObservedObject var document: CueListDocument
     let engine: PlayerEngine
+    var selectedCueID: Cue.ID?
 
     @Environment(\.undoManager) private var undoManager
     @State private var waveformURL: URL?
@@ -104,6 +105,7 @@ struct PreviewPane: View {
             asset: AVURLAsset(url: url),
             cues: item.cues,
             resolveColorHex: { document.model.colorHex(for: $0) },
+            selectedCueID: selectedCueID,
             onSeek: { time in Task { await engine.seek(to: time) } },
             onRetime: { cueId, newTime in
                 CueCommands.retime(

@@ -9,6 +9,7 @@ struct DocumentView: View {
     @State private var pendingAlert: DocumentAlert?
     @State private var seekTask: Task<Void, Never>?
     @State private var showOverlayAppearance = false
+    @State private var selectedCueID: Cue.ID?
     @AppStorage(FirstLaunchFlag.key) private var didShowFirstLaunch = false
     @AppStorage(NotesOverlayPreferences.storageKey) private var overlayPrefsData = NotesOverlayPreferences.defaultEncoded
     @Environment(\.undoManager) private var undoManager
@@ -20,7 +21,7 @@ struct DocumentView: View {
         } detail: {
             mainPane
                 .inspector(isPresented: .constant(true)) {
-                    CueListPane(document: document, engine: engine)
+                    CueListPane(document: document, engine: engine, selection: $selectedCueID)
                         .inspectorColumnWidth(min: 240, ideal: 300, max: 400)
                 }
         }
@@ -58,7 +59,7 @@ struct DocumentView: View {
             mediaSummary(activeItem)
                 .accessibilityIdentifier("mediaSummary")
 
-            PreviewPane(document: document, engine: engine)
+            PreviewPane(document: document, engine: engine, selectedCueID: selectedCueID)
 
             Text("\(activeItem?.cues.count ?? 0) cue\((activeItem?.cues.count ?? 0) == 1 ? "" : "s")")
                 .foregroundStyle(.secondary)

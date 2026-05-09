@@ -26,4 +26,15 @@ extension MediaItem {
             return cues.filter { $0.time > currentTime }.min(by: { $0.time < $1.time })
         }
     }
+
+    /// Returns the cue currently "active" at `currentTime` — the cue with the
+    /// largest `time <= currentTime`. Use case: the notes overlay shows the
+    /// notes of whichever cue the show caller is "in" right now. Returns nil
+    /// when the playhead is before the first cue or `cues` is empty; returns
+    /// the last cue when the playhead is past it (notes persist until show end).
+    /// Inclusive on `currentTime` (`<=`), unlike `cue(steppingFrom:direction:)`
+    /// which is strict — these are different semantic queries.
+    func activeCue(at currentTime: TimeInterval) -> Cue? {
+        cues.filter { $0.time <= currentTime }.max(by: { $0.time < $1.time })
+    }
 }

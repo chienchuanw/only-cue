@@ -6,6 +6,7 @@ struct CueMarkersOverlay: View {
     let duration: TimeInterval
     var resolveColorHex: (Cue) -> String? = { _ in nil }
     var selectedCueID: Cue.ID?
+    var onSelectCue: (Cue.ID) -> Void = { _ in }
     var onSeek: (TimeInterval) -> Void = { _ in }
     var onRetime: (Cue.ID, TimeInterval) -> Void = { _, _ in }
 
@@ -22,6 +23,7 @@ struct CueMarkersOverlay: View {
                             duration: duration
                         ),
                         isSelected: cue.id == selectedCueID,
+                        onSelect: { onSelectCue(cue.id) },
                         onSeek: { onSeek(cue.time) },
                         onRetimeBy: { dx in
                             let newTime = CueMarkersGeometry.time(
@@ -62,6 +64,7 @@ struct CueMarkerView: View {
     var resolvedColorHex: String?
     let baseX: CGFloat
     var isSelected: Bool = false
+    var onSelect: () -> Void = {}
     var onSeek: () -> Void = {}
     var onRetimeBy: (CGFloat) -> Void = { _ in }
 
@@ -118,6 +121,11 @@ struct CueMarkerView: View {
             .onEnded { value in
                 let dx = value.translation.width
                 if abs(dx) < Self.dragThreshold {
+                    // Select first so the cue list highlight + inspector update
+                    // land before the seek; engine.seek is idempotent so the
+                    // CueListPane.onChange(of: selection) seek that follows is
+                    // a redundant no-op against the same target time.
+                    onSelect()
                     onSeek()
                 } else {
                     onRetimeBy(dx)

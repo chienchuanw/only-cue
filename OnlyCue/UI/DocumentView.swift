@@ -59,7 +59,12 @@ struct DocumentView: View {
             mediaSummary(activeItem)
                 .accessibilityIdentifier("mediaSummary")
 
-            PreviewPane(document: document, engine: engine, selectedCueID: selectedCueID)
+            PreviewPane(
+                document: document,
+                engine: engine,
+                selectedCueID: selectedCueID,
+                onSelectCue: { selectedCueID = $0 }
+            )
 
             Text("\(activeItem?.cues.count ?? 0) cue\((activeItem?.cues.count ?? 0) == 1 ? "" : "s")")
                 .foregroundStyle(.secondary)

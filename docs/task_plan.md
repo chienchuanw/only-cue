@@ -56,7 +56,7 @@ Filed 2026-05-08 from the CuePoints competitive-gap brainstorm. Positioning: "pr
 | [#33](https://github.com/chienchuanw/only-cue/issues/33) | LTC generation + audio routing | p1 | ⚪ open |
 | [#34](https://github.com/chienchuanw/only-cue/issues/34) | Console export — CSV, MA2, MA3 (depends on #32) | p1 | ⚪ open |
 | [#35](https://github.com/chienchuanw/only-cue/issues/35) | OSC remote control (Companion / MA3 / StreamDeck) | p1 | ⚪ open |
-| [#36](https://github.com/chienchuanw/only-cue/issues/36) | Timeline UX polish (zoom/gain/snap/nudge/multi-select/inter-cue nav) | p1 | 🟡 in progress (1 leaf shipped: [#64](https://github.com/chienchuanw/only-cue/issues/64) → PR [#65](https://github.com/chienchuanw/only-cue/pull/65) ↑/↓ playhead step) |
+| [#36](https://github.com/chienchuanw/only-cue/issues/36) | Timeline UX polish (zoom/gain/snap/nudge/multi-select/inter-cue nav) | p1 | 🟡 in progress (2 leaves shipped: [#64](https://github.com/chienchuanw/only-cue/issues/64) → PR [#65](https://github.com/chienchuanw/only-cue/pull/65) ↑/↓ playhead step; [#66](https://github.com/chienchuanw/only-cue/issues/66) → PR [#67](https://github.com/chienchuanw/only-cue/pull/67) ⌘⌥ vertical zoom keyboard) |
 | [#37](https://github.com/chienchuanw/only-cue/issues/37) | Timeline breakdown view (depends on #32) | p1 | ⚪ open |
 | [#38](https://github.com/chienchuanw/only-cue/issues/38) | Notes overlay on video preview | p1 | ⚪ open |
 | [#39](https://github.com/chienchuanw/only-cue/issues/39) | Templates — CuePoint Type sets (depends on #32) | p2 | ⚪ open |
@@ -88,7 +88,8 @@ Filed JIT via `gh-dev` as work picks up. Each becomes its own issue + PR.
 ### Epic #36 — Timeline UX polish (in progress)
 
 - [x] [#64](https://github.com/chienchuanw/only-cue/issues/64) → PR [#65](https://github.com/chienchuanw/only-cue/pull/65) — `↑` / `↓` step playhead to prev / next cue (by `time`) in active media item; pure-function `MediaItem.cue(steppingFrom:direction:) -> Cue?` helper with `PlayheadStep` enum (strict `<`/`>` comparison so cue at exact playhead time is skipped; no wrap-around at ends); new `playheadStepShortcuts` ZStack mirrors `transportShortcuts` / `digitShortcuts` (3rd use confirms hidden-button pattern as canonical); 7 unit tests in new `MediaItemTests.swift`. UI + commands only — no schema bump. First Phase 2 leaf since post-#32 cleanup track wrapped.
-- [ ] Vertical waveform zoom (drag below the waveform) — direct analog of PR #43's horizontal zoom; selection-model-independent
+- [x] [#66](https://github.com/chienchuanw/only-cue/issues/66) → PR [#67](https://github.com/chienchuanw/only-cue/pull/67) — vertical waveform zoom keyboard surface (`⌘⌥=` / `⌘⌥-` / `⌘⌥0`); new `WaveformVerticalZoomController` mirrors `WaveformZoomController` minus scroll/anchor; `WaveformView.halfHeight` calc gains scale + clip-at-midline; 3 menu items in View menu (Divider-separated from horizontal zoom); 3 new `Notification.Name` entries; vertical zoom resets on item switch (post-merge fix `f7dbcf1` — automated review caught a missed `verticalZoom.reset()` in `WaveformContainer.load()`); 5 unit tests. **Sub-leaf split of #36's "vertical waveform zoom (drag below the waveform)" bullet — keyboard surface ships first; drag gesture is the next sub-leaf.**
+- [ ] Vertical waveform zoom drag gesture (sub-leaf — drag below the waveform translates to live zoom; completes the #36 vertical-zoom bullet)
 - [ ] Waveform gain control — selection-model-independent; needs UI surface decision
 - [ ] Multi-select model (Cmd-click + Shift-click) — gates `S` snap-to-playhead, `Option+arrow` nudge
 - [ ] `S` snap selected cue(s) to playhead — depends on multi-select model

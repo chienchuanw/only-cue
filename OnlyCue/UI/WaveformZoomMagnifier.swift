@@ -25,7 +25,6 @@ struct WaveformZoomMagnifier: View {
     var body: some View {
         HStack(spacing: 4) {
             Image(systemName: "magnifyingglass")
-                .imageScale(.medium)
             VStack(alignment: .trailing, spacing: 0) {
                 Text(String(format: "H %.1f×", Double(horizontalZoom)))
                 Text(String(format: "V %.1f×", Double(verticalZoom)))
@@ -45,6 +44,12 @@ struct WaveformZoomMagnifier: View {
                 NSCursor.crosshair.push()
             } else {
                 NSCursor.pop()
+            }
+        }
+        .onDisappear {
+            if isHovering {
+                NSCursor.pop()
+                isHovering = false
             }
         }
         .gesture(dragGesture)

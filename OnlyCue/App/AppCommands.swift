@@ -63,6 +63,16 @@ struct AppCommands: Commands {
                 NotificationCenter.default.post(name: .snapSelectedCueToPlayhead, object: nil)
             }
             .keyboardShortcut("s", modifiers: [])
+
+            Button("Nudge Selected Cue Back") {
+                NotificationCenter.default.post(name: .nudgeSelectedCueBack, object: nil)
+            }
+            .keyboardShortcut(.leftArrow, modifiers: .option)
+
+            Button("Nudge Selected Cue Forward") {
+                NotificationCenter.default.post(name: .nudgeSelectedCueForward, object: nil)
+            }
+            .keyboardShortcut(.rightArrow, modifiers: .option)
         }
 
         CommandMenu("Tools") {

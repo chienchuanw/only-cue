@@ -22,6 +22,23 @@ struct AppCommands: Commands {
                 NotificationCenter.default.post(name: .waveformZoomReset, object: nil)
             }
             .keyboardShortcut("0", modifiers: .command)
+
+            Divider()
+
+            Button("Zoom In Vertically") {
+                NotificationCenter.default.post(name: .waveformVerticalZoomIn, object: nil)
+            }
+            .keyboardShortcut("=", modifiers: [.command, .option])
+
+            Button("Zoom Out Vertically") {
+                NotificationCenter.default.post(name: .waveformVerticalZoomOut, object: nil)
+            }
+            .keyboardShortcut("-", modifiers: [.command, .option])
+
+            Button("Actual Vertical Size") {
+                NotificationCenter.default.post(name: .waveformVerticalZoomReset, object: nil)
+            }
+            .keyboardShortcut("0", modifiers: [.command, .option])
         }
     }
 

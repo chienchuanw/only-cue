@@ -4,6 +4,7 @@ struct WaveformView: View {
 
     let peaks: [Float]
     var color: Color = .accentColor
+    var verticalZoom: CGFloat = 1
 
     var body: some View {
         Canvas { context, size in
@@ -13,7 +14,7 @@ struct WaveformView: View {
             let barWidth = max(columnWidth - 1, 0.5)
             let shading = context.resolve(.color(color))
             for (index, peak) in peaks.enumerated() {
-                let halfHeight = max(CGFloat(peak) * midY, 0.5)
+                let halfHeight = min(max(CGFloat(peak) * midY * verticalZoom, 0.5), midY)
                 let xCenter = (CGFloat(index) + 0.5) * columnWidth
                 let rect = CGRect(
                     x: xCenter - barWidth / 2,

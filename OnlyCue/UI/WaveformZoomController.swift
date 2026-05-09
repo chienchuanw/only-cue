@@ -7,6 +7,7 @@ final class WaveformZoomController {
     static let minZoom: CGFloat = 1
     static let maxZoom: CGFloat = 16
     static let zoomStep: CGFloat = 1.5
+    static let dragPixelsPerStep: CGFloat = 60
     static let followLeadingFraction: CGFloat = 0.2
     static let followTrailingFraction: CGFloat = 0.8
 
@@ -67,6 +68,28 @@ final class WaveformZoomController {
         zoom = 1
         followsPlayhead = true
         scrollOffset = 0
+    }
+
+    /// Apply a continuous drag translation to a baseline zoom captured at drag start,
+    /// anchored on a horizontal cursor fraction so zoom centers on what the user is
+    /// pointing at. Positive `translation` = drag right = zoom in; one
+    /// `dragPixelsPerStep` of drag in either direction multiplies (or divides) the
+    /// baseline by `zoomStep`. Mirrors `WaveformVerticalZoomController.applyDrag`,
+    /// but routes through `setZoom(...)` so scroll-offset anchoring is preserved.
+    func applyDrag(
+        translation: CGFloat,
+        baseline: CGFloat,
+        anchorFraction: CGFloat,
+        viewportWidth: CGFloat,
+        scrollOffset: inout CGFloat
+    ) {
+        let raw = baseline * pow(Self.zoomStep, translation / Self.dragPixelsPerStep)
+        setZoom(
+            raw,
+            anchorFraction: anchorFraction,
+            viewportWidth: viewportWidth,
+            scrollOffset: &scrollOffset
+        )
     }
 
     /// Returns a new scroll offset that places the playhead at the leading fraction

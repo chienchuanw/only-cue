@@ -9,7 +9,7 @@ extension WaveformContainer {
         WaveformZoomRail(
             axis: .vertical,
             zoom: verticalZoom.zoom,
-            isVisible: isHoveringWaveform,
+            isVisible: isHoveringWaveform || hintShowing,
             onDrag: { translation, baseline, _ in
                 verticalZoom.applyDrag(translation: translation, baseline: baseline)
             },
@@ -22,7 +22,7 @@ extension WaveformContainer {
         WaveformZoomRail(
             axis: .horizontal,
             zoom: zoom.zoom,
-            isVisible: isHoveringWaveform,
+            isVisible: isHoveringWaveform || hintShowing,
             onDrag: applyHorizontalRailDrag,
             onResetRequested: { applyZoomReset() }
         )

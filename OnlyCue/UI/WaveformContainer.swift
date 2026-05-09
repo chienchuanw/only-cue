@@ -24,7 +24,7 @@ struct WaveformContainer: View {
     @State var viewportWidth: CGFloat = 0
     @State private var isProgrammaticAnchor = false
     @State var isHoveringWaveform = false
-    @State private var hasShownFirstLaunchHint = false
+    @State var hintShowing = false
 
     private static let maxAnchorCount = 200
 
@@ -74,13 +74,12 @@ struct WaveformContainer: View {
         .onHover { hovering in
             isHoveringWaveform = hovering
         }
-        .onAppear {
-            guard !hasShownFirstLaunchHint else { return }
-            hasShownFirstLaunchHint = true
-            isHoveringWaveform = true
-            DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) {
-                isHoveringWaveform = false
-            }
+        .task {
+            guard !FirstLaunchHintTracker.shared.hasShownWaveformZoomHint else { return }
+            FirstLaunchHintTracker.shared.markShown()
+            hintShowing = true
+            try? await Task.sleep(for: .seconds(1.5))
+            hintShowing = false
         }
     }
 

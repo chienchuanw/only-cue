@@ -56,6 +56,12 @@ struct AppCommands: Commands {
 
             Toggle("Show Notes Overlay", isOn: $showNotesOverlay)
         }
+
+        CommandMenu("Tools") {
+            Button("Edit Note Overlay Appearance…") {
+                NotificationCenter.default.post(name: .editNotesOverlayAppearance, object: nil)
+            }
+        }
     }
 
     private static func showAboutPanel() {

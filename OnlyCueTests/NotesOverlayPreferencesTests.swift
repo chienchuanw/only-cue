@@ -26,14 +26,20 @@ final class NotesOverlayPreferencesTests: XCTestCase {
     }
 
     func test_decode_fontScaleAboveMax_clampsTo3() throws {
-        let json = "{\"position\":\"bottom\",\"fontScale\":99.0,\"textColorHex\":\"#FFFFFF\",\"backgroundColorHex\":null,\"showCueIDPrefix\":false}"
+        let json = """
+        {"position":"bottom","fontScale":99.0,"textColorHex":"#FFFFFF",\
+        "backgroundColorHex":null,"showCueIDPrefix":false}
+        """
         let data = Data(json.utf8)
         let decoded = try JSONDecoder().decode(NotesOverlayPreferences.self, from: data)
         XCTAssertEqual(decoded.fontScale, 3.0, accuracy: 0.001, "out-of-range fontScale must be clamped on decode")
     }
 
     func test_decode_fontScaleBelowMin_clampsTo075() throws {
-        let json = "{\"position\":\"bottom\",\"fontScale\":0.1,\"textColorHex\":\"#FFFFFF\",\"backgroundColorHex\":null,\"showCueIDPrefix\":false}"
+        let json = """
+        {"position":"bottom","fontScale":0.1,"textColorHex":"#FFFFFF",\
+        "backgroundColorHex":null,"showCueIDPrefix":false}
+        """
         let data = Data(json.utf8)
         let decoded = try JSONDecoder().decode(NotesOverlayPreferences.self, from: data)
         XCTAssertEqual(decoded.fontScale, 0.75, accuracy: 0.001)

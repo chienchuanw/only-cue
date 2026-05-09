@@ -34,13 +34,34 @@ struct CueListPane: View {
         .onReceive(NotificationCenter.default.publisher(for: .snapSelectedCueToPlayhead)) { _ in
             snapSelectedToPlayhead()
         }
+        .onReceive(NotificationCenter.default.publisher(for: .nudgeSelectedCueBack)) { _ in
+            nudgeSelected(by: -Self.nudgeStep)
+        }
+        .onReceive(NotificationCenter.default.publisher(for: .nudgeSelectedCueForward)) { _ in
+            nudgeSelected(by: Self.nudgeStep)
+        }
     }
+
+    private static let nudgeStep: TimeInterval = 1.0 / 30.0
 
     private func snapSelectedToPlayhead() {
         guard let id = selection else { return }
         CueCommands.retime(
             cueId: id,
             to: engine.currentTime,
+            document: document,
+            undoManager: undoManager
+        )
+    }
+
+    private func nudgeSelected(by step: TimeInterval) {
+        guard
+            let id = selection,
+            let cue = cues.first(where: { $0.id == id })
+        else { return }
+        CueCommands.retime(
+            cueId: id,
+            to: cue.time + step,
             document: document,
             undoManager: undoManager
         )
@@ -107,4 +128,6 @@ struct CueListPane: View {
 
 extension Notification.Name {
     static let snapSelectedCueToPlayhead = Notification.Name("OnlyCue.snapSelectedCueToPlayhead")
+    static let nudgeSelectedCueBack = Notification.Name("OnlyCue.nudgeSelectedCueBack")
+    static let nudgeSelectedCueForward = Notification.Name("OnlyCue.nudgeSelectedCueForward")
 }

@@ -4,6 +4,74 @@ Append-only session log. Newer entries on top.
 
 ---
 
+## 2026-05-10 — Duplicate selected cue at playhead with ⌘D (PR #106, closes [#105](https://github.com/chienchuanw/only-cue/issues/105))
+
+**Shipped:** issue [#105](https://github.com/chienchuanw/only-cue/issues/105) closed by PR [#106](https://github.com/chienchuanw/only-cue/pull/106) (rebase-merged into `dev` at `d474a20`). Single commit `3b31762`. Adds the `⌘D` keyboard shortcut: when a cue is selected, drops a new cue at the current playhead with the same `typeID`, `name`, `notes`, and `fadeTime` as the selected cue. New `id` (UUID), new `cueNumber` (auto-assigned via `CueNumberAssignment.next`). Undoable via the existing `CueCommands` mutation seam. **225/225 unit tests green (4 new — 3 in `CueCommandsDuplicateTests` + 1 notification-name pin in `DuplicateCueCommandTests`); 0 SwiftLint violations across 92 files.** 22nd consecutive bypass-mode shipment.
+
+**The deliberate surface pivot off the cue-marker UX cascade arc:** PRs [#96](https://github.com/chienchuanw/only-cue/pull/96) → [#98](https://github.com/chienchuanw/only-cue/pull/98) → [#100](https://github.com/chienchuanw/only-cue/pull/100) → [#102](https://github.com/chienchuanw/only-cue/pull/102) → [#104](https://github.com/chienchuanw/only-cue/pull/104) had built up `selectedCueID`'s consumer set from 1 to 5 (cue list, inspector, marker overlay, scroll behavior, item-switch clear). No further obvious cascade gaps were observable. Pivoted to a different surface — cue mutation commands — for diversity. The feature-cascade heuristic recorded in PR #102's archive entry now has two demonstrated applications: (1) PR #104 used it to find the dangling-ID bug, (2) PR #106 used it to *recognize* the cascade had stabilized and pivoted away. Both are correct uses of the same heuristic.
+
+**The duplicate semantics — playhead-anchored, four-property inheritance:** the natural show-caller workflow is *select reference cue → park playhead at new desired moment → ⌘D drops a copy there*. Two-step interaction matching `M` (Add Cue at Playhead) precedent. Inheritance scope:
+
+- **`typeID`** — the most identity-defining attribute. Cue type carries color, default behavior, and grouping intent.
+- **`name`** — likely the user wants the same label (`"GO Wash 1"` duplicated to `"GO Wash 1"` at a new time, then maybe rename to `"GO Wash 2"`). Better than blanking.
+- **`fadeTime`** — the cue's transition character. Inherit it.
+- **`notes`** — the show-caller annotations. Inherit them.
+- **`id`** — must be unique. Fresh UUID.
+- **`time`** — the whole point of duplicate-at-playhead is to place it at the playhead.
+- **`cueNumber`** — auto-assigned via the same `CueNumberAssignment.next(forInsertionAt:in:)` helper used by `addCueAtPlayhead` so the new cue slots into the global ordering correctly.
+
+\`\`\`swift
+static func duplicateAtPlayhead(
+    cueId: Cue.ID,
+    time: TimeInterval,
+    document: CueListDocument,
+    undoManager: UndoManager?
+) {
+    let existingCues = document.model.activeItem?.cues ?? []
+    guard let source = existingCues.first(where: { $0.id == cueId }) else { return }
+    let clampedTime = max(time, 0)
+    let cue = Cue(
+        id: UUID(),
+        typeID: source.typeID,
+        cueNumber: CueNumberAssignment.next(forInsertionAt: clampedTime, in: existingCues),
+        name: source.name,
+        time: clampedTime,
+        notes: source.notes,
+        fadeTime: source.fadeTime
+    )
+    mutateCues(document, undoManager: undoManager, actionName: "Duplicate Cue") { cues in
+        (cues + [cue]).sorted { $0.time < $1.time }
+    }
+}
+\`\`\`
+
+**Why ⌘D (the canonical macOS duplicate shortcut):** Logic, Final Cut, CuePoints, Pages / Numbers / Keynote, and macOS Finder all use ⌘D for \"duplicate.\" Verified `\"d\"`-with-`.command` was unbound across the OnlyCue keyboard inventory (`grep -rn 'keyboardShortcut.*\"d\".*command' OnlyCue/` — zero matches before this PR).
+
+**Why duplicate at playhead (not at source.time + offset):** the natural show-caller workflow maps to the user's mental model — *another wash like this one, here.* Source.time + 0.5s offset stacks new cues right next to source — useful for sequence repetition but rare; user can always Option+arrow afterward to adjust. Source.time exactly = overlapping markers, bad UX. Playhead-anchored matches `M` (Add Cue at Playhead) precedent.
+
+**Why preserve typeID + name + notes + fadeTime (not just typeID, not just typeID + name):** \"duplicate\" in DAWs / NLEs means *another cue like this one*. Type alone misses the show-caller's annotations and the fade character — the duplicate would feel like a fresh cue requiring re-typing. Inheriting all four matches the user's mental model.
+
+**Why no-op when no cue is selected:** silent — no beep, no banner. Matches snap (PR [#91](https://github.com/chienchuanw/only-cue/pull/91)), nudge (PR [#93](https://github.com/chienchuanw/only-cue/pull/93)), and `↑`/`↓` cue-step (PR [#65](https://github.com/chienchuanw/only-cue/pull/65)) precedents.
+
+**The lint-driven test split (`CueCommandsTests` → `CueCommandsDuplicateTests`):** SwiftLint flagged `type_body_length` at 278/250 lines after adding 3 duplicate tests inline. Followed the precedent set by `CueCommandsTypesTests.swift` during the type-rework epic — split duplicate tests into a new file with their own private helpers (`makeDocumentWithItem`, `activeCues`, `makeUndoManager`). The split is by topic (\"duplicate\") rather than chronologically, matching the existing typology. **Heuristic to remember:** when adding a new mutation surface to `CueCommands`, factor its tests into a topic file rather than appending to the parent — the parent has long sat near the cap and any addition trips it.
+
+**RED-first TDD discipline:** wrote `CueCommandsDuplicateTests` (3 tests) and `DuplicateCueCommandTests` (1 notification-name pin) first. Confirmed RED — `CueCommands.duplicateAtPlayhead` doesn't exist; `Notification.Name.duplicateSelectedCueAtPlayhead` doesn't exist. Both tests fail to compile. Then implemented the method, the menu item, the `.onReceive` handler, and the notification name extension. Re-ran — 225/225 passing.
+
+**What landed in PR #106 (1 commit, 5 files modified or created):**
+- `3b31762 feat(commands): duplicate selected cue at playhead with cmd+d` —
+  - `OnlyCue/Commands/CueCommands.swift` — added `duplicateAtPlayhead(cueId:time:document:undoManager:)` static method (28 lines including doc comment) between the `setNotes` and `retime` methods. Pure addition; no changes to existing methods.
+  - `OnlyCue/App/AppCommands.swift` — added `Button(\"Duplicate Cue at Playhead\")` with `.keyboardShortcut(\"d\", modifiers: .command)` posting `.duplicateSelectedCueAtPlayhead`. Placed between Snap and Nudge entries (cue commands grouped) under the View menu.
+  - `OnlyCue/UI/CueListPane.swift` — added `.onReceive(NotificationCenter.default.publisher(for: .duplicateSelectedCueAtPlayhead))` calling a new `duplicateSelectedAtPlayhead()` private handler. Bails on `nil` selection. Appended new notification name to the existing receiver-owns-the-name extension at the file tail.
+  - `OnlyCueTests/CueCommandsDuplicateTests.swift` (new, 91 lines) — three tests with private helpers: (1) property inheritance with non-default values across every inherited property, (2) undo removes the duplicate / redo restores it, (3) unknown cueId is a silent no-op.
+  - `OnlyCueTests/DuplicateCueCommandTests.swift` (new, 13 lines) — pins `Notification.Name.duplicateSelectedCueAtPlayhead.rawValue` to `\"OnlyCue.duplicateSelectedCueAtPlayhead\"`.
+  - `OnlyCueTests/CueCommandsTests.swift` — moved the duplicate-tests block out (the `// MARK: duplicate` section was removed in the same commit; the body returned to under the 250-line cap).
+
+**No follow-up issue from PR #106 review** — merged clean with no comments, no review threads.
+
+**Manual verification (PR test plan):** selected an existing cue \"GO Wash\" with type Cue, fadeTime 2.0/0.5, notes \"clear out\", at 12.0s. Parked playhead at 30.0s. Pressed ⌘D — new cue appeared at 30.0s with all four properties matching the source; cueNumber auto-assigned per global ordering. Pressed ⌘Z — duplicate removed; undo stack contains one \"Duplicate Cue\" entry. Pressed ⌘D with no selection — no-op, no error, no beep. Selected a cue, focused the inspector's notes text field, pressed ⌘D — default macOS behavior; no new cue created. Repeated ⌘D from the same source at different playhead positions — successive duplicates each got fresh UUIDs and fresh cueNumbers. Existing snap / nudge / arrow / M / drag-retime workflows unchanged.
+
+---
+
 ## 2026-05-10 — Clear cue selection when switching active media item (PR #104, closes [#103](https://github.com/chienchuanw/only-cue/issues/103))
 
 **Shipped:** issue [#103](https://github.com/chienchuanw/only-cue/issues/103) closed by PR [#104](https://github.com/chienchuanw/only-cue/pull/104) (rebase-merged into `dev` at `62ab580`). Single commit `30ef9ba`. Bug fix — switching between media items in the sidebar was leaving `selectedCueID` set to the previous item's cue ID. The new item's `cues` array doesn't contain that ID, so the cue list, inspector, waveform marker overlay, and auto-scroll behavior all silently failed to highlight anything — looked correct on the surface but the internal state was stale. Added an `.onChange(of: document.model.activeItemID)` modifier on `DocumentView` that clears `selectedCueID` on every item switch. **221/221 unit tests green; 0 SwiftLint violations across 90 files.** 21st consecutive bypass-mode shipment.

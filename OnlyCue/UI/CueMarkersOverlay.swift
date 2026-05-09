@@ -5,6 +5,7 @@ struct CueMarkersOverlay: View {
     let cues: [Cue]
     let duration: TimeInterval
     var resolveColorHex: (Cue) -> String? = { _ in nil }
+    var selectedCueID: Cue.ID?
     var onSeek: (TimeInterval) -> Void = { _ in }
     var onRetime: (Cue.ID, TimeInterval) -> Void = { _, _ in }
 
@@ -20,6 +21,7 @@ struct CueMarkersOverlay: View {
                             width: geometry.size.width,
                             duration: duration
                         ),
+                        isSelected: cue.id == selectedCueID,
                         onSeek: { onSeek(cue.time) },
                         onRetimeBy: { dx in
                             let newTime = CueMarkersGeometry.time(
@@ -40,20 +42,36 @@ struct CueMarkersOverlay: View {
 
 struct CueMarkerView: View {
 
+    /// Layout dimensions for the marker line + cap. Selected markers emphasize via
+    /// thicker line and larger cap; the type color (`markerColor`) is unchanged so
+    /// the cue's CuePointType identity is preserved on selection.
+    struct MarkerStyle: Equatable {
+        let lineWidth: CGFloat
+        let capWidth: CGFloat
+        let capHeight: CGFloat
+
+        static let normal = Self(lineWidth: 2, capWidth: 10, capHeight: 8)
+        static let selected = Self(lineWidth: 3, capWidth: 14, capHeight: 12)
+
+        static func style(isSelected: Bool) -> Self {
+            isSelected ? .selected : .normal
+        }
+    }
+
     let cue: Cue
     var resolvedColorHex: String?
     let baseX: CGFloat
+    var isSelected: Bool = false
     var onSeek: () -> Void = {}
     var onRetimeBy: (CGFloat) -> Void = { _ in }
 
     @State private var dragOffset: CGFloat = 0
 
-    private static let lineWidth: CGFloat = 2
-    private static let capHeight: CGFloat = 8
-    private static let capWidth: CGFloat = 10
     private static let hitWidth: CGFloat = 14
     private static let dragThreshold: CGFloat = 4
     private static let labelGap: CGFloat = 1
+
+    private var style: MarkerStyle { MarkerStyle.style(isSelected: isSelected) }
 
     var body: some View {
         VStack(spacing: Self.labelGap) {
@@ -68,11 +86,11 @@ struct CueMarkerView: View {
                     .frame(width: Self.hitWidth)
                 Rectangle()
                     .fill(markerColor)
-                    .frame(width: Self.lineWidth)
+                    .frame(width: style.lineWidth)
                     .opacity(0.85)
                 Capsule()
                     .fill(markerColor)
-                    .frame(width: Self.capWidth, height: Self.capHeight)
+                    .frame(width: style.capWidth, height: style.capHeight)
             }
         }
         // Pin the layout column to hitWidth so wide cueNumber labels (e.g. "99.5",

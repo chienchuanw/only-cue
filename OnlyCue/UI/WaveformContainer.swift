@@ -18,10 +18,24 @@ struct WaveformContainer: View {
     @State private var seekTask: Task<Void, Never>?
     @State var zoom = WaveformZoomController()
     @State var verticalZoom = WaveformVerticalZoomController()
-    @State var scrollOffset: CGFloat = 0
     @State private var leadingAnchor: Int? = 0
-    @State var pinchBaseline: CGFloat = 1
-    @State var viewportWidth: CGFloat = 0
+
+    // scrollOffset, viewportWidth, and pinchBaseline are stored on the
+    // `zoom` controller (an @Observable reference type) so they survive
+    // SwiftUI struct copies and are directly mutable in tests without
+    // going through the @State wrapper's SwiftUI-only nonmutating-set path.
+    var scrollOffset: CGFloat {
+        get { zoom.scrollOffset }
+        nonmutating set { zoom.scrollOffset = newValue }
+    }
+    var viewportWidth: CGFloat {
+        get { zoom.viewportWidth }
+        nonmutating set { zoom.viewportWidth = newValue }
+    }
+    var pinchBaseline: CGFloat {
+        get { zoom.pinchBaseline }
+        nonmutating set { zoom.pinchBaseline = newValue }
+    }
     @State private var isProgrammaticAnchor = false
     @State var isHoveringWaveform = false
     @State var hintShowing = false

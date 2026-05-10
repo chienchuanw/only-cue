@@ -62,6 +62,10 @@ struct DocumentView: View {
         .sheet(isPresented: $showOverlayAppearance) {
             NotesOverlayPreferencesSheet(prefs: overlayPrefsBinding)
         }
+        .exportSheet(model: document.model, pendingErrorMessage: Binding(
+            get: { nil },
+            set: { if let msg = $0 { pendingAlert = .unsupported(msg) } }
+        ))
     }
 
     private var overlayPrefsBinding: Binding<NotesOverlayPreferences> {
@@ -133,10 +137,6 @@ struct DocumentView: View {
         .onReceive(NotificationCenter.default.publisher(for: .importMediaRequested)) { _ in
             showImporter = true
         }
-        .exportSheet(model: document.model, pendingErrorMessage: Binding(
-            get: { nil },
-            set: { if let msg = $0 { pendingAlert = .unsupported(msg) } }
-        ))
     }
 
     private func alertContent(_ alert: DocumentAlert) -> Alert {

@@ -22,7 +22,7 @@ struct AppCommands: Commands {
             Button {
                 NotificationCenter.default.post(name: .exportCuesToCSVRequested, object: nil)
             } label: {
-                Label("Export Cues to CSV…", systemImage: "square.and.arrow.up")
+                Label("Export Cues…", systemImage: "square.and.arrow.up")
             }
             .keyboardShortcut("e", modifiers: [.command, .shift])
         }

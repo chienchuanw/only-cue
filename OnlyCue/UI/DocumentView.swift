@@ -133,11 +133,10 @@ struct DocumentView: View {
         .onReceive(NotificationCenter.default.publisher(for: .importMediaRequested)) { _ in
             showImporter = true
         }
-        .onReceive(NotificationCenter.default.publisher(for: .exportCuesToCSVRequested)) { _ in
-            do { try CueCSVExportAction.run(model: document.model) } catch {
-                pendingAlert = .unsupported(error.localizedDescription)
-            }
-        }
+        .exportSheet(model: document.model, pendingErrorMessage: Binding(
+            get: { nil },
+            set: { if let msg = $0 { pendingAlert = .unsupported(msg) } }
+        ))
     }
 
     private func alertContent(_ alert: DocumentAlert) -> Alert {

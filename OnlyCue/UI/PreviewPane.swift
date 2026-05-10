@@ -68,7 +68,7 @@ struct PreviewPane: View {
                 audioContent(item: item)
             }
         } else {
-            placeholder("Import audio or video to preview")
+            emptyPreviewPlaceholder
                 .accessibilityIdentifier("emptyPreview")
         }
     }
@@ -128,6 +128,31 @@ struct PreviewPane: View {
             .foregroundStyle(.secondary)
             .frame(maxWidth: .infinity, maxHeight: .infinity)
             .multilineTextAlignment(.center)
+    }
+
+    /// Clickable empty-preview placeholder — same notification path as the
+    /// Import Media button + ⌘O so all three entry points converge on the
+    /// same file picker. Wrapped in a `.plain` button style so the hit area
+    /// fills the preview frame without macOS's default chrome competing with
+    /// the icon-led layout.
+    private var emptyPreviewPlaceholder: some View {
+        Button {
+            NotificationCenter.default.post(name: .importMediaRequested, object: nil)
+        } label: {
+            VStack(spacing: 8) {
+                Image(systemName: "square.and.arrow.down")
+                    .font(.largeTitle)
+                    .foregroundStyle(.tertiary)
+                Text("Import audio or video to preview")
+                    .font(.callout)
+                    .foregroundStyle(.secondary)
+            }
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
+            .multilineTextAlignment(.center)
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+        .help("Import Media (⌘O)")
     }
 
     private func resolveWaveformURL() async {

@@ -4,6 +4,55 @@ Append-only session log. Newer entries on top.
 
 ---
 
+## 2026-05-10 — Bypass-mode session: epic #34 closed (Console export) + epic #39 advanced to 4 of 5 leaves (Templates) + transport-bar/empty-state polish + XCUITest screenshot pattern
+
+**Shipped (8 PRs):** #126 → #128 → #130 → #132 → #134 → #136 → #138 → #140. All rebase-merged to `dev`. Cycles 32 through 39 of the bypass-mode shipment streak (continuous from cycle 26 starting PR #114).
+
+**Epic #34 (Console export) — CLOSED in 5 PRs.**
+
+| PR | Leaf | Surface |
+|---|---|---|
+| #130 | Generic CSV exporter + File menu hook (`⇧⌘E`) | `CueCSVExporter`, `CueCSVExportAction` |
+| #132 | TSV variant + per-Type filter | shared `format(...)` helper threading delimiter |
+| #134 | `docs/architecture.md#export-pipeline` + ADR-013 | spec backfilled after algorithmic core |
+| #136 | Export sheet UI (target picker + Type checkboxes) | `ExportSheet`, `ExportSheetPresenter` ViewModifier |
+| #138 | MA3 + MA2 (best-effort) + golden-file tests + ADR-014 | closes the epic; 4 format targets pinned |
+
+The export pipeline is two orthogonal pure functions (`CueExportFilter` + `CueCSVExporter`) plus an AppKit-side action (`CueCSVExportAction`). The `(best-effort)` picker label on MA3/MA2 surfaces the validate-against-console expectation per ADR-014 — we don't have authoritative format docs in the repo and shipping wrong silently is worse than shipping marked.
+
+**Epic #39 (Templates) — 4 of 5 leaves shipped in PR #140.**
+
+CuePointType templates persist under `~/Documents/OnlyCue/Templates/<name>.cuelist-template`. Append-merge load semantics (ADR-015): each loaded type gets a fresh UUID and appends to `ProjectModel.cuePointTypes`; existing types keep their IDs so cues' `typeID` references never break; loading the same template twice produces two distinct copies (well-defined, non-destructive). Same module-split pattern as epic #34: pure data (`CueListTemplate`) → pure store (`TemplateStore`) → AppKit action (`TemplateAction`) → ViewModifier receiver (`TemplateMenuReceiver`). Splash-dropdown / new-from-template leaf deferred — `⇧⌘N` already bound to Show Notes Overlay (PR #89), and the splash UX needs separate research.
+
+**Empty-state + transport-bar polish (4 PRs).**
+
+- #126 — empty-document footer expanded into a 3-line monospaced cheatsheet (`M`, `↑↓`, `⇧⌘N`, `⇧⌘P`); window-scoped screenshot capture in UI tests (replaces full-display capture that grabbed the developer's whole desktop).
+- #128 — empty-preview placeholder is now clickable with a `square.and.arrow.down` SF Symbol; converges with ⌘O / Import Media button via shared `.importMediaRequested` notification.
+- #130 / #132 — see Epic #34 above.
+- #138 bugfix `8332fa0` — `.exportSheet` modifier moved from inner `mainPane` to outer NavigationSplitView body. SwiftUI sheets attached to the inner detail view of `NavigationSplitView` don't propagate to the window — they have no host. Convention now documented: in `DocumentView`, sheets MUST attach at the outer body level (after `NavigationSplitView`); `.alert` and `.onReceive` can be on inner views.
+
+**XCUITest screenshot infrastructure pattern (started PR #122, evolved across PRs #124 / #126 / #138 / #140).**
+
+- `XCUIScreen.main.screenshot()` captures the whole display — including unrelated apps the developer has open. Use `app.windows.firstMatch.screenshot()` for window-scoped capture.
+- `app.activate()` before screenshot so the OnlyCue window is foregrounded.
+- Write PNG to `NSTemporaryDirectory()/screenshots/` — the runner is TCC-blocked from writing to `~/Documents` (NSCocoaErrorDomain Code 513). Copy to repo `screenshots/` post-test for review.
+- SwiftUI sheets on macOS expose a limited accessibility tree — `app.buttons[id]` cannot reach into the sheet on this SDK. Drive sheet flows via menu-bar click (more reliable than typeKey) + fixed delay + window-scoped screenshot; rely on visual review for the assertion. Manual `osascript` System Events probe of `sheet 1 of window 1` is the diagnostic for "is the sheet actually presented?".
+- `.help(...)` on a **disabled** SwiftUI Button hangs accessibility queries on macOS 14 — broke every UI test in the suite until removed (PR #126).
+
+**Architectural patterns reinforced.**
+
+- **`type_body_length` extension-file pattern (PR #140).** SwiftLint's per-file `type_body_length` cap of 250 doesn't count extension methods in *separate* files. Adding `extension DocumentView { ... }` in its own file (e.g., `DocumentView+PauseAtEachCue.swift`) lets the type body grow indefinitely without lint pressure forcing extraction to other types. Required loosening `private` → internal access on State properties used in the extension.
+- **Notification-bridge command pattern.** Menu items post a `Notification.Name`; `DocumentView` listens via `.onReceive` (or extracts the receiver to a `ViewModifier` like `ExportSheetPresenter` / `TemplateMenuReceiver`); the action runs in an AppKit-side `enum`. Adding a future toolbar button or AppleScript hook means adding another poster, not exporter code.
+- **Module split for IO actions: pure data + pure logic + AppKit action + ViewModifier receiver.** Epic #34 and epic #39 both follow this layout. Keeps SwiftUI bodies free of imperative IO and stays under `type_body_length`.
+- **"Best-effort" suffix on picker labels (ADR-014).** When the format/protocol is not authoritatively documented, surface the validation expectation in the UI itself rather than expecting users to read release notes.
+- **Append-and-let-user-rename merge semantics (ADR-015).** Predictable, non-destructive, ships fast. Existing UI surfaces (Manage Types sheet) handle dupes after-the-fact.
+
+**Verification.** 277/277 unit tests across the suite (was 250 at start of session — +27 new across CSV/TSV/filter/golden-file/template tests). 0 SwiftLint violations. UI screenshot test (`ExportSheetScreenshotTests`) green at session end after the harness recovered; `screenshots/export-sheet.png` committed locally for visual review (gitignored).
+
+**Closing note — two epics off the Pro-handoff board in one session.** Epic #34 (Console export) closed; epic #39 (Templates) at 4 of 5 leaves with only the splash-dropdown UX deferred. Combined with the prior cycles, the Phase 2 — Pro handoff milestone is now substantially advanced. Open epic candidates for the next session: epic #36 (timeline UX polish — only multi-select + waveform-gain remaining; gain may be redundant per the vertical-zoom shipment, multi-select is a major refactor), epic #40 (custom keyboard shortcuts editor — fresh, 5 leaves), epic #33 (LTC — large, needs Core Audio), epic #35 (OSC — server, needs network).
+
+---
+
 ## 2026-05-10 — Pause-at-each-cue mode for live show calling (PR #114, closes [#113](https://github.com/chienchuanw/only-cue/issues/113))
 
 **Shipped:** issue [#113](https://github.com/chienchuanw/only-cue/issues/113) closed by PR [#114](https://github.com/chienchuanw/only-cue/pull/114) (rebase-merged into `dev` at `e1f1e82`). Single commit `cfdfdc8`. Adds a toggleable **Pause at Each Cue** mode (View menu). When enabled, forward playback auto-pauses as the playhead crosses any cue's time. Show callers take a beat (read overlay notes, prep the next move) and press Space to resume — until the next cue, where it pauses again. **251/251 unit tests green (8 new in `PauseAtEachCueTests`); 0 SwiftLint violations across 96 files.** 26th consecutive bypass-mode shipment.

@@ -18,6 +18,13 @@ struct AppCommands: Commands {
                 Label("Import Media…", systemImage: "square.and.arrow.down")
             }
             .keyboardShortcut("o", modifiers: .command)
+
+            Button {
+                NotificationCenter.default.post(name: .exportCuesToCSVRequested, object: nil)
+            } label: {
+                Label("Export Cues to CSV…", systemImage: "square.and.arrow.up")
+            }
+            .keyboardShortcut("e", modifiers: [.command, .shift])
         }
 
         CommandGroup(after: .sidebar) {

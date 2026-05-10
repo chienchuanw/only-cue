@@ -4,15 +4,15 @@ import UniformTypeIdentifiers
 struct DocumentView: View {
 
     @ObservedObject var document: CueListDocument
-    @State private var engine = PlayerEngine()
+    @State var engine = PlayerEngine()
     @State private var showImporter = false
     @State private var pendingAlert: DocumentAlert?
     @State private var seekTask: Task<Void, Never>?
     @State private var showOverlayAppearance = false
-    @State private var selectedCueID: Cue.ID?
+    @State var selectedCueID: Cue.ID?
     @AppStorage(FirstLaunchFlag.key) private var didShowFirstLaunch = false
     @AppStorage(NotesOverlayPreferences.storageKey) private var overlayPrefsData = NotesOverlayPreferences.defaultEncoded
-    @AppStorage("pauseAtEachCue") private var pauseAtEachCue = false
+    @AppStorage("pauseAtEachCue") var pauseAtEachCue = false
     @Environment(\.undoManager) private var undoManager
 
     var body: some View {
@@ -27,10 +27,7 @@ struct DocumentView: View {
                 }
         }
         .navigationSubtitle(document.model.activeItem?.media.displayName ?? "")
-        .sheet(isPresented: Binding(
-            get: { !didShowFirstLaunch },
-            set: { if !$0 { didShowFirstLaunch = true } }
-        )) {
+        .sheet(isPresented: firstLaunchBinding) {
             FirstLaunchSheet { didShowFirstLaunch = true }
         }
         .task(id: document.model.activeItemID) { await reloadActive() }
@@ -41,19 +38,7 @@ struct DocumentView: View {
             selectedCueID = nil
         }
         .onChange(of: engine.currentTime) { oldValue, newValue in
-            // Pause-at-each-cue: when enabled, auto-pause as the playhead crosses
-            // any cue during forward playback. Selecting the crossed cue aligns
-            // the inspector / cue-list highlight / marker emphasis / auto-scroll
-            // on the cue the player just paused at — full UI context matches the
-            // cue the show caller is now sitting on. The `engine.rate > 0` guard
-            // skips scrubs during pause; the helper's strict-`>` on previousTime
-            // avoids re-pausing on resume from a previously-paused-at cue.
-            guard pauseAtEachCue, engine.rate > 0 else { return }
-            let cues = document.model.activeItem?.cues ?? []
-            if let crossed = cues.cueCrossed(movingFrom: oldValue, to: newValue) {
-                engine.pause()
-                selectedCueID = crossed.id
-            }
+            handlePauseAtEachCue(from: oldValue, to: newValue)
         }
         .resignFirstResponderOnOutsideClick()
         .onReceive(NotificationCenter.default.publisher(for: .editNotesOverlayAppearance)) { _ in
@@ -62,10 +47,7 @@ struct DocumentView: View {
         .sheet(isPresented: $showOverlayAppearance) {
             NotesOverlayPreferencesSheet(prefs: overlayPrefsBinding)
         }
-        .exportSheet(model: document.model, pendingErrorMessage: Binding(
-            get: { nil },
-            set: { if let msg = $0 { pendingAlert = .unsupported(msg) } }
-        ))
+        .exportSheet(model: document.model, pendingErrorMessage: pendingAlertMessageBinding)
     }
 
     private var overlayPrefsBinding: Binding<NotesOverlayPreferences> {
@@ -137,6 +119,19 @@ struct DocumentView: View {
         .onReceive(NotificationCenter.default.publisher(for: .importMediaRequested)) { _ in
             showImporter = true
         }
+        .templateMenuReceiver(
+            document: document,
+            pendingErrorMessage: pendingAlertMessageBinding,
+            undoManager: undoManager
+        )
+    }
+
+    private var pendingAlertMessageBinding: Binding<String?> {
+        Binding(get: { nil }, set: { if let msg = $0 { pendingAlert = .unsupported(msg) } })
+    }
+
+    private var firstLaunchBinding: Binding<Bool> {
+        Binding(get: { !didShowFirstLaunch }, set: { if !$0 { didShowFirstLaunch = true } })
     }
 
     private func alertContent(_ alert: DocumentAlert) -> Alert {
@@ -291,6 +286,8 @@ struct DocumentView: View {
 extension Notification.Name {
     static let importMediaRequested = Notification.Name("OnlyCue.importMediaRequested")
     static let exportCuesToCSVRequested = Notification.Name("OnlyCue.exportCuesToCSVRequested")
+    static let saveTemplateRequested = Notification.Name("OnlyCue.saveTemplateRequested")
+    static let loadTemplateRequested = Notification.Name("OnlyCue.loadTemplateRequested")
 }
 
 private enum DocumentAlert: Identifiable {

@@ -102,6 +102,7 @@ struct DocumentView: View {
             HStack {
                 Button("Import Media…") { showImporter = true }
                     .accessibilityIdentifier("importMediaButton")
+                    .help("Import Media (⌘O)")
 
                 Button("Add Cue") { addCueAtPlayhead() }
                     .accessibilityIdentifier("addCueButton")
@@ -113,10 +114,7 @@ struct DocumentView: View {
             digitShortcuts
             playheadStepShortcuts
 
-            Text("Drop files on the sidebar or press ⌘O to import.")
-                .multilineTextAlignment(.center)
-                .foregroundStyle(.tertiary)
-                .padding(.top, 4)
+            DocumentShortcutHints()
         }
         .frame(minWidth: 560, minHeight: 480)
         .padding()

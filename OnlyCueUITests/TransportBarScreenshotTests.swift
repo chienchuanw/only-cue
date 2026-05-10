@@ -34,7 +34,13 @@ final class TransportBarScreenshotTests: XCTestCase {
             "playPauseButton should appear within 5 seconds of opening a document"
         )
 
-        try captureScreenshot(named: "transport-bar-baseline")
+        // Activate the app so it comes to the front before screenshot — without
+        // this the OnlyCue window may be hidden behind whatever else is on the
+        // user's screen, leaving the captured PNG visually unhelpful even
+        // though accessibility queries still work.
+        app.activate()
+
+        try captureScreenshot(named: "transport-bar-baseline", window: app.windows.firstMatch)
 
         // Explicit terminate avoids the "Failed to terminate" tear-down error
         // observed when leaving the launched app + attachment processing for
@@ -50,8 +56,18 @@ final class TransportBarScreenshotTests: XCTestCase {
     /// compile-time path of this source file, so the location works whether
     /// the test runs from CLI or Xcode and survives moving DerivedData. If
     /// the source file is ever relocated, update `repoRoot` accordingly.
-    private func captureScreenshot(named name: String) throws {
-        let screenshot = XCUIScreen.main.screenshot()
+    /// Captures `window` (or the full screen if `window` is nil), attaches
+    /// to the xcresult, and writes a PNG to the runner's tmp screenshots dir.
+    /// Window-scoped capture keeps the artifact tightly framed on the app
+    /// under test rather than whatever else happens to be on the developer's
+    /// display.
+    private func captureScreenshot(named name: String, window: XCUIElement? = nil) throws {
+        let screenshot: XCUIScreenshot
+        if let window, window.waitForExistence(timeout: 2) {
+            screenshot = window.screenshot()
+        } else {
+            screenshot = XCUIScreen.main.screenshot()
+        }
 
         let attachment = XCTAttachment(screenshot: screenshot)
         attachment.name = name

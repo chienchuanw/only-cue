@@ -15,6 +15,13 @@ ADR template:
 
 ---
 
+## ADR-015 — Templates carry only CuePointTypes; load semantics are append-merge with fresh UUIDs
+**Date**: 2026-05-10
+**Status**: Accepted
+**Decision**: A template is a JSON file under `~/Documents/OnlyCue/Templates/<name>.cuelist-template` that carries only a `schemaVersion: Int`, a `name: String`, and a `[CuePointType]`. Loading a template into an existing project generates a FRESH UUID for each loaded type and appends them to `ProjectModel.cuePointTypes`; existing types keep their IDs. No name-collision detection — duplicates are appended verbatim.
+**Why**: Per epic #39's "Done when" — the user wants Type sets reusable across shows, not whole projects. Excluding media + cues + document metadata keeps templates portable and small. Append-merge with fresh UUIDs gives the predictable, non-destructive semantics that maps cleanly to the user mental model ("loading adds Types"); existing cues' `typeID` references can never break, and loading the same template twice is well-defined (two copies). Name-collision detection was rejected as scope creep — the existing Manage Types sheet already lets users rename or delete duplicates after the fact, and the alternative (interactive merge UI on every load) would block the leaf from shipping. Templates persist under user-Documents (not app-Sandbox) so they survive uninstall and can be shared via standard file workflows (AirDrop, Slack, version control).
+**Reversal cost**: Low. The format is a simple Codable struct + a folder path; changing append-merge to overwrite-merge (or to a UI-driven conflict resolver) is a single switch in `TemplateAction.load` + a possible schemaVersion bump if the file shape changes. Templates are user data, but the format is forward-compatible (current code has `schemaVersion = 1`).
+
 ## ADR-014 — grandMA3 / grandMA2 export targets are best-effort CSV variants with renamed headers
 **Date**: 2026-05-10
 **Status**: Accepted

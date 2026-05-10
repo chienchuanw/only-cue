@@ -178,6 +178,22 @@ id,name,time,fadeIn,fadeOut,type,notes
 
 **Golden-file regression tests.** `CueExportGoldenFileTests` pins byte-equivalent output for every target against a curated 3-cue fixture inlined as a Swift multi-line string. Schema or escape-rule drift fails loudly with a readable diff.
 
+## Templates
+
+CuePointType sets are reusable across projects via templates (epic #39). A template is a small JSON file under `~/Documents/OnlyCue/Templates/<name>.cuelist-template` carrying just a `schemaVersion`, a `name`, and a `[CuePointType]`. Templates intentionally do NOT carry media or cues — they're a Type bundle, not a project bundle.
+
+| Stage | API | Where it lives |
+|---|---|---|
+| Format | `CueListTemplate { schemaVersion, name, cuePointTypes }` | `OnlyCue/Document/CueListTemplate.swift` |
+| Store | `TemplateStore.save / .load / .list / .appendMerge` | `OnlyCue/Document/TemplateStore.swift` |
+| Action (NSSavePanel + disk) | `TemplateAction.save / .load` | `OnlyCue/Document/TemplateAction.swift` |
+| Menu (user entry) | "File > Save Template As…" / "File > Load Template…" | `OnlyCue/App/AppCommands.swift` |
+| Receiver (notification → action) | `.templateMenuReceiver(...)` view modifier | `OnlyCue/UI/TemplateMenuReceiver.swift` |
+
+**Append-merge load semantics.** Loading a template into an existing project assigns FRESH UUIDs to each loaded type and appends them to `ProjectModel.cuePointTypes`. Existing types keep their IDs, so existing cues' `typeID` references are never broken. Loading the same template twice produces two distinct copies (two fresh UUID sets) — predictable, non-destructive. ADR-015.
+
+**Why no name-collision detection.** The append-and-let-user-rename strategy keeps the load action conflict-free. Users can rename through the existing Manage Types sheet.
+
 ## Phase-2 seams
 
 These are explicit extension points so future features don't require rewrites. See [`roadmap.md`](roadmap.md) for what plugs in here.

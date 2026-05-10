@@ -30,6 +30,19 @@ struct TransportBar: View {
             .map { $0 - currentTime }
     }
 
+    /// Mirror of `nextCueInterval`: time elapsed since the most recent cue at
+    /// `time <= currentTime`. Inclusive `<=` so a cue exactly at `currentTime`
+    /// reads as "Last: 0.0s" (operator just hit it). Returns nil when no past
+    /// cue exists. Like the forward helper, doesn't assume sortedness — `max()`
+    /// picks the most recent regardless of input order.
+    static func lastCueElapsed(currentTime: TimeInterval, cues: [Cue]) -> TimeInterval? {
+        cues
+            .map(\.time)
+            .filter { $0 <= currentTime }
+            .max()
+            .map { currentTime - $0 }
+    }
+
     var body: some View {
         HStack(spacing: 12) {
             Button {
@@ -46,6 +59,13 @@ struct TransportBar: View {
                 .font(.system(.body, design: .monospaced))
                 .foregroundStyle(.secondary)
                 .accessibilityIdentifier("currentTimeReadout")
+
+            if let interval = Self.lastCueElapsed(currentTime: engine.currentTime, cues: cues) {
+                Text("Last: \(TimeFormat.compactCountdown(interval))")
+                    .font(.system(.body, design: .monospaced))
+                    .foregroundStyle(.secondary)
+                    .accessibilityIdentifier("lastCueElapsed")
+            }
 
             if let interval = Self.nextCueInterval(currentTime: engine.currentTime, cues: cues) {
                 Text("Next: \(TimeFormat.compactCountdown(interval))")

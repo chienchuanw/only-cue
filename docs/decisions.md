@@ -15,6 +15,13 @@ ADR template:
 
 ---
 
+## ADR-014 — grandMA3 / grandMA2 export targets are best-effort CSV variants with renamed headers
+**Date**: 2026-05-10
+**Status**: Accepted
+**Decision**: `ExportTarget.ma3` and `ExportTarget.ma2` produce CSV with the same row shape as the generic CSV target but with grandMA-conventional column labels: `Cue,Name,Trig Time,Fade In,Fade Out,Type,Note`. Both share a single `CueCSVExporter.maCSV` formatter (MA3 and MA2 are identical at the format layer; the case distinction exists so the picker can label them separately and the file extension / content type stay consistent). The picker UI labels both options with "(best-effort)" so users know to validate against their console before relying on the format in production.
+**Why**: Epic #34 calls for grandMA3 and grandMA2 importer formats so users handing off shows to grandMA consoles can skip the spreadsheet-bridge step. We don't have authoritative format documentation in the repo, and shipping a wrong format silently is worse than not shipping. The renamed-header best-effort variant gives users a usable starting point; the "(best-effort)" picker label and ADR caveat surface the validation expectation. Consolidating MA3 + MA2 to a single formatter avoids duplicating the same code twice when no concrete divergence is known yet — the case distinction stays at the enum level so a future split is a single switch-branch change. The column convention is documented explicitly here so it can be amended once a real-world MA user reports specifics.
+**Reversal cost**: Low. Each target's format function is a single switch branch; renaming columns or splitting MA3 from MA2 are mechanical refactors. Removing the targets entirely is a single-row enum delete + a small picker re-render. No persistence consequences.
+
 ## ADR-013 — Export pipeline is two orthogonal pure functions plus an AppKit-side action
 **Date**: 2026-05-10
 **Status**: Accepted

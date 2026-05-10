@@ -49,7 +49,6 @@ struct ExportSheet: View {
                     Text(target.displayName).tag(target)
                 }
             }
-            .pickerStyle(.segmented)
             .labelsHidden()
             .accessibilityIdentifier("exportFormatPicker")
         }

@@ -18,19 +18,31 @@ import Foundation
 enum CueCSVExporter {
 
     static let columns = ["id", "name", "time", "fadeIn", "fadeOut", "type", "notes"]
+    /// grandMA-conventional column labels — best-effort rename of the generic
+    /// schema. See ADR-014 for the rationale + the validate-against-console
+    /// caveat. The data shape is identical; only the header row differs.
+    static let maColumns = ["Cue", "Name", "Trig Time", "Fade In", "Fade Out", "Type", "Note"]
 
     static func csv(cues: [Cue], typeNamesByID: [UUID: String]) -> String {
-        format(cues: cues, typeNamesByID: typeNamesByID, delimiter: ",")
+        format(cues: cues, typeNamesByID: typeNamesByID, delimiter: ",", columns: columns)
     }
 
     static func tsv(cues: [Cue], typeNamesByID: [UUID: String]) -> String {
-        format(cues: cues, typeNamesByID: typeNamesByID, delimiter: "\t")
+        format(cues: cues, typeNamesByID: typeNamesByID, delimiter: "\t", columns: columns)
+    }
+
+    /// grandMA3 / grandMA2 best-effort CSV — same shape as `csv`, but with
+    /// grandMA-conventional column labels. MA3 and MA2 both accept CSV
+    /// import; the format here is a single shared variant. ADR-014.
+    static func maCSV(cues: [Cue], typeNamesByID: [UUID: String]) -> String {
+        format(cues: cues, typeNamesByID: typeNamesByID, delimiter: ",", columns: maColumns)
     }
 
     private static func format(
         cues: [Cue],
         typeNamesByID: [UUID: String],
-        delimiter: String
+        delimiter: String,
+        columns: [String]
     ) -> String {
         var out = columns.joined(separator: delimiter) + "\n"
         for cue in cues {

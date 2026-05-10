@@ -174,7 +174,9 @@ id,name,time,fadeIn,fadeOut,type,notes
 
 **Notification-bridge wiring.** The File menu posts `.exportCuesToCSVRequested`; `DocumentView` receives it and calls `CueCSVExportAction.run(model:)`. Same pattern as `.importMediaRequested`. Adding a future toolbar button or AppleScript hook means adding another poster — no new exporter code.
 
-**Future leaves under #34.** grandMA3 / grandMA2 formats add new exporter modules that take the same `(cues, typeNamesByID)` arguments and return a String; they compose against the existing filter without modification. The export sheet UI replaces the always-CSV-no-filter menu path with a target picker (CSV/TSV/MA3/MA2) + Type-filter checkboxes; it calls the same exporter + filter pair with user-driven arguments.
+**Targets.** `ExportTarget` is a Swift `enum` with cases `csv`, `tsv`, `ma3`, `ma2`. Each case carries `displayName`, `fileExtension`, `contentType`, and a `format(cues:typeNamesByID:)` method that delegates to the right `CueCSVExporter` static. Adding a new target is a single-row enum addition + a switch branch. MA3 and MA2 share a `maCSV` formatter that renames the header row to grandMA conventions (`Cue,Name,Trig Time,Fade In,Fade Out,Type,Note`); see ADR-014 for the best-effort caveat.
+
+**Golden-file regression tests.** `CueExportGoldenFileTests` pins byte-equivalent output for every target against a curated 3-cue fixture inlined as a Swift multi-line string. Schema or escape-rule drift fails loudly with a readable diff.
 
 ## Phase-2 seams
 

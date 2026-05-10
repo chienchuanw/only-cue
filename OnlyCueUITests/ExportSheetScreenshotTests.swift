@@ -26,16 +26,26 @@ final class ExportSheetScreenshotTests: XCTestCase {
         )
 
         app.activate()
-        app.typeKey("e", modifierFlags: [.command, .shift])
 
-        let exportSheet = app.otherElements["exportSheet"]
-        XCTAssertTrue(
-            exportSheet.waitForExistence(timeout: 3),
-            "exportSheet should appear within 3 seconds of pressing ⇧⌘E"
-        )
+        // Drive the export sheet via the menu bar rather than the keyboard
+        // shortcut. ⇧⌘E gets intercepted by macOS system services in some
+        // contexts; menuBar click is the reliable path for UI tests.
+        let fileMenu = app.menuBars.menuBarItems["File"]
+        XCTAssertTrue(fileMenu.waitForExistence(timeout: 2))
+        fileMenu.click()
+        let exportItem = app.menuItems["Export Cues…"]
+        XCTAssertTrue(exportItem.waitForExistence(timeout: 2))
+        exportItem.click()
 
+        // macOS SwiftUI sheets render as their own window — anchor the visibility
+        // assertion on the Confirm button (which is unique to this sheet) rather
+        // than the sheet container, since the container's element type can shift
+        // between minor macOS versions.
         let confirm = app.buttons["exportConfirm"]
-        XCTAssertTrue(confirm.exists, "exportConfirm button should be visible inside the sheet")
+        XCTAssertTrue(
+            confirm.waitForExistence(timeout: 3),
+            "exportConfirm button should appear within 3 seconds of pressing ⇧⌘E"
+        )
 
         try captureScreenshot(named: "export-sheet", window: app.windows.firstMatch)
         app.terminate()

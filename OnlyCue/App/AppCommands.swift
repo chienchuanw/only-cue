@@ -25,6 +25,20 @@ struct AppCommands: Commands {
                 Label("Export Cues…", systemImage: "square.and.arrow.up")
             }
             .keyboardShortcut("e", modifiers: [.command, .shift])
+
+            Divider()
+
+            Button {
+                NotificationCenter.default.post(name: .saveTemplateRequested, object: nil)
+            } label: {
+                Label("Save Template As…", systemImage: "doc.badge.plus")
+            }
+
+            Button {
+                NotificationCenter.default.post(name: .loadTemplateRequested, object: nil)
+            } label: {
+                Label("Load Template…", systemImage: "doc.badge.gearshape")
+            }
         }
 
         CommandGroup(after: .sidebar) {

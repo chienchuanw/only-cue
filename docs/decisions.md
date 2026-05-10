@@ -15,6 +15,13 @@ ADR template:
 
 ---
 
+## ADR-013 — Export pipeline is two orthogonal pure functions plus an AppKit-side action
+**Date**: 2026-05-10
+**Status**: Accepted
+**Decision**: Console export (#34) is built as three discrete modules: a `CueExportFilter` (pure `(cues, onlyTypeIDs) -> [Cue]`), a `CueCSVExporter` with `csv(...)` and `tsv(...)` methods both delegating to a private `format(cues:typeNamesByID:delimiter:)` helper that threads the active delimiter into a single escape predicate, and a `CueCSVExportAction` that wraps the pure pair with `NSSavePanel` + disk write. The File menu posts `.exportCuesToCSVRequested`; `DocumentView` receives it and calls the action. Empty filter set is "no filter" passthrough.
+**Why**: The epic-#34 Gherkin scenario ("Then a file ... contains only Lighting cues") requires a filter that operates between the cue list and any output format, so the filter has to be format-agnostic. Future grandMA2/3 formats add new exporter modules with the same `(cues, typeNamesByID) -> String` signature and compose with the existing filter without modification. The format-aware escape predicate (single helper, parameterized delimiter) gives CSV and TSV correct, asymmetric escape behavior (commas pass through unescaped in TSV; tabs pass through in CSV) without code duplication. Keeping AppKit (`NSSavePanel`) in a separate action file keeps `DocumentView`'s SwiftUI body free of imperative IO and stays under SwiftLint's `type_body_length` cap. The notification-bridge wiring matches the existing `.importMediaRequested` precedent so a future toolbar button or AppleScript hook adds a poster, not exporter code.
+**Reversal cost**: Low. Each module is independent; collapsing them back into a single function (or splitting the exporter further per-format) is a mechanical refactor with no schema or persistence consequences. The notification name is a string constant; adding/removing entry points is local.
+
 ## ADR-012 — Color resolves from `CuePointType`; drop transitional `Cue.colorHex` (schema v6)
 **Date**: 2026-05-08
 **Status**: Accepted

@@ -6,6 +6,8 @@ struct TransportBar: View {
     var cues: [Cue] = []
     var mediaDuration: TimeInterval = 0
 
+    @AppStorage("pauseAtEachCue") private var pauseAtEachCue = false
+
     /// Single-Text readout so the slash kerns correctly with monospaced digits and
     /// stays aligned on resize. When `mediaDuration` is 0 (no active item) the slash
     /// and total are omitted — `"00:00:00.000 / 00:00:00.000"` would be misleading.
@@ -49,6 +51,13 @@ struct TransportBar: View {
                     .font(.system(.body, design: .monospaced))
                     .foregroundStyle(.secondary)
                     .accessibilityIdentifier("nextCueCountdown")
+            }
+
+            if pauseAtEachCue {
+                Text("Pause: each cue")
+                    .font(.system(.body, design: .monospaced))
+                    .foregroundStyle(.secondary)
+                    .accessibilityIdentifier("pauseAtEachCueIndicator")
             }
         }
     }

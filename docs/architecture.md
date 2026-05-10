@@ -148,6 +148,34 @@ Toggleable HUD layer rendering the active cue's notes on top of `PreviewPane` so
 | Default visual | Bottom-center alignment, `.title` font, `.primary` foreground on `.ultraThinMaterial` rounded card, max-width 600pt, multi-line wrap, 12pt bottom padding inside the preview clip rect. |
 | Customisation | Deferred. The customisation sheet (font scaling, position, color, optional cue-ID prefix) and restore-defaults button are separate leaves of [#38](https://github.com/chienchuanw/only-cue/issues/38). When that leaf lands, an ADR will lock the persistence shape (per-app vs per-document tuning). |
 
+## Export pipeline
+
+Console export (#34) is modelled as a pipeline of two orthogonal pure functions over `ProjectModel` data, plus an AppKit-side action that wires user input to a save panel. The split keeps the algorithmic core testable in isolation and lets future formats (grandMA2/3) compose without touching the filter or the menu wiring.
+
+| Stage | API | Where it lives |
+|---|---|---|
+| Filter (which cues) | `CueExportFilter.cues(_:onlyTypeIDs:) -> [Cue]` | `OnlyCue/Document/CueExportFilter.swift` |
+| Format (string output) | `CueCSVExporter.csv(cues:typeNamesByID:) -> String` and `.tsv(...)` | `OnlyCue/Document/CueCSVExporter.swift` |
+| Action (NSSavePanel + disk) | `CueCSVExportAction.run(model:) throws` | `OnlyCue/Document/CueCSVExportAction.swift` |
+| Menu (user entry) | "File > Export Cues to CSV…" `⇧⌘E` | `OnlyCue/App/AppCommands.swift` |
+| Receiver (notification → action) | `.onReceive(.exportCuesToCSVRequested)` | `OnlyCue/UI/DocumentView.swift` |
+
+Schema (one row per cue, plus a header):
+
+```text
+id,name,time,fadeIn,fadeOut,type,notes
+```
+
+`time` / `fadeIn` / `fadeOut` are decimal seconds matching in-memory storage. `type` is the human-readable name from the project's `CuePointType` lookup; the column is empty when the type ID isn't in the lookup.
+
+**Format-aware escape.** CSV and TSV share a private `format(cues:typeNamesByID:delimiter:)` that threads the active delimiter into the escape check. A value containing the active delimiter, a quote, or a newline is wrapped in `"`s with internal quotes doubled (RFC 4180-style). TSV values with commas pass through unescaped because commas aren't column separators in TSV. Plain values pass through untouched in either format.
+
+**Filter contract.** Empty `onlyTypeIDs` means "no filter" — the input list passes through. This matches the natural UI default ("export all cues") and keeps callers from special-casing it. The filter preserves input order so downstream exporters don't observe a re-sort they didn't request.
+
+**Notification-bridge wiring.** The File menu posts `.exportCuesToCSVRequested`; `DocumentView` receives it and calls `CueCSVExportAction.run(model:)`. Same pattern as `.importMediaRequested`. Adding a future toolbar button or AppleScript hook means adding another poster — no new exporter code.
+
+**Future leaves under #34.** grandMA3 / grandMA2 formats add new exporter modules that take the same `(cues, typeNamesByID)` arguments and return a String; they compose against the existing filter without modification. The export sheet UI replaces the always-CSV-no-filter menu path with a target picker (CSV/TSV/MA3/MA2) + Type-filter checkboxes; it calls the same exporter + filter pair with user-driven arguments.
+
 ## Phase-2 seams
 
 These are explicit extension points so future features don't require rewrites. See [`roadmap.md`](roadmap.md) for what plugs in here.

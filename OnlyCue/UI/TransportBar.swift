@@ -40,6 +40,7 @@ struct TransportBar: View {
             }
             .accessibilityIdentifier("playPauseButton")
             .accessibilityLabel(engine.rate > 0 ? "Pause" : "Play")
+            .help("Play / Pause (Space)")
 
             Text(timeReadout)
                 .font(.system(.body, design: .monospaced))
@@ -54,10 +55,14 @@ struct TransportBar: View {
             }
 
             if pauseAtEachCue {
-                Text("Pause: each cue")
-                    .font(.system(.body, design: .monospaced))
-                    .foregroundStyle(.secondary)
-                    .accessibilityIdentifier("pauseAtEachCueIndicator")
+                HStack(spacing: 4) {
+                    Image(systemName: "pause.circle")
+                    Text("Pause: each cue")
+                }
+                .font(.system(.body, design: .monospaced))
+                .foregroundStyle(.secondary)
+                .accessibilityIdentifier("pauseAtEachCueIndicator")
+                .help("Toggle with ⇧⌘P")
             }
         }
     }

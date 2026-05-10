@@ -133,6 +133,11 @@ struct DocumentView: View {
         .onReceive(NotificationCenter.default.publisher(for: .importMediaRequested)) { _ in
             showImporter = true
         }
+        .onReceive(NotificationCenter.default.publisher(for: .exportCuesToCSVRequested)) { _ in
+            do { try CueCSVExportAction.run(model: document.model) } catch {
+                pendingAlert = .unsupported(error.localizedDescription)
+            }
+        }
     }
 
     private func alertContent(_ alert: DocumentAlert) -> Alert {
@@ -286,6 +291,7 @@ struct DocumentView: View {
 
 extension Notification.Name {
     static let importMediaRequested = Notification.Name("OnlyCue.importMediaRequested")
+    static let exportCuesToCSVRequested = Notification.Name("OnlyCue.exportCuesToCSVRequested")
 }
 
 private enum DocumentAlert: Identifiable {

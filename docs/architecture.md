@@ -217,6 +217,21 @@ A receive-only OSC server (epic #35) lets external controllers — Bitfocus Comp
 
 **Scope.** Receive-only (no state broadcast — that's Phase 3). Manual IP configuration (no Bonjour). Per-document ownership: each open window has its own `OSCServer` binding the same port with `allowLocalEndpointReuse`. On Darwin a unicast datagram is delivered to exactly one of the bound sockets (kernel-chosen), so with two document windows open one unpredictable document responds — fine for the single-document workflow OSC control implies. macOS shows a one-time firewall prompt on first bind; no App Sandbox entitlement is needed (the app isn't sandboxed — ADR-007). See ADR-016.
 
+## Timeline breakdown view
+
+A toggleable alternative to the waveform timeline (epic #37) that splits the cues into one lane per visible `CuePointType`, so a programmer can read "lighting only" or "sound only" at a glance.
+
+| Stage | API | Where it lives |
+|---|---|---|
+| Layout (pure) | `TimelineBreakdownLayout.lanes(cues:types:)` / `.hiddenCount(types:)` | `OnlyCue/UI/TimelineBreakdownLayout.swift` |
+| View | `TimelineBreakdownView` (+ private `BreakdownPlayheadLine`) | `OnlyCue/UI/TimelineBreakdownView.swift` |
+| Visibility mutation | `CueCommands.setCuePointTypeVisibility(...)` / `.showAllCuePointTypes(...)` | `OnlyCue/Commands/CueCommands+Types.swift` |
+| Toggle | `View → Show Timeline Breakdown` (`⇧⌘B`) → `@AppStorage("showTimelineBreakdown")` | `OnlyCue/App/AppCommands.swift`, read in `PreviewPane` |
+
+`TimelineBreakdownLayout` is pure: it filters Types by `isVisible`, keeps model order (no reordering in v1), and partitions cues into a `Lane` per Type (Types with no cues still get an empty lane; stray-typed cues are dropped). `TimelineBreakdownView` renders each lane as `[colour swatch + name + hide button] | [track with that Type's markers]`, markers positioned by `CueMarkersGeometry.position` (the same time→x mapping the waveform overlay uses, so a cue sits at the same horizontal spot in either view). A single playhead line spans all lanes — drawn by `BreakdownPlayheadLine`, its own view so only it re-renders on each `engine.currentTime` tick, not the lanes. Lanes scroll vertically if they overflow; hidden Types collapse into a "+N hidden lanes" button (`showAllCuePointTypes` — one undo step). There's no horizontal zoom in the breakdown view in v1.
+
+**Persistence.** Lane visibility is `CuePointType.isVisible`, already a `ProjectModel` field (migrations preserve it), so the layout persists in `.cuelist` with no schema change. Toggling goes through `CueCommands`, so it's undoable and triggers a document edit. **Scope (v1):** markers in the breakdown view select + seek; retiming a cue by drag stays on the waveform view. Per-lane vertical/horizontal zoom and free-form lane reordering are out. See ADR-017.
+
 ## Phase-2 seams
 
 These are explicit extension points so future features don't require rewrites. See [`roadmap.md`](roadmap.md) for what plugs in here.

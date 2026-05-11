@@ -122,10 +122,16 @@ final class OSCServer {
     nonisolated private func receive(on connection: NWConnection) {
         connection.receiveMessage { [weak self] data, _, _, error in
             if let data, !data.isEmpty {
+                // TODO: rate-limit datagrams — a flood currently queues
+                // unbounded main-actor tasks (fine for a trusted LAN in v1).
                 Task { @MainActor [weak self] in self?.ingest(data) }
             }
             if error == nil {
                 self?.receive(on: connection)
+            } else {
+                // Connection errored or closed — release it rather than
+                // leaving a stale socket around.
+                connection.cancel()
             }
         }
     }

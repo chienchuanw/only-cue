@@ -49,16 +49,14 @@ final class OSCCommandTests: XCTestCase {
         XCTAssertNil(OSCCommand.from(message("/something/else")))
     }
 
-    func test_supportedAddressPatterns_coverAllCommands() {
-        // Every documented pattern's bare address must map to a command.
-        for pattern in OSCCommand.supportedAddressPatterns {
-            let bareAddress = String(pattern.split(separator: " ", maxSplits: 1)[0])
-            let args: [OSCArgument] = bareAddress.hasSuffix("skip") || bareAddress.hasSuffix("locate")
-                ? [.int32(1)]
-                : []
+    func test_supportedAddresses_coverAllCommands() {
+        // Every documented address must map to a command. Entries with an
+        // argHint need a numeric argument supplied to map successfully.
+        for entry in OSCCommand.supportedAddresses {
+            let args: [OSCArgument] = entry.argHint == nil ? [] : [.int32(1)]
             XCTAssertNotNil(
-                OSCCommand.from(message(bareAddress, args)),
-                "Documented pattern \(pattern) should map to a command"
+                OSCCommand.from(message(entry.address, args)),
+                "Documented address \(entry.address) should map to a command"
             )
         }
     }

@@ -7,8 +7,8 @@ import SwiftUI
 /// and starts/stops its `OSCServer` accordingly.
 struct OSCSettingsView: View {
 
-    @AppStorage("oscServerEnabled") private var enabled = false
-    @AppStorage("oscServerPort") private var port = Int(OSCServer.defaultPort)
+    @AppStorage(OSCServerSettings.enabledKey) private var enabled = false
+    @AppStorage(OSCServerSettings.portKey) private var port = OSCServerSettings.defaultPort
 
     var body: some View {
         Form {
@@ -29,12 +29,12 @@ struct OSCSettingsView: View {
             }
 
             Section("Supported address patterns") {
-                ForEach(OSCCommand.supportedAddressPatterns, id: \.self) { pattern in
+                ForEach(OSCCommand.supportedAddresses) { entry in
                     HStack {
-                        Text(pattern)
+                        Text(entry.displayPattern)
                             .font(.system(.body, design: .monospaced))
                         Spacer()
-                        Button("Copy") { copy(bareAddress(of: pattern)) }
+                        Button("Copy") { copy(entry.address) }
                             .controlSize(.small)
                     }
                 }
@@ -43,12 +43,6 @@ struct OSCSettingsView: View {
         .formStyle(.grouped)
         .frame(width: 460, height: 360)
         .accessibilityIdentifier("oscSettings")
-    }
-
-    /// Strips a trailing ` <placeholder>` so the copied text is the bare OSC
-    /// address (e.g. `/onlycue/skip`), ready to paste into a Companion action.
-    private func bareAddress(of pattern: String) -> String {
-        pattern.split(separator: " ", maxSplits: 1).first.map(String.init) ?? pattern
     }
 
     private func copy(_ text: String) {

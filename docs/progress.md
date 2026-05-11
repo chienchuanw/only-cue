@@ -4,6 +4,18 @@ Append-only session log. Newer entries on top.
 
 ---
 
+## 2026-05-11 — Bypass-mode session: epic #39 closed (Templates) — `File → New from Template…`
+
+**Shipped (1 PR):** #146. Rebase-merged to `dev` at `3b08fbb`. Closed the last leaf of epic #39 (leaf 4 — new-document-from-template). The reviewer LGTM'd with three non-blocking nits deferred (NSOpenPanel-setup duplication between `TemplateAction.newDocument`/`.load` → extract a `templateOpenPanel()` helper; `Save Template As…` icon `square.and.arrow.down.on.square` reads as "import into" → `square.and.arrow.up` is the export glyph; the `NSDocumentController.newDocument(nil)` → `DocumentGroup` bridge is only manual-test-covered).
+
+**The hand-off problem and its shape.** SwiftUI's `DocumentGroup(newDocument:)` closure (`CueListDocument.init()`) takes no parameters — there's no documented way to inject initial content into a freshly-created document. Solution: a static slot. `File → New from Template…` → `TemplateAction.newDocument()` opens an `NSOpenPanel` at `~/Documents/OnlyCue/Templates`, loads (and so *validates*) the chosen `.cuelist-template` into `TemplateStore.pendingNewDocumentTemplate` (a `nonisolated(unsafe) static var` — single-threaded by construction: written on the main actor, read-and-cleared synchronously inside the same `NSDocumentController.shared.newDocument(nil)` call), then triggers the new document. `CueListDocument.init()` calls `TemplateStore.consumePendingNewDocumentTemplate()` (read-and-clear) and, if a template is pending, seeds the new `ProjectModel` with its CuePointTypes — each given a *fresh UUID*, consistent with the load-into-existing path (ADR-015). Consume-and-clear means a stale slot can never bleed into a later plain ⌘N. `New from Template…` is handled directly in `AppCommands` (a `do { try TemplateAction.newDocument() } catch { NSApplication.shared.presentError(error) }`), **not** via the notification bridge the Save/Load Template commands use, because it must work with no document window open.
+
+**Why not a dynamic `New from Template ▶` submenu** listing template files inline: SwiftUI `Commands` menus don't re-read disk when opened, so the list would be a stale launch-time snapshot. The `NSOpenPanel` path always reflects the current folder — and it matches the existing `Load Template…` affordance.
+
+**No screenshot for this leaf** — it's a File-menu command + a `CueListDocument.init()` code path, not a view. Pinned by `NewFromTemplateTests` (the slot's return-then-clear; `CueListDocument.init()` pickup: no pending → built-in default, pending → template's types with fresh UUIDs + slot consumed, empty pending → default — 5 tests) and `NewFromTemplateMenuTests` (the File menu offers the command). ADR-015 got a "new-document-from-template" addendum; `architecture.md#templates` updated. **Epic #39 is closed.**
+
+---
+
 ## 2026-05-11 — Bypass-mode session: epic #35 closed (OSC remote control) — receive-only OSC server + transport/cue commands + Settings pane + Companion/MA3 doc + OSC monitor sheet
 
 **Shipped (2 PRs):** #142 → #144. Both rebase-merged to `dev`. Cycles 40–41 of the bypass-mode shipment streak (continuous from cycle 26 / PR #114). Plus one `/gh-fix` round on #142 (commit `e904cd4`) addressing five reviewer suggestions before its merge.

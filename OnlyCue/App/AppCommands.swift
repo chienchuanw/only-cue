@@ -29,9 +29,15 @@ struct AppCommands: Commands {
             Divider()
 
             Button {
+                Self.newDocumentFromTemplate()
+            } label: {
+                Label("New from Template…", systemImage: "doc.badge.plus")
+            }
+
+            Button {
                 NotificationCenter.default.post(name: .saveTemplateRequested, object: nil)
             } label: {
-                Label("Save Template As…", systemImage: "doc.badge.plus")
+                Label("Save Template As…", systemImage: "square.and.arrow.down.on.square")
             }
 
             Button {
@@ -117,6 +123,16 @@ struct AppCommands: Commands {
             Button("OSC Monitor…") {
                 NotificationCenter.default.post(name: .oscMonitorRequested, object: nil)
             }
+        }
+    }
+
+    private static func newDocumentFromTemplate() {
+        do {
+            try TemplateAction.newDocument()
+        } catch {
+            // Corrupt / unreadable template file picked in the open panel —
+            // surface it; nothing was created.
+            _ = NSApplication.shared.presentError(error)
         }
     }
 

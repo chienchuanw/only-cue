@@ -11,6 +11,7 @@ struct PreviewPane: View {
     @Environment(\.undoManager) private var undoManager
     @State private var waveformURL: URL?
     @AppStorage("showNotesOverlay") private var showNotesOverlay = false
+    @AppStorage("showTimelineBreakdown") private var showTimelineBreakdown = false
     @AppStorage(NotesOverlayPreferences.storageKey) private var overlayPrefsData = NotesOverlayPreferences.defaultEncoded
 
     var body: some View {
@@ -77,11 +78,8 @@ struct PreviewPane: View {
     private func videoContent(item: MediaItem) -> some View {
         VStack(spacing: 0) {
             videoPlayer
-            if let url = waveformURL {
-                waveform(for: url, item: item, withPlayhead: true)
-                    .frame(height: 100)
-                    .accessibilityIdentifier("videoWaveform")
-            }
+            timeline(item: item)
+                .frame(height: showTimelineBreakdown ? 160 : 100)
         }
     }
 
@@ -92,9 +90,36 @@ struct PreviewPane: View {
 
     @ViewBuilder
     private func audioContent(item: MediaItem) -> some View {
-        if let url = waveformURL {
+        timeline(item: item)
+    }
+
+    /// The timeline area below/inside the preview: the per-Type breakdown lanes
+    /// when `View → Show Timeline Breakdown` is on, otherwise the waveform view.
+    /// The breakdown view needs no decoded audio (it positions markers off
+    /// `media.duration`, which is in the model) — so it renders even while the
+    /// waveform URL is still resolving or the media file is missing.
+    @ViewBuilder
+    private func timeline(item: MediaItem) -> some View {
+        if showTimelineBreakdown {
+            TimelineBreakdownView(
+                cues: item.cues,
+                types: document.model.cuePointTypes,
+                duration: item.media.duration,
+                selectedCueID: selectedCueID,
+                onSelectCue: onSelectCue,
+                onSeek: { time in Task { await engine.seek(to: time) } },
+                onHideType: { typeId in
+                    CueCommands.setCuePointTypeVisibility(id: typeId, to: false, document: document, undoManager: undoManager)
+                },
+                onShowAllTypes: {
+                    CueCommands.showAllCuePointTypes(document: document, undoManager: undoManager)
+                },
+                engine: engine
+            )
+            .accessibilityIdentifier("timelineBreakdownArea")
+        } else if let url = waveformURL {
             waveform(for: url, item: item, withPlayhead: true)
-                .accessibilityIdentifier("audioWaveform")
+                .accessibilityIdentifier(item.media.kind == .video ? "videoWaveform" : "audioWaveform")
         } else {
             placeholder("Loading…")
                 .accessibilityIdentifier("audioPlaceholder")

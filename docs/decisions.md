@@ -15,6 +15,13 @@ ADR template:
 
 ---
 
+## ADR-017 — Timeline breakdown view is a per-CuePointType lane layout reusing `isVisible`; no new schema
+**Date**: 2026-05-12
+**Status**: Accepted
+**Decision**: The timeline breakdown view (epic #37) renders one lane per visible `CuePointType` via a pure `TimelineBreakdownLayout` (filter by `isVisible`, model order, partition cues by Type) and a `TimelineBreakdownView` shown in `PreviewPane` in place of the waveform when `View → Show Timeline Breakdown` (`⇧⌘B`) is on. Lane visibility is the existing `CuePointType.isVisible` field — toggled through `CueCommands` (undoable), persisted in `.cuelist` with no schema bump. Markers reuse `CueMarkersGeometry.position`. In v1 there is no horizontal zoom in the breakdown view and markers there only select + seek (drag-retime stays on the waveform view).
+**Why**: `isVisible` was pre-provisioned on `CuePointType` (and carried through every migration) precisely for this — reusing it makes the "persisted layout" leaf free and keeps the model at schema v6, avoiding a migration for what is fundamentally a per-Type boolean. A pure `TimelineBreakdownLayout` keeps the lane-partitioning logic unit-tested without SwiftUI, matching the export / OSC / templates split. Building the breakdown view as a `PreviewPane`-internal toggle (rather than a separate window or a third pane) keeps it next to the waveform it replaces and means the existing `selectedCueID` / seek wiring carries over unchanged. Deferring horizontal zoom and in-breakdown retiming keeps the first cut small — the epic is about *lane layout*, and the waveform view already owns zoom + drag-retime; adding them to the breakdown view is a clean follow-up if asked for. Lane reordering is left alphabetical/insertion-order per the epic's own out-of-scope list.
+**Reversal cost**: Low. `TimelineBreakdownLayout` + `TimelineBreakdownView` are self-contained; the `PreviewPane` change is one `@ViewBuilder` branch behind an `@AppStorage` flag. `CuePointType.isVisible` already existed, so removing the feature leaves the field inert (as it was before). Adding zoom / retiming / persisted lane order later are additive; persisted lane order would be the only one needing a schema touch.
+
 ## ADR-016 — OSC remote control is receive-only, hand-rolled parser, per-document server
 **Date**: 2026-05-10
 **Status**: Accepted

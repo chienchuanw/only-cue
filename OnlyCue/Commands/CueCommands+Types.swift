@@ -35,6 +35,31 @@ extension CueCommands {
         }
     }
 
+    /// Shows or hides a Type's lane in the timeline breakdown view (`CuePointType.isVisible`,
+    /// persisted in `.cuelist`). Doesn't touch cues or the regular waveform overlay.
+    static func setCuePointTypeVisibility(
+        id: CuePointType.ID,
+        to isVisible: Bool,
+        document: CueListDocument,
+        undoManager: UndoManager?
+    ) {
+        updateType(id: id, document: document, undoManager: undoManager, actionName: isVisible ? "Show Type Lane" : "Hide Type Lane") {
+            $0.isVisible = isVisible
+        }
+    }
+
+    /// Marks every Type visible in one undo step — the "+N hidden" affordance in the
+    /// breakdown view. No-op (still registers undo) if none were hidden.
+    static func showAllCuePointTypes(document: CueListDocument, undoManager: UndoManager?) {
+        mutateTypes(document, undoManager: undoManager, actionName: "Show All Type Lanes") { types in
+            types.map { type in
+                var copy = type
+                copy.isVisible = true
+                return copy
+            }
+        }
+    }
+
     /// Removes a Type and reassigns every cue currently referencing it to `reassignTo`.
     /// Both mutations land in one undo group: ⌘Z restores the Type and the prior typeIDs.
     /// Caller is responsible for: blocking the call when this is the last Type, and showing

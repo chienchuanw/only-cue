@@ -17,7 +17,7 @@ OnlyCue runs a **receive-only** OSC server. Enable it in **Settings → OSC**, s
 | `/onlycue/cue/next` | — | Move the playhead to the next cue |
 | `/onlycue/cue/prev` | — | Move the playhead to the previous cue |
 
-Unrecognised addresses are ignored (they still appear in the future OSC monitor window).
+Unrecognised addresses are ignored — but they still show up in the OSC monitor (**Tools → OSC Monitor…**), so you can see whether a controller is reaching OnlyCue at all and whether it's spelling the address the way OnlyCue expects.
 
 If multiple OnlyCue document windows are open, each incoming message reaches one of them, picked by the OS — not all of them, and not predictably the frontmost one. Keep a single document open while driving it over OSC.
 

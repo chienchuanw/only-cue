@@ -203,10 +203,11 @@ A receive-only OSC server (epic #35) lets external controllers — Bitfocus Comp
 | Wire format | `OSCMessage { addressPattern, [OSCArgument] }`; `OSCParser.parse(_:)` (pure) | `OnlyCue/OSC/OSCMessage.swift`, `OSCParser.swift` |
 | Command mapping | `OSCCommand.from(_ message:) -> OSCCommand?` (pure) | `OnlyCue/OSC/OSCCommand.swift` |
 | Server | `OSCServer` — `@Observable @MainActor` wrapper over `NWListener` (UDP) | `OnlyCue/OSC/OSCServer.swift` |
-| Host (per document) | `.oscServerHost(...)` view modifier — owns the server, dispatches commands to `PlayerEngine` / `CueCommands` | `OnlyCue/UI/OSCServerHost.swift` |
+| Host (per document) | `.oscServerHost(...)` view modifier — owns the server, dispatches commands to `PlayerEngine` / `CueCommands`, presents the monitor sheet | `OnlyCue/UI/OSCServerHost.swift` |
 | Settings | `Settings → OSC` — enable toggle + listen port + copyable address list | `OnlyCue/UI/OSCSettingsView.swift` |
+| Monitor | `Tools → OSC Monitor…` — sheet: listening status + port, live newest-first message tail (`Clear` to reset), copyable address list | `OnlyCue/UI/OSCMonitorView.swift`, `OSCSupportedAddressList.swift` |
 
-`OSCParser` handles the OSC 1.0 subset OnlyCue needs: 4-byte-aligned OSC-strings, big-endian `int32` / `float32`, the zero-byte type tags (`T`/`F`/`N`/`I`), and `#bundle` flattening. A malformed datagram returns nil and is dropped — never crashes. `OSCServer` keeps a capped newest-first `recentMessages` ring buffer (including unrecognised addresses) so a future OSC monitor window can live-tail traffic.
+`OSCParser` handles the OSC 1.0 subset OnlyCue needs: 4-byte-aligned OSC-strings, big-endian `int32` / `float32`, the zero-byte type tags (`T`/`F`/`N`/`I`), and `#bundle` flattening. A malformed datagram returns nil and is dropped — never crashes. `OSCServer` keeps a capped newest-first `recentMessages` ring buffer (including unrecognised addresses); `OSCServer.formatLine(for:)` renders each entry as `"<address> <arg…>"` and the monitor sheet live-tails it. The monitor is a sheet presented from `OSCServerHost` rather than a standalone window: the server is per-document, so a free-floating window would have to pick which document to mirror — the sheet just mirrors the one it's attached to. It re-uses `OSCSupportedAddressList` (the same copyable rows the Settings pane shows).
 
 **Threading.** `NWListener` / `NWConnection` callbacks run on the server's private `DispatchQueue`. The connection-accept and receive-loop methods are `nonisolated` (they touch only the `Sendable` `NWConnection` and the immutable queue); everything that mutates observable state or invokes the command handler hops to the main actor in `ingest(_:)`.
 

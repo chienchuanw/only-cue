@@ -1,4 +1,3 @@
-import AppKit
 import SwiftUI
 
 /// Settings → OSC pane: enable toggle, listen port, and a copyable list of the
@@ -29,24 +28,11 @@ struct OSCSettingsView: View {
             }
 
             Section("Supported address patterns") {
-                ForEach(OSCCommand.supportedAddresses) { entry in
-                    HStack {
-                        Text(entry.displayPattern)
-                            .font(.system(.body, design: .monospaced))
-                        Spacer()
-                        Button("Copy") { copy(entry.address) }
-                            .controlSize(.small)
-                    }
-                }
+                OSCSupportedAddressList()
             }
         }
         .formStyle(.grouped)
         .frame(width: 460, height: 360)
         .accessibilityIdentifier("oscSettings")
-    }
-
-    private func copy(_ text: String) {
-        NSPasteboard.general.clearContents()
-        NSPasteboard.general.setString(text, forType: .string)
     }
 }

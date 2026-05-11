@@ -24,6 +24,7 @@ struct OSCServerHost: ViewModifier {
     @AppStorage(OSCServerSettings.portKey) private var port = OSCServerSettings.defaultPort
     @State private var server = OSCServer()
     @State private var seekTask: Task<Void, Never>?
+    @State private var showMonitor = false
 
     func body(content: Content) -> some View {
         content
@@ -31,6 +32,12 @@ struct OSCServerHost: ViewModifier {
             .onChange(of: enabled) { _, _ in syncServer() }
             .onChange(of: port) { _, _ in syncServer() }
             .onDisappear { server.stop() }
+            .onReceive(NotificationCenter.default.publisher(for: .oscMonitorRequested)) { _ in
+                showMonitor = true
+            }
+            .sheet(isPresented: $showMonitor) {
+                OSCMonitorView(server: server)
+            }
     }
 
     private func syncServer() {

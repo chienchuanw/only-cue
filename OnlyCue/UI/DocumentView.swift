@@ -274,6 +274,7 @@ extension Notification.Name {
     static let exportCuesToCSVRequested = Notification.Name("OnlyCue.exportCuesToCSVRequested")
     static let saveTemplateRequested = Notification.Name("OnlyCue.saveTemplateRequested")
     static let loadTemplateRequested = Notification.Name("OnlyCue.loadTemplateRequested")
+    static let oscMonitorRequested = Notification.Name("OnlyCue.oscMonitorRequested")
 }
 
 enum DocumentAlert: Identifiable {

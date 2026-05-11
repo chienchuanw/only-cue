@@ -15,6 +15,13 @@ ADR template:
 
 ---
 
+## ADR-016 — OSC remote control is receive-only, hand-rolled parser, per-document server
+**Date**: 2026-05-10
+**Status**: Accepted
+**Decision**: Implement OSC remote control (epic #35) as a receive-only UDP server using `Network.framework` (`NWListener`), with a hand-rolled OSC 1.0 message parser (no third-party dependency). The pure parts — `OSCParser.parse` and `OSCCommand.from` — are separate testable units; `OSCServer` wraps the listener and hops to the main actor before invoking its command handler. The server is owned per document window (`.oscServerHost` view modifier), all sharing one listen port via `allowLocalEndpointReuse`. Port and an enable toggle live in `Settings → OSC` via `@AppStorage`.
+**Why**: The OSC 1.0 message format is small enough (NUL-terminated 4-byte-aligned strings, big-endian int32/float32, a handful of zero-byte type tags, bundles) that hand-rolling the receive path is ~130 lines and keeps the repo dependency-free — consistent with the project's "Apple frameworks only so far" posture; an SPM dependency would add a package-management surface for marginal benefit. `Network.framework` is the supported macOS UDP API and needs no sandbox entitlement (ADR-007 — the app isn't sandboxed), though macOS still shows a one-time firewall prompt on first bind. Receive-only is the v1 scope per the roadmap — broadcasting transport state back to controllers is the Phase-3 console-integration differentiator and would need a bidirectional design. Per-document ownership (vs. an app-level singleton) is the pragmatic choice: `DocumentGroup` doesn't expose "the frontmost document" to the `App` scene, so an app-level server couldn't route a `/onlycue/play` to a specific document; per-window servers with port reuse mean the command reaches all open documents, which is acceptable because OSC control implies a single-document show-calling workflow. Splitting the pure parser/mapper from the stateful server keeps the wire-format logic fully unit-tested without a live socket. The OSC monitor window (a separate leaf) is deferred but pre-provisioned: `OSCServer` already keeps a capped `recentMessages` buffer.
+**Reversal cost**: Low–medium. The parser and command map are self-contained pure functions; swapping the hand-rolled parser for a library, or moving the server to an app-level singleton with a "target document" picker, are localised changes. Removing OSC entirely deletes the `OnlyCue/OSC/` folder + the host modifier + the Settings pane — no schema or persistence impact (the two `@AppStorage` keys are inert if unread).
+
 ## ADR-015 — Templates carry only CuePointTypes; load semantics are append-merge with fresh UUIDs
 **Date**: 2026-05-10
 **Status**: Accepted

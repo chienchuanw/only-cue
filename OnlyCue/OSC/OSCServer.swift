@@ -5,8 +5,8 @@ import Observation
 /// Receive-only OSC server over UDP. Wraps an `NWListener`; parses each
 /// datagram with `OSCParser`, maps it with `OSCCommand.from(_:)`, and hands
 /// recognised commands to `onCommand` on the main actor. Unrecognised
-/// datagrams are still logged to `recentMessages` so a future monitor window
-/// can show "received but unhandled" traffic.
+/// datagrams are still appended to `recentMessages` so the OSC monitor sheet
+/// (`Tools → OSC Monitor…`) can show "received but unhandled" traffic.
 ///
 /// No App Sandbox entitlement is needed to bind an incoming UDP port (the app
 /// is not sandboxed — ADR-007). macOS shows a one-time firewall prompt the
@@ -90,17 +90,28 @@ final class OSCServer {
     }
 
     private func appendRecent(_ message: OSCMessage) {
-        let argsDescription = message.arguments.map(Self.describe).joined(separator: " ")
-        let line = argsDescription.isEmpty
-            ? message.addressPattern
-            : "\(message.addressPattern) \(argsDescription)"
-        recentMessages.insert(line, at: 0)
+        recentMessages.insert(Self.formatLine(for: message), at: 0)
         if recentMessages.count > Self.recentMessagesCap {
             recentMessages.removeLast(recentMessages.count - Self.recentMessagesCap)
         }
     }
 
-    private static func describe(_ argument: OSCArgument) -> String {
+    /// Empties the monitor tail. Doesn't touch the listener — purely a
+    /// view-side "clear what I've seen so far".
+    func clearRecentMessages() {
+        recentMessages.removeAll()
+    }
+
+    /// One-line rendering of a received message for the monitor tail:
+    /// `"<address> <arg1> <arg2> …"`, or just `"<address>"` with no arguments.
+    nonisolated static func formatLine(for message: OSCMessage) -> String {
+        let argsDescription = message.arguments.map(describe).joined(separator: " ")
+        return argsDescription.isEmpty
+            ? message.addressPattern
+            : "\(message.addressPattern) \(argsDescription)"
+    }
+
+    nonisolated private static func describe(_ argument: OSCArgument) -> String {
         switch argument {
         case .int32(let value): String(value)
         case .float32(let value): String(value)

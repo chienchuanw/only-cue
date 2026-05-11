@@ -111,6 +111,12 @@ struct AppCommands: Commands {
             Button("Edit Note Overlay Appearance…") {
                 NotificationCenter.default.post(name: .editNotesOverlayAppearance, object: nil)
             }
+
+            Divider()
+
+            Button("OSC Monitor…") {
+                NotificationCenter.default.post(name: .oscMonitorRequested, object: nil)
+            }
         }
     }
 

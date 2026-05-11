@@ -122,7 +122,7 @@ struct PreviewPane: View {
                 .accessibilityIdentifier(item.media.kind == .video ? "videoWaveform" : "audioWaveform")
         } else {
             placeholder("Loading…")
-                .accessibilityIdentifier("audioPlaceholder")
+                .accessibilityIdentifier(item.media.kind == .video ? "videoPlaceholder" : "audioPlaceholder")
         }
     }
 

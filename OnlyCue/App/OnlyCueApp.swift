@@ -7,5 +7,9 @@ struct OnlyCueApp: App {
             DocumentView(document: file.document)
         }
         .commands { AppCommands() }
+
+        Settings {
+            OSCSettingsView()
+        }
     }
 }

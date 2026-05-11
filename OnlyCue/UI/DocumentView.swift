@@ -6,12 +6,12 @@ struct DocumentView: View {
     @ObservedObject var document: CueListDocument
     @State var engine = PlayerEngine()
     @State private var showImporter = false
-    @State private var pendingAlert: DocumentAlert?
+    @State var pendingAlert: DocumentAlert?
     @State private var seekTask: Task<Void, Never>?
     @State private var showOverlayAppearance = false
     @State var selectedCueID: Cue.ID?
-    @AppStorage(FirstLaunchFlag.key) private var didShowFirstLaunch = false
-    @AppStorage(NotesOverlayPreferences.storageKey) private var overlayPrefsData = NotesOverlayPreferences.defaultEncoded
+    @AppStorage(FirstLaunchFlag.key) var didShowFirstLaunch = false
+    @AppStorage(NotesOverlayPreferences.storageKey) var overlayPrefsData = NotesOverlayPreferences.defaultEncoded
     @AppStorage("pauseAtEachCue") var pauseAtEachCue = false
     @Environment(\.undoManager) private var undoManager
 
@@ -48,13 +48,7 @@ struct DocumentView: View {
             NotesOverlayPreferencesSheet(prefs: overlayPrefsBinding)
         }
         .exportSheet(model: document.model, pendingErrorMessage: pendingAlertMessageBinding)
-    }
-
-    private var overlayPrefsBinding: Binding<NotesOverlayPreferences> {
-        Binding(
-            get: { NotesOverlayPreferences.decode(overlayPrefsData) },
-            set: { overlayPrefsData = $0.encoded }
-        )
+        .oscServerHost(engine: engine, document: document, undoManager: undoManager)
     }
 
     private var mainPane: some View {
@@ -124,14 +118,6 @@ struct DocumentView: View {
             pendingErrorMessage: pendingAlertMessageBinding,
             undoManager: undoManager
         )
-    }
-
-    private var pendingAlertMessageBinding: Binding<String?> {
-        Binding(get: { nil }, set: { if let msg = $0 { pendingAlert = .unsupported(msg) } })
-    }
-
-    private var firstLaunchBinding: Binding<Bool> {
-        Binding(get: { !didShowFirstLaunch }, set: { if !$0 { didShowFirstLaunch = true } })
     }
 
     private func alertContent(_ alert: DocumentAlert) -> Alert {
@@ -290,7 +276,7 @@ extension Notification.Name {
     static let loadTemplateRequested = Notification.Name("OnlyCue.loadTemplateRequested")
 }
 
-private enum DocumentAlert: Identifiable {
+enum DocumentAlert: Identifiable {
     case unsupported(String)
     case relink(String)
 

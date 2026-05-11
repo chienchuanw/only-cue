@@ -194,6 +194,26 @@ CuePointType sets are reusable across projects via templates (epic #39). A templ
 
 **Why no name-collision detection.** The append-and-let-user-rename strategy keeps the load action conflict-free. Users can rename through the existing Manage Types sheet.
 
+## OSC remote control
+
+A receive-only OSC server (epic #35) lets external controllers — Bitfocus Companion, StreamDeck, grandMA3 macros — drive transport and cue navigation over UDP.
+
+| Stage | API | Where it lives |
+|---|---|---|
+| Wire format | `OSCMessage { addressPattern, [OSCArgument] }`; `OSCParser.parse(_:)` (pure) | `OnlyCue/OSC/OSCMessage.swift`, `OSCParser.swift` |
+| Command mapping | `OSCCommand.from(_ message:) -> OSCCommand?` (pure) | `OnlyCue/OSC/OSCCommand.swift` |
+| Server | `OSCServer` — `@Observable @MainActor` wrapper over `NWListener` (UDP) | `OnlyCue/OSC/OSCServer.swift` |
+| Host (per document) | `.oscServerHost(...)` view modifier — owns the server, dispatches commands to `PlayerEngine` / `CueCommands` | `OnlyCue/UI/OSCServerHost.swift` |
+| Settings | `Settings → OSC` — enable toggle + listen port + copyable address list | `OnlyCue/UI/OSCSettingsView.swift` |
+
+`OSCParser` handles the OSC 1.0 subset OnlyCue needs: 4-byte-aligned OSC-strings, big-endian `int32` / `float32`, the zero-byte type tags (`T`/`F`/`N`/`I`), and `#bundle` flattening. A malformed datagram returns nil and is dropped — never crashes. `OSCServer` keeps a capped newest-first `recentMessages` ring buffer (including unrecognised addresses) so a future OSC monitor window can live-tail traffic.
+
+**Threading.** `NWListener` / `NWConnection` callbacks run on the server's private `DispatchQueue`. The connection-accept and receive-loop methods are `nonisolated` (they touch only the `Sendable` `NWConnection` and the immutable queue); everything that mutates observable state or invokes the command handler hops to the main actor in `ingest(_:)`.
+
+**Supported addresses.** `/onlycue/play`, `/pause`, `/stop`, `/skip <seconds>` (signed int/float), `/locate <seconds>`, `/cue/add`, `/cue/next`, `/cue/prev`. See `docs/osc-companion-ma3.md` for Companion and grandMA3 macro syntax per address.
+
+**Scope.** Receive-only (no state broadcast — that's Phase 3). Manual IP configuration (no Bonjour). Per-document ownership: each open window has its own `OSCServer` binding the same port with `allowLocalEndpointReuse`, so a `/onlycue/play` reaches every open document — fine for the single-document workflow OSC control implies. macOS shows a one-time firewall prompt on first bind; no App Sandbox entitlement is needed (the app isn't sandboxed — ADR-007). See ADR-016.
+
 ## Phase-2 seams
 
 These are explicit extension points so future features don't require rewrites. See [`roadmap.md`](roadmap.md) for what plugs in here.

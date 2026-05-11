@@ -212,7 +212,7 @@ A receive-only OSC server (epic #35) lets external controllers — Bitfocus Comp
 
 **Supported addresses.** `/onlycue/play`, `/pause`, `/stop`, `/skip <seconds>` (signed int/float), `/locate <seconds>`, `/cue/add`, `/cue/next`, `/cue/prev`. See `docs/osc-companion-ma3.md` for Companion and grandMA3 macro syntax per address.
 
-**Scope.** Receive-only (no state broadcast — that's Phase 3). Manual IP configuration (no Bonjour). Per-document ownership: each open window has its own `OSCServer` binding the same port with `allowLocalEndpointReuse`, so a `/onlycue/play` reaches every open document — fine for the single-document workflow OSC control implies. macOS shows a one-time firewall prompt on first bind; no App Sandbox entitlement is needed (the app isn't sandboxed — ADR-007). See ADR-016.
+**Scope.** Receive-only (no state broadcast — that's Phase 3). Manual IP configuration (no Bonjour). Per-document ownership: each open window has its own `OSCServer` binding the same port with `allowLocalEndpointReuse`. On Darwin a unicast datagram is delivered to exactly one of the bound sockets (kernel-chosen), so with two document windows open one unpredictable document responds — fine for the single-document workflow OSC control implies. macOS shows a one-time firewall prompt on first bind; no App Sandbox entitlement is needed (the app isn't sandboxed — ADR-007). See ADR-016.
 
 ## Phase-2 seams
 

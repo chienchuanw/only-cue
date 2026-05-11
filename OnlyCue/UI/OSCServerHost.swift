@@ -9,17 +9,19 @@ import SwiftUI
 /// and `TemplateMenuReceiver`.
 ///
 /// Multiple open documents: each gets its own `OSCServer`, all binding the
-/// same UDP port with `allowLocalEndpointReuse`. A `/onlycue/play` then plays
-/// every open document. Acceptable for v1 (most users have one document); see
-/// ADR-016.
+/// same UDP port with `allowLocalEndpointReuse`. On Darwin, an incoming
+/// unicast datagram (what Companion / StreamDeck / grandMA3 send) is delivered
+/// to exactly one of the bound sockets, chosen by the kernel — so with two
+/// document windows open, one unpredictable document responds. OSC control
+/// implies a single-document show-calling workflow; see ADR-016.
 struct OSCServerHost: ViewModifier {
 
     let engine: PlayerEngine
     @ObservedObject var document: CueListDocument
     var undoManager: UndoManager?
 
-    @AppStorage("oscServerEnabled") private var enabled = false
-    @AppStorage("oscServerPort") private var port = Int(OSCServer.defaultPort)
+    @AppStorage(OSCServerSettings.enabledKey) private var enabled = false
+    @AppStorage(OSCServerSettings.portKey) private var port = OSCServerSettings.defaultPort
     @State private var server = OSCServer()
     @State private var seekTask: Task<Void, Never>?
 
@@ -41,24 +43,32 @@ struct OSCServerHost: ViewModifier {
     }
 
     private func dispatch(_ command: OSCCommand) {
+        if let target = Self.resolvedSeekTime(for: command, currentTime: engine.currentTime) {
+            if case .stop = command { engine.pause() }
+            seek(to: target)
+            return
+        }
         switch command {
-        case .play:
-            engine.play()
-        case .pause:
-            engine.pause()
-        case .stop:
-            engine.pause()
-            seek(to: 0)
-        case .skip(let seconds):
-            seek(to: max(0, engine.currentTime + seconds))
-        case .locate(let seconds):
-            seek(to: max(0, seconds))
+        case .play: engine.play()
+        case .pause: engine.pause()
         case .cueAdd:
             CueCommands.addCueAtPlayhead(time: engine.currentTime, document: document, undoManager: undoManager)
-        case .cueNext:
-            step(.next)
-        case .cuePrev:
-            step(.previous)
+        case .cueNext: step(.next)
+        case .cuePrev: step(.previous)
+        case .stop, .skip, .locate: break // handled above
+        }
+    }
+
+    /// The resolved absolute seek destination for a seek-y command, clamped to
+    /// >= 0. nil for commands that aren't seeks. Pure — pinned by
+    /// `OSCServerHostTests`. (`stop` rewinds to 0; `skip` is relative; `locate`
+    /// is absolute.)
+    static func resolvedSeekTime(for command: OSCCommand, currentTime: TimeInterval) -> TimeInterval? {
+        switch command {
+        case .stop: 0
+        case .skip(let seconds): max(0, currentTime + seconds)
+        case .locate(let seconds): max(0, seconds)
+        default: nil
         }
     }
 

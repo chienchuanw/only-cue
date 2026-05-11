@@ -19,7 +19,7 @@ OnlyCue runs a **receive-only** OSC server. Enable it in **Settings → OSC**, s
 
 Unrecognised addresses are ignored (they still appear in the future OSC monitor window).
 
-If multiple OnlyCue document windows are open, every message reaches all of them — practically you'll want one document open while driving it over OSC.
+If multiple OnlyCue document windows are open, each incoming message reaches one of them, picked by the OS — not all of them, and not predictably the frontmost one. Keep a single document open while driving it over OSC.
 
 ## Bitfocus Companion
 

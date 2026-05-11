@@ -17,18 +17,19 @@ enum OSCCommand: Equatable {
     case cueNext
     case cuePrev
 
-    /// The OSC address patterns OnlyCue listens for, in display order. Used by
-    /// the Settings → OSC pane (copy buttons) and the reference docs. The
-    /// `<n>` placeholder denotes an optional numeric argument.
-    static let supportedAddressPatterns: [String] = [
-        "/onlycue/play",
-        "/onlycue/pause",
-        "/onlycue/stop",
-        "/onlycue/skip <seconds>",
-        "/onlycue/locate <seconds>",
-        "/onlycue/cue/add",
-        "/onlycue/cue/next",
-        "/onlycue/cue/prev"
+    /// The OSC addresses OnlyCue listens for, in display order. Used by the
+    /// Settings → OSC pane (display label + copy-the-bare-address button) and
+    /// the reference docs. `argHint` (when present) is the name of the
+    /// expected numeric argument.
+    static let supportedAddresses: [OSCAddressEntry] = [
+        OSCAddressEntry(address: "/onlycue/play"),
+        OSCAddressEntry(address: "/onlycue/pause"),
+        OSCAddressEntry(address: "/onlycue/stop"),
+        OSCAddressEntry(address: "/onlycue/skip", argHint: "seconds"),
+        OSCAddressEntry(address: "/onlycue/locate", argHint: "seconds"),
+        OSCAddressEntry(address: "/onlycue/cue/add"),
+        OSCAddressEntry(address: "/onlycue/cue/next"),
+        OSCAddressEntry(address: "/onlycue/cue/prev")
     ]
 
     /// Pure mapping from a parsed message to a command. Unknown addresses (or

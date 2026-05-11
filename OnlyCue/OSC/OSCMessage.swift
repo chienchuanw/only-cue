@@ -8,6 +8,22 @@ struct OSCMessage: Equatable {
     let arguments: [OSCArgument]
 }
 
+/// One supported OSC address, plus the name of its expected numeric argument
+/// (if any). `displayPattern` renders the `/addr <hint>` form for UI labels;
+/// `address` is the bare string a controller actually sends.
+struct OSCAddressEntry: Identifiable, Equatable {
+    let address: String
+    let argHint: String?
+
+    init(address: String, argHint: String? = nil) {
+        self.address = address
+        self.argHint = argHint
+    }
+
+    var id: String { address }
+    var displayPattern: String { argHint.map { "\(address) <\($0)>" } ?? address }
+}
+
 /// The OSC argument types OnlyCue understands. The four zero-byte types
 /// (`T`/`F`/`N`/`I`) carry no payload — they're occasionally used by senders
 /// for "go" buttons that send `/onlycue/play T`.

@@ -22,7 +22,12 @@ import Observation
 @Observable
 final class OSCServer {
 
-    static let defaultPort: UInt16 = 8000
+    // `nonisolated` so `OSCServerSettings.defaultPort` (a nonisolated `enum`)
+    // can derive its value from here — an immutable Sendable constant has no
+    // need for the class's `@MainActor` isolation. Without it: "main
+    // actor-isolated static property 'defaultPort' can not be referenced from
+    // a nonisolated context" (an error under the Swift 6 language mode).
+    nonisolated static let defaultPort: UInt16 = 8000
     private static let recentMessagesCap = 50
 
     private(set) var isListening = false

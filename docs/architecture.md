@@ -186,11 +186,13 @@ CuePointType sets are reusable across projects via templates (epic #39). A templ
 |---|---|---|
 | Format | `CueListTemplate { schemaVersion, name, cuePointTypes }` | `OnlyCue/Document/CueListTemplate.swift` |
 | Store | `TemplateStore.save / .load / .list / .appendMerge` | `OnlyCue/Document/TemplateStore.swift` |
-| Action (NSSavePanel + disk) | `TemplateAction.save / .load` | `OnlyCue/Document/TemplateAction.swift` |
-| Menu (user entry) | "File > Save Template As…" / "File > Load Template…" | `OnlyCue/App/AppCommands.swift` |
-| Receiver (notification → action) | `.templateMenuReceiver(...)` view modifier | `OnlyCue/UI/TemplateMenuReceiver.swift` |
+| Action (NSSavePanel/NSOpenPanel + disk) | `TemplateAction.save / .load / .newDocument` | `OnlyCue/Document/TemplateAction.swift` |
+| Menu (user entry) | "File > New from Template…" / "File > Save Template As…" / "File > Load Template…" | `OnlyCue/App/AppCommands.swift` |
+| Receiver (notification → action) | `.templateMenuReceiver(...)` view modifier (save / load) | `OnlyCue/UI/TemplateMenuReceiver.swift` |
 
 **Append-merge load semantics.** Loading a template into an existing project assigns FRESH UUIDs to each loaded type and appends them to `ProjectModel.cuePointTypes`. Existing types keep their IDs, so existing cues' `typeID` references are never broken. Loading the same template twice produces two distinct copies (two fresh UUID sets) — predictable, non-destructive. ADR-015.
+
+**New-document-from-template.** `File → New from Template…` opens an `NSOpenPanel` at the templates folder; on pick, `TemplateAction.newDocument` loads (and so validates) the template into `TemplateStore.pendingNewDocumentTemplate`, then calls `NSDocumentController.shared.newDocument(nil)`. `CueListDocument.init()` reads-and-clears that slot — when a template is pending the new project starts with its CuePointTypes (fresh UUIDs); otherwise the single built-in default, exactly as a plain ⌘N. The consume-and-clear means a stale slot can never bleed into a later ⌘N. (A splash-screen template picker is a possible later addition; `⇧⌘N` is unavailable — it's the Show Notes Overlay toggle.) `New from Template…` is handled directly in `AppCommands` rather than via the notification-bridge the save/load commands use, because it must work with no document window open.
 
 **Why no name-collision detection.** The append-and-let-user-rename strategy keeps the load action conflict-free. Users can rename through the existing Manage Types sheet.
 

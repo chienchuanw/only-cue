@@ -14,6 +14,25 @@ enum TemplateStore {
 
     static let fileExtension = "cuelist-template"
 
+    /// Hand-off slot for `File → New from Template…`: `TemplateAction.newDocument`
+    /// loads the chosen template into here, then asks `NSDocumentController` to
+    /// create a new untitled document; `CueListDocument.init()` reads-and-clears
+    /// it so the new project starts with the template's types. nil the rest of
+    /// the time, so a plain ⌘N is unaffected and a stale stash can't leak.
+    /// Single-threaded by construction: written by `TemplateAction.newDocument`
+    /// (main actor) and read-and-cleared by `CueListDocument.init()` synchronously
+    /// inside the same `NSDocumentController.newDocument(_:)` call — never touched
+    /// off the main thread.
+    nonisolated(unsafe) static var pendingNewDocumentTemplate: CueListTemplate?
+
+    /// Reads and clears `pendingNewDocumentTemplate` in one step — called from
+    /// `CueListDocument.init()`. Returns nil unless a `New from Template…`
+    /// command is mid-flight.
+    static func consumePendingNewDocumentTemplate() -> CueListTemplate? {
+        defer { pendingNewDocumentTemplate = nil }
+        return pendingNewDocumentTemplate
+    }
+
     /// `~/Documents/OnlyCue/Templates`. Creating-on-demand at write time.
     static var defaultDirectory: URL {
         FileManager.default

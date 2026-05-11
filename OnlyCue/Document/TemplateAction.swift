@@ -49,4 +49,24 @@ enum TemplateAction {
             CueCommands.addCuePointType(fresh, document: document, undoManager: undoManager)
         }
     }
+
+    /// Open an `NSOpenPanel` pointed at the user's templates directory, load the
+    /// chosen template, and create a new untitled document pre-loaded with its
+    /// CuePointType set. No-op if the user cancels. The template is validated
+    /// (decoded) before any document is created — a corrupt file surfaces the
+    /// error and creates nothing. The new document picks the template up via
+    /// `TemplateStore.pendingNewDocumentTemplate`, which `CueListDocument.init()`
+    /// reads and clears.
+    @MainActor
+    static func newDocument() throws {
+        let panel = NSOpenPanel()
+        panel.directoryURL = TemplateStore.defaultDirectory
+        panel.canChooseDirectories = false
+        panel.canChooseFiles = true
+        panel.allowsMultipleSelection = false
+
+        guard panel.runModal() == .OK, let url = panel.url else { return }
+        TemplateStore.pendingNewDocumentTemplate = try TemplateStore.load(from: url)
+        NSDocumentController.shared.newDocument(nil)
+    }
 }

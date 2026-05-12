@@ -4,6 +4,21 @@ Append-only session log. Newer entries on top.
 
 ---
 
+## 2026-05-12 — Bypass-mode session: epic #40 — Settings → Keyboard editor + `AppCommands` reads the keymap
+
+**Shipped (1 PR):** #156. Rebase-merged to `dev` (`9636bd4`). Epic #40 leaves 2 (settings UI) and 3 (per-row conflict + reset). Leaf issue #155.
+
+- **`KeyboardSettingsView`** (`OnlyCue/UI/KeyboardSettingsView.swift`) — a new Settings → **Keyboard** tab (`OnlyCueApp` now wraps `Settings { TabView { OSCSettingsView…; KeyboardSettingsView… } }`; OSC stays the default tab). A `List` with one row per `KeymapAction`: `displayName`, a conflict ⚠︎ (tooltip lists the other actions on that chord), a chord button, and a per-row reset-to-default button (disabled when the row equals the default). Clicking the chord swaps it for a focused capture field — `.onKeyPress(phases: .down)` turns the next key event into a `KeyChord` and `KeymapStore.rebind`-s it immediately; bare **Esc** cancels. Footer: a conflict count (or "No conflicts") + "Reset All…". Observes `KeymapStore.shared` so edits reflect live.
+- **`KeyChord.from(keyEquivalent:modifiers:)`** + **`KeyChord.specialKeyName(for:)`** (`OnlyCue/App/KeyChord.swift`) — the pure capture mapping: keeps the four real modifiers (drops ambient flags like caps-lock / numeric-pad), maps `KeyEquivalent.leftArrow`/`.space`/… back to their reserved names (`KeyEquivalent` isn't `Equatable`, so the lookup compares `.character`), lower-cases letter keys (case is the `.shift` modifier, not the key), returns `nil` for an unbindable function key (a private-use scalar with no printable character).
+- **`AppCommands`** now reads the keymap: `@ObservedObject keymapStore = KeymapStore.shared` + `shortcut(_ action:) -> KeyboardShortcut` (the chord's `keyboardShortcut`, falling back to `Keymap.default`'s, then a harmless `⌘/`); every `.keyboardShortcut("o", modifiers: .command)` etc. is now `.keyboardShortcut(shortcut(.importMedia))` etc. Defaults are unchanged — `Keymap.default` *is* the old literal set.
+- **Tests:** `OnlyCueTests/KeyChordCaptureTests.swift` (7 tests — `from()` printable + modifiers, letter → lower-cased, special keys → reserved names, ignores caps-lock / numeric-pad, unbindable function key → `nil`, round-trip through `.keyboardShortcut`, `specialKeyName`) + `OnlyCueUITests/KeyboardSettingsScreenshotTests.swift` (opens Settings → Keyboard, screenshots the window). 367 unit tests pass; `swiftlint --strict` clean.
+- **No screenshot produced in automation** — *every* XCUITest in the repo (the pre-existing `ExportSheet` / `OSCMonitor` / `OSCSettings` / `TransportBar` / `DocumentLaunch` ones too) fails in the headless `xcodebuild test` host at the `playPauseButton` launch wait — there's no usable GUI/window-server session there. The screenshot test is committed; it needs to be run from Xcode. (This is the same wall the project's other screenshot tests hit in CI/automation — not a regression.)
+- No new ADR — leaves 2/3 are execution of ADR-018's design. Docs: `architecture.md#custom-shortcuts` updated (Editor + Consumer rows; a "wired so far / not yet" note), the Phase-2-seams "AppCommands reads keymap" row marked realized, `task_plan.md` #40 → 🟡 ~4 of 5 leaves.
+
+**Remaining epic #40 leaf (leaf 4):** the document window's `m` (Add Cue), `0`–`9` (cue-type hotkeys → `triggerHotkey`), Space (play/pause), ←→ (jump ±1 s), ↑↓ (prev/next cue) shortcuts in `DocumentView` still come from literals — rewire them to read the keymap, and extend `KeymapAction` with the cases they need (today only `.addCueOfType1…9` exist; need `.addCue`, `.playPause`, `.jumpBack`, `.jumpForward`, `.stepPrevCue`, `.stepNextCue`, `.addCueOfType0`) so they show as editable rows too.
+
+---
+
 ## 2026-05-12 — Bypass-mode session: epic #40 started (custom keyboard shortcuts — keymap data layer)
 
 **Shipped (1 PR):** #154. Rebase-merged to `dev` (`524120e`). Opens epic #40 (custom keyboard shortcuts editor) with leaf 1 (spec — keymap schema + conflict-resolution rules) and the load/save/conflict-detection cases of leaf 5 (tests). Leaf issue #153.

@@ -13,7 +13,14 @@ struct DocumentView: View {
     @AppStorage(FirstLaunchFlag.key) var didShowFirstLaunch = false
     @AppStorage(NotesOverlayPreferences.storageKey) var overlayPrefsData = NotesOverlayPreferences.defaultEncoded
     @AppStorage("pauseAtEachCue") var pauseAtEachCue = false
+    @ObservedObject private var keymapStore = KeymapStore.shared
     @Environment(\.undoManager) private var undoManager
+
+    private func shortcut(_ action: KeymapAction) -> KeyboardShortcut {
+        keymapStore.keymap.chord(for: action).keyboardShortcut
+            ?? Keymap.default.chord(for: action).keyboardShortcut
+            ?? KeyboardShortcut(KeyEquivalent("/"), modifiers: .command)
+    }
 
     var body: some View {
         NavigationSplitView {
@@ -86,7 +93,7 @@ struct DocumentView: View {
 
                 Button("Add Cue") { addCueAtPlayhead() }
                     .accessibilityIdentifier("addCueButton")
-                    .keyboardShortcut("m", modifiers: [])
+                    .keyboardShortcut(shortcut(.addCue))
                     .disabled(activeItem == nil)
             }
 
@@ -199,11 +206,11 @@ struct DocumentView: View {
     private var transportShortcuts: some View {
         ZStack {
             Button("Play/Pause") { engine.toggle() }
-                .keyboardShortcut(.space, modifiers: [])
+                .keyboardShortcut(shortcut(.playPause))
             Button("Back 1s") { jump(by: -1) }
-                .keyboardShortcut(.leftArrow, modifiers: [])
+                .keyboardShortcut(shortcut(.jumpBack))
             Button("Forward 1s") { jump(by: 1) }
-                .keyboardShortcut(.rightArrow, modifiers: [])
+                .keyboardShortcut(shortcut(.jumpForward))
         }
         .frame(width: 0, height: 0)
         .opacity(0)
@@ -214,7 +221,7 @@ struct DocumentView: View {
         ZStack {
             ForEach(0...9, id: \.self) { digit in
                 Button("Cue Type \(digit)") { triggerHotkey(digit) }
-                    .keyboardShortcut(KeyEquivalent(Character("\(digit)")), modifiers: [])
+                    .keyboardShortcut(shortcut(KeymapAction.addCueOfType(digit) ?? .addCueOfType0))
             }
         }
         .frame(width: 0, height: 0)
@@ -226,9 +233,9 @@ struct DocumentView: View {
     private var playheadStepShortcuts: some View {
         ZStack {
             Button("Previous Cue") { stepPlayhead(.previous) }
-                .keyboardShortcut(.upArrow, modifiers: [])
+                .keyboardShortcut(shortcut(.stepPrevCue))
             Button("Next Cue") { stepPlayhead(.next) }
-                .keyboardShortcut(.downArrow, modifiers: [])
+                .keyboardShortcut(shortcut(.stepNextCue))
         }
         .frame(width: 0, height: 0)
         .opacity(0)

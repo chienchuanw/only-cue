@@ -60,6 +60,13 @@ final class PlayerEngine {
         if rate > 0 { pause() } else { play() }
     }
 
+    /// Mute / unmute the player's own audio output. The LTC output path uses this
+    /// to silence program audio on `AVPlayer` while it is re-routed through the
+    /// LTC `AVAudioEngine`'s Track channels. Idempotent.
+    func setAudioMuted(_ muted: Bool) {
+        player.volume = muted ? 0 : 1
+    }
+
     func seek(to seconds: TimeInterval) async {
         let target = CMTime(seconds: seconds, preferredTimescale: 600)
         await player.seek(to: target, toleranceBefore: .zero, toleranceAfter: .zero)

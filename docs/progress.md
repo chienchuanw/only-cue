@@ -4,6 +4,21 @@ Append-only session log. Newer entries on top.
 
 ---
 
+## 2026-05-12 — Bypass-mode session: epic #33 (LTC) — `LTCFrame` + biphase modulation; plus a screenshot-test fix
+
+**Shipped (2 PRs):** #162 (epic #33 leaf 2) and #164 (test-infra fix). Rebase-merged to `dev` (`e15b4be`, `cca52cd`).
+
+**`LTCFrame` + `LTCBiphaseEncoder` (PR #162, leaf issue #161).** The deterministic, fully-testable parts of the LTC encoder.
+
+- **`LTCFrame(timecode:)`** (`OnlyCue/LTC/LTCFrame.swift`) — builds the 80-bit SMPTE 12M word as `bits: [Bool]` in transmission order (LSB-first within each field): frame/sec/min/hour BCD units+tens in the standard positions, drop-frame flag at bit 10, zero colour/binary-group-flag/user bits, the bit-polarity-correction (parity) bit at **bit 27** set so the whole word has even parity, and the `0011 1111 1111 1101` sync word at bits 64–79. Decoded-field accessors (`hours`/`minutes`/`seconds`/`frames`/`isDropFrame`/`hasEvenParity`/`syncWordIsValid`). v1 parks the parity bit at bit 27 for *all* rates — the 25 fps standard puts it at bit 59 (follow-up).
+- **`LTCBiphaseEncoder.levels(for:samplesPerHalfBit:startLevel:)`** (`OnlyCue/LTC/LTCBiphaseEncoder.swift`) — biphase-mark (FM): a transition at every bit boundary plus a mid-bit transition for each `1`; emits `samplesPerHalfBit` identical levels per half-bit, returns `(samples: [Bool], endLevel: Bool)` so frames chain (feed `endLevel` back as the next `startLevel`). The caller supplies the integer samples-per-half-bit; the rate→sample-count arithmetic + real `Float`/`AVAudioPCMBuffer` belong with the synthesis leaf.
+- `LTCFrameTests` (~13 — BCD encode/decode + round-trip incl. drop-frame, the drop-frame flag, 80 bits, the sync-word pattern, user/colour/BGF bits zero, even parity always + bit 27 is the only correction bit; biphase — 0-bit transitions only at the boundary, 1-bit adds the mid-bit transition, sample count = 2·bits·spH, spH scales each half-bit, `endLevel` chains, a high `startLevel` inverts the stream). `task_plan.md` #33 → 🟡 2 of 7 leaves.
+- **Repo gotchas learned:** SwiftLint `--strict` here also enforces `large_tuple` (≤ 2 members — a `[(Int,Int,Int,Int,Rate)]` literal fails; use `[Timecode]` / `[[Int]]`) and `multiline_parameters` (a wrapped function signature must be all-on-one-line *or* one-param-per-line); and the SwiftLint build phase runs `--strict`, so violations *fail the build*, not just the lint step.
+
+**Screenshot-test fix (PR #164, issue #163).** `OSCSettingsScreenshotTests` and `KeyboardSettingsScreenshotTests` were failing — both anchored on `app.windows["OnlyCue Settings"]`, but since the Settings scene became a `TabView` (PR #156) macOS titles the Settings window after the selected pane ("OSC" by default, "Keyboard" after switching), so no window has that fixed title. Fix: both tests now record `app.windows.count` before ⌘,, press ⌘,, and assert (via a short poll, `SettingsWindowFinder.waitForNewWindow`) that the count increased — robust regardless of title or the SwiftUI `Form`'s limited a11y tree. The screenshot still prefers the Settings window via a candidate-title lookup, else falls back to the full screen; the Keyboard test additionally clicks the "Keyboard" tab before screenshotting. `OSCMonitorScreenshotTests` was unaffected (it screenshots a sheet, not the Settings window). New `enum SettingsWindowFinder` in `OSCSettingsScreenshotTests.swift`.
+
+---
+
 ## 2026-05-12 — Bypass-mode session: epic #33 started (LTC) — timecode value model
 
 **Shipped (1 PR):** #160. Rebase-merged to `dev` (`05ed534`). Opens epic #33 (LTC generation + audio routing) with leaf 1 — the spec + ADR + the pure timecode value model that every later leaf builds on. Leaf issue #159.

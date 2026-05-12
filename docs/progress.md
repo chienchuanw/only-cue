@@ -4,6 +4,17 @@ Append-only session log. Newer entries on top.
 
 ---
 
+## 2026-05-12 — Bypass-mode session: epic #33 (LTC) — `LTCEncoder` (Timecode → PCM)
+
+**Shipped (1 PR):** #166. Rebase-merged to `dev` (`7c794e3`). Leaf issue #165. Finishes the LTC *encoder* — the audio-sample side — ahead of the routing leaf.
+
+- **`LTCEncoder.samples(for timecode:sampleRate:amplitude:startLevel:)`** (`OnlyCue/LTC/LTCEncoder.swift`) → `(samples: [Float], endLevel: Bool)`. Builds `LTCFrame(timecode:)`, then walks its 80 bits as 160 half-bit slots: slot `k` occupies samples `[round(k·R) … round((k+1)·R))` with `R = sampleRate / (160·fps)` and `fps` the timeline rate (30 for both 30-ND and 30-DF). Exact at any sample rate — integer at 48 kHz for 24/25/30 (`R` = 12.5 / 12 / 10), the rounded slot boundaries distribute the remainder when `R` isn't whole (44.1 kHz, or 24 fps's 12.5-per-half-bit). The biphase rule per slot: a level toggle at the start of each bit's first slot (boundary transition) and another at the start of the second slot iff the bit is `1` (mid-bit transition). `endLevel` returned so consecutive frames join seamlessly.
+- **`LTCEncoder.makeBuffer(for:sampleRate:amplitude:)`** → a mono `.pcmFormatFloat32` `AVAudioPCMBuffer` holding one LTC frame. `amplitude` defaults to `0.8`.
+- `LTCEncoderTests` (7 — sample count = `round(sampleRate/fps)` at 48 kHz (1920 @ 25, 1600 @ 30/30-DF, 2000 @ 24) and 44.1 kHz (1764 @ 25, 1470 @ 30); every sample `±amplitude`; the first sample reflects the opening boundary transition; `endLevel` chains; at `sampleRate = 160·fps` the per-sample sign sequence equals `LTCBiphaseEncoder.levels(for: frame.bits, samplesPerHalfBit: 1)`; `makeBuffer` format/length). 405 unit tests pass; `swiftlint --strict` clean (had to fix a `multiline_arguments` violation — that rule, like the others, runs in the SwiftLint *build phase*, so it fails the build).
+- Docs: `architecture.md#ltc-and-routing` — the sample-synthesis row is now `LTCEncoder` (the `round(k·R)` slot scheme); `task_plan.md` #33 → 🟡 ~3 of 7 leaves. No new ADR. No screenshot (pure synthesis, no UI).
+
+---
+
 ## 2026-05-12 — Bypass-mode session: epic #33 (LTC) — `LTCFrame` + biphase modulation; plus a screenshot-test fix
 
 **Shipped (2 PRs):** #162 (epic #33 leaf 2) and #164 (test-infra fix). Rebase-merged to `dev` (`e15b4be`, `cca52cd`).

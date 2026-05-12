@@ -22,6 +22,12 @@ struct LTCFrame: Equatable, Sendable {
     /// Exactly 80 bits, transmission order.
     let bits: [Bool]
 
+    /// Wrap a raw 80-bit transmission-order word (e.g. recovered by a decoder).
+    init(bits: [Bool]) {
+        precondition(bits.count == 80, "an LTC frame is exactly 80 bits")
+        self.bits = bits
+    }
+
     init(timecode: Timecode) {
         var word = [Bool](repeating: false, count: 80)
 
@@ -54,6 +60,22 @@ struct LTCFrame: Equatable, Sendable {
     var isDropFrame: Bool { bits[10] }
     var hasEvenParity: Bool { bits.lazy.filter { $0 }.count.isMultiple(of: 2) }
     var syncWordIsValid: Bool { Array(bits[64..<80]) == Self.syncWord }
+
+    /// `true` when the sync word is intact and the word has even parity — the
+    /// two integrity checks a decoder applies before trusting the fields.
+    var isWellFormed: Bool { syncWordIsValid && hasEvenParity }
+
+    /// The timecode this frame carries, at `framesPerSecond` (the wire form only
+    /// distinguishes drop-frame via bit 10 — the rate magnitude comes from the
+    /// signal's measured bit period). `nil` if the BCD fields are out of range
+    /// (or a drop-frame-skipped number), or if `framesPerSecond` has no
+    /// `SMPTEFramerate`.
+    func timecode(framesPerSecond: Int) -> Timecode? {
+        guard let rate = SMPTEFramerate.matching(framesPerSecond: framesPerSecond, isDropFrame: isDropFrame) else {
+            return nil
+        }
+        return Timecode(hours: hours, minutes: minutes, seconds: seconds, frames: frames, rate: rate)
+    }
 
     private func value(at start: Int, bits count: Int) -> Int {
         (0..<count).reduce(0) { $0 | (bits[start + $1] ? (1 << $1) : 0) }

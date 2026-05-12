@@ -5,7 +5,7 @@ struct CueMarkersOverlay: View {
     let cues: [Cue]
     let duration: TimeInterval
     var resolveColorHex: (Cue) -> String? = { _ in nil }
-    var selectedCueID: Cue.ID?
+    var selectedCueIDs: Set<Cue.ID> = []
     var onSelectCue: (Cue.ID) -> Void = { _ in }
     var onSeek: (TimeInterval) -> Void = { _ in }
     var onRetime: (Cue.ID, TimeInterval) -> Void = { _, _ in }
@@ -22,7 +22,7 @@ struct CueMarkersOverlay: View {
                             width: geometry.size.width,
                             duration: duration
                         ),
-                        isSelected: cue.id == selectedCueID,
+                        isSelected: selectedCueIDs.contains(cue.id),
                         onSelect: { onSelectCue(cue.id) },
                         onSeek: { onSeek(cue.time) },
                         onRetimeBy: { dx in

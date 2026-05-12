@@ -18,7 +18,7 @@ struct TimelineBreakdownView: View {
     let cues: [Cue]
     let types: [CuePointType]
     let duration: TimeInterval
-    var selectedCueID: Cue.ID?
+    var selectedCueIDs: Set<Cue.ID> = []
     var onSelectCue: (Cue.ID) -> Void = { _ in }
     var onSeek: (TimeInterval) -> Void = { _ in }
     var onHideType: (CuePointType.ID) -> Void = { _ in }
@@ -107,7 +107,7 @@ struct TimelineBreakdownView: View {
 
     private func marker(for cue: Cue, colorHex: String, trackWidth: CGFloat) -> some View {
         let x = CueMarkersGeometry.position(forTime: cue.time, width: trackWidth, duration: duration)
-        let selected = cue.id == selectedCueID
+        let selected = selectedCueIDs.contains(cue.id)
         let lineWidth: CGFloat = selected ? 3 : 2
         return Rectangle()
             .fill(Color(hex: colorHex) ?? .accentColor)

@@ -4,7 +4,12 @@ struct CueListPane: View {
 
     @ObservedObject var document: CueListDocument
     let engine: PlayerEngine
-    @Binding var selection: Cue.ID?
+    @Binding var selection: Set<Cue.ID>
+
+    /// The single selected cue's id, when exactly one is selected — the
+    /// granularity the inspector / snap / nudge / duplicate commands work at
+    /// (batch versions over the whole `selection` are a follow-up leaf).
+    private var soleSelectedID: Cue.ID? { selection.count == 1 ? selection.first : nil }
 
     @Environment(\.undoManager) private var undoManager
     @State private var searchQuery: String = ""
@@ -28,7 +33,7 @@ struct CueListPane: View {
     }
 
     private var selectedCue: Cue? {
-        guard let id = selection else { return nil }
+        guard let id = soleSelectedID else { return nil }
         return cues.first(where: { $0.id == id })
     }
 
@@ -65,7 +70,7 @@ struct CueListPane: View {
     private static let nudgeStep: TimeInterval = 1.0 / 30.0
 
     private func duplicateSelectedAtPlayhead() {
-        guard let id = selection else { return }
+        guard let id = soleSelectedID else { return }
         CueCommands.duplicateAtPlayhead(
             cueId: id,
             time: engine.currentTime,
@@ -75,7 +80,7 @@ struct CueListPane: View {
     }
 
     private func snapSelectedToPlayhead() {
-        guard let id = selection else { return }
+        guard let id = soleSelectedID else { return }
         CueCommands.retime(
             cueId: id,
             to: engine.currentTime,
@@ -86,7 +91,7 @@ struct CueListPane: View {
 
     private func nudgeSelected(by step: TimeInterval) {
         guard
-            let id = selection,
+            let id = soleSelectedID,
             let cue = cues.first(where: { $0.id == id })
         else { return }
         CueCommands.retime(
@@ -149,9 +154,11 @@ struct CueListPane: View {
                 .onDelete(perform: deleteAtOffsets)
             }
             .onDeleteCommand { deleteSelected() }
-            .onChange(of: selection) { _, newValue in
+            .onChange(of: selection) { _, _ in
+                // Seek/scroll only on a single-cue selection — a multi-select
+                // shouldn't yank the playhead or re-center the list.
                 guard
-                    let id = newValue,
+                    let id = soleSelectedID,
                     let cue = cues.first(where: { $0.id == id })
                 else { return }
                 Task { await engine.seek(to: cue.time) }
@@ -178,9 +185,11 @@ struct CueListPane: View {
     }
 
     private func deleteSelected() {
-        guard let id = selection else { return }
-        CueCommands.delete(cueId: id, document: document, undoManager: undoManager)
-        selection = nil
+        guard !selection.isEmpty else { return }
+        for id in selection {
+            CueCommands.delete(cueId: id, document: document, undoManager: undoManager)
+        }
+        selection = []
     }
 }
 

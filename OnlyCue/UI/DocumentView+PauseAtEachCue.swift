@@ -12,7 +12,7 @@ extension DocumentView {
         let cues = document.model.activeItem?.cues ?? []
         if let crossed = cues.cueCrossed(movingFrom: oldValue, to: newValue) {
             engine.pause()
-            selectedCueID = crossed.id
+            cueSelection = [crossed.id]
         }
     }
 }

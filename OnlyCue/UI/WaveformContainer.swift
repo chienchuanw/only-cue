@@ -7,7 +7,7 @@ struct WaveformContainer: View {
     var resolution: Int = 512
     var cues: [Cue] = []
     var resolveColorHex: (Cue) -> String? = { _ in nil }
-    var selectedCueID: Cue.ID?
+    var selectedCueIDs: Set<Cue.ID> = []
     var onSelectCue: (Cue.ID) -> Void = { _ in }
     var onSeek: (TimeInterval) -> Void = { _ in }
     var onRetime: (Cue.ID, TimeInterval) -> Void = { _, _ in }
@@ -97,7 +97,7 @@ struct WaveformContainer: View {
                             cues: cues,
                             duration: loadedDuration,
                             resolveColorHex: resolveColorHex,
-                            selectedCueID: selectedCueID,
+                            selectedCueIDs: selectedCueIDs,
                             onSelectCue: onSelectCue,
                             onSeek: onSeek,
                             onRetime: onRetime

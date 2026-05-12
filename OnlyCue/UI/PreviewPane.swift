@@ -5,7 +5,7 @@ struct PreviewPane: View {
 
     @ObservedObject var document: CueListDocument
     let engine: PlayerEngine
-    var selectedCueID: Cue.ID?
+    var selectedCueIDs: Set<Cue.ID> = []
     var onSelectCue: (Cue.ID) -> Void = { _ in }
 
     @Environment(\.undoManager) private var undoManager
@@ -105,7 +105,7 @@ struct PreviewPane: View {
                 cues: item.cues,
                 types: document.model.cuePointTypes,
                 duration: item.media.duration,
-                selectedCueID: selectedCueID,
+                selectedCueIDs: selectedCueIDs,
                 onSelectCue: onSelectCue,
                 onSeek: { time in Task { await engine.seek(to: time) } },
                 onHideType: { typeId in
@@ -131,7 +131,7 @@ struct PreviewPane: View {
             asset: AVURLAsset(url: url),
             cues: item.cues,
             resolveColorHex: { document.model.colorHex(for: $0) },
-            selectedCueID: selectedCueID,
+            selectedCueIDs: selectedCueIDs,
             onSelectCue: onSelectCue,
             onSeek: { time in Task { await engine.seek(to: time) } },
             onRetime: { cueId, newTime in

@@ -38,6 +38,7 @@ struct DocumentView: View {
             FirstLaunchSheet { didShowFirstLaunch = true }
         }
         .task(id: document.model.activeItemID) { await reloadActive() }
+        .stripedTimecodeReader(item: document.model.activeItem)
         .onChange(of: document.model.activeItemID) { _, _ in
             // Clear stale selection on item switch — the new item's cues won't
             // contain the previous item's selected Cue.ID, so leaving it set

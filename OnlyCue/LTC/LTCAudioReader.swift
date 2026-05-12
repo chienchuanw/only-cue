@@ -19,8 +19,9 @@ enum LTCAudioReader {
     static let sampleRate: Double = 48_000
 
     /// The first audio track of `url`, down-mixed to mono `Float` PCM at
-    /// `sampleRate`.
-    static func readMonoSamples(from url: URL) async throws -> [Float] {
+    /// `sampleRate`. `maxSeconds` (when > 0) caps how much is read — enough to
+    /// detect striped LTC without pulling an hour-long file into memory.
+    static func readMonoSamples(from url: URL, maxSeconds: TimeInterval = 0) async throws -> [Float] {
         let asset = AVURLAsset(url: url)
         guard let track = try await asset.loadTracks(withMediaType: .audio).first else {
             throw LTCAudioReaderError.noAudioTrack
@@ -39,18 +40,23 @@ enum LTCAudioReader {
         reader.add(output)
         guard reader.startReading() else { throw LTCAudioReaderError.readerFailed }
 
+        let cap = maxSeconds > 0 ? Int((maxSeconds * sampleRate).rounded(.up)) : Int.max
         var samples: [Float] = []
-        while let buffer = output.copyNextSampleBuffer() {
+        while samples.count < cap, let buffer = output.copyNextSampleBuffer() {
             appendFloatSamples(from: buffer, into: &samples)
             CMSampleBufferInvalidate(buffer)
         }
+        reader.cancelReading()
         if reader.status == .failed { throw LTCAudioReaderError.readerFailed }
         return samples
     }
 
-    /// Decode every well-formed LTC frame striped onto `url`'s first audio track.
-    static func decodeTimecodes(from url: URL) async throws -> [LTCDecoder.DecodedFrame] {
-        LTCDecoder.decode(samples: try await readMonoSamples(from: url), sampleRate: sampleRate)
+    /// Decode the LTC frames striped onto `url`'s first audio track, reading at
+    /// most `maxSeconds` of audio (default 10 s — plenty for an anchor frame;
+    /// LTC is linear so a `StripedTimecodeTrack` extrapolates the rest). Pass
+    /// `maxSeconds: 0` to read the whole track.
+    static func decodeTimecodes(from url: URL, maxSeconds: TimeInterval = 10) async throws -> [LTCDecoder.DecodedFrame] {
+        LTCDecoder.decode(samples: try await readMonoSamples(from: url, maxSeconds: maxSeconds), sampleRate: sampleRate)
     }
 
     private static func appendFloatSamples(from sampleBuffer: CMSampleBuffer, into samples: inout [Float]) {

@@ -4,6 +4,19 @@ Append-only session log. Newer entries on top.
 
 ---
 
+## 2026-05-12 — Bypass-mode session: epic #33 (LTC) — `LTCAudioReader` (read striped LTC off imported media)
+
+**Shipped (1 PR):** #178. Rebase-merged to `dev` (`e030f82`). Leaf issue #177. The media-reader half of leaf 5.
+
+- **`LTCAudioReader.readMonoSamples(from url:) async throws -> [Float]`** (`OnlyCue/LTC/LTCAudioReader.swift`) — `AVURLAsset` → first `.audio` track → `AVAssetReaderTrackOutput` with linear-PCM / mono / 32-bit float / 48 kHz / non-interleaved output settings; pulls `CMSampleBuffer`s, copies each block buffer's bytes and appends them as `Float`. `LTCAudioReaderError` (`.noAudioTrack`, `.readerFailed`). 48 kHz so the decoder's bit-period maths stay integer-ish for 24 / 25 / 30 fps. Mirrors the repo's `WaveformGenerator` `AVAssetReader` pattern.
+- **`LTCAudioReader.decodeTimecodes(from url:) async throws -> [LTCDecoder.DecodedFrame]`** — `readMonoSamples` then `LTCDecoder.decode(...)`.
+- The remaining bit of leaf 5 — feeding `decodeTimecodes(...)` into `PlayerEngine` so a striped LTC track drives the timeline — is a later leaf (it's a playback behaviour change, better verified in Xcode; and there's no SMPTE-timecode consumer in the UI yet).
+- Docs: `architecture.md#ltc-and-routing` — new "Media reader" + "Striped-LTC drive (not built)" rows, intro updated; `task_plan.md` #33 — leaf 5 media reader done.
+- `LTCAudioReaderTests` (4 — a `writeWav` helper builds a mono 32-bit-float WAV via `AVAudioFile` (all unwraps via `try XCTUnwrap` — SwiftLint forbids `!`): encode an LTC run with `LTCFrameStream` → write → `readMonoSamples` back (count matches ±64 edge slack, not silence); `decodeTimecodes` on a 10-frame fps25 WAV recovers a contiguous run of the encoded timecodes (≤1 leading lost) + the rate; a non-media `.txt` makes `readMonoSamples` throw without crashing; a silent WAV decodes to no frames). 466 → 470 unit tests pass; `swiftlint --strict` clean.
+- Decided (with the user) the order for the rest of epic #33: **A** `LTCSchedule` (pure buffer plan, fully tested) → **B** `LTCAudioOutput` (thin `AVAudioEngine` glue — engine on the routed device, mono LTC on the assigned channel, reschedule on config-change = the "survives disconnect" behaviour; untestable headless) → **C** wire it to the document window (start/feed on playback) → **D** striped-LTC → `PlayerEngine`. The user verifies B/C in Xcode against a real interface.
+
+---
+
 ## 2026-05-12 — Bypass-mode session: epic #33 (LTC) — `LTCDecoder` (biphase-mark demodulation + frame recovery)
 
 **Shipped (1 PR):** #176. Rebase-merged to `dev` (`2897959`). Leaf issue #175. The decoder half of leaf 5 (striped-LTC playback) — the pure, fully-testable inverse of `LTCEncoder` / `LTCFrameStream`.

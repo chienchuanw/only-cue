@@ -1,3 +1,4 @@
+import AppKit
 import SwiftUI
 
 struct CueMarkersOverlay: View {
@@ -6,7 +7,10 @@ struct CueMarkersOverlay: View {
     let duration: TimeInterval
     var resolveColorHex: (Cue) -> String? = { _ in nil }
     var selectedCueIDs: Set<Cue.ID> = []
+    /// Plain marker click → replace the selection with this cue.
     var onSelectCue: (Cue.ID) -> Void = { _ in }
+    /// ⌘- (or ⇧-) marker click → toggle this cue in/out of the selection.
+    var onToggleCue: (Cue.ID) -> Void = { _ in }
     var onSeek: (TimeInterval) -> Void = { _ in }
     var onRetime: (Cue.ID, TimeInterval) -> Void = { _, _ in }
 
@@ -23,7 +27,9 @@ struct CueMarkersOverlay: View {
                             duration: duration
                         ),
                         isSelected: selectedCueIDs.contains(cue.id),
-                        onSelect: { onSelectCue(cue.id) },
+                        onSelect: { extending in
+                            if extending { onToggleCue(cue.id) } else { onSelectCue(cue.id) }
+                        },
                         onSeek: { onSeek(cue.time) },
                         onRetimeBy: { dx in
                             let newTime = CueMarkersGeometry.time(
@@ -64,7 +70,8 @@ struct CueMarkerView: View {
     var resolvedColorHex: String?
     let baseX: CGFloat
     var isSelected: Bool = false
-    var onSelect: () -> Void = {}
+    /// `true` when ⌘ or ⇧ was held during the click (extend the selection vs. replace it).
+    var onSelect: (_ extending: Bool) -> Void = { _ in }
     var onSeek: () -> Void = {}
     var onRetimeBy: (CGFloat) -> Void = { _ in }
 
@@ -124,9 +131,12 @@ struct CueMarkerView: View {
                     // Select first so the cue list highlight + inspector update
                     // land before the seek; engine.seek is idempotent so the
                     // CueListPane.onChange(of: selection) seek that follows is
-                    // a redundant no-op against the same target time.
-                    onSelect()
-                    onSeek()
+                    // a redundant no-op against the same target time. ⌘/⇧ extends
+                    // the selection instead of replacing it (no seek then).
+                    let modifiers = NSEvent.modifierFlags
+                    let extending = modifiers.contains(.command) || modifiers.contains(.shift)
+                    onSelect(extending)
+                    if !extending { onSeek() }
                 } else {
                     onRetimeBy(dx)
                 }

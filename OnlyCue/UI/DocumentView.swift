@@ -75,7 +75,8 @@ struct DocumentView: View {
                 document: document,
                 engine: engine,
                 selectedCueIDs: cueSelection,
-                onSelectCue: { cueSelection = [$0] }
+                onSelectCue: { cueSelection = [$0] },
+                onToggleCue: { cueSelection.formSymmetricDifference([$0]) }
             )
 
             Text("\(activeItem?.cues.count ?? 0) cue\((activeItem?.cues.count ?? 0) == 1 ? "" : "s")")

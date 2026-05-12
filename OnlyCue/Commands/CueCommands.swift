@@ -133,6 +133,40 @@ enum CueCommands {
         }
     }
 
+    /// Shift every cue in `ids` by `delta` seconds (clamped at 0), re-sort, in
+    /// one undo step. No-op for an empty set. Used by the multi-select nudge
+    /// (`Option+←` / `Option+→`).
+    static func nudgeCues(_ ids: Set<Cue.ID>, by delta: TimeInterval, document: CueListDocument, undoManager: UndoManager?) {
+        guard !ids.isEmpty else { return }
+        mutateCues(document, undoManager: undoManager, actionName: "Nudge Cues") { cues in
+            cues
+                .map { cue -> Cue in
+                    guard ids.contains(cue.id) else { return cue }
+                    var copy = cue
+                    copy.time = max(cue.time + delta, 0)
+                    return copy
+                }
+                .sorted { $0.time < $1.time }
+        }
+    }
+
+    /// Move every cue in `ids` to `time` (clamped at 0), re-sort, in one undo
+    /// step. No-op for an empty set. Used by the multi-select snap-to-playhead
+    /// (`S`) — note that snapping several cues to the same point stacks them.
+    static func snapCues(_ ids: Set<Cue.ID>, to time: TimeInterval, document: CueListDocument, undoManager: UndoManager?) {
+        guard !ids.isEmpty else { return }
+        mutateCues(document, undoManager: undoManager, actionName: "Snap Cues") { cues in
+            cues
+                .map { cue -> Cue in
+                    guard ids.contains(cue.id) else { return cue }
+                    var copy = cue
+                    copy.time = max(time, 0)
+                    return copy
+                }
+                .sorted { $0.time < $1.time }
+        }
+    }
+
     // MARK: - Internals
 
     private static func updateCue(

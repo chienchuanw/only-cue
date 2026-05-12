@@ -80,26 +80,11 @@ struct CueListPane: View {
     }
 
     private func snapSelectedToPlayhead() {
-        guard let id = soleSelectedID else { return }
-        CueCommands.retime(
-            cueId: id,
-            to: engine.currentTime,
-            document: document,
-            undoManager: undoManager
-        )
+        CueCommands.snapCues(selection, to: engine.currentTime, document: document, undoManager: undoManager)
     }
 
     private func nudgeSelected(by step: TimeInterval) {
-        guard
-            let id = soleSelectedID,
-            let cue = cues.first(where: { $0.id == id })
-        else { return }
-        CueCommands.retime(
-            cueId: id,
-            to: cue.time + step,
-            document: document,
-            undoManager: undoManager
-        )
+        CueCommands.nudgeCues(selection, by: step, document: document, undoManager: undoManager)
     }
 
     private var emptyState: some View {

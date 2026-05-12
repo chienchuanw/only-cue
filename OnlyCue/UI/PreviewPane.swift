@@ -7,6 +7,7 @@ struct PreviewPane: View {
     let engine: PlayerEngine
     var selectedCueIDs: Set<Cue.ID> = []
     var onSelectCue: (Cue.ID) -> Void = { _ in }
+    var onToggleCue: (Cue.ID) -> Void = { _ in }
 
     @Environment(\.undoManager) private var undoManager
     @State private var waveformURL: URL?
@@ -133,6 +134,7 @@ struct PreviewPane: View {
             resolveColorHex: { document.model.colorHex(for: $0) },
             selectedCueIDs: selectedCueIDs,
             onSelectCue: onSelectCue,
+            onToggleCue: onToggleCue,
             onSeek: { time in Task { await engine.seek(to: time) } },
             onRetime: { cueId, newTime in
                 CueCommands.retime(

@@ -28,6 +28,11 @@ enum AudioOutputDeviceList {
         deviceIDs().compactMap { device(for: $0) }
     }
 
+    /// The current device with this stable UID, if it's still present.
+    static func device(forUID uid: String) -> AudioOutputDevice? {
+        current().first { $0.uid == uid }
+    }
+
     /// The system default output device, if it has output channels.
     static func defaultOutput() -> AudioOutputDevice? {
         var address = AudioObjectPropertyAddress(

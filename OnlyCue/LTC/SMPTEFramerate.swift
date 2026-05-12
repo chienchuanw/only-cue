@@ -27,6 +27,21 @@ enum SMPTEFramerate: String, Codable, CaseIterable, Identifiable, Sendable {
 
     var isDropFrame: Bool { self == .fps30drop }
 
+    /// The rate with this nominal `framesPerSecond` and drop-frame flag, or
+    /// `nil` if there is none (drop-frame only exists at 30 fps; only 24 / 25 /
+    /// 30 are supported). Used when recovering a rate from a decoded LTC signal:
+    /// the magnitude comes from the measured bit period, the drop-frame bit from
+    /// the frame itself.
+    static func matching(framesPerSecond: Int, isDropFrame: Bool) -> Self? {
+        if isDropFrame { return framesPerSecond == 30 ? .fps30drop : nil }
+        switch framesPerSecond {
+        case 24: return .fps24
+        case 25: return .fps25
+        case 30: return .fps30
+        default: return nil
+        }
+    }
+
     var displayName: String {
         switch self {
         case .fps24: return "24 fps"

@@ -4,6 +4,17 @@ Append-only session log. Newer entries on top.
 
 ---
 
+## 2026-05-12 — Bypass-mode session: epic #36 (timeline UX) — `Set<Cue.ID>` selection model (multi-select part 1)
+
+**Shipped (1 PR):** #188. Rebase-merged to `dev` (`670a7f8`). Leaf issue #187. (Started after epic #33's playback story landed; user scoping: the "waveform gain control" leaf is dropped — the existing pinch-zoom + vertical-zoom magnifier already cover it.)
+
+- Migrated the cue selection from `selectedCueID: Cue.ID?` to a `Set<Cue.ID>` across 7 files: `DocumentView` (`cueSelection`, cleared on item switch + by pause-at-each-cue → `[crossed.id]`), `DocumentView+PauseAtEachCue`, `CueListPane` (`@Binding var selection: Set<Cue.ID>` — `List(selection:)` gives Cmd/Shift multi-select natively), `PreviewPane` / `TimelineBreakdownView` / `WaveformContainer` / `CueMarkersOverlay` (`selectedCueIDs: Set<Cue.ID>`; highlight when `.contains(cue.id)`).
+- `CueListPane.soleSelectedID` (`selection.count == 1 ? selection.first : nil`) is the granularity the inspector / `S` snap / Option+←→ nudge / duplicate-at-playhead work at — they no-op when 0 or >1 selected; seek-on-select + centered scroll fire only on a single selection; `⌫` / `onDeleteCommand` delete every selected cue (one `CueCommands.delete` per cue — batched undo is part 2). A plain marker click still *replaces* the selection (`cueSelection = [id]`); Cmd/Shift-on-marker is part 2.
+- Docs: `architecture.md` — new `## Cue selection` section. `task_plan.md` #36 — multi-select pt1 done; gain-control leaf dropped per user; remaining = pt2 (batch snap/nudge over the set with one undo step + Cmd/Shift-click on markers).
+- 495 unit tests pass — no new tests (pure refactor; the new logic is private View / SwiftUI-`List` behaviour; existing tests guard the unchanged command paths). `swiftlint --strict` clean. Process gotchas: a `bash` heredoc `cd OnlyCue/UI && python3 …` left the shell's cwd at `OnlyCue/UI` for the *next* Bash call (cwd persists across calls), so `xcodegen` failed + `swiftlint` linted only the 46 files under that dir — recovered with an absolute `cd`. And a stray `selectedCueID` use in `DocumentView+PauseAtEachCue.swift` got past the first grep — caught at build.
+
+---
+
 ## 2026-05-12 — Bypass-mode session: epic #33 (LTC) — striped-LTC drives the SMPTE readout (step D; playback story complete)
 
 **Shipped (1 PR):** #186. Rebase-merged to `dev` (`ec9f600`). Leaf issue #185.

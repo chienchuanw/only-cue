@@ -9,7 +9,7 @@ struct DocumentView: View {
     @State var pendingAlert: DocumentAlert?
     @State private var seekTask: Task<Void, Never>?
     @State private var showOverlayAppearance = false
-    @State var selectedCueID: Cue.ID?
+    @State var cueSelection: Set<Cue.ID> = []
     @AppStorage(FirstLaunchFlag.key) var didShowFirstLaunch = false
     @AppStorage(NotesOverlayPreferences.storageKey) var overlayPrefsData = NotesOverlayPreferences.defaultEncoded
     @AppStorage("pauseAtEachCue") var pauseAtEachCue = false
@@ -29,7 +29,7 @@ struct DocumentView: View {
         } detail: {
             mainPane
                 .inspector(isPresented: .constant(true)) {
-                    CueListPane(document: document, engine: engine, selection: $selectedCueID)
+                    CueListPane(document: document, engine: engine, selection: $cueSelection)
                         .inspectorColumnWidth(min: 240, ideal: 300, max: 400)
                 }
         }
@@ -43,7 +43,7 @@ struct DocumentView: View {
             // Clear stale selection on item switch — the new item's cues won't
             // contain the previous item's selected Cue.ID, so leaving it set
             // produces a silent inspector-empty state with no visual indication.
-            selectedCueID = nil
+            cueSelection = []
         }
         .onChange(of: engine.currentTime) { oldValue, newValue in
             handlePauseAtEachCue(from: oldValue, to: newValue)
@@ -74,8 +74,8 @@ struct DocumentView: View {
             PreviewPane(
                 document: document,
                 engine: engine,
-                selectedCueID: selectedCueID,
-                onSelectCue: { selectedCueID = $0 }
+                selectedCueIDs: cueSelection,
+                onSelectCue: { cueSelection = [$0] }
             )
 
             Text("\(activeItem?.cues.count ?? 0) cue\((activeItem?.cues.count ?? 0) == 1 ? "" : "s")")

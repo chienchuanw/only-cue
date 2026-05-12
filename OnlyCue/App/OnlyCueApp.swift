@@ -9,7 +9,12 @@ struct OnlyCueApp: App {
         .commands { AppCommands() }
 
         Settings {
-            OSCSettingsView()
+            TabView {
+                OSCSettingsView()
+                    .tabItem { Label("OSC", systemImage: "dot.radiowaves.left.and.right") }
+                KeyboardSettingsView()
+                    .tabItem { Label("Keyboard", systemImage: "keyboard") }
+            }
         }
     }
 }

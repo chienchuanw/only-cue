@@ -6,6 +6,13 @@ struct AppCommands: Commands {
     @AppStorage("showNotesOverlay") private var showNotesOverlay = false
     @AppStorage("showTimelineBreakdown") private var showTimelineBreakdown = false
     @AppStorage("pauseAtEachCue") private var pauseAtEachCue = false
+    @ObservedObject private var keymapStore = KeymapStore.shared
+
+    private func shortcut(_ action: KeymapAction) -> KeyboardShortcut {
+        keymapStore.keymap.chord(for: action).keyboardShortcut
+            ?? Keymap.default.chord(for: action).keyboardShortcut
+            ?? KeyboardShortcut(KeyEquivalent("/"), modifiers: .command)
+    }
 
     var body: some Commands {
         CommandGroup(replacing: .appInfo) {
@@ -18,14 +25,14 @@ struct AppCommands: Commands {
             } label: {
                 Label("Import Media…", systemImage: "square.and.arrow.down")
             }
-            .keyboardShortcut("o", modifiers: .command)
+            .keyboardShortcut(shortcut(.importMedia))
 
             Button {
                 NotificationCenter.default.post(name: .exportCuesToCSVRequested, object: nil)
             } label: {
                 Label("Export Cues…", systemImage: "square.and.arrow.up")
             }
-            .keyboardShortcut("e", modifiers: [.command, .shift])
+            .keyboardShortcut(shortcut(.exportCues))
 
             Divider()
 
@@ -54,67 +61,67 @@ struct AppCommands: Commands {
             Button("Zoom In") {
                 NotificationCenter.default.post(name: .waveformZoomIn, object: nil)
             }
-            .keyboardShortcut("=", modifiers: .command)
+            .keyboardShortcut(shortcut(.waveformZoomIn))
 
             Button("Zoom Out") {
                 NotificationCenter.default.post(name: .waveformZoomOut, object: nil)
             }
-            .keyboardShortcut("-", modifiers: .command)
+            .keyboardShortcut(shortcut(.waveformZoomOut))
 
             Button("Actual Size") {
                 NotificationCenter.default.post(name: .waveformZoomReset, object: nil)
             }
-            .keyboardShortcut("0", modifiers: .command)
+            .keyboardShortcut(shortcut(.waveformZoomReset))
 
             Divider()
 
             Button("Zoom In Vertically") {
                 NotificationCenter.default.post(name: .waveformVerticalZoomIn, object: nil)
             }
-            .keyboardShortcut("=", modifiers: [.command, .option])
+            .keyboardShortcut(shortcut(.waveformVerticalZoomIn))
 
             Button("Zoom Out Vertically") {
                 NotificationCenter.default.post(name: .waveformVerticalZoomOut, object: nil)
             }
-            .keyboardShortcut("-", modifiers: [.command, .option])
+            .keyboardShortcut(shortcut(.waveformVerticalZoomOut))
 
             Button("Actual Vertical Size") {
                 NotificationCenter.default.post(name: .waveformVerticalZoomReset, object: nil)
             }
-            .keyboardShortcut("0", modifiers: [.command, .option])
+            .keyboardShortcut(shortcut(.waveformVerticalZoomReset))
 
             Divider()
 
             Toggle("Show Notes Overlay", isOn: $showNotesOverlay)
-                .keyboardShortcut("n", modifiers: [.command, .shift])
+                .keyboardShortcut(shortcut(.toggleNotesOverlay))
 
             Toggle("Show Timeline Breakdown", isOn: $showTimelineBreakdown)
-                .keyboardShortcut("b", modifiers: [.command, .shift])
+                .keyboardShortcut(shortcut(.toggleTimelineBreakdown))
 
             Toggle("Pause at Each Cue", isOn: $pauseAtEachCue)
-                .keyboardShortcut("p", modifiers: [.command, .shift])
+                .keyboardShortcut(shortcut(.togglePauseAtEachCue))
 
             Divider()
 
             Button("Snap Selected Cue to Playhead") {
                 NotificationCenter.default.post(name: .snapSelectedCueToPlayhead, object: nil)
             }
-            .keyboardShortcut("s", modifiers: [])
+            .keyboardShortcut(shortcut(.snapSelectedCueToPlayhead))
 
             Button("Duplicate Cue at Playhead") {
                 NotificationCenter.default.post(name: .duplicateSelectedCueAtPlayhead, object: nil)
             }
-            .keyboardShortcut("d", modifiers: .command)
+            .keyboardShortcut(shortcut(.duplicateCueAtPlayhead))
 
             Button("Nudge Selected Cue Back") {
                 NotificationCenter.default.post(name: .nudgeSelectedCueBack, object: nil)
             }
-            .keyboardShortcut(.leftArrow, modifiers: .option)
+            .keyboardShortcut(shortcut(.nudgeSelectedCueBack))
 
             Button("Nudge Selected Cue Forward") {
                 NotificationCenter.default.post(name: .nudgeSelectedCueForward, object: nil)
             }
-            .keyboardShortcut(.rightArrow, modifiers: .option)
+            .keyboardShortcut(shortcut(.nudgeSelectedCueForward))
         }
 
         CommandMenu("Tools") {

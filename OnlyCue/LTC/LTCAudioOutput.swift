@@ -39,6 +39,18 @@ final class LTCAudioOutput: ObservableObject {
     private var renderFormat: AVAudioFormat?
     private var ltcChannel = 0
 
+    /// Buffers handed to `playerNode` that haven't reported completion yet — the
+    /// current lead. `topUpBuffers` schedules until this reaches `primeCount`.
+    private var outstandingBuffers = 0
+    /// Bumped on every rebuild / `stop` / `update`. Completion handlers capture
+    /// the generation they were scheduled under and ignore themselves once it's
+    /// stale, so a superseded schedule's late completions don't skew the count.
+    private var pumpGeneration = 0
+    /// Periodically calls `topUpBuffers` on the main queue — a refill path that
+    /// doesn't depend on the completion-handler chain being serviced promptly, so
+    /// a brief main-actor stall can't drain the player-node queue.
+    private var refillTimer: DispatchSourceTimer?
+
     /// What `start` was last told — used to rebuild after a config change.
     private var pendingStart: (timecode: Timecode, routing: LTCRoutingSettings)?
     private var configObserver: NSObjectProtocol?
@@ -54,6 +66,7 @@ final class LTCAudioOutput: ObservableObject {
 
     deinit {
         if let configObserver { NotificationCenter.default.removeObserver(configObserver) }
+        refillTimer?.cancel()
     }
 
     // MARK: - Transport hooks
@@ -72,12 +85,15 @@ final class LTCAudioOutput: ObservableObject {
 
     /// Stop LTC output and release the device.
     func stop() {
+        pumpGeneration += 1
+        stopRefillTimer()
         playerNode.stop()
         engine.stop()
         engine.reset()
         schedule = nil
         renderFormat = nil
         pendingStart = nil
+        outstandingBuffers = 0
         isRunning = false
     }
 
@@ -86,12 +102,14 @@ final class LTCAudioOutput: ObservableObject {
     /// scrub is a short re-prime, not a full restart. No-op if not running.
     func update(at timecode: Timecode) {
         guard isRunning, let pending = pendingStart, let format = renderFormat else { return }
+        pumpGeneration += 1
+        outstandingBuffers = 0
         pendingStart = (timecode, pending.routing)
         playerNode.stop()
         let framesPerBuffer = LTCSchedule.framesPerBuffer(forTargetSeconds: bufferTargetSeconds, rate: timecode.rate)
         schedule = LTCSchedule(startTimecode: timecode, sampleRate: format.sampleRate, framesPerBuffer: framesPerBuffer)
         playerNode.play()
-        for _ in 0..<primeCount { scheduleOneBuffer() }
+        topUpBuffers()
     }
 
     // MARK: - Engine lifecycle
@@ -103,9 +121,12 @@ final class LTCAudioOutput: ObservableObject {
 
     private func restartEngine() {
         guard let pending = pendingStart else { return }
+        pumpGeneration += 1
+        stopRefillTimer()
         playerNode.stop()
         engine.stop()
         engine.reset()
+        outstandingBuffers = 0
         isRunning = false
         lastError = nil
 
@@ -133,7 +154,8 @@ final class LTCAudioOutput: ObservableObject {
 
             try engine.start()
             playerNode.play()
-            for _ in 0..<primeCount { scheduleOneBuffer() }
+            topUpBuffers()
+            startRefillTimer()
             isRunning = true
         } catch {
             schedule = nil
@@ -164,21 +186,63 @@ final class LTCAudioOutput: ObservableObject {
 
     // MARK: - Buffer pump
 
+    /// Schedule buffers until the player-node lead reaches `primeCount`. Called
+    /// from priming, from each buffer's completion handler, and from the refill
+    /// timer — whichever notices the lead is short first.
+    private func topUpBuffers() {
+        guard isRunningOrPriming else { return }
+        let needed = Self.buffersToSchedule(outstanding: outstandingBuffers, target: primeCount)
+        for _ in 0..<needed { scheduleOneBuffer() }
+    }
+
     private func scheduleOneBuffer() {
         guard isRunningOrPriming, let format = renderFormat, var currentSchedule = schedule else { return }
         let buffer = currentSchedule.nextBuffer()
         schedule = currentSchedule
         guard let pcm = Self.makeBuffer(monoSamples: buffer.samples, format: format, channel: ltcChannel) else { return }
+        outstandingBuffers += 1
+        let generation = pumpGeneration
         // `AVAudioPlayerNode` invokes this on an internal engine thread, not the
         // main queue — hop to the main actor (a bare `assumeIsolated` would trap).
         playerNode.scheduleBuffer(pcm) { [weak self] in
-            Task { @MainActor in self?.scheduleOneBuffer() }
+            Task { @MainActor in self?.bufferDidComplete(generation: generation) }
         }
+    }
+
+    private func bufferDidComplete(generation: Int) {
+        guard generation == pumpGeneration else { return }   // a superseded schedule's late completion
+        outstandingBuffers = max(0, outstandingBuffers - 1)
+        topUpBuffers()
     }
 
     /// `true` while we should keep the pipeline topped up — either fully running,
     /// or in the priming burst right before `isRunning` flips true.
     private var isRunningOrPriming: Bool { schedule != nil && engine.isRunning }
+
+    // MARK: - Refill timer
+
+    private func startRefillTimer() {
+        stopRefillTimer()
+        let interval = bufferTargetSeconds / 2
+        let timer = DispatchSource.makeTimerSource(queue: .main)
+        timer.schedule(deadline: .now() + interval, repeating: interval)
+        timer.setEventHandler { [weak self] in
+            MainActor.assumeIsolated { self?.topUpBuffers() }
+        }
+        refillTimer = timer
+        timer.resume()
+    }
+
+    private func stopRefillTimer() {
+        refillTimer?.cancel()
+        refillTimer = nil
+    }
+
+    /// How many more buffers to schedule to reach `target` given the current
+    /// `outstanding` lead. Pure — exposed for tests.
+    static func buffersToSchedule(outstanding: Int, target: Int) -> Int {
+        max(0, target - max(0, outstanding))
+    }
 
     /// A deinterleaved 32-bit-float format with `channelCount` channels in a
     /// discrete (non-standard) layout — `AVAudioFormat`'s simple initializers

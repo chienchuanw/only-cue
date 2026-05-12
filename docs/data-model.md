@@ -10,7 +10,7 @@ UTType: `com.onlycue.cuelist`, conforms to `public.json`.
 
 ```json
 {
-  "schemaVersion": 7,
+  "schemaVersion": 8,
   "id": "9F2E0F8A-9C2D-4F2A-9E1A-0E1A2D3C4B5A",
   "name": "Show A",
   "activeItemID": "AABBCCDD-1111-2222-3333-444455556666",
@@ -65,7 +65,7 @@ UTType: `com.onlycue.cuelist`, conforms to `public.json`.
 
 ```swift
 struct ProjectModel: Codable {
-    static let currentSchemaVersion = 7
+    static let currentSchemaVersion = 8
 
     var schemaVersion: Int
     var id: UUID
@@ -103,6 +103,19 @@ struct MediaItem: Codable, Identifiable, Equatable {
     var id: UUID
     var media: MediaReference   // non-optional — items only exist after import
     var cues: [Cue]
+    var tempoMap: TempoMap      // since v8; empty == no tempo grid
+}
+
+struct TempoMap: Codable, Equatable {
+    var sections: [TempoSection]   // sorted by startSeconds; if non-empty, sections[0].startSeconds == 0
+}
+
+struct TempoSection: Codable, Identifiable, Equatable {
+    var id: UUID
+    var startSeconds: TimeInterval          // where this constant-tempo span begins
+    var bpm: Double                         // clamped to [20, 400]
+    var beatsPerBar: Int                    // >= 1 (time-signature numerator)
+    var downbeatOffsetSeconds: TimeInterval // time from startSeconds to bar 1 / beat 1; in [0, barDuration)
 }
 
 struct Cue: Codable, Identifiable, Equatable {
@@ -162,20 +175,22 @@ enum MediaKind: String, Codable {
 | `cue.notes` | Free text, may be empty. Editable via the cue inspector (multi-line editor → `CueCommands.setNotes`). |
 | `cue.fadeTime` | Required. `FadeTime(fadeIn:fadeOut:)`. New cues default to `.symmetric(0)` (no fade); v4 → v5 migration backfills the same. The cue inspector parses input via `FadeTime.parse(_:)` (accepts `"1"` / `"1.5"` symmetric and `"1/2"` split, trims whitespace, rejects empty/non-numeric/negative/multi-slash/half-empty), routes valid edits through `CueCommands.setFadeTime`, and reverts the field to `FadeTime.format()`'s canonical form on rejection. The struct itself does not trap on negative values; the parser is the gate. |
 | `timecodeSettings` | Since v7. `framerate` is `"24"` / `"25"` / `"30"` / `"30df"` (`SMPTEFramerate` raw value); `startOffsetFrames` is the project's start timecode expressed as a count of frames since `00:00:00:00` (drop-frame aware via `Timecode`). Defaults to `{framerate: "30", startOffsetFrames: 0}`. Used by the LTC generator (epic #33) and the Audio & Timecode preferences pane (leaf 6 — the pane edits these; the field is pre-provisioned here, same as `isVisible` was before the breakdown view). v6 → v7 migration seeds the default. |
+| `tempoMap` (per `MediaItem`) | Since v8. A `TempoMap` of `TempoSection`s — an empty map means "no tempo grid". Persisted per media item. The map is normalized on construction: sections sorted by `startSeconds`, de-duplicated by start (last wins), the first section forced to `startSeconds == 0`, and each section's `downbeatOffsetSeconds` reduced into `[0, barDuration)`. `bpm` is clamped to `[20, 400]` and `beatsPerBar` to `>= 1`. It is a visual + snap aid only — it does not move cues (ADR-020). Mutated via `CueCommands` (epic #199); the DSP tempo analyzer can seed a section's `bpm` + `downbeatOffsetSeconds`. v7 → v8 migration seeds an empty map on every item. |
 
 ## Versioning policy
 
-- `schemaVersion: 7` is the current file. We will **never** mutate v7 semantics; new fields go in v8.
+- `schemaVersion: 8` is the current file. We will **never** mutate v8 semantics; new fields go in v9.
 - Adding optional fields → old readers ignore unknown keys via `Codable`; no version bump required.
 - Adding a required field, or removing / repurposing a field → bump `schemaVersion` and write a migration.
-- Migrations are pure functions `(JSONvN) -> ProjectModel`, applied during `ProjectModel.decode(from:)`. Pre-v4 chains run `assignCueNumbersBySort` so cues land with sequential `cueNumber` values; every chain backfills `fadeTime = .symmetric(0)` at the cue boundary so pre-v5 sources land with a valid `fadeTime`; every chain drops the legacy per-cue `colorHex` at the boundary so any pre-v6 source lands with color resolving via the Type; and every chain seeds `timecodeSettings = .default` so any pre-v7 source lands with valid timecode settings:
+- Migrations are pure functions `(JSONvN) -> ProjectModel`, applied during `ProjectModel.decode(from:)`. Pre-v4 chains run `assignCueNumbersBySort` so cues land with sequential `cueNumber` values; every chain backfills `fadeTime = .symmetric(0)` at the cue boundary so pre-v5 sources land with a valid `fadeTime`; every chain drops the legacy per-cue `colorHex` at the boundary so any pre-v6 source lands with color resolving via the Type; every chain seeds `timecodeSettings = .default` so any pre-v7 source lands with valid timecode settings; and every chain lands an empty `tempoMap` on every item so any pre-v8 source has a valid (empty) tempo map:
   - **v1 → current**: wraps the v1 (media, cues) into a single `MediaItem`; seeds a default `CuePointType` "General" with `colorHex` `#4ECDC4`; assigns that Type's id to every cue; backfills `fadeTime = .symmetric(0)`; drops `cue.colorHex`; seeds `timecodeSettings = .default`. v1 documents with no media decode to `items: []`.
   - **v2 → current**: keeps `items` and `activeItemID` as-is; seeds the default `CuePointType` "General"; assigns that Type's id to every existing cue; backfills `fadeTime = .symmetric(0)`; drops `cue.colorHex`; seeds `timecodeSettings = .default`.
   - **v3 → current**: keeps `cuePointTypes`, `items`, and `activeItemID` as-is; assigns sequential `cueNumber`s by time order within each item; backfills `fadeTime = .symmetric(0)`; drops `cue.colorHex`; seeds `timecodeSettings = .default`.
   - **v4 → current**: keeps `cuePointTypes`, `items`, `activeItemID`, and per-cue `cueNumber` as-is; backfills `fadeTime = .symmetric(0)` on every cue; drops `cue.colorHex`; seeds `timecodeSettings = .default`.
   - **v5 → current**: keeps everything except `cue.colorHex` (dropped); color resolves through `ProjectModel.colorHex(for:)`; seeds `timecodeSettings = .default`.
-  - **v6 → current**: keeps everything; seeds `timecodeSettings = .default` (v6 had no timecode settings).
-- v7 is a one-way upgrade: every prior build (v1 through v6) cannot open v7 files.
+  - **v6 → current**: keeps everything; seeds `timecodeSettings = .default` (v6 had no timecode settings); seeds an empty `tempoMap` on every item.
+  - **v7 → current**: keeps everything (including `timecodeSettings`); seeds an empty `tempoMap` on every item (v7 had no tempo maps).
+- v8 is a one-way upgrade: every prior build (v1 through v7) cannot open v8 files.
 
 ## Bookmark behavior
 

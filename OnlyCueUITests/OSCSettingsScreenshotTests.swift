@@ -90,7 +90,7 @@ enum SettingsWindowFinder {
     /// The Settings window by one of the titles its panes produce, or `nil`
     /// (in which case callers screenshot the whole screen instead).
     static func window(in app: XCUIApplication) -> XCUIElement? {
-        for title in ["OnlyCue Settings", "Settings", "OSC", "Keyboard"] {
+        for title in ["OnlyCue Settings", "Settings", "OSC", "Keyboard", "Audio"] {
             let window = app.windows[title]
             if window.exists { return window }
         }

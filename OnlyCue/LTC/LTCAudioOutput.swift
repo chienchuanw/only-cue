@@ -32,6 +32,11 @@ final class LTCAudioOutput: ObservableObject {
     private let engine = AVAudioEngine()
     private let playerNode = AVAudioPlayerNode()
     private var schedule: LTCSchedule?
+    /// Render format + LTC channel of the active engine connection — set by
+    /// `restartEngine`, read by `scheduleOneBuffer` (so the off-thread completion
+    /// handler hops back to `self` rather than capturing them across the actor).
+    private var renderFormat: AVAudioFormat?
+    private var ltcChannel = 0
 
     /// What `start` was last told — used to rebuild after a config change.
     private var pendingStart: (timecode: Timecode, routing: LTCRoutingSettings)?
@@ -70,6 +75,7 @@ final class LTCAudioOutput: ObservableObject {
         engine.stop()
         engine.reset()
         schedule = nil
+        renderFormat = nil
         pendingStart = nil
         isRunning = false
     }
@@ -107,6 +113,8 @@ final class LTCAudioOutput: ObservableObject {
                 throw LTCAudioOutputError.unsupportedOutputFormat
             }
             engine.connect(playerNode, to: engine.outputNode, format: renderFormat)
+            self.renderFormat = renderFormat
+            ltcChannel = pending.routing.ltcChannel ?? 0
 
             let framesPerBuffer = LTCSchedule.framesPerBuffer(
                 forTargetSeconds: bufferTargetSeconds, rate: pending.timecode.rate
@@ -119,8 +127,7 @@ final class LTCAudioOutput: ObservableObject {
 
             try engine.start()
             playerNode.play()
-            let ltcChannel = pending.routing.ltcChannel ?? 0
-            for _ in 0..<primeCount { scheduleOneBuffer(format: renderFormat, ltcChannel: ltcChannel) }
+            for _ in 0..<primeCount { scheduleOneBuffer() }
             isRunning = true
         } catch {
             schedule = nil
@@ -151,15 +158,15 @@ final class LTCAudioOutput: ObservableObject {
 
     // MARK: - Buffer pump
 
-    private func scheduleOneBuffer(format: AVAudioFormat, ltcChannel: Int) {
-        guard isRunningOrPriming, var currentSchedule = schedule else { return }
+    private func scheduleOneBuffer() {
+        guard isRunningOrPriming, let format = renderFormat, var currentSchedule = schedule else { return }
         let buffer = currentSchedule.nextBuffer()
         schedule = currentSchedule
         guard let pcm = Self.makeBuffer(monoSamples: buffer.samples, format: format, channel: ltcChannel) else { return }
+        // `AVAudioPlayerNode` invokes this on an internal engine thread, not the
+        // main queue — hop to the main actor (a bare `assumeIsolated` would trap).
         playerNode.scheduleBuffer(pcm) { [weak self] in
-            MainActor.assumeIsolated {
-                self?.scheduleOneBuffer(format: format, ltcChannel: ltcChannel)
-            }
+            Task { @MainActor in self?.scheduleOneBuffer() }
         }
     }
 

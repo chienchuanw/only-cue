@@ -4,6 +4,19 @@ Append-only session log. Newer entries on top.
 
 ---
 
+## 2026-05-12 — Bypass-mode session: epic #33 (LTC) — routing settings data layer
+
+**Shipped (1 PR):** #172. Rebase-merged to `dev` (`e173853`). Leaf issue #171. Epic #33 leaf 3 (data layer half) — the persisted routing configuration + Core Audio device enumeration, ahead of the `AVAudioEngine` playback path and the Audio prefs UI (same staging as #168 → #170 for the Timecode side).
+
+- **`LTCRoutingSettings`** (`OnlyCue/LTC/LTCRoutingSettings.swift`) — `deviceUID: String?` (`nil` follows the system default output) + `channelRoles: [ChannelRole]` indexed 0-based. `ChannelRole` = `silent` / `ltc` / `trackLeft` / `trackRight`; the latter three are *unique* roles (assigning one to a channel clears any other channel that held it — `assigning(_:toChannel:)`). Value-returning transforms (`selectingDevice(uid:)`, `resized(toChannelCount:)` pads `.silent`/truncates, `withDefaultRoles(forChannelCount:)`). Default layout = ch 0 LTC, ch 1 Track L, ch 2 Track R, rest silent (the epic-#33 Gherkin's 4-channel mapping). `isComplete` once an LTC channel is assigned (track channels optional). `Codable`/`Equatable`/`Sendable`.
+- **`LTCRoutingStore`** (`OnlyCue/LTC/LTCRoutingStore.swift`) — `@MainActor ObservableObject`, JSON in `UserDefaults` under `ltcRouting.v1`, corrupt/absent → `.default`. Mirrors `KeymapStore`. A machine/session preference, deliberately *not* part of the `.cuelist`.
+- **`AudioOutputDevice` / `AudioOutputDeviceList`** (`OnlyCue/LTC/AudioOutputDevice.swift`) — Core Audio HAL: `current()` lists every device with ≥1 output channel (id / UID / name / output-channel count summed across output streams), `defaultOutput()` the system default. HAL failures → `[]` / `nil` (no throws). `kAudioDevicePropertyDeviceUID` / `kAudioObjectPropertyName` read as `Unmanaged<CFString>?` (`&value` on a bare `CFString` triggers a "may contain an object reference" warning).
+- No UI yet — the routing UI (output-device picker + per-channel table) and the `AVAudioEngine` playback path that consumes it are later leaves. No new ADR (ADR-019 covers the LTC value model; routing-in-`UserDefaults` is the same call as the OSC server prefs).
+- Docs: `architecture.md#ltc-and-routing` — split the old "Routing" row into "Routing settings" (built) + "Routing playback" (leaf 3, not built); intro line updated. `task_plan.md` #33 → 🟡 ~6 of 7 leaves.
+- `LTCRoutingSettingsTests` (15 — default, out-of-range role read, default layout at 0/1/2/4/-N channels, unique-role move clears the prior holder, `.silent` reassignment doesn't clear other silents, out-of-range assign is a no-op, resize pad/truncate keeps the device UID, `withDefaultRoles` replaces the layout but keeps the device, `selectingDevice` keeps roles, `isComplete` needs an LTC channel, Codable round-trip, `ChannelRole` display names + uniqueness) + `LTCRoutingStoreTests` (5 — fresh = default, persist + reload, no-op on equal value, reset, corrupt → default) + `AudioOutputDeviceListTests` (3 — shape-only smoke: every device has a non-empty uid/name and >0 channels, uids unique, default output is among `current()`; no assertion that any particular device exists, so it holds in CI / headless). 446 unit tests pass; `swiftlint --strict` clean. SwiftLint gotcha: `prefer_self_in_static_references` flags `[ChannelRole]` only when `ChannelRole` *is* the surrounding type — inside a static func *on `LTCRoutingSettings`* the annotation must stay `[ChannelRole]` (using `[Self]` there would mean `[LTCRoutingSettings]`).
+
+---
+
 ## 2026-05-12 — Bypass-mode session: epic #33 (LTC) — Timecode Settings sheet (edit framerate + start timecode)
 
 **Shipped (1 PR):** #170. Rebase-merged to `dev` (`9203cb4`). Leaf issue #169. The editor for `ProjectModel.timecodeSettings` (persisted in #168) — the first half of the epic's "Audio & Timecode preferences pane" leaf (the Audio half waits on the Core Audio routing leaf).

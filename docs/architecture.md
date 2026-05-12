@@ -249,7 +249,7 @@ User-rebindable shortcuts (epic #40 — complete). The keymap JSON is the source
 
 ## LTC and routing
 
-SMPTE Linear Timecode generation synced to playback (epic #33), routable to a configurable Core Audio output. **Built so far:** the timecode value model + the 80-bit LTC frame + the biphase-mark modulation primitive + the sample synthesis (rows 1–5 below). **Not yet:** Core Audio output-device picker + per-channel routing (LTC vs Track L/R) + the `AVAudioEngine` playback path fed by `PlayerEngine.currentTime`, the project framerate/start-offset persisted in `.cuelist`, striped-LTC playback (read existing LTC off imported media), and the Audio & Timecode preferences pane.
+SMPTE Linear Timecode generation synced to playback (epic #33), routable to a configurable Core Audio output. **Built so far:** the timecode value model + the 80-bit LTC frame + the biphase-mark modulation primitive + the sample synthesis (rows 1–5 below), plus the project's persisted timecode settings (`ProjectModel.timecodeSettings` — `ProjectTimecodeSettings`, schema v7). **Not yet:** Core Audio output-device picker + per-channel routing (LTC vs Track L/R) + the `AVAudioEngine` playback path fed by `PlayerEngine.currentTime`, striped-LTC playback (read existing LTC off imported media), and the Audio & Timecode preferences pane (which will *edit* the timecode settings).
 
 | Piece | API | Where it lives |
 |---|---|---|

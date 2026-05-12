@@ -58,6 +58,15 @@ final class LTCAudioOutputTests: XCTestCase {
         XCTAssertFalse(output.isRunning)
     }
 
+    func test_update_whenNotRunning_isHarmless() {
+        let output = LTCAudioOutput()
+        guard let timecode = Timecode(hours: 1, minutes: 0, seconds: 0, frames: 0, rate: .fps30) else {
+            return XCTFail("invalid timecode")
+        }
+        output.update(at: timecode)
+        XCTAssertFalse(output.isRunning)
+    }
+
     func test_start_withNoLTCChannel_recordsErrorAndStaysStopped() {
         let output = LTCAudioOutput()
         let routing = LTCRoutingSettings(deviceUID: nil, channelRoles: [.trackLeft, .trackRight])

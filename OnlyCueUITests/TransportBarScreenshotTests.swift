@@ -33,6 +33,10 @@ final class TransportBarScreenshotTests: XCTestCase {
             playPauseButton.waitForExistence(timeout: 5),
             "playPauseButton should appear within 5 seconds of opening a document"
         )
+        XCTAssertTrue(
+            app.staticTexts["smpteTimecode"].waitForExistence(timeout: 3),
+            "the transport bar should show the SMPTE timecode readout"
+        )
 
         // Activate the app so it comes to the front before screenshot — without
         // this the OnlyCue window may be hidden behind whatever else is on the

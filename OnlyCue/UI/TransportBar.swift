@@ -5,6 +5,7 @@ struct TransportBar: View {
     let engine: PlayerEngine
     var cues: [Cue] = []
     var mediaDuration: TimeInterval = 0
+    var timecodeSettings: ProjectTimecodeSettings = .default
 
     @AppStorage("pauseAtEachCue") private var pauseAtEachCue = false
 
@@ -59,6 +60,12 @@ struct TransportBar: View {
                 .font(.system(.body, design: .monospaced))
                 .foregroundStyle(.secondary)
                 .accessibilityIdentifier("currentTimeReadout")
+
+            Text(timecodeSettings.timecode(atPlaybackSeconds: engine.currentTime).displayString)
+                .font(.system(.body, design: .monospaced))
+                .foregroundStyle(.secondary)
+                .accessibilityIdentifier("smpteTimecode")
+                .help("SMPTE timecode at the playhead (\(timecodeSettings.framerate.displayName); edit in Tools → Timecode Settings…)")
 
             if let interval = Self.lastCueElapsed(currentTime: engine.currentTime, cues: cues) {
                 Text("Last: \(TimeFormat.compactCountdown(interval))")

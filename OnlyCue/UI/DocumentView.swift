@@ -57,6 +57,7 @@ struct DocumentView: View {
         .timecodeSettingsSheet(document: document)
         .exportSheet(model: document.model, pendingErrorMessage: pendingAlertMessageBinding)
         .oscServerHost(engine: engine, document: document, undoManager: undoManager)
+        .ltcOutput(engine: engine, document: document)
     }
 
     private var mainPane: some View {
@@ -83,7 +84,8 @@ struct DocumentView: View {
             TransportBar(
                 engine: engine,
                 cues: activeItem?.cues ?? [],
-                mediaDuration: activeItem?.media.duration ?? 0
+                mediaDuration: activeItem?.media.duration ?? 0,
+                timecodeSettings: document.model.timecodeSettings
             )
                 .padding(.top, 4)
 

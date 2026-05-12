@@ -24,8 +24,9 @@ final class LTCAudioOutput: ObservableObject {
     /// The most recent failure (e.g. the routed device vanished), for UI to surface.
     @Published private(set) var lastError: String?
 
-    /// Audio buffers kept scheduled ahead of the play head.
-    private let primeCount = 3
+    /// Audio buffers kept scheduled ahead of the play head — enough that a brief
+    /// main-actor stall (the buffer-refill hops through it) won't underrun.
+    private let primeCount = 5
     /// Target wall-clock length of one scheduled buffer.
     private let bufferTargetSeconds: TimeInterval = 0.1
 
@@ -80,12 +81,17 @@ final class LTCAudioOutput: ObservableObject {
         isRunning = false
     }
 
-    /// Move the LTC stream to `timecode` (e.g. after a seek) — restarts the
-    /// schedule from there. No-op if not running.
+    /// Move the LTC stream to `timecode` (e.g. after a seek). Re-cues on the
+    /// existing engine/connection — no device reconfigure or reconnect — so a
+    /// scrub is a short re-prime, not a full restart. No-op if not running.
     func update(at timecode: Timecode) {
-        guard let pending = pendingStart else { return }
+        guard isRunning, let pending = pendingStart, let format = renderFormat else { return }
         pendingStart = (timecode, pending.routing)
-        restartEngine()
+        playerNode.stop()
+        let framesPerBuffer = LTCSchedule.framesPerBuffer(forTargetSeconds: bufferTargetSeconds, rate: timecode.rate)
+        schedule = LTCSchedule(startTimecode: timecode, sampleRate: format.sampleRate, framesPerBuffer: framesPerBuffer)
+        playerNode.play()
+        for _ in 0..<primeCount { scheduleOneBuffer() }
     }
 
     // MARK: - Engine lifecycle

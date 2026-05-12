@@ -4,33 +4,40 @@ A native macOS application for lighting designers and show programmers, inspired
 
 ## Table of Contents
 
-- [Screenshots](#screenshots)
-- [Install](#install)
-- [Status](#status)
-- [Build](#build)
-- [Documents](#documents)
-- [Stack at a glance](#stack-at-a-glance)
-- [Reference](#reference)
+- [OnlyCue](#onlycue)
+  - [Table of Contents](#table-of-contents)
+  - [Screenshots](#screenshots)
+  - [Install](#install)
+  - [Status](#status)
+    - [Current release](#current-release)
+    - [Shipped beyond MVP (on `dev`)](#shipped-beyond-mvp-on-dev)
+    - [In progress / next](#in-progress--next)
+  - [Build](#build)
+    - [When to re-run xcodegen / clean the build folder](#when-to-re-run-xcodegen--clean-the-build-folder)
+    - [Run tests and lint locally](#run-tests-and-lint-locally)
+  - [Documents](#documents)
+  - [Stack at a glance](#stack-at-a-glance)
+  - [Reference](#reference)
 
 ## Screenshots
 
 Document window (fresh, untitled) — media preview area, transport bar, and the empty cue list:
 
-![OnlyCue document window](screenshots/document-window.png)
+![OnlyCue document window](static/document-window.png)
 <!-- Regenerate: xcodebuild test -project OnlyCue.xcodeproj -scheme OnlyCue -destination 'platform=macOS' -only-testing:OnlyCueUITests/TransportBarScreenshotTests, then copy transport-bar-baseline.png from the runner tmp dir. TODO: a media-loaded variant needs a new UI test + media fixture. -->
 
 
 Export Cues sheet (`⇧⌘E`) — format picker and per-cue-type filter:
 
-![Export Cues sheet](screenshots/export-sheet.png)
+![Export Cues sheet](static/export-sheet.png)
 
 OSC settings (Settings → OSC) — enable the receive-only OSC server and pick a listen port:
 
-![OSC settings](screenshots/osc-settings.png)
+![OSC settings](static/osc-settings.png)
 
 OSC Monitor (`Tools → OSC Monitor…`) — live message tail and copyable address list:
 
-![OSC Monitor](screenshots/osc-monitor.png)
+![OSC Monitor](static/osc-monitor.png)
 
 ## Install
 

@@ -78,8 +78,12 @@ private struct LTCOutputHost: ViewModifier {
     private func installTap(on item: AVPlayerItem) {
         removeTap()
         let tap = ProgramAudioTap(ring: programRing, renderSampleRate: output.currentRenderSampleRate ?? 48_000)
-        tap.attach(to: item)
         programTap = tap
+        Task { @MainActor in
+            // Bail if a teardown/replace happened while the asset's tracks loaded.
+            guard programTap === tap else { return }
+            await tap.attach(to: item)
+        }
     }
 
     private func removeTap() {

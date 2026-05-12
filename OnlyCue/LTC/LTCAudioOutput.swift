@@ -35,6 +35,12 @@ final class LTCAudioOutput: ObservableObject {
 
     private let engine = AVAudioEngine()
     private let playerNode = AVAudioPlayerNode()
+    /// Sums the LTC node and the program node before the output node — the output
+    /// node has a single input bus, so the two player nodes can't connect to it
+    /// directly (the second `connect` would disconnect the first). The mixer's
+    /// input and output formats are both `renderFormat` (same discrete channel
+    /// layout), so it passes channels through 1:1 rather than downmixing.
+    private let mixerNode = AVAudioMixerNode()
     private var schedule: LTCSchedule?
     /// Render format + LTC channel of the active engine connection — set by
     /// `restartEngine`, read by `scheduleOneBuffer` (so the off-thread completion
@@ -79,6 +85,7 @@ final class LTCAudioOutput: ObservableObject {
     init() {
         engine.attach(playerNode)
         engine.attach(programNode)
+        engine.attach(mixerNode)
         configObserver = NotificationCenter.default.addObserver(
             forName: .AVAudioEngineConfigurationChange, object: engine, queue: .main
         ) { [weak self] _ in
@@ -176,8 +183,9 @@ final class LTCAudioOutput: ObservableObject {
             ) else {
                 throw LTCAudioOutputError.unsupportedOutputFormat
             }
-            engine.connect(playerNode, to: engine.outputNode, format: renderFormat)
-            engine.connect(programNode, to: engine.outputNode, format: renderFormat)
+            engine.connect(playerNode, to: mixerNode, format: renderFormat)
+            engine.connect(programNode, to: mixerNode, format: renderFormat)
+            engine.connect(mixerNode, to: engine.outputNode, format: renderFormat)
             self.renderFormat = renderFormat
             ltcChannel = pending.routing.ltcChannel ?? 0
             trackLeftChannel = pending.routing.trackLeftChannel

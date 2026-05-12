@@ -28,6 +28,7 @@ private final class ProgramTapContext {
 /// running the app. The realtime `process` callback only converts and pushes
 /// (with a brief unfair-lock hold inside the ring buffer); the converter and its
 /// output buffer are created once per `prepare`.
+@MainActor
 final class ProgramAudioTap {
 
     private let ring: ProgramAudioRingBuffer
@@ -40,14 +41,15 @@ final class ProgramAudioTap {
         self.renderSampleRate = renderSampleRate > 0 ? renderSampleRate : 48_000
     }
 
-    deinit { detach() }
-
     /// Install the tap onto `item`'s first audio track. No-op if the item has no
     /// audio track or the tap can't be created. Replaces any tap this object
-    /// previously attached.
-    func attach(to item: AVPlayerItem) {
+    /// previously attached. Async because the asset's track list is loaded
+    /// asynchronously (synchronous `tracks(withMediaType:)` is deprecated and can
+    /// raise on macOS 13+).
+    func attach(to item: AVPlayerItem) async {
         detach()
-        guard let track = item.asset.tracks(withMediaType: .audio).first else { return }
+        let audioTracks = try? await item.asset.loadTracks(withMediaType: .audio)
+        guard let track = audioTracks?.first else { return }
 
         let context = ProgramTapContext(ring: ring, renderSampleRate: renderSampleRate)
         let clientInfo = Unmanaged.passRetained(context).toOpaque()

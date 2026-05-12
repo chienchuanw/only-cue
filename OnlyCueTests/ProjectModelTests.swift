@@ -39,8 +39,8 @@ final class ProjectModelTests: XCTestCase {
         XCTAssertNil(model.cuePointType(forHotkey: 5))
     }
 
-    func test_currentSchemaVersionIsSix() {
-        XCTAssertEqual(ProjectModel.currentSchemaVersion, 6)
+    func test_currentSchemaVersionIsSeven() {
+        XCTAssertEqual(ProjectModel.currentSchemaVersion, 7)
     }
 
     func test_colorHex_for_returnsMatchingTypeColor() throws {

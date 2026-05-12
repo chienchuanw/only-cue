@@ -232,6 +232,10 @@ A toggleable alternative to the waveform timeline (epic #37) that splits the cue
 
 **Persistence.** Lane visibility is `CuePointType.isVisible`, already a `ProjectModel` field (migrations preserve it), so the layout persists in `.cuelist` with no schema change. Toggling goes through `CueCommands`, so it's undoable and triggers a document edit. **Scope (v1):** markers in the breakdown view select + seek; retiming a cue by drag stays on the waveform view. Per-lane vertical/horizontal zoom and free-form lane reordering are out. See ADR-017.
 
+## Cue selection
+
+The cue selection is a `Set<Cue.ID>` (`DocumentView.cueSelection`, not undoable, cleared on item switch) — `CueListPane`'s `List(selection:)` gives Cmd-click / Shift-click multi-select natively, and `CueMarkersOverlay` / `PreviewPane` / `TimelineBreakdownView` highlight every cue whose id is in the set (`selectedCueIDs`). A plain marker click *replaces* the selection (`cueSelection = [id]`); Cmd/Shift-on-marker and batch snap/nudge over the whole selection are a follow-up leaf of epic #36. While the set isn't exactly one cue, the inspector shows its empty state, the seek-on-select / scroll-to-row is suppressed, and the single-cue commands (`S` snap, Option+←/→ nudge, duplicate-at-playhead) are no-ops (`CueListPane.soleSelectedID`); delete (`⌫` / `onDeleteCommand`) removes every selected cue. The waveform's transient inspect-magnifier (vertical zoom) and horizontal pinch-zoom are unrelated view gestures (epic #36, shipped).
+
 ## Custom keyboard shortcuts
 
 User-rebindable shortcuts (epic #40 — complete). The keymap JSON is the source of truth; **every** `.keyboardShortcut(...)` in `AppCommands` (the menu commands) and in `DocumentView` (the `m` "Add Cue", `0`–`9` cue-type hotkeys, Space play/pause, ←→ jump ±1 s, ↑↓ prev/next cue), plus the `DocumentShortcutHints` cheat-sheet text, read it; the Settings → Keyboard editor writes it. Defaults are exactly the old hardcoded literals.

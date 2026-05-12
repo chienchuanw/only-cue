@@ -247,6 +247,19 @@ User-rebindable shortcuts (epic #40 — complete). The keymap JSON is the source
 
 **Schema.** On disk a keymap is a plain JSON object `{ actionRawValue: { key, modifiers } }` — sparse (only overrides need be present; missing actions resolve to the default), forward-tolerant (unknown action keys are ignored, so a newer build's keymap doesn't break an older one and vice versa). The `KeymapAction` raw value is the stable wire key — renaming a case requires a migration. **Conflict rule (v1):** two actions may hold the same chord; `conflicts()` / the editor's ⚠︎ surface the clash but nothing is auto-resolved or blocked (macOS itself tolerates duplicate shortcuts — last responder wins). See ADR-018.
 
+## LTC and routing
+
+SMPTE Linear Timecode generation synced to playback (epic #33), routable to a configurable Core Audio output. **Built so far:** the timecode value model (this section's first two rows). **Not yet:** the biphase-mark `LTCEncoder`, Core Audio output-device picker + per-channel routing (LTC vs Track L/R), the project framerate/start-offset persisted in `.cuelist`, striped-LTC playback (read existing LTC off imported media), and the Audio & Timecode preferences pane — those are later leaves.
+
+| Piece | API | Where it lives |
+|---|---|---|
+| Framerate | `SMPTEFramerate` (`fps24` / `fps25` / `fps30` / `fps30drop`; `framesPerSecond`, `isDropFrame`, `displayName`) — `Codable`, raw values `"24"` / `"25"` / `"30"` / `"30df"` are the stable `.cuelist` tokens | `OnlyCue/LTC/SMPTEFramerate.swift` |
+| Timecode | `Timecode` (`HH:MM:SS:FF` for a rate; `init?(hours:minutes:seconds:frames:rate:)` validating ranges + drop-frame-skipped numbers, `init(frameCount:rate:)` / `frameCount`, `init(totalSeconds:rate:)` / `totalSeconds`, `displayString` with `;` for drop-frame) — pure value type | `OnlyCue/LTC/Timecode.swift` |
+| Generator | *(leaf 2)* `LTCEncoder` — the 80-bit SMPTE word (frame/sec/min/hour BCD + user bits + flags + parity + the `0x3FFD` sync word) biphase-mark-modulated into an audio sample buffer at the project rate | `OnlyCue/LTC/` |
+| Routing | *(leaf 3)* output-device picker + per-channel assignment, fed by `PlayerEngine.currentTime` | `OnlyCue/LTC/` |
+
+**Drop-frame.** `Timecode` implements the standard counting rule for `fps30drop`: frame numbers `00` and `01` are skipped at the top of every minute except every tenth minute, so `frameCount` is the *actual* number of frames elapsed since `00:00:00:00` (what an LTC signal carries and what `PlayerEngine.currentTime` maps to), while the `HH:MM:SS:FF` components are labels. v1 treats `fps30drop` as a 30 fps timeline with drop-frame *labels* (`totalSeconds` divides by 30.0, not 29.97) — true 29.97 / 23.976 / 59.94 and pulldown are out of scope (the epic), as is LTC chase / slave-to-incoming (we generate, we don't slave). See ADR-019.
+
 ## Phase-2 seams
 
 These are explicit extension points so future features don't require rewrites. See [`roadmap.md`](roadmap.md) for what plugs in here.

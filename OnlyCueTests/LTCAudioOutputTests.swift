@@ -46,6 +46,40 @@ final class LTCAudioOutputTests: XCTestCase {
         XCTAssertNil(LTCAudioOutput.makeBuffer(monoSamples: [], format: try format(channels: 2), channel: 0))
     }
 
+    func test_makeBufferMulti_placesEachSourceOnItsChannel() throws {
+        let left: [Float] = [0.1, 0.2, 0.3, 0.4]
+        let right: [Float] = [-0.1, -0.2, -0.3, -0.4]
+        let buffer = try XCTUnwrap(LTCAudioOutput.makeBuffer(
+            channels: [(samples: left, channel: 1), (samples: right, channel: 2)],
+            format: try format(channels: 4)))
+        XCTAssertEqual(Int(buffer.frameLength), 4)
+        let data = try XCTUnwrap(buffer.floatChannelData)
+        XCTAssertEqual(Array(UnsafeBufferPointer(start: data[0], count: 4)), [Float](repeating: 0, count: 4))
+        XCTAssertEqual(Array(UnsafeBufferPointer(start: data[1], count: 4)), left)
+        XCTAssertEqual(Array(UnsafeBufferPointer(start: data[2], count: 4)), right)
+        XCTAssertEqual(Array(UnsafeBufferPointer(start: data[3], count: 4)), [Float](repeating: 0, count: 4))
+    }
+
+    func test_makeBufferMulti_clampsOutOfRangeChannel() throws {
+        let mono: [Float] = [1, 2]
+        let buffer = try XCTUnwrap(LTCAudioOutput.makeBuffer(
+            channels: [(samples: mono, channel: 9)], format: try format(channels: 2)))
+        let data = try XCTUnwrap(buffer.floatChannelData)
+        XCTAssertEqual(Array(UnsafeBufferPointer(start: data[1], count: 2)), mono)
+        XCTAssertEqual(Array(UnsafeBufferPointer(start: data[0], count: 2)), [0, 0])
+    }
+
+    func test_makeBufferMulti_mismatchedLengths_isNil() throws {
+        XCTAssertNil(LTCAudioOutput.makeBuffer(
+            channels: [(samples: [1, 2, 3], channel: 0), (samples: [1, 2], channel: 1)],
+            format: try format(channels: 2)))
+    }
+
+    func test_makeBufferMulti_emptyOrZeroLength_isNil() throws {
+        XCTAssertNil(LTCAudioOutput.makeBuffer(channels: [], format: try format(channels: 2)))
+        XCTAssertNil(LTCAudioOutput.makeBuffer(channels: [(samples: [], channel: 0)], format: try format(channels: 2)))
+    }
+
     func test_buffersToSchedule_fillsTheGapToTarget() {
         XCTAssertEqual(LTCAudioOutput.buffersToSchedule(outstanding: 0, target: 5), 5)
         XCTAssertEqual(LTCAudioOutput.buffersToSchedule(outstanding: 3, target: 5), 2)

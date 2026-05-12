@@ -4,6 +4,21 @@ Append-only session log. Newer entries on top.
 
 ---
 
+## 2026-05-12 — Bypass-mode session: epic #40 closed (custom keyboard shortcuts — document-window shortcuts read the keymap)
+
+**Shipped (1 PR):** #158. Rebase-merged to `dev` (`671c663`). Epic #40 leaf 4 — and the epic is now **complete**. Leaf issue #157.
+
+- **`KeymapAction`** gains a "Document window — playback & cue navigation" block: `.playPause`, `.jumpBack`, `.jumpForward`, `.stepPrevCue`, `.stepNextCue`, `.addCue`, plus `.addCueOfType0` next to the existing `.addCueOfType1…9`. Each gets a `displayName` and a `Keymap.default` binding equal to the literal it replaces (`space`, `leftArrow`, `rightArrow`, `upArrow`, `downArrow`, `m`, `0`). New helper `KeymapAction.addCueOfType(_ digit: Int) -> KeymapAction?` maps `0`…`9` to the right `.addCueOfTypeN` slot (`nil` out of range). The default keymap stays conflict-free — the new bare-key chords are distinct from the existing ones (e.g. `←` ≠ `nudgeSelectedCueBack`'s `⌥←`).
+- **`DocumentView`** now reads the keymap: `@ObservedObject keymapStore = KeymapStore.shared` + the same `shortcut(_:)` helper as `AppCommands`; `.keyboardShortcut("m", modifiers: [])` → `.keyboardShortcut(shortcut(.addCue))`, the transport ZStack's `.space`/`.leftArrow`/`.rightArrow` → `.playPause`/`.jumpBack`/`.jumpForward`, the playhead-step ZStack's `.upArrow`/`.downArrow` → `.stepPrevCue`/`.stepNextCue`, the hidden `ForEach(0...9)` digit buttons → `.keyboardShortcut(shortcut(KeymapAction.addCueOfType(digit) ?? .addCueOfType0))`. Button *actions* are unchanged (`addCueAtPlayhead()`, `engine.toggle()`, `jump(by:)`, `stepPlayhead(_:)`, `triggerHotkey(digit)`).
+- **`DocumentShortcutHints`** — the empty-document cheat-sheet now interpolates `keymapStore.keymap.chord(for: .addCue).displayString` etc. instead of literal "M" / "↑ ↓" / "⇧⌘N" / "⇧⌘P", so it tracks rebinds.
+- These actions show up in Settings → Keyboard automatically (the editor lists `KeymapAction.allCases`) — that's leaf 4's "expose as editable rows" for free.
+- **Tests:** `OnlyCueTests/KeymapDocumentActionsTests.swift` (4 — the new defaults match the literals they replace; `addCueOfType(_:)` digit→slot incl. out-of-range; every slot has its digit default; the new actions are in `allCases`). 371 unit tests pass; `swiftlint --strict` clean; build succeeds.
+- No new ADR (ADR-018's design unchanged). No screenshot — the only changed UI surface is the cheat-sheet text and the (existing) Settings → Keyboard list with more rows; `KeyboardSettingsScreenshotTests` still can't run in the headless test host (no GUI/window-server session — same wall every XCUITest in the repo hits in automation).
+
+**Epic #40 (custom keyboard shortcuts) is complete** — five leaves across PRs #154 (data layer + tests), #156 (Settings → Keyboard editor + `AppCommands` consumer), #158 (document-window consumer). The keymap (`KeymapAction × KeyChord`, sparse forward-tolerant JSON under `keymap.v1`, advisory conflicts — ADR-018) is the source of truth for every `.keyboardShortcut(...)` in the app; defaults equal the prior hardcoded set. **Remaining Phase-2 epics: only #33 (LTC generation + audio routing) and #36 (timeline UX polish — its "waveform gain control" leaf has loosely-specified scope and will want a quick design call).**
+
+---
+
 ## 2026-05-12 — Bypass-mode session: epic #40 — Settings → Keyboard editor + `AppCommands` reads the keymap
 
 **Shipped (1 PR):** #156. Rebase-merged to `dev` (`9636bd4`). Epic #40 leaves 2 (settings UI) and 3 (per-row conflict + reset). Leaf issue #155.

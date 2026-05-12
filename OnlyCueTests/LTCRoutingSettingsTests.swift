@@ -68,13 +68,61 @@ final class LTCRoutingSettingsTests: XCTestCase {
         XCTAssertEqual(updated.channelRoles, [.ltc, .trackLeft])
     }
 
-    func test_isComplete_requiresLTCChannel() {
-        XCTAssertFalse(LTCRoutingSettings(deviceUID: nil, channelRoles: [.trackLeft, .trackRight]).isComplete)
-        XCTAssertTrue(LTCRoutingSettings(deviceUID: nil, channelRoles: [.silent, .ltc]).isComplete)
+    func test_default_isDisabled() {
+        XCTAssertFalse(LTCRoutingSettings.default.isEnabled)
+    }
+
+    func test_isComplete_requiresEnabledAndLTCChannel() {
+        XCTAssertFalse(LTCRoutingSettings(isEnabled: false, deviceUID: nil, channelRoles: [.ltc, .trackLeft]).isComplete)
+        XCTAssertFalse(LTCRoutingSettings(isEnabled: true, deviceUID: nil, channelRoles: [.silent, .trackLeft]).isComplete)
+        XCTAssertTrue(LTCRoutingSettings(isEnabled: true, deviceUID: nil, channelRoles: [.ltc, .trackLeft]).isComplete)
+    }
+
+    func test_settingEnabled_togglesOutput_keepsRouting() {
+        let settings = LTCRoutingSettings(deviceUID: "uid", channelRoles: [.ltc, .trackLeft])
+        let enabled = settings.settingEnabled(true)
+        XCTAssertTrue(enabled.isEnabled)
+        XCTAssertEqual(enabled.deviceUID, "uid")
+        XCTAssertEqual(enabled.channelRoles, [.ltc, .trackLeft])
+        XCTAssertFalse(enabled.settingEnabled(false).isEnabled)
+    }
+
+    func test_trackChannels() {
+        let none = LTCRoutingSettings(deviceUID: nil, channelRoles: [.ltc, .silent])
+        XCTAssertNil(none.trackLeftChannel)
+        XCTAssertNil(none.trackRightChannel)
+        XCTAssertFalse(none.hasTrackChannels)
+
+        let both = LTCRoutingSettings(deviceUID: nil, channelRoles: [.ltc, .trackLeft, .trackRight])
+        XCTAssertEqual(both.trackLeftChannel, 1)
+        XCTAssertEqual(both.trackRightChannel, 2)
+        XCTAssertTrue(both.hasTrackChannels)
+
+        let onlyRight = LTCRoutingSettings(deviceUID: nil, channelRoles: [.ltc, .silent, .trackRight])
+        XCTAssertNil(onlyRight.trackLeftChannel)
+        XCTAssertEqual(onlyRight.trackRightChannel, 2)
+        XCTAssertTrue(onlyRight.hasTrackChannels)
+    }
+
+    func test_transforms_carryIsEnabled() {
+        let settings = LTCRoutingSettings(isEnabled: true, deviceUID: "uid", channelRoles: [.ltc, .trackLeft, .silent])
+        XCTAssertTrue(settings.assigning(.trackRight, toChannel: 2).isEnabled)
+        XCTAssertTrue(settings.selectingDevice(uid: "other").isEnabled)
+        XCTAssertTrue(settings.resized(toChannelCount: 5).isEnabled)
+        XCTAssertTrue(settings.withDefaultRoles(forChannelCount: 3).isEnabled)
+    }
+
+    func test_codable_missingIsEnabledKey_decodesAsDisabled() throws {
+        let legacy = Data(#"{"channelRoles":["ltc","trackLeft"]}"#.utf8)
+        let decoded = try JSONDecoder().decode(LTCRoutingSettings.self, from: legacy)
+        XCTAssertFalse(decoded.isEnabled)
+        XCTAssertEqual(decoded.channelRoles, [.ltc, .trackLeft])
+        XCTAssertNil(decoded.deviceUID)
     }
 
     func test_codableRoundTrip() throws {
-        let original = LTCRoutingSettings(deviceUID: "Built-in Output", channelRoles: [.ltc, .trackLeft, .trackRight, .silent])
+        let original = LTCRoutingSettings(
+            isEnabled: true, deviceUID: "Built-in Output", channelRoles: [.ltc, .trackLeft, .trackRight, .silent])
         let data = try JSONEncoder().encode(original)
         let decoded = try JSONDecoder().decode(LTCRoutingSettings.self, from: data)
         XCTAssertEqual(decoded, original)

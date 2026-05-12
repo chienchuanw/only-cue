@@ -35,6 +35,11 @@ enum ChannelRole: String, Codable, CaseIterable, Sendable {
 /// out-of-range lookups read as `.silent`.
 struct LTCRoutingSettings: Codable, Equatable, Sendable {
 
+    /// Master switch for LTC output. When `false` the LTC engine never runs and
+    /// the channel assignments below are dormant. Defaults to `false` — a fresh
+    /// install emits no timecode until the user opts in.
+    var isEnabled: Bool
+
     /// Core Audio device UID of the selected output, or `nil` to follow the
     /// system default output device.
     var deviceUID: String?
@@ -42,11 +47,30 @@ struct LTCRoutingSettings: Codable, Equatable, Sendable {
     /// Role per output channel, indexed 0-based.
     var channelRoles: [ChannelRole]
 
-    static let `default` = Self(deviceUID: nil, channelRoles: [])
+    static let `default` = Self(isEnabled: false, deviceUID: nil, channelRoles: [])
 
-    init(deviceUID: String?, channelRoles: [ChannelRole]) {
+    init(isEnabled: Bool = false, deviceUID: String?, channelRoles: [ChannelRole]) {
+        self.isEnabled = isEnabled
         self.deviceUID = deviceUID
         self.channelRoles = channelRoles
+    }
+
+    // MARK: Codable — tolerate payloads written before `isEnabled` existed.
+
+    private enum CodingKeys: String, CodingKey { case isEnabled, deviceUID, channelRoles }
+
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        isEnabled = try container.decodeIfPresent(Bool.self, forKey: .isEnabled) ?? false
+        deviceUID = try container.decodeIfPresent(String.self, forKey: .deviceUID)
+        channelRoles = try container.decodeIfPresent([ChannelRole].self, forKey: .channelRoles) ?? []
+    }
+
+    func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        try container.encode(isEnabled, forKey: .isEnabled)
+        try container.encodeIfPresent(deviceUID, forKey: .deviceUID)
+        try container.encode(channelRoles, forKey: .channelRoles)
     }
 
     // MARK: Queries
@@ -63,9 +87,19 @@ struct LTCRoutingSettings: Codable, Equatable, Sendable {
 
     var ltcChannel: Int? { channel(for: .ltc) }
 
-    /// Routing is usable once an LTC output channel has been assigned. (Track
-    /// channels are optional — a 1-channel "LTC only" cable is valid.)
-    var isComplete: Bool { ltcChannel != nil }
+    /// The channel carrying the left / right legs of the program (track) audio,
+    /// if assigned. Track channels are optional — a 1-channel "LTC only" cable is
+    /// valid; without them the program audio is silent while LTC runs.
+    var trackLeftChannel: Int? { channel(for: .trackLeft) }
+    var trackRightChannel: Int? { channel(for: .trackRight) }
+
+    /// Whether any channel carries program (track) audio.
+    var hasTrackChannels: Bool { trackLeftChannel != nil || trackRightChannel != nil }
+
+    /// Routing is usable once LTC is enabled and an LTC output channel has been
+    /// assigned. (Track channels are optional — a 1-channel "LTC only" cable is
+    /// valid.)
+    var isComplete: Bool { isEnabled && ltcChannel != nil }
 
     // MARK: Transforms (value-returning — callers persist the result)
 
@@ -80,14 +114,19 @@ struct LTCRoutingSettings: Codable, Equatable, Sendable {
             }
         }
         roles[channel] = role
-        return Self(deviceUID: deviceUID, channelRoles: roles)
+        return Self(isEnabled: isEnabled, deviceUID: deviceUID, channelRoles: roles)
+    }
+
+    /// Toggle the master switch, leaving the device + channel layout untouched.
+    func settingEnabled(_ enabled: Bool) -> Self {
+        Self(isEnabled: enabled, deviceUID: deviceUID, channelRoles: channelRoles)
     }
 
     /// Select a different output device. The channel-role list is left as-is;
     /// pair this with `resized(toChannelCount:)` once the new device's channel
     /// count is known.
     func selectingDevice(uid: String?) -> Self {
-        Self(deviceUID: uid, channelRoles: channelRoles)
+        Self(isEnabled: isEnabled, deviceUID: uid, channelRoles: channelRoles)
     }
 
     /// Pad with `.silent` or truncate so `channelRoles.count == count`. If the
@@ -102,12 +141,12 @@ struct LTCRoutingSettings: Codable, Equatable, Sendable {
         } else if roles.count < clamped {
             roles.append(contentsOf: repeatElement(.silent, count: clamped - roles.count))
         }
-        return Self(deviceUID: deviceUID, channelRoles: roles)
+        return Self(isEnabled: isEnabled, deviceUID: deviceUID, channelRoles: roles)
     }
 
     /// Replace the channel layout with the default one for `count` channels.
     func withDefaultRoles(forChannelCount count: Int) -> Self {
-        Self(deviceUID: deviceUID, channelRoles: Self.defaultRoles(forChannelCount: count))
+        Self(isEnabled: isEnabled, deviceUID: deviceUID, channelRoles: Self.defaultRoles(forChannelCount: count))
     }
 
     /// Default channel layout: ch 0 = LTC, ch 1 = Track L, ch 2 = Track R, the

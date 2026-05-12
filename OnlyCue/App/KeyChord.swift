@@ -47,6 +47,36 @@ struct KeyChord: Codable, Equatable, Hashable, Sendable {
         return result
     }
 
+    // MARK: - Building from a key event
+
+    /// Build a chord from a SwiftUI key event (`KeyPress.key` + `.modifiers`),
+    /// or `nil` if the key isn't something we can bind (an unrecognised
+    /// function key with no printable character). Modifiers other than the four
+    /// we model (caps-lock, numeric-pad…) are ignored. Letter keys are
+    /// lower-cased — case is carried by the `.shift` modifier, not the key.
+    static func from(keyEquivalent: KeyEquivalent, modifiers: EventModifiers) -> Self? {
+        var mods: Set<Modifier> = []
+        if modifiers.contains(.command) { mods.insert(.command) }
+        if modifiers.contains(.shift) { mods.insert(.shift) }
+        if modifiers.contains(.option) { mods.insert(.option) }
+        if modifiers.contains(.control) { mods.insert(.control) }
+
+        if let name = specialKeyName(for: keyEquivalent) {
+            return Self(key: name, modifiers: mods)
+        }
+        let character = keyEquivalent.character
+        guard character.isLetter || character.isNumber || character.isPunctuation || character.isSymbol else {
+            return nil
+        }
+        return Self(key: String(character).lowercased(), modifiers: mods)
+    }
+
+    /// The reserved name for `keyEquivalent` if it's one of the special keys we
+    /// model (`leftArrow`, `space`, …); `nil` for ordinary printable keys.
+    static func specialKeyName(for keyEquivalent: KeyEquivalent) -> String? {
+        specialKeys.first { $0.value.character == keyEquivalent.character }?.key
+    }
+
     // MARK: - Display
 
     /// e.g. `⇧⌘E`, `⌥←`, `S`. Modifiers in the macOS-canonical order ⌃⌥⇧⌘.

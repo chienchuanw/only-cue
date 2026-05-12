@@ -4,6 +4,18 @@ Append-only session log. Newer entries on top.
 
 ---
 
+## 2026-05-12 — Bypass-mode session: epic #33 (LTC) — `LTCFrameStream` + Settings → Audio routing pane
+
+**Shipped (1 PR):** #174. Rebase-merged to `dev` (`b567b9f`). Leaf issue #173. Two small leaves: the continuous frame stream (leaf 3 — generator half) + the Audio side of the prefs UI (leaf 6 — audio half).
+
+- **`LTCFrameStream`** (`OnlyCue/LTC/LTCFrameStream.swift`) — `startTimecode` + `sampleRate` + `amplitude`. `samples(frameCount:)` walks N consecutive frames (`Timecode(frameCount: start.frameCount + n, rate:)`), concatenating `LTCEncoder.samples(...)` and threading each frame's `endLevel` into the next call's `startLevel` so the biphase signal stays continuous across the joins (no boundary glitch). `timecode(atFrameOffset:)` (negative clamps to start), `samplesPerFrame` = `round(sampleRate/fps)` (constant per frame). Pure value type — the `AVAudioEngine` that schedules these buffers is the playback leaf.
+- **`AudioSettingsView`** (`OnlyCue/UI/AudioSettingsView.swift`, `Settings → Audio` — third tab after OSC / Keyboard) — output-device `Picker` (`System Default`, tag `String?.none`, + each `AudioOutputDeviceList.current()` device "name — N ch", with a Refresh Devices button); a per-channel role `Picker` table over `0..<channelCount` (`ChannelRole` cases by `displayName`; selecting routes through `LTCRoutingSettings.assigning(_:toChannel:)`, which vacates any other channel holding the same unique role); on appear it `refreshDevices()` + reconciles `channelRoles` to the selected device's `outputChannelCount` (empty → the default LTC/L/R layout, else resize pads `.silent`/truncates); a warning `Label` when `!settings.isComplete`; a Reset Routing button. Bound to `LTCRoutingStore.shared`. AccessibilityIds `audioSettings` / `audioOutputDevicePicker` / `audioChannelRolePicker.<index>` / `audioRoutingWarning`.
+- `OnlyCueApp.swift` gained the `AudioSettingsView().tabItem { Label("Audio", systemImage: "hifispeaker") }`.
+- Docs: `architecture.md#ltc-and-routing` — new "Frame stream" + "Audio prefs" rows, intro line updated; `task_plan.md` #33 — leaf 3 (frame stream) + leaf 6 (audio half) marked done.
+- `LTCFrameStreamTests` (8 — `samplesPerFrame` at 24/25/30/30drop @ 48 k & 44.1 k; `timecode(atFrameOffset:)` advances + clamps negatives; empty for `count <= 0`; length = count × `samplesPerFrame`; samples at `±amplitude`; first frame == `LTCEncoder.samples(...)`; second frame starts from the first's `endLevel`; drop-frame stream advances `00:00:59;29 → 00:01:00;02`) + `AudioSettingsScreenshotTests` (UI baseline — fails headless here, as every XCUITest does; run it in Xcode). 446 → 454 unit tests pass; `swiftlint --strict` clean. SwiftLint gotchas this cycle: `identifier_name` (2–40 chars) rejects single-letter test-helper params `h`/`m`/`s`/`f` → spell them out, and the helper signature then had to be all-one-line or one-param-per-line; `line_length` 140 — a `Label` string came out 141 → shortened. Test bug fixed mid-cycle: `LTCEncoder.samples(...)` returns `(samples: [Float], endLevel: Bool)`, so the destructured `let (frame0, _) = ...` makes `frame0` the *array* — `frame0.samples` was wrong.
+
+---
+
 ## 2026-05-12 — Bypass-mode session: epic #33 (LTC) — routing settings data layer
 
 **Shipped (1 PR):** #172. Rebase-merged to `dev` (`e173853`). Leaf issue #171. Epic #33 leaf 3 (data layer half) — the persisted routing configuration + Core Audio device enumeration, ahead of the `AVAudioEngine` playback path and the Audio prefs UI (same staging as #168 → #170 for the Timecode side).

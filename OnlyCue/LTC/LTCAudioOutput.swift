@@ -258,28 +258,35 @@ final class LTCAudioOutput: ObservableObject {
         )
     }
 
-    /// Build a multichannel float PCM buffer carrying `monoSamples` on `channel`
-    /// and silence on every other channel of `format`. Out-of-range `channel`
-    /// clamps into bounds. Pure — exposed for tests.
-    static func makeBuffer(monoSamples: [Float], format: AVAudioFormat, channel: Int) -> AVAudioPCMBuffer? {
-        guard !monoSamples.isEmpty,
-              let buffer = AVAudioPCMBuffer(pcmFormat: format, frameCapacity: AVAudioFrameCount(monoSamples.count)),
-              let channels = buffer.floatChannelData
+    /// Build a multichannel float PCM buffer placing each `(samples, channel)`
+    /// entry on its channel of `format` and silence on every other channel.
+    /// Out-of-range channel indices clamp into bounds (a later entry on the same
+    /// channel overwrites an earlier one). All `samples` arrays must share the
+    /// same non-zero length. Pure — exposed for tests.
+    static func makeBuffer(
+        channels: [(samples: [Float], channel: Int)], format: AVAudioFormat
+    ) -> AVAudioPCMBuffer? {
+        guard let frameCount = channels.first?.samples.count, frameCount > 0,
+              channels.allSatisfy({ $0.samples.count == frameCount }),
+              let buffer = AVAudioPCMBuffer(pcmFormat: format, frameCapacity: AVAudioFrameCount(frameCount)),
+              let destinations = buffer.floatChannelData
         else { return nil }
-        buffer.frameLength = AVAudioFrameCount(monoSamples.count)
+        buffer.frameLength = AVAudioFrameCount(frameCount)
         let channelCount = Int(format.channelCount)
-        let target = min(max(0, channel), channelCount - 1)
-        for index in 0..<channelCount {
-            let destination = channels[index]
-            if index == target {
-                monoSamples.withUnsafeBufferPointer { source in
-                    if let base = source.baseAddress { destination.update(from: base, count: monoSamples.count) }
-                }
-            } else {
-                destination.update(repeating: 0, count: monoSamples.count)
+        for index in 0..<channelCount { destinations[index].update(repeating: 0, count: frameCount) }
+        for (samples, channel) in channels {
+            let target = min(max(0, channel), channelCount - 1)
+            samples.withUnsafeBufferPointer { source in
+                if let base = source.baseAddress { destinations[target].update(from: base, count: frameCount) }
             }
         }
         return buffer
+    }
+
+    /// Single mono-on-one-channel form — thin wrapper over `makeBuffer(channels:format:)`
+    /// for the LTC pump. Pure — exposed for tests.
+    static func makeBuffer(monoSamples: [Float], format: AVAudioFormat, channel: Int) -> AVAudioPCMBuffer? {
+        makeBuffer(channels: [(samples: monoSamples, channel: channel)], format: format)
     }
 }
 

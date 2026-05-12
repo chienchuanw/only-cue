@@ -4,6 +4,16 @@ Append-only session log. Newer entries on top.
 
 ---
 
+## 2026-05-12 — Bypass-mode session: epic #33 (LTC) — `LTCSchedule` (buffer plan; step A of the A→D finish plan)
+
+**Shipped (1 PR):** #180. Rebase-merged to `dev` (`1f89038`). Leaf issue #179.
+
+- **`LTCSchedule`** (`OnlyCue/LTC/LTCSchedule.swift`) — pure value type, the brain of the upcoming `LTCAudioOutput`: `startTimecode` + `sampleRate` + `framesPerBuffer` + `amplitude`; `timecode(forBufferIndex:)` (= `startTimecode + index·framesPerBuffer` frames, drop-frame aware), `samples(forBufferIndex:)` (a seamless `LTCFrameStream` run of `framesPerBuffer` frames — polarity threaded within a buffer, reset between buffers, which is harmless since LTC keys on transitions), `buffer(at:)` → `Buffer { index, timecode, samples }`, `nextBuffer()` (mutating/sequential, advances `emittedBuffers`), `samplesPerBuffer` (constant) / `bufferDuration`, `targetBufferCount(elapsedSeconds:leadBuffers:)` (how many buffers to keep emitted to stay ahead of playback), `static framesPerBuffer(forTargetSeconds:rate:)`.
+- Docs: `architecture.md#ltc-and-routing` — new "Buffer plan" row; "Routing playback" row updated to reference `LTCSchedule`. `task_plan.md` #33 — step A done; the A→D plan recorded.
+- `LTCScheduleTests` (8). 470 → 478 unit tests pass; `swiftlint --strict` clean. SwiftLint: `large_tuple` (≤2) → `nextBuffer()` returns a `Buffer` struct, not a 3-tuple; `multiline_arguments` → an `XCTAssertEqual(LongExpr.prop, 0.2, accuracy:)` split across lines fails, so extract a local first.
+
+---
+
 ## 2026-05-12 — Bypass-mode session: epic #33 (LTC) — `LTCAudioReader` (read striped LTC off imported media)
 
 **Shipped (1 PR):** #178. Rebase-merged to `dev` (`e030f82`). Leaf issue #177. The media-reader half of leaf 5.

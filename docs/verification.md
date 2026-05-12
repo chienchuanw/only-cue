@@ -24,6 +24,19 @@ Run on a clean user account with a freshly installed DMG. Use bundled fixtures `
 
 If any step fails, the MVP is not done.
 
+## LTC output (manual — requires a multichannel audio interface)
+
+The `ProgramAudioTap`, the two-node `AVAudioEngine`, and `AVPlayer` muting can't be exercised headlessly; verify by running the app against a real interface. The pure pieces (`ProgramAudioRingBuffer`, `LTCAudioOutput.makeBuffer`, `LTCRoutingSettings`) are unit-tested.
+
+1. Fresh `UserDefaults` (or `LTCRoutingStore.shared.resetToDefault()`): `Settings → Audio` shows only the "Enable LTC output" toggle, off; the channel table and warnings are hidden; media plays with audio normally on the default output.
+2. Toggle "Enable LTC output" on → the device picker, channel table, and "No channel is assigned to LTC" warning appear.
+3. Pick the interface; assign channel 1 = LTC, channel 2 = Track L, channel 3 = Track R → the warning clears; no "no Track channels" hint.
+4. Load a media file and press space → (a) clean LTC on channel 1 (verify with an LTC reader or a second app), (b) program audio audible on channels 2/3, (c) **no** program-audio bleed onto channel 1, (d) the Mac's normal output is silent for this media (`AVPlayer` muted).
+5. Seek during playback → LTC re-cues to the new timecode; program audio follows within a fraction of a second.
+6. Unplug then replug the interface mid-playback → LTC and program audio resume (config-change rebuild).
+7. Set channels 2/3 back to Silent → on the next play, program audio is silent and LTC stays clean; the "Track L / Track R" hint appears in the Audio pane.
+8. Toggle "Enable LTC output" off → media audio returns to the normal output; no LTC is emitted.
+
 ## Automated suite
 
 Cheap, fast tests that catch the regressions that humans miss.
@@ -39,6 +52,9 @@ Cheap, fast tests that catch the regressions that humans miss.
 - `WaveformGeneratorTests` — peak array length matches requested resolution; deterministic for the same input.
 - `BookmarksTests` — round-trip create → encode → decode → resolve on a temp file.
 - `WaveformZoomControllerTests` — anchored zoom keeps the time under the gesture in place; clamping at 1× and 16×; reset restores fit-width + follow; auto-follow returns the leading-fraction target only when zoomed in, following, and past the trailing threshold.
+- `LTCRoutingSettingsTests` — `isEnabled` defaults false; `isComplete` ⇔ enabled ∧ an LTC channel; transforms carry `isEnabled`; legacy JSON (no `isEnabled` key) decodes to false; round-trip.
+- `ProgramAudioRingBufferTests` — push/drain ordering, wrap-around, underrun zero-fill, overflow drops oldest, push larger than capacity keeps newest, flush, odd/empty push are no-ops.
+- `LTCAudioOutputTests` — `makeBuffer(channels:format:)` places each source on its channel with silence elsewhere, clamps out-of-range, nil on mismatched/empty; `renderFormat` non-standard channel counts; `buffersToSchedule` gap-fill.
 
 ### UI smoke (XCUITest)
 

@@ -6,9 +6,12 @@ import CoreAudio
 /// current playhead, the project framerate, and `LTCRoutingSettings`, it opens
 /// an engine on the routed device and streams `LTCSchedule` buffers onto an
 /// `AVAudioPlayerNode`, with the mono LTC placed on the channel the routing
-/// assigned (`ChannelRole.ltc`) and silence on the others. Rebuilds on
-/// `AVAudioEngineConfigurationChange` (device disconnect / sample-rate change)
-/// from the timecode it was last told.
+/// assigned (`ChannelRole.ltc`) and silence on the others. When a
+/// `ProgramAudioRingBuffer` is supplied to `start` (the media's program audio,
+/// captured by `ProgramAudioTap`), a second `AVAudioPlayerNode` plays it onto
+/// the routing's `trackLeft` / `trackRight` channels so the LTC channel never
+/// sums with program audio. Rebuilds on `AVAudioEngineConfigurationChange`
+/// (device disconnect / sample-rate change) from the timecode it was last told.
 ///
 /// Caller responsibilities (see `LTCAudioOutput` consumers): call `start`/`stop`
 /// alongside transport play/pause, and `update(timecode:)` on seek.
@@ -39,6 +42,19 @@ final class LTCAudioOutput: ObservableObject {
     private var renderFormat: AVAudioFormat?
     private var ltcChannel = 0
 
+    /// Second player node carrying the media's program audio onto the Track L / R
+    /// channels while LTC runs (`LTCOutputHost` mutes `AVPlayer`'s own output and
+    /// feeds this via a `ProgramAudioTap`). `nil` `programRing` ⇒ no program
+    /// audio is scheduled, so those channels stay silent.
+    private let programNode = AVAudioPlayerNode()
+    private var programRing: ProgramAudioRingBuffer?
+    private var trackLeftChannel: Int?
+    private var trackRightChannel: Int?
+    private var outstandingProgramBuffers = 0
+    /// Frames per program buffer — kept equal to the LTC buffer length so the two
+    /// pumps stay in step.
+    private var programFramesPerBuffer = 0
+
     /// Buffers handed to `playerNode` that haven't reported completion yet — the
     /// current lead. `topUpBuffers` schedules until this reaches `primeCount`.
     private var outstandingBuffers = 0
@@ -55,8 +71,14 @@ final class LTCAudioOutput: ObservableObject {
     private var pendingStart: (timecode: Timecode, routing: LTCRoutingSettings)?
     private var configObserver: NSObjectProtocol?
 
+    /// The sample rate of the active engine connection (the routed device's
+    /// rate), or `nil` when not running — `LTCOutputHost` matches the program tap
+    /// to it.
+    var currentRenderSampleRate: Double? { renderFormat?.sampleRate }
+
     init() {
         engine.attach(playerNode)
+        engine.attach(programNode)
         configObserver = NotificationCenter.default.addObserver(
             forName: .AVAudioEngineConfigurationChange, object: engine, queue: .main
         ) { [weak self] _ in
@@ -72,14 +94,17 @@ final class LTCAudioOutput: ObservableObject {
     // MARK: - Transport hooks
 
     /// Begin (or restart) LTC output at `timecode`, on the device + channel the
-    /// `routing` specifies. A no-op with a recorded error if `routing` has no
-    /// LTC channel.
-    func start(at timecode: Timecode, routing: LTCRoutingSettings) {
+    /// `routing` specifies. If `programRing` is non-nil and the routing assigns
+    /// Track channels, the engine also plays whatever is pushed into it onto
+    /// those channels. A no-op with a recorded error if `routing` has no LTC
+    /// channel.
+    func start(at timecode: Timecode, routing: LTCRoutingSettings, programRing: ProgramAudioRingBuffer? = nil) {
         guard routing.ltcChannel != nil else {
             lastError = "No output channel is assigned to LTC."
             return
         }
         pendingStart = (timecode, routing)
+        self.programRing = programRing
         restartEngine()
     }
 
@@ -88,12 +113,17 @@ final class LTCAudioOutput: ObservableObject {
         pumpGeneration += 1
         stopRefillTimer()
         playerNode.stop()
+        programNode.stop()
         engine.stop()
         engine.reset()
         schedule = nil
         renderFormat = nil
         pendingStart = nil
         outstandingBuffers = 0
+        outstandingProgramBuffers = 0
+        programRing = nil
+        trackLeftChannel = nil
+        trackRightChannel = nil
         isRunning = false
     }
 
@@ -104,12 +134,17 @@ final class LTCAudioOutput: ObservableObject {
         guard isRunning, let pending = pendingStart, let format = renderFormat else { return }
         pumpGeneration += 1
         outstandingBuffers = 0
+        outstandingProgramBuffers = 0
         pendingStart = (timecode, pending.routing)
         playerNode.stop()
+        programNode.stop()
+        programRing?.flush()
         let framesPerBuffer = LTCSchedule.framesPerBuffer(forTargetSeconds: bufferTargetSeconds, rate: timecode.rate)
         schedule = LTCSchedule(startTimecode: timecode, sampleRate: format.sampleRate, framesPerBuffer: framesPerBuffer)
         playerNode.play()
+        programNode.play()
         topUpBuffers()
+        topUpProgramBuffers()
     }
 
     // MARK: - Engine lifecycle
@@ -124,9 +159,11 @@ final class LTCAudioOutput: ObservableObject {
         pumpGeneration += 1
         stopRefillTimer()
         playerNode.stop()
+        programNode.stop()
         engine.stop()
         engine.reset()
         outstandingBuffers = 0
+        outstandingProgramBuffers = 0
         isRunning = false
         lastError = nil
 
@@ -140,12 +177,16 @@ final class LTCAudioOutput: ObservableObject {
                 throw LTCAudioOutputError.unsupportedOutputFormat
             }
             engine.connect(playerNode, to: engine.outputNode, format: renderFormat)
+            engine.connect(programNode, to: engine.outputNode, format: renderFormat)
             self.renderFormat = renderFormat
             ltcChannel = pending.routing.ltcChannel ?? 0
+            trackLeftChannel = pending.routing.trackLeftChannel
+            trackRightChannel = pending.routing.trackRightChannel
 
             let framesPerBuffer = LTCSchedule.framesPerBuffer(
                 forTargetSeconds: bufferTargetSeconds, rate: pending.timecode.rate
             )
+            programFramesPerBuffer = framesPerBuffer
             schedule = LTCSchedule(
                 startTimecode: pending.timecode,
                 sampleRate: renderFormat.sampleRate,
@@ -154,7 +195,9 @@ final class LTCAudioOutput: ObservableObject {
 
             try engine.start()
             playerNode.play()
+            programNode.play()
             topUpBuffers()
+            topUpProgramBuffers()
             startRefillTimer()
             isRunning = true
         } catch {
@@ -227,7 +270,10 @@ final class LTCAudioOutput: ObservableObject {
         let timer = DispatchSource.makeTimerSource(queue: .main)
         timer.schedule(deadline: .now() + interval, repeating: interval)
         timer.setEventHandler { [weak self] in
-            MainActor.assumeIsolated { self?.topUpBuffers() }
+            MainActor.assumeIsolated {
+                self?.topUpBuffers()
+                self?.topUpProgramBuffers()
+            }
         }
         refillTimer = timer
         timer.resume()
@@ -287,6 +333,49 @@ final class LTCAudioOutput: ObservableObject {
     /// for the LTC pump. Pure — exposed for tests.
     static func makeBuffer(monoSamples: [Float], format: AVAudioFormat, channel: Int) -> AVAudioPCMBuffer? {
         makeBuffer(channels: [(samples: monoSamples, channel: channel)], format: format)
+    }
+}
+
+// MARK: - Program-audio pump
+
+extension LTCAudioOutput {
+
+    /// Whether program (track) audio should be scheduled — there is a source ring
+    /// buffer and the routing assigns at least one Track channel.
+    private var hasProgramOutput: Bool {
+        programRing != nil && (trackLeftChannel != nil || trackRightChannel != nil) && programFramesPerBuffer > 0
+    }
+
+    func topUpProgramBuffers() {
+        guard isRunningOrPriming, hasProgramOutput else { return }
+        let needed = Self.buffersToSchedule(outstanding: outstandingProgramBuffers, target: primeCount)
+        for _ in 0..<needed { scheduleOneProgramBuffer() }
+    }
+
+    private func scheduleOneProgramBuffer() {
+        guard isRunningOrPriming, hasProgramOutput, let format = renderFormat, let ring = programRing else { return }
+        let interleaved = ring.drain(frameCount: programFramesPerBuffer)   // always full length, zero-padded
+        var left = [Float](repeating: 0, count: programFramesPerBuffer)
+        var right = [Float](repeating: 0, count: programFramesPerBuffer)
+        for frame in 0..<programFramesPerBuffer {
+            left[frame] = interleaved[frame * 2]
+            right[frame] = interleaved[frame * 2 + 1]
+        }
+        var entries: [(samples: [Float], channel: Int)] = []
+        if let leftCh = trackLeftChannel { entries.append((left, leftCh)) }
+        if let rightCh = trackRightChannel { entries.append((right, rightCh)) }
+        guard !entries.isEmpty, let pcm = Self.makeBuffer(channels: entries, format: format) else { return }
+        outstandingProgramBuffers += 1
+        let generation = pumpGeneration
+        programNode.scheduleBuffer(pcm) { [weak self] in
+            Task { @MainActor in self?.programBufferDidComplete(generation: generation) }
+        }
+    }
+
+    private func programBufferDidComplete(generation: Int) {
+        guard generation == pumpGeneration else { return }
+        outstandingProgramBuffers = max(0, outstandingProgramBuffers - 1)
+        topUpProgramBuffers()
     }
 }
 

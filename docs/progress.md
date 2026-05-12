@@ -4,6 +4,24 @@ Append-only session log. Newer entries on top.
 
 ---
 
+## 2026-05-12 — Bypass-mode session: epic #40 started (custom keyboard shortcuts — keymap data layer)
+
+**Shipped (1 PR):** #154. Rebase-merged to `dev` (`524120e`). Opens epic #40 (custom keyboard shortcuts editor) with leaf 1 (spec — keymap schema + conflict-resolution rules) and the load/save/conflict-detection cases of leaf 5 (tests). Leaf issue #153.
+
+**The keymap data layer — no UI, no behaviour change yet.** The menu/document shortcuts still come from the hardcoded `.keyboardShortcut(...)` calls; this PR is the seam the Settings editor and the `AppCommands` rewiring will plug into.
+
+- **`KeymapAction`** (`OnlyCue/App/KeymapAction.swift`) — a `CaseIterable` enum of every rebindable command: the File-menu items, the waveform-zoom / overlay-toggle / cue-edit View-menu items, and `addCueOfType1…9` (the document window's number-key cue creation, listed here so the editor can expose them as rows even though the document window doesn't read them yet). `rawValue` is the **stable JSON wire key** — renaming a case needs a migration. `displayName` is data-driven via a static `[Self: String]` dict (a 24-case `switch` would blow this repo's `cyclomatic_complexity` cap of 10).
+- **`KeyChord`** (`OnlyCue/App/KeyChord.swift`) — `Codable` stand-in for SwiftUI's non-`Codable` `KeyboardShortcut`: `key` is one printable character or a reserved special-key name (`"leftArrow"`, `"space"`, …); `modifiers` is a `Set` of `command`/`shift`/`option`/`control`. `.keyboardShortcut` builds the SwiftUI value (special-key name → `KeyEquivalent` static via a lookup table; otherwise the first character); `.displayString` renders `⇧⌘E` / `⌥←` / `S` in macOS-canonical modifier order ⌃⌥⇧⌘. Unparseable `key` → `nil` shortcut.
+- **`Keymap`** (`OnlyCue/App/Keymap.swift`) — a **total** `KeymapAction → KeyChord` map. `Keymap.default` mirrors today's hardcoded shortcuts (and `1`…`9` for the cue-type slots). On disk it's a **sparse** JSON object `{ actionRawValue: { key, modifiers } }`; `init(bindings:)` backfills any missing action from defaults so the map stays total, and `Keymap.decode(_:Data?)` is lenient — nil/corrupt → `.default`, partial → backfilled, unknown action keys dropped (so a keymap written by one build version is forward- and backward-tolerant against another). `conflicts()` / `actionsConflicting(with:excluding:)` surface chord clashes for the editor to flag — v1 is **advisory only**, nothing auto-resolves (macOS itself tolerates duplicate shortcuts). `rebind` / `resetToDefault` / `resetAll` mutate it. Custom `Codable` (single-value container of `[String: KeyChord]`, unknown keys dropped on decode).
+- **`KeymapStore`** (`OnlyCue/App/KeymapStore.swift`) — `@MainActor` `ObservableObject`, persists under `keymap.v1` with an **injectable `UserDefaults`** (default `.standard`) so tests use a throwaway suite, never the app's real key.
+- **Tests:** `OnlyCueTests/KeymapTests.swift` (default-table integrity, JSON round-trip incl. after-rebind, lenient decode of nil/corrupt/partial/unknown-key, conflict detection + prediction, rebind isolation, reset-to-default / reset-all, `KeyChord` ⇄ `KeyboardShortcut` round-trip + special keys + unparseable keys, `displayString`, `KeyChord` JSON round-trip) + `OnlyCueTests/KeymapStoreTests.swift` (fresh-store default, rebind persists + survives reopen/reload, reset-all persists, corrupt stored data → default). ~22 new tests; all green; `swiftlint --strict` clean. `xcodegen generate` re-run (new files in the existing `OnlyCue/App/` folder, no new top-level folder).
+- **No screenshot** — pure model + store + tests, nothing visual. The Settings → Keyboard editor (leaf 2) is the first piece with a screen.
+- Docs: new `docs/architecture.md#custom-shortcuts` section + ADR-018 ("keymap is a sparse, forward-tolerant JSON object keyed by a stable `KeymapAction`; the data layer ships before the editor; advisory conflicts in v1"); `task_plan.md` #40 row → 🟡 1 of 5 leaves.
+
+**Remaining epic #40 leaves (later PRs):** leaf 2 — Settings → Keyboard editor UI (table of action → key — first screenshottable piece); leaf 3 — per-row conflict UI + reset-to-default; leaf 4 — editable number-key cue-binding rows; plus rewiring `AppCommands` (its ~15 `.keyboardShortcut(...)` sites) and the document window's number-key handling to actually read `KeymapStore.shared.keymap`.
+
+---
+
 ## 2026-05-12 — Bypass-mode session: epic #37 closed (Timeline breakdown view, leaf 5 — layout-fidelity tests)
 
 **Shipped (1 PR):** #152. Rebase-merged to `dev` (`c932660`). Closed the last leaf of epic #37 (leaf 5 — exhaustive `TimelineBreakdownLayout` fidelity tests + a video-vs-audio placeholder-id tidy-up from PR #148's review note 1).

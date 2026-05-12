@@ -4,6 +4,18 @@ Append-only session log. Newer entries on top.
 
 ---
 
+## 2026-05-12 — Bypass-mode session: epic #33 (LTC) — Timecode Settings sheet (edit framerate + start timecode)
+
+**Shipped (1 PR):** #170. Rebase-merged to `dev` (`9203cb4`). Leaf issue #169. The editor for `ProjectModel.timecodeSettings` (persisted in #168) — the first half of the epic's "Audio & Timecode preferences pane" leaf (the Audio half waits on the Core Audio routing leaf).
+
+- **`Timecode.parse(_:rate:)`** (`OnlyCue/LTC/Timecode.swift`) — parses `HH:MM:SS:FF` (also `;`/`,`/`.`/space/tab as separators; `;` before the frames signals drop-frame display) into a `Timecode`, going through the validating `init?` so drop-frame-skipped numbers are rejected. Round-trips with `displayString`.
+- **`CueCommands.setProjectTimecodeSettings(_:document:undoManager:)`** (`OnlyCue/Commands/CueCommands+Timecode.swift`, new) — undoable replace of `model.timecodeSettings`; no-op when unchanged so committing on every keystroke is cheap. Wraps `registerUndo` in `beginUndoGrouping()` / `defer endUndoGrouping()` — required, or the `groupsByEvent = false` document `UndoManager` throws "must begin a group before registering undo".
+- **`TimecodeSettingsSheet`** (`OnlyCue/UI/TimecodeSettingsSheet.swift`, new) — `Tools → Timecode Settings…` posts `.timecodeSettingsRequested`; a `TimecodeSettingsSheetHost` `ViewModifier` (`.timecodeSettingsSheet(document:)`, mirrors the `.exportSheet` / `.oscServerHost` host-modifier pattern so `DocumentView`'s body stays under the `type_body_length` cap) presents it. Framerate `Picker` + monospaced start-timecode `TextField`; invalid text is flagged inline (red caption) and left as-is, valid text is canonicalised; both commit through `setProjectTimecodeSettings`. AccessibilityIds `timecodeSettingsSheet` / `timecodeFrameratePicker` / `timecodeStartField`.
+- Docs: `architecture.md#ltc-and-routing` — Timecode-settings row now notes the sheet; `task_plan.md` #33 → 🟡 ~5 of 7 leaves. No new ADR (ADR-019 covers the LTC value model).
+- `TimecodeParseTests` (8 — colon/semicolon/whitespace forms, wrong field count, non-integer, out-of-range, drop-frame-skipped + tenth-minute, round-trip) + `CueCommandsTimecodeTests` (3 `@MainActor` — change + undo/redo, no-op when unchanged, lands in the project snapshot). 426 unit tests pass; `swiftlint --strict` clean. `DocumentView` body had hit `type_body_length` 251 with inline `@State`/`.onReceive`/`.sheet` → the host-modifier extraction brought it back under. UI screenshot test (`TimecodeSettingsSheetScreenshotTests`) committed; can't run headless here — run it in Xcode.
+
+---
+
 ## 2026-05-12 — Bypass-mode session: epic #33 (LTC) — persist project timecode settings (schema v7)
 
 **Shipped (1 PR):** #168. Rebase-merged to `dev` (`63fb095`). Leaf issue #167. Epic #33 leaf 4 — the project's framerate + start offset, persisted in `.cuelist` (schema v6 → v7).

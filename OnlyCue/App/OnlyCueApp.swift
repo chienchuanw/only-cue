@@ -14,6 +14,8 @@ struct OnlyCueApp: App {
                     .tabItem { Label("OSC", systemImage: "dot.radiowaves.left.and.right") }
                 KeyboardSettingsView()
                     .tabItem { Label("Keyboard", systemImage: "keyboard") }
+                AudioSettingsView()
+                    .tabItem { Label("Audio", systemImage: "hifispeaker") }
             }
         }
     }

@@ -16,19 +16,19 @@ The features that make the app useful **at the desk** during programming, not ju
 
 Phase 2 is **the smallest set of features that makes a working lighting programmer choose us over CuePoints**. We will not ship a paid product without at least LTC + export.
 
-## Phase 3 — Our differentiator (pick one)
+## Phase 3 — Our differentiator
 
-We deliberately defer this until phase 2 ships. Three candidates we've discussed:
+Deferred until phase 2 shipped (it has). Of the three candidates we discussed, **A and B are both in flight** (A first, then B); C remains a future option.
 
-### Option A — AI-assisted cueing
+### Option A — AI-assisted cueing — **in progress**
 
-Auto-suggest cues from audio analysis: beat grid, transients, vocal entries, instrument changes, scene cuts in video. The user accepts/rejects suggestions; nothing is auto-applied.
+The full vision: auto-suggest cues from audio/video analysis — beat grid, transients, vocal entries, instrument changes, scene cuts. **v1 scope** (epic #199, [`superpowers/specs/2026-05-13-ai-tempo-map-design.md`](superpowers/specs/2026-05-13-ai-tempo-map-design.md), ADR-020): a per-`MediaItem` **tempo map** — configurable per-section BPM + bar length + downbeat phase, a beat/bar grid overlay on the waveform, an on-device DSP "Detect tempo" estimator behind a `TempoAnalyzer` protocol, and snap-cues-to-beat/bar + add-cues-on-grid commands. The grid is a visual + snap aid only; it does not move cues. Transient / vocal-entry / instrument-change / scene-cut suggestion, auto section-boundary detection, a Core ML / cloud engine, and musical-time cue binding are deferred to later leaves.
 
-**Why it could win**: turns a 4-hour planning session into a 30-minute review session.
+**Why it could win**: turns a multi-hour planning session into a review session.
 
-**Where it plugs in**: a new `CueSuggester` produces candidate `Cue` values; insertion happens through the existing `CueCommands` API, which means undo and persistence work for free.
+**Where it plugs in**: `TempoMap`/`TempoSection` live on `MediaItem` (schema v8); the analyzer reads audio via `AudioSampleReader` (the `AVAssetReader → mono PCM` reader factored out of `LTCAudioReader`); all map edits and cue snapping/insertion go through `CueCommands`, so undo + persistence work for free. The `TempoAnalyzer` protocol generalizes to a `CueSuggester` for the later detectors. See `docs/architecture.md#tempo-map`.
 
-### Option B — Real-time collaboration
+### Option B — Real-time collaboration — **planned (next epic)**
 
 Multiple programmers editing the same cue list live, like Figma. Useful for big shows where lighting + video + sound teams sit in the same session.
 

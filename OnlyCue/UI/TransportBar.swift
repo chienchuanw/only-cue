@@ -7,6 +7,10 @@ struct TransportBar: View {
     var mediaDuration: TimeInterval = 0
     var timecodeSettings: ProjectTimecodeSettings = .default
 
+    /// LTC decoded off the active media file, if any (supplied via the
+    /// environment by `StripedTimecodeHost`) — takes priority over
+    /// `timecodeSettings` for the SMPTE readout.
+    @Environment(\.stripedTimecode) private var stripedTimecode
     @AppStorage("pauseAtEachCue") private var pauseAtEachCue = false
 
     /// Single-Text readout so the slash kerns correctly with monospaced digits and
@@ -44,6 +48,22 @@ struct TransportBar: View {
             .map { currentTime - $0 }
     }
 
+    /// The SMPTE timecode at the playhead — the active file's striped LTC when
+    /// it has any, otherwise derived from the project settings.
+    private var smpteReadout: String {
+        if let striped = stripedTimecode {
+            return striped.timecode(atPlaybackSeconds: engine.currentTime).displayString
+        }
+        return timecodeSettings.timecode(atPlaybackSeconds: engine.currentTime).displayString
+    }
+
+    private var smpteReadoutHelp: String {
+        if stripedTimecode != nil {
+            return "SMPTE timecode read from the media file's LTC track."
+        }
+        return "SMPTE timecode at the playhead (\(timecodeSettings.framerate.displayName); edit in Tools → Timecode Settings…)."
+    }
+
     var body: some View {
         HStack(spacing: 12) {
             Button {
@@ -61,11 +81,11 @@ struct TransportBar: View {
                 .foregroundStyle(.secondary)
                 .accessibilityIdentifier("currentTimeReadout")
 
-            Text(timecodeSettings.timecode(atPlaybackSeconds: engine.currentTime).displayString)
+            Text(smpteReadout)
                 .font(.system(.body, design: .monospaced))
                 .foregroundStyle(.secondary)
                 .accessibilityIdentifier("smpteTimecode")
-                .help("SMPTE timecode at the playhead (\(timecodeSettings.framerate.displayName); edit in Tools → Timecode Settings…)")
+                .help(smpteReadoutHelp)
 
             if let interval = Self.lastCueElapsed(currentTime: engine.currentTime, cues: cues) {
                 Text("Last: \(TimeFormat.compactCountdown(interval))")

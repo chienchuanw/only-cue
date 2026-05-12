@@ -64,6 +64,24 @@ enum MediaImporter {
         return nil
     }
 
+    /// Decode the LTC striped onto `item`'s first audio track (resolving its
+    /// security-scoped bookmark), or `nil` if there's none / the file can't be
+    /// read. Used by the document window to make the SMPTE readout follow the
+    /// file's own timecode.
+    @MainActor
+    static func stripedTimecode(for item: MediaItem?) async -> StripedTimecodeTrack? {
+        guard let item else { return nil }
+        do {
+            let resolution = try Bookmarks.resolve(item.media.bookmarkData)
+            let didAccess = resolution.url.startAccessingSecurityScopedResource()
+            defer { if didAccess { resolution.url.stopAccessingSecurityScopedResource() } }
+            let frames = try await LTCAudioReader.decodeTimecodes(from: resolution.url)
+            return StripedTimecodeTrack(decodedFrames: frames, sampleRate: LTCAudioReader.sampleRate)
+        } catch {
+            return nil
+        }
+    }
+
     /// Build `MediaItem`s in parallel, preserving the original `urls` order.
     /// Asset duration loads (`.load(.duration)`) are I/O-bound, so a serial
     /// `for await` would scale linearly with N; a task group keeps wall time

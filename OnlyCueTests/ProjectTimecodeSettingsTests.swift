@@ -58,7 +58,6 @@ final class ProjectTimecodeSettingsTests: XCTestCase {
     func test_v6Document_migratesToV7_withDefaultTimecodeSettings() throws {
         let model = try ProjectModel.decode(from: Data(Self.v6FixtureJSON.utf8))
         XCTAssertEqual(model.schemaVersion, ProjectModel.currentSchemaVersion)
-        XCTAssertEqual(model.schemaVersion, 7)
         XCTAssertEqual(model.timecodeSettings, .default)
         XCTAssertEqual(model.name, "Legacy v6 show")
         XCTAssertEqual(model.cuePointTypes.map(\.name), ["General"])

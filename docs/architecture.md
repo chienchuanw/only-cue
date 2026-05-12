@@ -234,7 +234,7 @@ A toggleable alternative to the waveform timeline (epic #37) that splits the cue
 
 ## Custom keyboard shortcuts
 
-User-rebindable shortcuts (epic #40). The keymap JSON is the source of truth; the menu shortcuts (`AppCommands`) and the Settings → Keyboard editor both read it. **Wired so far:** `AppCommands`'s ~15 menu shortcuts. **Not yet:** the document window's `m` / `0`–`9` / Space / ←→ / ↑↓ shortcuts (`DocumentView`) still come from literals — rewiring those (and adding the `KeymapAction` cases they need beyond `.addCueOfType1…9`) is the remaining leaf.
+User-rebindable shortcuts (epic #40 — complete). The keymap JSON is the source of truth; **every** `.keyboardShortcut(...)` in `AppCommands` (the menu commands) and in `DocumentView` (the `m` "Add Cue", `0`–`9` cue-type hotkeys, Space play/pause, ←→ jump ±1 s, ↑↓ prev/next cue), plus the `DocumentShortcutHints` cheat-sheet text, read it; the Settings → Keyboard editor writes it. Defaults are exactly the old hardcoded literals.
 
 | Piece | API | Where it lives |
 |---|---|---|
@@ -243,7 +243,7 @@ User-rebindable shortcuts (epic #40). The keymap JSON is the source of truth; th
 | Keymap | `Keymap` — total map `action → chord`; `chord(for:)`, `conflicts()`, `actionsConflicting(with:excluding:)`, `rebind`, `resetToDefault`, `resetAll`; `Keymap.default` mirrors today's hardcoded shortcuts; `Keymap.decode(_:)` is lenient (nil/corrupt → default, partial → backfilled, unknown keys dropped) | `OnlyCue/App/Keymap.swift` |
 | Store | `KeymapStore` (`@MainActor`, `ObservableObject`) — persistence under `keymap.v1`, injectable `UserDefaults` for tests; `KeymapStore.shared` is the app-wide instance `AppCommands` and the editor both observe | `OnlyCue/App/KeymapStore.swift` |
 | Editor | `KeyboardSettingsView` — Settings → Keyboard tab; a row per `KeymapAction` (`displayName` · current chord button · per-row reset-to-default · conflict ⚠︎); clicking the chord enters a `.onKeyPress` capture (Esc cancels), the captured `KeyChord` is `rebind`-ed and persisted immediately; a "Reset All…" footer button + a conflict summary | `OnlyCue/UI/KeyboardSettingsView.swift`, mounted in `OnlyCueApp.swift`'s `Settings { TabView { … } }` |
-| Consumer | `AppCommands.shortcut(_:)` → `KeymapStore.shared.keymap.chord(for:).keyboardShortcut` (falls back to `Keymap.default`'s) — every `.keyboardShortcut(…)` in `AppCommands` goes through it | `OnlyCue/App/AppCommands.swift` |
+| Consumers | `shortcut(_ action:)` → `KeymapStore.shared.keymap.chord(for:).keyboardShortcut` (falls back to `Keymap.default`'s) — every `.keyboardShortcut(…)` in `AppCommands` *and* `DocumentView` goes through it; `DocumentView`'s `ForEach(0...9)` digit row uses `KeymapAction.addCueOfType(digit)`; `DocumentShortcutHints` shows `keymap.chord(for:).displayString` | `OnlyCue/App/AppCommands.swift`, `OnlyCue/UI/DocumentView.swift`, `OnlyCue/UI/DocumentShortcutHints.swift` |
 
 **Schema.** On disk a keymap is a plain JSON object `{ actionRawValue: { key, modifiers } }` — sparse (only overrides need be present; missing actions resolve to the default), forward-tolerant (unknown action keys are ignored, so a newer build's keymap doesn't break an older one and vice versa). The `KeymapAction` raw value is the stable wire key — renaming a case requires a migration. **Conflict rule (v1):** two actions may hold the same chord; `conflicts()` / the editor's ⚠︎ surface the clash but nothing is auto-resolved or blocked (macOS itself tolerates duplicate shortcuts — last responder wins). See ADR-018.
 
@@ -255,6 +255,6 @@ These are explicit extension points so future features don't require rewrites. S
 |---|---|
 | `PlayerEngine.currentTime` publisher | LTC encoder subscribes and feeds Core Audio |
 | `ProjectModel` is plain JSON | Templates are just `.cuelist` files with no media |
-| `AppCommands` reads keymap | Realized — see [Custom keyboard shortcuts](#custom-keyboard-shortcuts) (`DocumentView`'s shortcuts still pending) |
+| `AppCommands` reads keymap | Realized (epic #40 complete) — see [Custom keyboard shortcuts](#custom-keyboard-shortcuts) |
 | `ProjectModel.cues` is a flat array | Export to CSV / EDL / Timecode XML is a pure transform |
 | `CueCommands` is the only mutator | AI-suggested cues call the same API to insert |

@@ -13,7 +13,8 @@ final class AudioSettingsScreenshotTests: XCTestCase {
     /// Scenario: Settings → Audio pane renders
     /// Given the app is launched
     /// When the user opens Settings (⌘,) and selects the Audio tab
-    /// Then the output-device picker and the per-channel role table are shown
+    /// Then the "Enable LTC output" toggle is shown (the device picker and
+    ///   per-channel role table appear once it is turned on)
     /// And a screenshot of the Settings window is captured.
     func test_audioSettings_visualBaseline() throws {
         let app = XCUIApplication()

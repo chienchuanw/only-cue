@@ -4,6 +4,16 @@ Append-only session log. Newer entries on top.
 
 ---
 
+## 2026-05-13 — Bypass-mode session: epic #33 (LTC) — timer-driven buffer refill (epic complete; Phase-2 set feature-complete)
+
+**Shipped (1 PR):** #192. Rebase-merged to `dev` (`6bca844`). Leaf issue #191. Also closed epics #33, #36, #40 on GitHub (all functionally complete).
+
+- **`LTCAudioOutput` timer-driven refill** — the player-node queue is now topped up to `primeCount` (5) buffers by **two** paths feeding `topUpBuffers()`: each scheduled buffer's completion handler (as before — hops to the main actor, since `AVAudioPlayerNode` calls it off-thread) **and** a `DispatchSourceTimer` on `DispatchQueue.main` firing every `bufferTargetSeconds/2`, started after priming in `restartEngine()` and torn down in `stop()` / before each rebuild / in `deinit`. So a brief main-actor stall on the handler chain can't drain the queue and dropout the LTC stream (PR #182 review note 1).
+- An `outstandingBuffers` counter tracks the current lead (++ when a buffer is handed to `playerNode`, -- on completion); a `pumpGeneration` token is bumped on every rebuild / `update(at:)` / `stop()` and captured by each completion handler, so a superseded schedule's flushed-buffer completions are dropped instead of skewing the counter. `buffersToSchedule(outstanding:target:)` is a pure static — the only headless-testable surface.
+- `OnlyCueTests/LTCAudioOutputTests.swift` — 2 tests (`buffersToSchedule` fills the gap to target; never negative on overfill / negative input). 500 → 502 unit tests pass; `swiftlint --strict` clean; `xcodegen generate` re-run; `xcodebuild build` SUCCEEDED. Two commits: `cb187b3` test(ltc) RED, `6bca844` feat(ltc). No screenshot — no UI change. PR #192 review (senior-Swift-dev pass): LGTM, called out the `pumpGeneration` race handling, `MainActor.assumeIsolated`-on-`.main` soundness, `deinit` only-cancels-never-suspends, and `topUpBuffers` snapshot-then-loop being double-count-free as the things that mattered.
+- Docs: `architecture.md#ltc-and-routing` — refill paths described, intro says "generation + playback story is complete"; `task_plan.md` #33 → ✅ shipped, new PR #191 entry.
+- **Epic #33 complete.** With #36 and #40 also closed, the **Phase-2 epic set (#33 / #36 / #40) is feature-complete — no open epics or issues remain.** Out-of-scope LTC items (MTC, chase/slave, 23.976 / 29.97 / 59.94 framerates) stay deliberately deferred.
+
 ## 2026-05-12 — Bypass-mode session: epic #36 (timeline UX) — batch retime + ⌘-click marker multi-select (multi-select part 2 — epic complete)
 
 **Shipped (1 PR):** #190. Rebase-merged to `dev` (`cba0f1d`). Leaf issue #189.

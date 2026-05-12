@@ -4,6 +4,18 @@ Append-only session log. Newer entries on top.
 
 ---
 
+## 2026-05-12 — Bypass-mode session: epic #33 (LTC) — `LTCDecoder` (biphase-mark demodulation + frame recovery)
+
+**Shipped (1 PR):** #176. Rebase-merged to `dev` (`2897959`). Leaf issue #175. The decoder half of leaf 5 (striped-LTC playback) — the pure, fully-testable inverse of `LTCEncoder` / `LTCFrameStream`.
+
+- **`LTCDecoder.decode(samples:sampleRate:) -> [DecodedFrame]`** (`OnlyCue/LTC/LTCDecoder.swift`; `DecodedFrame = { timecode: Timecode, startSample: Int }`) — pipeline: zero-crossing detection (a zero sample keeps the prior sign) → bit-period estimate from the transition-interval histogram (spacings cluster at `H` and `2H`; average the lower cluster; `bitRate = sampleRate/2H`, `fps = round(bitRate/80)` — so the rate is *recovered*, not assumed) → biphase-mark demodulation (interval ≈`2H` → bit `0`, consume 1 transition; ≈`H` → bit `1`, consume 2; misfits dropped to re-sync; each bit records the sample of the transition that began it via a private `BitStream` struct) → slide an 80-bit window, lock when the trailing 16 bits are `LTCFrame.syncWord`, validate `LTCFrame.isWellFormed` (sync + even parity) + the `Timecode` init (in-range BCD incl. drop-frame-skipped numbers); bit 10 picks `fps30drop` vs `fps30`.
+- **`LTCFrame`** gained `init(bits:)` (precondition `count == 80`), `isWellFormed` (`syncWordIsValid && hasEvenParity`), `timecode(framesPerSecond:) -> Timecode?` (rate via `SMPTEFramerate.matching`). **`SMPTEFramerate`** gained `matching(framesPerSecond:isDropFrame:) -> Self?` (drop-frame only exists at 30; only 24/25/30 supported).
+- v1 decoder caveats (documented in the type + `architecture.md`): tuned for clean signals (software-striped files, our own generator played back) — no PLL-style jitter tracking, half-speed / reverse playback, or the 25 fps bit-59 parity variant. The `AVAssetReader` float-sample reader for an imported media's audio track + feeding decoded frames into `PlayerEngine` (so striped LTC drives the timeline) is the remaining integration work for leaf 5.
+- Docs: `architecture.md#ltc-and-routing` — new "Decoder" + "Striped-LTC playback (partial)" rows, intro updated; `task_plan.md` #33 — leaf 5 decoder marked done.
+- `LTCDecoderTests` (13 — round-trips `LTCFrameStream → LTCDecoder` at 24/25/30/30-drop @ 48 kHz and 44.1 kHz: recovers a *contiguous run* of the encoded timecodes (loses ≤1 leading frame to phase-lock + ≤1 trailing to mid-bit truncation — my first version of the assertion wrongly assumed a *suffix*; fixed to locate `recovered[0]` in the expected run and compare the slice) and the rate, drop-frame included; `startSample` monotonic and ~one frame apart; silence / white noise / a 3-sample input all decode to nothing without crashing; `LTCFrame(bits:)` round-trips and `timecode(framesPerSecond:)` is `nil` for 60 / 23 fps; `SMPTEFramerate.matching` cases). 454 → 466 unit tests pass; `swiftlint --strict` clean (one `prefer_self_in_static_references` fix: `matching`'s return type → `Self?`).
+
+---
+
 ## 2026-05-12 — Bypass-mode session: epic #33 (LTC) — `LTCFrameStream` + Settings → Audio routing pane
 
 **Shipped (1 PR):** #174. Rebase-merged to `dev` (`b567b9f`). Leaf issue #173. Two small leaves: the continuous frame stream (leaf 3 — generator half) + the Audio side of the prefs UI (leaf 6 — audio half).

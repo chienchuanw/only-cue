@@ -4,6 +4,18 @@ Append-only session log. Newer entries on top.
 
 ---
 
+## 2026-05-12 — Bypass-mode session: epic #33 (LTC) — persist project timecode settings (schema v7)
+
+**Shipped (1 PR):** #168. Rebase-merged to `dev` (`63fb095`). Leaf issue #167. Epic #33 leaf 4 — the project's framerate + start offset, persisted in `.cuelist` (schema v6 → v7).
+
+- **`ProjectTimecodeSettings`** (`OnlyCue/Document/ProjectTimecodeSettings.swift`) — `framerate: SMPTEFramerate` + `startOffsetFrames: Int` (the project's start timecode as a frame count since `00:00:00:00`, drop-frame aware via `Timecode`). `Codable`/`Equatable`/`Sendable`; `static let default` = 30 fps, offset 0. Derived `startTimecode: Timecode` and `timecode(atPlaybackSeconds:) -> Timecode` (`startOffset + playbackPosition` rounded to a frame, playback clamped ≥ 0) — what the LTC generator and the Audio & Timecode prefs pane will consume.
+- **`ProjectModel`** — `var timecodeSettings: ProjectTimecodeSettings = .default`; `currentSchemaVersion` 6 → 7; new `LegacyV6` shape + `migrateFromV6` (copies everything, seeds `.default`); the existing v1–v5 migrations target `currentSchemaVersion`, so they get `.default` via the memberwise default. `CueListDocument` keeps creating new documents at the current version.
+- No UI yet — the field is pre-provisioned here, same as `CuePointType.isVisible` before the breakdown view; the Audio & Timecode prefs pane (leaf 6) is what edits it. No new ADR (the schema bump is the routine process CLAUDE.md mandates; ADR-019 covers the LTC value model).
+- Docs: `data-model.md` — example bumped to `schemaVersion: 7` with a `timecodeSettings` line, Swift-types block + a `ProjectTimecodeSettings` block, a field rule, the versioning policy / migration list (every chain now seeds `timecodeSettings = .default`; "v7 is a one-way upgrade"). `architecture.md#ltc-and-routing` notes the persisted settings. `task_plan.md` #33 → 🟡 ~4 of 7 leaves.
+- `ProjectTimecodeSettingsTests` (10 — value type + `startTimecode` + `timecode(atPlaybackSeconds:)` incl. the epic-acceptance "25 fps / offset 01:00:00:00 / play 30 s → 01:00:30:00" and a drop-frame case + negative-playback clamp; Codable round-trip; JSON shape; v6 `.cuelist` fixture → v7 with `.default`; v7 model round-trips custom settings; new document at `currentSchemaVersion` with `.default`). Bumped `ProjectModelTests`' `currentSchemaVersion` assertion (6 → 7) — that was the one test that broke on the bump; a hardcoded version assertion to remember on every schema change. 415 unit tests pass; `swiftlint --strict` clean (one `prefer_self_in_static_references` fix).
+
+---
+
 ## 2026-05-12 — Bypass-mode session: epic #33 (LTC) — `LTCEncoder` (Timecode → PCM)
 
 **Shipped (1 PR):** #166. Rebase-merged to `dev` (`7c794e3`). Leaf issue #165. Finishes the LTC *encoder* — the audio-sample side — ahead of the routing leaf.

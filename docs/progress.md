@@ -4,6 +4,17 @@ Append-only session log. Newer entries on top.
 
 ---
 
+## 2026-05-12 — Bypass-mode session: epic #33 (LTC) — `LTCAudioOutput` (AVAudioEngine playback path; step B) + review fix
+
+**Shipped (1 PR):** #182 (incl. a `/gh-fix` round). Rebase-merged to `dev` (`0dd3471`). Leaf issue #181.
+
+- **`LTCAudioOutput`** (`OnlyCue/LTC/LTCAudioOutput.swift`) — `@MainActor ObservableObject`. `start(at timecode:routing:)` / `stop()` / `update(at timecode:)`: opens an `AVAudioEngine` on the routed device (`AudioUnitSetProperty(kAudioOutputUnitProperty_CurrentDevice)`, or system default when `deviceUID == nil`), connects an `AVAudioPlayerNode` with a discrete-layout multichannel float `renderFormat(channelCount:sampleRate:)` (`AVAudioFormat`'s simple inits return `nil` for any channel count other than 1/2 — must build an `AVAudioChannelLayout` with `kAudioChannelLayoutTag_DiscreteInOrder | UInt32(n)`), and pumps `LTCSchedule.nextBuffer()` as `makeBuffer(monoSamples:format:channel:)` (mono LTC on the assigned channel, silence elsewhere), keeping `primeCount` (3) buffers scheduled ahead via the `scheduleBuffer` completion handler — which **must hop to the main actor** (`Task { @MainActor in … }`), *not* `MainActor.assumeIsolated`, because `AVAudioPlayerNode` invokes that handler on an internal engine thread (the original `assumeIsolated` would have trapped on the first completion — caught in review, fixed in `9cb0e8f`; `renderFormat`/`ltcChannel` lifted to stored properties so the handler bounces back to `self` instead of capturing across the hop). Rebuilds on `AVAudioEngineConfigurationChange` (= survives device disconnect). `isRunning` / `lastError` published; `LTCAudioOutputError`.
+- The live engine/device path is **not headless-testable** — `LTCSchedule` / `makeBuffer` / `renderFormat` / the guards are unit-tested; the live path is verified by running the app (and leaf C is the first thing that will actually exercise it). Two non-blocking review notes are leaf-C follow-ups: (1) a timer-driven refill topping the queue up to `LTCSchedule.targetBufferCount(...)` so a main-actor stall can't underrun; (2) `update(at:)` doing a full `restartEngine()` on every seek (audio dropout).
+- Docs: `architecture.md#ltc-and-routing` — "Routing playback" row now describes `LTCAudioOutput`; intro updated. `task_plan.md` #33 — step B done; C/D remain.
+- `LTCAudioOutputTests` (8 — `makeBuffer` channel placement / clamp / mono / empty→nil; `renderFormat` for 1/4/8 channels + nil for 0; fresh instance not running; `stop()` when idle is harmless; `start` with no LTC channel records `lastError` and stays stopped). 478 → 486 unit tests pass; `swiftlint --strict` clean (`multiline_arguments` → the `AudioUnitSetProperty` call one arg per line). **Lesson:** don't imply untestable-headless code was app-verified when it wasn't — flag it UNVERIFIED.
+
+---
+
 ## 2026-05-12 — Bypass-mode session: epic #33 (LTC) — `LTCSchedule` (buffer plan; step A of the A→D finish plan)
 
 **Shipped (1 PR):** #180. Rebase-merged to `dev` (`1f89038`). Leaf issue #179.

@@ -4,6 +4,20 @@ Append-only session log. Newer entries on top.
 
 ---
 
+## 2026-05-12 — Bypass-mode session: epic #33 started (LTC) — timecode value model
+
+**Shipped (1 PR):** #160. Rebase-merged to `dev` (`05ed534`). Opens epic #33 (LTC generation + audio routing) with leaf 1 — the spec + ADR + the pure timecode value model that every later leaf builds on. Leaf issue #159.
+
+- **`SMPTEFramerate`** (`OnlyCue/LTC/SMPTEFramerate.swift`) — `fps24` / `fps25` / `fps30` / `fps30drop`; `framesPerSecond` (30 for both 30-rates), `isDropFrame`, `displayName`. `Codable` with stable raw tokens `"24"` / `"25"` / `"30"` / `"30df"`, fixed now so the `.cuelist` framerate persistence in leaf 4 is forward-stable. `fps30drop` is modelled as a 30 fps timeline with drop-frame *labels* — not true 29.97 (out of scope per the epic, along with 23.976 / 59.94 / pulldown / LTC chase).
+- **`Timecode`** (`OnlyCue/LTC/Timecode.swift`) — `HH:MM:SS:FF` (`;` between SS/FF for drop-frame) at a rate. `init?(hours:minutes:seconds:frames:rate:)` validates ranges and rejects the frame numbers the drop-frame rule skips. `init(frameCount:rate:)` / `frameCount` and `init(totalSeconds:rate:)` / `totalSeconds` round-trip both ways — `frameCount` is the *actual* frames elapsed since `00:00:00:00` (drop-frame aware: frames `00`/`01` skipped at the top of each minute except every tenth), the components are labels. Negative `frameCount` clamps to 0; past `24:00:00:00` wraps a day. `displayString` for UI. Pure value type — no AVFoundation, in the fast unit suite.
+- **Tests:** `OnlyCueTests/TimecodeTests.swift` (~15 — framerate properties + Codable raw values; non-drop component ⇄ frameCount round-trips at 24/25/30; frameCount 0 / negative clamp; `totalSeconds` round-trip + round-to-nearest-frame; drop-frame — `00:00:59;29` → `00:01:00;02`, the skipped numbers unconstructible, the tenth minute not skipped, `01:00:00;00` = 107892 frames, multi-minute component round-trips; out-of-range rejection; `displayString` incl. `;`). 384 unit tests pass; `swiftlint --strict` clean.
+- Docs: new `docs/architecture.md#ltc-and-routing` section + ADR-019 ("LTC support starts with a pure timecode value model; `fps30drop` is a 30 fps timeline with drop-frame labels — no 29.97"). `task_plan.md` #33 → 🟡 1 of 7 leaves. No screenshot (pure value types, no UI).
+- **Process note:** the prior cycle's "pr is merged" prompt arrived while PR #158 was still open — surfaced it via a question rather than barrelling ahead; the user merged it and re-issued the prompt. Always reconcile the "merged" claim against `gh pr view` before archiving / branching.
+
+**Remaining epic #33 leaves:** leaf 2 — `LTCEncoder` (the 80-bit SMPTE word — frame/sec/min/hour BCD + user bits + flags + the parity bit (bit 27 at 25 fps, bit 59 at 24/30) + the `0x3FFD` sync word in bits 64–79 — biphase-mark-modulated into an audio sample buffer at the project rate; the fiddly one — get the bit layout exact against SMPTE 12M / libltc); leaf 3 — Core Audio output-device picker + per-channel assignment (LTC vs Track L/R), fed by `PlayerEngine.currentTime`; leaf 4 — project framerate + start offset persisted in `.cuelist` (schema bump + migration); leaf 5 — striped-LTC playback (read existing LTC off imported media, no regeneration); leaf 6 — Audio & Timecode preferences pane (a Settings tab — `Settings` is already a `TabView` with OSC + Keyboard); leaf 7 — encoder/routing tests. Also still open: epic #36 (timeline UX polish — its "waveform gain control" leaf has loosely-specified scope and will want a quick design call).
+
+---
+
 ## 2026-05-12 — Bypass-mode session: epic #40 closed (custom keyboard shortcuts — document-window shortcuts read the keymap)
 
 **Shipped (1 PR):** #158. Rebase-merged to `dev` (`671c663`). Epic #40 leaf 4 — and the epic is now **complete**. Leaf issue #157.

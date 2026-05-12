@@ -54,6 +54,7 @@ struct DocumentView: View {
         .sheet(isPresented: $showOverlayAppearance) {
             NotesOverlayPreferencesSheet(prefs: overlayPrefsBinding)
         }
+        .timecodeSettingsSheet(document: document)
         .exportSheet(model: document.model, pendingErrorMessage: pendingAlertMessageBinding)
         .oscServerHost(engine: engine, document: document, undoManager: undoManager)
     }
@@ -282,6 +283,7 @@ extension Notification.Name {
     static let saveTemplateRequested = Notification.Name("OnlyCue.saveTemplateRequested")
     static let loadTemplateRequested = Notification.Name("OnlyCue.loadTemplateRequested")
     static let oscMonitorRequested = Notification.Name("OnlyCue.oscMonitorRequested")
+    static let timecodeSettingsRequested = Notification.Name("OnlyCue.timecodeSettingsRequested")
 }
 
 enum DocumentAlert: Identifiable {

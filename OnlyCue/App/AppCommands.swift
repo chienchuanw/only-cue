@@ -134,6 +134,10 @@ struct AppCommands: Commands {
             Button("OSC Monitor…") {
                 NotificationCenter.default.post(name: .oscMonitorRequested, object: nil)
             }
+
+            Button("Timecode Settings…") {
+                NotificationCenter.default.post(name: .timecodeSettingsRequested, object: nil)
+            }
         }
     }
 

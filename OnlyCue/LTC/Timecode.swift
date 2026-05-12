@@ -80,6 +80,22 @@ struct Timecode: Equatable, Hashable, Sendable {
         return String(format: "%02d:%02d:%02d%@%02d", hours, minutes, seconds, separator, frames)
     }
 
+    /// Parse a `HH:MM:SS:FF` (or `HH:MM:SS;FF`) string for `rate`. Any of
+    /// `:`/`;`/`.`/`,` and whitespace separate the four fields; leading/trailing
+    /// whitespace is ignored. Returns `nil` unless it's exactly four
+    /// non-negative integer fields whose values are in range for `rate` (and,
+    /// for drop-frame, not a frame number the counting rule skips). The
+    /// `;`-vs-`:` separator is punctuation only — drop-frame-ness comes from
+    /// `rate`.
+    static func parse(_ string: String, rate: SMPTEFramerate) -> Self? {
+        let separators = CharacterSet(charactersIn: ":;,. \t")
+        let fields = string.components(separatedBy: separators).filter { !$0.isEmpty }
+        guard fields.count == 4,
+              let hours = Int(fields[0]), let minutes = Int(fields[1]),
+              let seconds = Int(fields[2]), let frames = Int(fields[3]) else { return nil }
+        return Self(hours: hours, minutes: minutes, seconds: seconds, frames: frames, rate: rate)
+    }
+
     private static func framesPerDay(_ rate: SMPTEFramerate) -> Int {
         let nonDrop = 24 * 60 * 60 * rate.framesPerSecond
         guard rate.isDropFrame else { return nonDrop }

@@ -232,6 +232,19 @@ A toggleable alternative to the waveform timeline (epic #37) that splits the cue
 
 **Persistence.** Lane visibility is `CuePointType.isVisible`, already a `ProjectModel` field (migrations preserve it), so the layout persists in `.cuelist` with no schema change. Toggling goes through `CueCommands`, so it's undoable and triggers a document edit. **Scope (v1):** markers in the breakdown view select + seek; retiming a cue by drag stays on the waveform view. Per-lane vertical/horizontal zoom and free-form lane reordering are out. See ADR-017.
 
+## Custom keyboard shortcuts
+
+User-rebindable shortcuts (epic #40). The keymap JSON is the source of truth; the menu/document shortcuts and the Settings → Keyboard editor both read it. The data layer (this section) lands first; the editor UI, per-row conflict UI, the number-key cue-binding rows, and the `AppCommands` rewiring to consume the keymap are later leaves.
+
+| Piece | API | Where it lives |
+|---|---|---|
+| Action enum | `KeymapAction` (`.importMedia`, `.exportCues`, the waveform-zoom / overlay-toggle / cue-edit actions, `.addCueOfType1…9`) | `OnlyCue/App/KeymapAction.swift` |
+| Chord value | `KeyChord(key:modifiers:)` — `Codable`; `key` is one printable char or a special-key name (`"leftArrow"`, …); `keyboardShortcut` → SwiftUI `KeyboardShortcut`, `displayString` → `⇧⌘E` | `OnlyCue/App/KeyChord.swift` |
+| Keymap | `Keymap` — total map `action → chord`; `chord(for:)`, `conflicts()`, `actionsConflicting(with:excluding:)`, `rebind`, `resetToDefault`, `resetAll`; `Keymap.default` mirrors today's hardcoded shortcuts; `Keymap.decode(_:)` is lenient (nil/corrupt → default, partial → backfilled, unknown keys dropped) | `OnlyCue/App/Keymap.swift` |
+| Store | `KeymapStore` (`@MainActor`, `ObservableObject`) — `@AppStorage`-style persistence under `keymap.v1`, injectable `UserDefaults` for tests | `OnlyCue/App/KeymapStore.swift` |
+
+**Schema.** On disk a keymap is a plain JSON object `{ actionRawValue: { key, modifiers } }` — sparse (only overrides need be present; missing actions resolve to the default), forward-tolerant (unknown action keys are ignored, so a newer build's keymap doesn't break an older one and vice versa). The `KeymapAction` raw value is the stable wire key — renaming a case requires a migration. **Conflict rule (v1):** two actions may hold the same chord; `conflicts()` surfaces the clash for the editor to flag, but nothing is auto-resolved. See ADR-018.
+
 ## Phase-2 seams
 
 These are explicit extension points so future features don't require rewrites. See [`roadmap.md`](roadmap.md) for what plugs in here.

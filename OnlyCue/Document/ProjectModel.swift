@@ -2,7 +2,7 @@ import Foundation
 
 struct ProjectModel: Codable, Equatable {
 
-    static let currentSchemaVersion = 6
+    static let currentSchemaVersion = 7
 
     var schemaVersion: Int
     var id: UUID
@@ -10,6 +10,7 @@ struct ProjectModel: Codable, Equatable {
     var cuePointTypes: [CuePointType] = []
     var items: [MediaItem]
     var activeItemID: UUID?
+    var timecodeSettings: ProjectTimecodeSettings = .default
 
     var defaultCuePointTypeID: UUID? { cuePointTypes.first?.id }
 
@@ -60,6 +61,8 @@ extension ProjectModel {
             return migrateFromV4(try JSONDecoder().decode(LegacyV4.self, from: data))
         case 5:
             return migrateFromV5(try JSONDecoder().decode(LegacyV5.self, from: data))
+        case 6:
+            return migrateFromV6(try JSONDecoder().decode(LegacyV6.self, from: data))
         case currentSchemaVersion:
             return try JSONDecoder().decode(ProjectModel.self, from: data)
         default:
@@ -361,6 +364,30 @@ extension ProjectModel {
             cuePointTypes: legacy.cuePointTypes,
             items: items,
             activeItemID: legacy.activeItemID
+        )
+    }
+
+    /// v6 = the schema before `timecodeSettings` (epic #33 leaf 4). Same shape
+    /// as the current `ProjectModel` minus that field; migration just seeds the
+    /// default timecode settings.
+    private struct LegacyV6: Decodable {
+        let schemaVersion: Int
+        let id: UUID
+        let name: String
+        let cuePointTypes: [CuePointType]
+        let items: [MediaItem]
+        let activeItemID: UUID?
+    }
+
+    private static func migrateFromV6(_ legacy: LegacyV6) -> ProjectModel {
+        ProjectModel(
+            schemaVersion: currentSchemaVersion,
+            id: legacy.id,
+            name: legacy.name,
+            cuePointTypes: legacy.cuePointTypes,
+            items: legacy.items,
+            activeItemID: legacy.activeItemID,
+            timecodeSettings: .default
         )
     }
 }

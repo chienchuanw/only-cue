@@ -4,6 +4,18 @@ Append-only session log. Newer entries on top.
 
 ---
 
+## 2026-05-12 — Bypass-mode session: epic #33 (LTC) — transport wiring + SMPTE readout (step C)
+
+**Shipped (1 PR):** #184. Rebase-merged to `dev` (`4a0a6ed`). Leaf issue #183.
+
+- **`LTCOutputHost`** (`OnlyCue/UI/LTCOutputHost.swift`, `.ltcOutput(engine:document:)` on `DocumentView` — host-modifier shape like `.exportSheet` / `.oscServerHost`) — owns an `LTCAudioOutput`; `.onChange(of: engine.isPlaying)` → `start(at:routing:)` (playhead timecode via `document.model.timecodeSettings`, routing from `LTCRoutingStore.shared`) / `stop()`; `.onChange(of: engine.currentTime)` → `update(at:)` when the time jumps > 1 s (a seek vs. the ~0.1 s playback tick); `.onChange(of: routingStore.settings)` / `.onChange(of: timecodeSettings)` → restart while playing; `.onDisappear` → `stop()`; no-op when no LTC channel is assigned (`routing.isComplete == false`).
+- **`TransportBar`** — new `timecodeSettings` parameter + a monospaced SMPTE readout (`smpteTimecode`) showing `timecodeSettings.timecode(atPlaybackSeconds: engine.currentTime).displayString` (the first consumer of that method) with a help tooltip naming the framerate.
+- **`LTCAudioOutput`** — `update(at:)` re-cues on the existing engine/connection (stop the player node, rebuild the `LTCSchedule` from the new timecode, re-prime) instead of a full `restartEngine()` (so a scrub isn't a device reconfigure) — review note 2 from PR #182; `primeCount` 3 → 5 for more underrun slack. (Timer-driven refill to `LTCSchedule.targetBufferCount(...)` — review note 1 — still deferred.)
+- Docs: `architecture.md#ltc-and-routing` — "Routing playback" row updated, new "Transport wiring" row, intro updated. `task_plan.md` #33 — step C done; D + the timer-refill follow-up remain.
+- `LTCAudioOutputTests` += `update(at:)`-when-idle is harmless; `TransportBarScreenshotTests` += assert `smpteTimecode` exists. 486 → 487 unit tests pass; `swiftlint --strict` clean. The LTC audio path is now wired but still verified by running the app (Xcode, against an interface), not headless.
+
+---
+
 ## 2026-05-12 — Bypass-mode session: epic #33 (LTC) — `LTCAudioOutput` (AVAudioEngine playback path; step B) + review fix
 
 **Shipped (1 PR):** #182 (incl. a `/gh-fix` round). Rebase-merged to `dev` (`0dd3471`). Leaf issue #181.

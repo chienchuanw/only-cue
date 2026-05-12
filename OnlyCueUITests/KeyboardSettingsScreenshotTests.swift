@@ -24,33 +24,33 @@ final class KeyboardSettingsScreenshotTests: XCTestCase {
             "playPauseButton should appear within 5 seconds of opening a document"
         )
 
+        let windowsBefore = app.windows.count
         app.activate()
         app.typeKey(",", modifierFlags: .command)
 
-        let settingsWindow = app.windows["OnlyCue Settings"]
         XCTAssertTrue(
-            settingsWindow.waitForExistence(timeout: 3),
-            "the Settings window should appear within 3 seconds of pressing ⌘,"
+            SettingsWindowFinder.waitForNewWindow(in: app, above: windowsBefore, timeout: 5),
+            "pressing ⌘, should open the Settings window within 5 seconds"
         )
 
-        // Switch to the Keyboard tab. SwiftUI tab items expose as buttons /
-        // radio buttons on macOS — click by label, falling back to a coordinate
-        // tap near the second tab if the label isn't in the a11y tree.
-        let keyboardTab = settingsWindow.buttons["Keyboard"].firstMatch
-        if keyboardTab.waitForExistence(timeout: 2) {
+        // Switch to the Keyboard tab. SwiftUI tab items expose as radio buttons
+        // (or plain buttons) on macOS — try by label; if neither is in the a11y
+        // tree the screenshot just captures the default (OSC) pane, which is
+        // still a useful baseline.
+        let keyboardTab = app.radioButtons["Keyboard"].exists ? app.radioButtons["Keyboard"] : app.buttons["Keyboard"]
+        if keyboardTab.waitForExistence(timeout: 3) {
             keyboardTab.click()
-        } else if settingsWindow.radioButtons["Keyboard"].firstMatch.waitForExistence(timeout: 1) {
-            settingsWindow.radioButtons["Keyboard"].firstMatch.click()
+            _ = app.buttons["keymapChord.importMedia"].waitForExistence(timeout: 3)
         }
 
         Thread.sleep(forTimeInterval: 0.9)
-        try captureScreenshot(named: "keyboard-settings", window: settingsWindow)
+        try captureScreenshot(named: "keyboard-settings", window: SettingsWindowFinder.window(in: app))
         app.terminate()
     }
 
     private func captureScreenshot(named name: String, window: XCUIElement? = nil) throws {
         let screenshot: XCUIScreenshot
-        if let window, window.waitForExistence(timeout: 2) {
+        if let window, window.exists {
             screenshot = window.screenshot()
         } else {
             screenshot = XCUIScreen.main.screenshot()

@@ -4,6 +4,17 @@ Append-only session log. Newer entries on top.
 
 ---
 
+## 2026-05-12 — Bypass-mode session: epic #36 (timeline UX) — batch retime + ⌘-click marker multi-select (multi-select part 2 — epic complete)
+
+**Shipped (1 PR):** #190. Rebase-merged to `dev` (`cba0f1d`). Leaf issue #189.
+
+- **`CueCommands.nudgeCues(_:by:document:undoManager:)` / `snapCues(_:to:document:undoManager:)`** — batch retime over a `Set<Cue.ID>` built on the `mutateCues` snapshot primitive, so shifting/snapping N selected cues is **one undo step** that reverts all of them (directly the epic-level Gherkin: "three cues selected → Option+→ → all advance → one undo reverts all three"). Both clamp at `0`, re-sort by time, no-op on an empty set.
+- **`CueListPane`** — `S` (snap) and Option+←/→ (nudge by the configured step) now route the whole `selection` through those commands instead of only the sole-selected cue.
+- **`CueMarkerView.onSelect(_ extending: Bool)`** reads `NSEvent.modifierFlags` in the tap branch (gestures don't surface modifiers on macOS) — ⌘ or ⇧ → `onToggleCue` (threaded `CueMarkersOverlay → WaveformContainer → PreviewPane → DocumentView`, `cueSelection.formSymmetricDifference([id])`), plain click → replace + seek as before. `WaveformContainer.markersOverlay()` extracted to a `@ViewBuilder` to keep `waveformBody` under the `function_body_length` cap after the extra parameter.
+- Docs: `architecture.md` "Cue selection" section expanded (batch commands + marker toggle); `task_plan.md` #36 → all leaves done (waveform-gain-control leaf dropped per owner — pinch + magnifier zoom already cover it).
+- `CueCommandsBatchRetimeTests` (5: every-selected-shifted/others-left, one-undo-step revert+redo, clamp-at-zero, empty-set no-op, snap-all-to-target + undo). 495 → 500 unit tests pass. `swiftlint --strict` clean; `xcodegen generate` re-run. No screenshot — no new visible UI (modifier-click on existing markers; XCUITests don't run headless).
+- **Epic #36 closed.** Also closed epic **#40** (custom keyboard shortcuts editor) — functionally complete since PR #157 (keymap editor with record-a-chord, per-row + reset-all, conflict warnings, number-key bindings as editable rows); the GitHub issue was just still open.
+
 ## 2026-05-12 — Bypass-mode session: epic #36 (timeline UX) — `Set<Cue.ID>` selection model (multi-select part 1)
 
 **Shipped (1 PR):** #188. Rebase-merged to `dev` (`670a7f8`). Leaf issue #187. (Started after epic #33's playback story landed; user scoping: the "waveform gain control" leaf is dropped — the existing pinch-zoom + vertical-zoom magnifier already cover it.)

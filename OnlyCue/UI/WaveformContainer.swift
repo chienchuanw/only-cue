@@ -9,6 +9,7 @@ struct WaveformContainer: View {
     var resolveColorHex: (Cue) -> String? = { _ in nil }
     var selectedCueIDs: Set<Cue.ID> = []
     var onSelectCue: (Cue.ID) -> Void = { _ in }
+    var onToggleCue: (Cue.ID) -> Void = { _ in }
     var onSeek: (TimeInterval) -> Void = { _ in }
     var onRetime: (Cue.ID, TimeInterval) -> Void = { _, _ in }
     var engine: PlayerEngine?
@@ -84,6 +85,22 @@ struct WaveformContainer: View {
     }
 
     @ViewBuilder
+    private func markersOverlay() -> some View {
+        if loadedDuration > 0 {
+            CueMarkersOverlay(
+                cues: cues,
+                duration: loadedDuration,
+                resolveColorHex: resolveColorHex,
+                selectedCueIDs: selectedCueIDs,
+                onSelectCue: onSelectCue,
+                onToggleCue: onToggleCue,
+                onSeek: onSeek,
+                onRetime: onRetime
+            )
+        }
+    }
+
+    @ViewBuilder
     private func waveformBody(peaks: [Float]) -> some View {
         GeometryReader { proxy in
             let width = proxy.size.width
@@ -92,17 +109,7 @@ struct WaveformContainer: View {
             ScrollView(.horizontal, showsIndicators: zoom.zoom > 1) {
                 ZStack(alignment: .topLeading) {
                     WaveformView(peaks: peaks, verticalZoom: verticalZoom.zoom)
-                    if loadedDuration > 0 {
-                        CueMarkersOverlay(
-                            cues: cues,
-                            duration: loadedDuration,
-                            resolveColorHex: resolveColorHex,
-                            selectedCueIDs: selectedCueIDs,
-                            onSelectCue: onSelectCue,
-                            onSeek: onSeek,
-                            onRetime: onRetime
-                        )
-                    }
+                    markersOverlay()
                     if let engine, loadedDuration > 0 {
                         WaveformPlayheadLayer(
                             engine: engine,

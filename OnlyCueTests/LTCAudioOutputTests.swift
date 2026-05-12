@@ -46,6 +46,17 @@ final class LTCAudioOutputTests: XCTestCase {
         XCTAssertNil(LTCAudioOutput.makeBuffer(monoSamples: [], format: try format(channels: 2), channel: 0))
     }
 
+    func test_buffersToSchedule_fillsTheGapToTarget() {
+        XCTAssertEqual(LTCAudioOutput.buffersToSchedule(outstanding: 0, target: 5), 5)
+        XCTAssertEqual(LTCAudioOutput.buffersToSchedule(outstanding: 3, target: 5), 2)
+        XCTAssertEqual(LTCAudioOutput.buffersToSchedule(outstanding: 5, target: 5), 0)
+    }
+
+    func test_buffersToSchedule_neverNegative_evenIfOverfilledOrNegativeInput() {
+        XCTAssertEqual(LTCAudioOutput.buffersToSchedule(outstanding: 9, target: 5), 0)
+        XCTAssertEqual(LTCAudioOutput.buffersToSchedule(outstanding: -2, target: 5), 5)
+    }
+
     func test_freshInstance_isNotRunning() {
         let output = LTCAudioOutput()
         XCTAssertFalse(output.isRunning)

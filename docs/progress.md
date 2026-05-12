@@ -4,6 +4,20 @@ Append-only session log. Newer entries on top.
 
 ---
 
+## 2026-05-12 — Bypass-mode session: epic #37 closed (Timeline breakdown view, leaf 5 — layout-fidelity tests)
+
+**Shipped (1 PR):** #152. Rebase-merged to `dev` (`c932660`). Closed the last leaf of epic #37 (leaf 5 — exhaustive `TimelineBreakdownLayout` fidelity tests + a video-vs-audio placeholder-id tidy-up from PR #148's review note 1).
+
+- **`TimelineBreakdownLayoutFidelityTests` (7 tests, pure — no `@MainActor`):** 30-Type model order preserved; a 10-Type × 50-cue set partitioned exactly (500 in lanes, 25 stray-typed cues dropped, every cue under a lane carries that lane's `typeID`); all-Types-hidden → no lanes but `hiddenCount` == total; partial visibility keeps visible lanes in original relative order; the default-shaped project (one Type, no cues — the post-v1/v2-migration state) yields one empty lane; lane order never re-sorted (Types "Z","M","A" → lanes Z,M,A); and the layout run against a hand-written **schema-v3 `.cuelist` JSON fixture decoded + migrated to current schema** — one "General" Type, three cues, asserts the migrated model is at `currentSchemaVersion`, the single lane is named "General", its cues are exactly the three fixture times, and every cue's `typeID` matches the migrated Type's id.
+- **`PreviewPane`** placeholder-id fix: the waveform-loading-else-branch `placeholder("Loading…")` now uses `accessibilityIdentifier(item.media.kind == .video ? "videoPlaceholder" : "audioPlaceholder")` instead of always `"audioPlaceholder"` (PR #148 review note 1). PR #148's review notes 2-4 stay deferred — non-actionable / cosmetic.
+- **New PR type — `test`.** This was the repo's first `test(...)`-typed PR; per `CLAUDE.md` ("if a future PR type is needed and a forked template does not yet exist, stop and add the forked template — don't fall back to the bundled template silently") a `.github/PULL_REQUEST_TEMPLATE/test.md` was authored (modelled on `chore.md`: Summary / Motivation / What's Covered / What's NOT Covered (and why) / How to Verify + the OnlyCue verification footer) and the `test → test.md` mapping line added to `CLAUDE.md`, committed as a separate `chore: add forked test.md PR template` commit on the same branch.
+- **Repo SwiftLint note (cost a re-format):** this repo's `line_length` cap is **140**, not 200 — the v3 JSON fixture lines had to be reflowed (each cue object split across two lines, Type/media objects one field per line); and `force_unwrapping` is on, so `Self.v3FixtureJSON.data(using: .utf8)` is unwrapped via `try XCTUnwrap`, not `!`.
+- **No screenshot** — leaf 5 is pure tests + an accessibility-id string; no view changed. The breakdown-view screenshot UI test stays deferred (it needs a media-loaded `.cuelist` fixture XCUITest can open — brittle to schema changes, and macOS document apps don't reliably auto-open a file passed via `launchArguments`). The layout is fully unit-covered: 5 `TimelineBreakdownLayoutTests` + 7 `TimelineBreakdownLayoutFidelityTests` + 3 `CueCommandsVisibilityTests`. 336 unit tests pass, 0 SwiftLint `--strict` warnings.
+
+Epic #37 is now **complete (5 leaves)**. Remaining open Phase-2 epics: #33 (LTC), #36 (timeline UX polish — waveform gain + multi-select), #40 (custom keyboard shortcuts editor).
+
+---
+
 ## 2026-05-12 — Bypass-mode session: epic #37 advanced (Timeline breakdown view, 4 of 5 leaves) + OSC `defaultPort` isolation fix
 
 **Shipped (2 PRs):** #148 (timeline breakdown view — epic #37 leaves 1-4) → #150 (chore — `OSCServer.defaultPort` nonisolated). Both rebase-merged to `dev` (`5a42bde`, `90b74dc`).

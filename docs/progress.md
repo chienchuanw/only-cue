@@ -4,6 +4,21 @@ Append-only session log. Newer entries on top.
 
 ---
 
+## 2026-05-12 — Bypass-mode session: epic #33 (LTC) — striped-LTC drives the SMPTE readout (step D; playback story complete)
+
+**Shipped (1 PR):** #186. Rebase-merged to `dev` (`ec9f600`). Leaf issue #185.
+
+- **`StripedTimecodeTrack`** (`OnlyCue/LTC/StripedTimecodeTrack.swift`) — an anchor (`Timecode` at a known playback second) plus the assumption that LTC is linear, so `timecode(atPlaybackSeconds:)` extrapolates exactly to any position (`anchorTimecode` shifted by the rounded elapsed-frame count). `init?(decodedFrames:sampleRate:)` anchors on the first recovered frame; `nil` if there are none / `sampleRate <= 0`.
+- **`LTCAudioReader`** — `readMonoSamples(from:maxSeconds:)` / `decodeTimecodes(from:maxSeconds:)` (default 10 s for the latter; one anchor frame is enough) cap the read and `reader.cancelReading()`, so detecting striping on an hour-long file doesn't pull the whole track into `[Float]`.
+- **`MediaImporter.stripedTimecode(for item:)`** (`@MainActor`) — resolves the item's security-scoped bookmark + decodes; `StripedTimecodeTrack?` (nil on any failure / no LTC).
+- **`StripedTimecodeHost`** (`OnlyCue/UI/StripedTimecodeHost.swift`, `.stripedTimecodeReader(item:)` on `DocumentView`) — a `ViewModifier` that loads the active item's striped track in the background (`.task(id: item?.id)`) and publishes it via `EnvironmentValues.stripedTimecode`. Done as a modifier-with-environment because `DocumentView`'s body was at the `type_body_length` cap (an inline-`@State` version hit 253).
+- **`TransportBar`** — reads `@Environment(\.stripedTimecode)`; the `smpteTimecode` readout follows the file's LTC when present (tooltip "read from the media file's LTC track"), else the project-settings timecode.
+- Docs: `architecture.md#ltc-and-routing` — Media-reader + Striped-LTC-readout rows; intro now "generation + playback in place". `task_plan.md` #33 → 🟢 (one follow-up: the timer-driven buffer refill for `LTCAudioOutput`).
+- `StripedTimecodeTrackTests` (8 — `init?` nil cases; anchor-on-first-frame; `timecode(atPlaybackSeconds:)` at the anchor / extrapolated forward & backward / rounded to the nearest frame / clamped at `00:00:00:00` / skipping drop-frame numbers; round-trip from `LTCFrameStream → LTCDecoder`). 487 → 495 unit tests pass; `swiftlint --strict` clean. Fixed a wrong test expectation mid-cycle: the drop-frame sequence is `;28 → ;29 → 00:01:00;02 → ;03` (frames `;00`/`;01` skipped at minute 1), so +3 frames from `00:00:59;28` is `00:01:00;03` — `Timecode` was right, the test was wrong.
+- **Epic #33 status:** generation + playback + routing + project settings + decoder + striped readout are all in place. One follow-up remains (the `LTCAudioOutput` timer-driven refill — PR #182 review note 1). The live audio/device path is verified by running the app in Xcode, not headless.
+
+---
+
 ## 2026-05-12 — Bypass-mode session: epic #33 (LTC) — transport wiring + SMPTE readout (step C)
 
 **Shipped (1 PR):** #184. Rebase-merged to `dev` (`4a0a6ed`). Leaf issue #183.

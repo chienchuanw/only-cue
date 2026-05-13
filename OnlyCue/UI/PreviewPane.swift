@@ -131,6 +131,7 @@ struct PreviewPane: View {
         WaveformContainer(
             asset: AVURLAsset(url: url),
             cues: item.cues,
+            tempoMap: item.tempoMap,
             resolveColorHex: { document.model.colorHex(for: $0) },
             selectedCueIDs: selectedCueIDs,
             onSelectCue: onSelectCue,

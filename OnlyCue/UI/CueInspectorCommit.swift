@@ -13,6 +13,9 @@ enum CueInspectorCommit {
 
     enum NumberOutcome: Equatable {
         case parsed(Double)
+        /// Draft was emptied while the cue currently has a number — clear the
+        /// cell. (Empty draft + already-nil number is `.noChange` instead.)
+        case cleared
         case noChange
         case revert(canonical: String)
     }
@@ -29,8 +32,11 @@ enum CueInspectorCommit {
 
     static func commitCueNumber(draft: String, current: Double?) -> NumberOutcome {
         let trimmed = draft.trimmingCharacters(in: .whitespaces)
+        if trimmed.isEmpty {
+            return current == nil ? .noChange : .cleared
+        }
         let canonical = current.map(FadeTime.formatNumber) ?? ""
-        guard !trimmed.isEmpty, let parsed = Double(trimmed), parsed.isFinite else {
+        guard let parsed = Double(trimmed), parsed.isFinite else {
             return .revert(canonical: canonical)
         }
         if parsed == current {

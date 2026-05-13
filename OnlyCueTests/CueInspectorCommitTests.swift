@@ -56,13 +56,24 @@ final class CueInspectorCommitTests: XCTestCase {
         XCTAssertEqual(outcome, .revert(canonical: "1.5"))
     }
 
-    func test_commitCueNumber_empty_returnsRevert() {
+    func test_commitCueNumber_emptyWithExistingNumber_returnsCleared() {
         let outcome = CueInspectorCommit.commitCueNumber(draft: "  ", current: 3.0)
-        XCTAssertEqual(outcome, .revert(canonical: "3"))
+        XCTAssertEqual(outcome, .cleared)
     }
 
-    func test_commitCueNumber_negativeAllowed() {
+    func test_commitCueNumber_emptyWhenAlreadyNil_returnsNoChange() {
+        let outcome = CueInspectorCommit.commitCueNumber(draft: "", current: nil)
+        XCTAssertEqual(outcome, .noChange)
+    }
+
+    func test_commitCueNumber_negativeAllowed_returnsParsedAndValidatorDecidesFate() {
+        // The pure helper only parses; sign and range checks live in CueNumberValidator.
         let outcome = CueInspectorCommit.commitCueNumber(draft: "-1", current: 0.0)
         XCTAssertEqual(outcome, .parsed(-1.0))
+    }
+
+    func test_commitCueNumber_currentIsNilAndDraftIsNumber_returnsParsed() {
+        let outcome = CueInspectorCommit.commitCueNumber(draft: "1.5", current: nil)
+        XCTAssertEqual(outcome, .parsed(1.5))
     }
 }

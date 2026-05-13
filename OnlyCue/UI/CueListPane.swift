@@ -168,6 +168,14 @@ struct CueListPane: View {
                         resolvedColorHex: document.model.colorHex(for: cue),
                         onRename: { newName in
                             CueCommands.rename(cueId: cue.id, to: newName, document: document, undoManager: undoManager)
+                        },
+                        onCommitNumber: { newNumber in
+                            CueCommands.setCueNumber(
+                                cueId: cue.id,
+                                to: newNumber,
+                                document: document,
+                                undoManager: undoManager
+                            )
                         }
                     )
                     .tag(cue.id)

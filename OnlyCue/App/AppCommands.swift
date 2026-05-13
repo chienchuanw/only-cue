@@ -142,6 +142,17 @@ struct AppCommands: Commands {
             Button("Timecode Settings…") {
                 NotificationCenter.default.post(name: .timecodeSettingsRequested, object: nil)
             }
+
+            Divider()
+
+            Button("Tempo Map…") {
+                NotificationCenter.default.post(name: .tempoMapRequested, object: nil)
+            }
+
+            Button("Split Tempo Section at Playhead") {
+                NotificationCenter.default.post(name: .splitTempoSectionAtPlayhead, object: nil)
+            }
+            .keyboardShortcut(shortcut(.splitTempoSectionAtPlayhead))
         }
     }
 

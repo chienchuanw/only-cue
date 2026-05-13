@@ -24,6 +24,7 @@ struct DocumentShortcutHints: View {
         .multilineTextAlignment(.center)
         .foregroundStyle(.tertiary)
         .padding(.top, 4)
+        .accessibilityElement(children: .combine)
         .accessibilityIdentifier("documentShortcutHints")
     }
 }

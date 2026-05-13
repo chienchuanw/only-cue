@@ -29,7 +29,7 @@ struct PreviewPane: View {
                 NotesOverlayView(
                     activeCue: activeCue,
                     prefs: overlayPrefs,
-                    cueNumberLabel: activeCue.map { FadeTime.formatNumber($0.cueNumber) }
+                    cueNumberLabel: activeCue.flatMap { $0.cueNumber.map(FadeTime.formatNumber) }
                 )
                 .padding(overlayPadding, 12)
             }

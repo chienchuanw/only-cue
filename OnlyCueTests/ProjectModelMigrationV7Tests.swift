@@ -2,8 +2,9 @@ import XCTest
 @testable import OnlyCue
 
 /// v7 fixture — has `timecodeSettings` but no per-item `tempoMap` (schema v8
-/// adds the latter). Decoding it must produce a v8 model with an empty tempo
-/// map on every item and the timecode settings carried through unchanged.
+/// adds the latter). Decoding it must migrate all the way to the current schema
+/// (v9, which widens `cueNumber` to `Double?`) with an empty tempo map on every
+/// item and the timecode settings carried through unchanged.
 private let v7Fixture = """
 {
   "schemaVersion": 7,
@@ -49,10 +50,10 @@ private let v7Fixture = """
 
 final class ProjectModelMigrationV7Tests: XCTestCase {
 
-    func test_v7_decodesToV8WithEmptyTempoMapsAndPreservedTimecodeSettings() throws {
+    func test_v7_decodesToCurrentWithEmptyTempoMapsAndPreservedTimecodeSettings() throws {
         let model = try ProjectModel.decode(from: Data(v7Fixture.utf8))
 
-        XCTAssertEqual(model.schemaVersion, 8)
+        XCTAssertEqual(model.schemaVersion, ProjectModel.currentSchemaVersion)
         XCTAssertEqual(model.items.count, 1)
         let item = try XCTUnwrap(model.items.first)
         XCTAssertTrue(item.tempoMap.isEmpty, "a migrated v7 item must have an empty tempo map")

@@ -85,11 +85,13 @@ struct CueMarkerView: View {
 
     var body: some View {
         VStack(spacing: Self.labelGap) {
-            Text(FadeTime.formatNumber(cue.cueNumber))
-                .font(.caption2)
-                .foregroundStyle(.secondary)
-                .fixedSize()
-                .accessibilityIdentifier("cueMarkerLabel-\(cue.id.uuidString)")
+            if let number = cue.cueNumber {
+                Text(FadeTime.formatNumber(number))
+                    .font(.caption2)
+                    .foregroundStyle(.secondary)
+                    .fixedSize()
+                    .accessibilityIdentifier("cueMarkerLabel-\(cue.id.uuidString)")
+            }
             ZStack(alignment: .top) {
                 Capsule()
                     .fill(.clear)

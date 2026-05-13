@@ -8,6 +8,10 @@ struct PlayheadOverlay: View {
     private static let lineWidth: CGFloat = 1
     private static let labelWidth: CGFloat = 96
     private static let labelHeight: CGFloat = 18
+    /// Y inset from the top of the overlay where the time label is anchored.
+    /// Must be non-negative so the label stays inside the parent ScrollView's
+    /// clipped frame (regression: a previous negative offset clipped it away).
+    static let labelTopInset: CGFloat = 4
 
     var body: some View {
         GeometryReader { geometry in
@@ -36,7 +40,7 @@ struct PlayheadOverlay: View {
                     )
                     .offset(
                         x: Self.labelX(playheadX: x, labelWidth: Self.labelWidth, width: width),
-                        y: -Self.labelHeight - 2
+                        y: Self.labelTopInset
                     )
             }
         }

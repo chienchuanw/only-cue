@@ -12,14 +12,18 @@ extension ProjectModel {
 
     static func migrateFromV8(data: Data) throws -> ProjectModel {
         let legacy = try JSONDecoder().decode(LegacyV8.self, from: data)
+        // v8 documents converge on v10 directly: cueNumber widens to Double?
+        // and the project-wide startOffsetFrames is fanned onto each item
+        // (the same transformation v9 → v10 performs).
+        let offset = legacy.timecodeSettings.startOffsetFrames
         return ProjectModel(
             schemaVersion: currentSchemaVersion,
             id: legacy.id,
             name: legacy.name,
             cuePointTypes: legacy.cuePointTypes,
-            items: legacy.items.map { $0.toMediaItem() },
+            items: legacy.items.map { $0.toMediaItem(startTimecodeFrames: offset) },
             activeItemID: legacy.activeItemID,
-            timecodeSettings: legacy.timecodeSettings
+            timecodeSettings: ProjectTimecodeSettings(framerate: legacy.timecodeSettings.framerate)
         )
     }
 
@@ -30,7 +34,20 @@ extension ProjectModel {
         let cuePointTypes: [CuePointType]
         let items: [LegacyV8Item]
         let activeItemID: UUID?
-        let timecodeSettings: ProjectTimecodeSettings
+        let timecodeSettings: LegacyV8TimecodeSettings
+    }
+
+    private struct LegacyV8TimecodeSettings: Decodable {
+        let framerate: SMPTEFramerate
+        let startOffsetFrames: Int
+
+        private enum CodingKeys: String, CodingKey { case framerate, startOffsetFrames }
+
+        init(from decoder: Decoder) throws {
+            let container = try decoder.container(keyedBy: CodingKeys.self)
+            framerate = try container.decode(SMPTEFramerate.self, forKey: .framerate)
+            startOffsetFrames = try container.decodeIfPresent(Int.self, forKey: .startOffsetFrames) ?? 0
+        }
     }
 
     private struct LegacyV8Item: Decodable {
@@ -39,8 +56,15 @@ extension ProjectModel {
         let cues: [LegacyV8Cue]
         let tempoMap: TempoMap
 
-        func toMediaItem() -> MediaItem {
-            MediaItem(id: id, media: media, cues: cues.map { $0.toCue() }, tempoMap: tempoMap)
+        func toMediaItem(startTimecodeFrames: Int) -> MediaItem {
+            MediaItem(
+                id: id,
+                media: media,
+                cues: cues.map { $0.toCue() },
+                tempoMap: tempoMap,
+                startTimecodeFrames: startTimecodeFrames,
+                ltcMuted: false
+            )
         }
     }
 

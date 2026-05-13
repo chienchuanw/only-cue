@@ -1,30 +1,30 @@
 import Foundation
 
-/// The project's timecode configuration, persisted in `.cuelist` (schema v7):
-/// which SMPTE framerate the project runs at, and where its timecode starts
-/// (`startOffsetFrames` is the start timecode expressed as a count of frames
-/// since `00:00:00:00`, so e.g. a 25 fps project starting at `01:00:00:00` has
-/// `framerate = .fps25`, `startOffsetFrames = 90_000`).
+/// The project's timecode configuration, persisted in `.cuelist` (schema v10):
+/// only the SMPTE framerate now lives here. Each clip carries its own
+/// `startTimecodeFrames` on `MediaItem` (per-media start TC replaced the
+/// project-wide `startOffsetFrames` in v9 → v10).
 ///
-/// The derived timecodes here are what the LTC generator and the Audio &
-/// Timecode preferences pane consume — the pane edits `framerate` /
-/// `startOffsetFrames`; the generator maps a playback position to a `Timecode`.
+/// `timecode(atPlaybackSeconds:forItem:)` is the single source-of-truth mapping
+/// the LTC generator and transport readout consume — pass the active item so
+/// the result respects that clip's start TC.
 struct ProjectTimecodeSettings: Codable, Equatable, Sendable {
 
     var framerate: SMPTEFramerate
-    var startOffsetFrames: Int
 
-    static let `default` = Self(framerate: .fps30, startOffsetFrames: 0)
+    static let `default` = Self(framerate: .fps30)
 
-    /// The project's start timecode (the offset from `00:00:00:00`).
-    var startTimecode: Timecode {
-        Timecode(frameCount: startOffsetFrames, rate: framerate)
-    }
-
-    /// The timecode at a given playback position (seconds into the timeline),
-    /// rounded to the nearest frame: `startOffset + playbackPosition`.
-    func timecode(atPlaybackSeconds seconds: TimeInterval) -> Timecode {
+    /// The timecode at a given playback position inside `item`, rounded to the
+    /// nearest frame: `item.startTimecodeFrames + playbackPosition`. Negative
+    /// `seconds` clamp to the item's start TC.
+    func timecode(atPlaybackSeconds seconds: TimeInterval, forItem item: MediaItem) -> Timecode {
         let playbackFrames = Int((seconds * Double(framerate.framesPerSecond)).rounded())
-        return Timecode(frameCount: startOffsetFrames + max(0, playbackFrames), rate: framerate)
+        return Timecode(frameCount: item.startTimecodeFrames + max(0, playbackFrames), rate: framerate)
     }
+
+    // Tolerate v9 payloads carrying a `startOffsetFrames` key: ignore it on
+    // decode (the v9 → v10 migration has already lifted the value onto items).
+    // Explicit CodingKeys prevents synthesized decoding from re-introducing the
+    // field if a future addition shadows the same name.
+    private enum CodingKeys: String, CodingKey { case framerate }
 }

@@ -68,16 +68,19 @@ private let v8Fixture = """
 
 final class ProjectModelMigrationV8Tests: XCTestCase {
 
-    func test_v8_decodesToV9WithCueNumbersPreservedAsSomeValues() throws {
+    func test_v8_decodesToCurrentWithCueNumbersPreservedAsSomeValues() throws {
         let model = try ProjectModel.decode(from: Data(v8Fixture.utf8))
 
-        XCTAssertEqual(model.schemaVersion, 9)
+        XCTAssertEqual(model.schemaVersion, ProjectModel.currentSchemaVersion)
         let item = try XCTUnwrap(model.items.first)
         XCTAssertEqual(item.cues.count, 3)
         XCTAssertEqual(item.cues[0].cueNumber, 1.0)
         XCTAssertEqual(item.cues[1].cueNumber, 1.5)
         XCTAssertEqual(item.cues[2].cueNumber, 2.0)
         XCTAssertEqual(model.timecodeSettings.framerate, .fps25)
+        // v8 → v10 also fans the project-wide startOffsetFrames onto every item.
+        XCTAssertEqual(item.startTimecodeFrames, 90_000)
+        XCTAssertEqual(item.ltcMuted, false)
     }
 
     func test_v9_cueWithoutCueNumberDecodesToNil() throws {

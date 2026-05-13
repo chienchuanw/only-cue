@@ -81,7 +81,8 @@ struct DocumentView: View {
                 engine: engine,
                 cues: activeItem?.cues ?? [],
                 mediaDuration: activeItem?.media.duration ?? 0,
-                timecodeSettings: document.model.timecodeSettings
+                timecodeSettings: document.model.timecodeSettings,
+                activeItem: activeItem
             )
                 .padding(.top, 4)
 

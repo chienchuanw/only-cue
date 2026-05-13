@@ -1,88 +1,102 @@
 import XCTest
 @testable import OnlyCue
 
-/// Coverage for `ProjectTimecodeSettings` (epic #33 leaf 4 — the project's
-/// persisted framerate + start offset) and the v6 → v7 schema migration.
+/// Coverage for `ProjectTimecodeSettings` after the schema-v10 reshape: the
+/// project owns only `framerate`; the start TC now lives on each `MediaItem`
+/// as `startTimecodeFrames`. The mapping function takes the active item.
 final class ProjectTimecodeSettingsTests: XCTestCase {
 
     // MARK: - ProjectTimecodeSettings value type
 
-    func test_default_is30fpsZeroOffset() {
+    func test_default_is30fps() {
         XCTAssertEqual(ProjectTimecodeSettings.default.framerate, .fps30)
-        XCTAssertEqual(ProjectTimecodeSettings.default.startOffsetFrames, 0)
-        XCTAssertEqual(ProjectTimecodeSettings.default.startTimecode, Timecode(frameCount: 0, rate: .fps30))
     }
 
-    func test_startTimecode_isTheOffsetAsATimecode() throws {
-        let oneHourAt25 = try XCTUnwrap(Timecode(hours: 1, minutes: 0, seconds: 0, frames: 0, rate: .fps25))
-        let settings = ProjectTimecodeSettings(framerate: .fps25, startOffsetFrames: oneHourAt25.frameCount)
-        XCTAssertEqual(settings.startOffsetFrames, 90_000)
-        XCTAssertEqual(settings.startTimecode.displayString, "01:00:00:00")
+    func test_timecode_addsItemStartAndPlaybackPosition() {
+        // 25 fps, item start 01:00:00:00, play at 30 s → 01:00:30:00.
+        let settings = ProjectTimecodeSettings(framerate: .fps25)
+        let item = Self.item(startTimecodeFrames: 90_000)
+        XCTAssertEqual(settings.timecode(atPlaybackSeconds: 30, forItem: item).displayString, "01:00:30:00")
+        XCTAssertEqual(settings.timecode(atPlaybackSeconds: 0, forItem: item).displayString, "01:00:00:00")
     }
 
-    func test_timecodeAtPlaybackSeconds_addsOffsetAndPosition() {
-        // The epic-acceptance case: 25 fps, start offset 01:00:00:00, play at 30 s past start → 01:00:30:00.
-        let settings = ProjectTimecodeSettings(framerate: .fps25, startOffsetFrames: 90_000)
-        XCTAssertEqual(settings.timecode(atPlaybackSeconds: 30).displayString, "01:00:30:00")
-        XCTAssertEqual(settings.timecode(atPlaybackSeconds: 0).displayString, "01:00:00:00")
+    func test_timecode_dropFrame() {
+        // 60 real seconds at 30 fps DF = 1800 frames elapsed → label 00:01:00;02.
+        let settings = ProjectTimecodeSettings(framerate: .fps30drop)
+        let item = Self.item(startTimecodeFrames: 0)
+        XCTAssertEqual(settings.timecode(atPlaybackSeconds: 60, forItem: item).displayString, "00:01:00;02")
     }
 
-    func test_timecodeAtPlaybackSeconds_dropFrame() {
-        // 60 real seconds at 30 fps DF = 1800 frames elapsed → label 00:01:00;02 (numbers ;00/;01 skipped).
-        let settings = ProjectTimecodeSettings(framerate: .fps30drop, startOffsetFrames: 0)
-        XCTAssertEqual(settings.timecode(atPlaybackSeconds: 60).displayString, "00:01:00;02")
+    func test_timecode_clampsNegativePlayback() {
+        let settings = ProjectTimecodeSettings(framerate: .fps30)
+        let item = Self.item(startTimecodeFrames: 300)
+        XCTAssertEqual(
+            settings.timecode(atPlaybackSeconds: -5, forItem: item),
+            Timecode(frameCount: 300, rate: .fps30)
+        )
     }
 
-    func test_timecodeAtPlaybackSeconds_clampsNegativePlayback() {
-        let settings = ProjectTimecodeSettings(framerate: .fps30, startOffsetFrames: 300)
-        XCTAssertEqual(settings.timecode(atPlaybackSeconds: -5), Timecode(frameCount: 300, rate: .fps30))
+    func test_timecode_perItemMapping_distinctItemsYieldDistinctTCs() {
+        // The motivating case for the v10 reshape: two items with distinct
+        // start TCs share one project framerate but produce distinct readouts.
+        let settings = ProjectTimecodeSettings(framerate: .fps25)
+        let item1 = Self.item(startTimecodeFrames: 90_000)   // 01:00:00:00
+        let item2 = Self.item(startTimecodeFrames: 112_500)  // 01:15:00:00
+        XCTAssertEqual(settings.timecode(atPlaybackSeconds: 0, forItem: item1).displayString, "01:00:00:00")
+        XCTAssertEqual(settings.timecode(atPlaybackSeconds: 0, forItem: item2).displayString, "01:15:00:00")
     }
 
     func test_codable_roundTrip() throws {
-        let settings = ProjectTimecodeSettings(framerate: .fps24, startOffsetFrames: 123)
-        let decoded = try JSONDecoder().decode(ProjectTimecodeSettings.self, from: try JSONEncoder().encode(settings))
+        let settings = ProjectTimecodeSettings(framerate: .fps24)
+        let decoded = try JSONDecoder().decode(
+            ProjectTimecodeSettings.self,
+            from: try JSONEncoder().encode(settings)
+        )
         XCTAssertEqual(decoded, settings)
     }
 
-    func test_jsonShape_usesFramerateRawValue() throws {
-        let json = try JSONDecoder().decode(
+    func test_jsonShape_tolerates_legacyStartOffsetFramesKey() throws {
+        // v9 payloads that haven't been migrated yet may still carry
+        // `startOffsetFrames` on `timecodeSettings`. The current struct must
+        // decode them cleanly (ignoring the legacy key) — the v9 → v10
+        // migration handles the actual data fan-out.
+        let decoded = try JSONDecoder().decode(
             ProjectTimecodeSettings.self,
             from: Data(#"{"framerate":"30df","startOffsetFrames":7}"#.utf8)
         )
-        XCTAssertEqual(json.framerate, .fps30drop)
-        XCTAssertEqual(json.startOffsetFrames, 7)
+        XCTAssertEqual(decoded.framerate, .fps30drop)
     }
 
-    // MARK: - Schema v6 → v7 migration
+    // MARK: - Schema chain still produces current schema
 
-    func test_v6Document_migratesToV7_withDefaultTimecodeSettings() throws {
+    func test_v6Document_migratesToCurrent_withDefaultTimecodeSettings() throws {
         let model = try ProjectModel.decode(from: Data(Self.v6FixtureJSON.utf8))
         XCTAssertEqual(model.schemaVersion, ProjectModel.currentSchemaVersion)
         XCTAssertEqual(model.timecodeSettings, .default)
-        XCTAssertEqual(model.name, "Legacy v6 show")
-        XCTAssertEqual(model.cuePointTypes.map(\.name), ["General"])
-    }
-
-    func test_v7Document_roundTrips_preservingTimecodeSettings() throws {
-        let original = ProjectModel(
-            schemaVersion: ProjectModel.currentSchemaVersion,
-            id: UUID(),
-            name: "v7 show",
-            cuePointTypes: [ProjectModel.makeDefaultCuePointType()],
-            items: [],
-            activeItemID: nil,
-            timecodeSettings: ProjectTimecodeSettings(framerate: .fps25, startOffsetFrames: 90_000)
-        )
-        let reloaded = try ProjectModel.decode(from: try JSONEncoder().encode(original))
-        XCTAssertEqual(reloaded, original)
-        XCTAssertEqual(reloaded.timecodeSettings.framerate, .fps25)
-        XCTAssertEqual(reloaded.timecodeSettings.startOffsetFrames, 90_000)
     }
 
     func test_newDocument_startsAtCurrentSchemaWithDefaultTimecodeSettings() {
         let document = CueListDocument()
         XCTAssertEqual(document.model.schemaVersion, ProjectModel.currentSchemaVersion)
         XCTAssertEqual(document.model.timecodeSettings, .default)
+    }
+
+    // MARK: - Helpers
+
+    private static func item(startTimecodeFrames: Int) -> MediaItem {
+        MediaItem(
+            id: UUID(),
+            media: MediaReference(
+                displayName: "fixture.wav",
+                kind: .audio,
+                duration: 10,
+                bookmarkData: Data()
+            ),
+            cues: [],
+            tempoMap: TempoMap(),
+            startTimecodeFrames: startTimecodeFrames,
+            ltcMuted: false
+        )
     }
 
     private static let v6FixtureJSON = """

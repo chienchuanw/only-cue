@@ -41,9 +41,10 @@ private struct LTCOutputHost: ViewModifier {
                 refresh(playing: playing)
             }
             .onChange(of: engine.currentTime) { oldValue, newValue in
-                if output.isRunning, abs(newValue - oldValue) > seekThreshold {
-                    output.update(at: timecodeSettings.timecode(atPlaybackSeconds: newValue))
-                }
+                guard output.isRunning,
+                      abs(newValue - oldValue) > seekThreshold,
+                      let item = document.model.activeItem else { return }
+                output.update(at: timecodeSettings.timecode(atPlaybackSeconds: newValue, forItem: item))
             }
             .onChange(of: routingStore.settings) { _, _ in
                 refresh(playing: engine.isPlaying)
@@ -55,14 +56,14 @@ private struct LTCOutputHost: ViewModifier {
     }
 
     private func refresh(playing: Bool) {
-        guard playing, routingStore.settings.isComplete else {
+        guard playing, routingStore.settings.isComplete, let item = document.model.activeItem else {
             teardown()
             return
         }
         let routing = routingStore.settings
         let wantsProgramAudio = routing.hasTrackChannels && engine.player.currentItem != nil
         output.start(
-            at: timecodeSettings.timecode(atPlaybackSeconds: engine.currentTime),
+            at: timecodeSettings.timecode(atPlaybackSeconds: engine.currentTime, forItem: item),
             routing: routing,
             programRing: wantsProgramAudio ? programRing : nil
         )

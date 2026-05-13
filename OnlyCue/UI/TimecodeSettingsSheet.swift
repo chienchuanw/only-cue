@@ -1,11 +1,9 @@
 import SwiftUI
 
-/// Document-scoped editor for the project's SMPTE framerate and start timecode
-/// (`ProjectModel.timecodeSettings`) — the values the LTC generator reads.
-/// Reachable via `Tools → Timecode Settings…` (notification → `DocumentView`
-/// presents this sheet). Edits route through `CueCommands.setProjectTimecodeSettings`
-/// (undoable). The *Audio* side of LTC (output device + per-channel routing)
-/// is a separate, later pane.
+/// Document-scoped editor for the project's SMPTE framerate. As of schema v10
+/// each `MediaItem` carries its own `startTimecodeFrames`; this sheet only
+/// edits the project-wide framerate. The per-media start TC editor is added
+/// in a later leaf. Reachable via `Tools → Timecode Settings…`.
 struct TimecodeSettingsSheet: View {
 
     @ObservedObject var document: CueListDocument
@@ -13,14 +11,10 @@ struct TimecodeSettingsSheet: View {
     @Environment(\.undoManager) private var undoManager
 
     @State private var framerate: SMPTEFramerate
-    @State private var startText: String
-    @State private var startInvalid = false
 
     init(document: CueListDocument) {
         self.document = document
-        let settings = document.model.timecodeSettings
-        _framerate = State(initialValue: settings.framerate)
-        _startText = State(initialValue: settings.startTimecode.displayString)
+        _framerate = State(initialValue: document.model.timecodeSettings.framerate)
     }
 
     var body: some View {
@@ -36,18 +30,6 @@ struct TimecodeSettingsSheet: View {
                 }
                 .accessibilityIdentifier("timecodeFrameratePicker")
                 .onChange(of: framerate) { _, _ in commit() }
-
-                TextField("Start timecode", text: $startText)
-                    .font(.system(.body, design: .monospaced))
-                    .frame(maxWidth: 160)
-                    .onSubmit { commit() }
-                    .accessibilityIdentifier("timecodeStartField")
-
-                if startInvalid {
-                    Text("Enter a timecode as HH:MM:SS:FF — use ; before the frames for drop-frame.")
-                        .font(.caption)
-                        .foregroundStyle(.red)
-                }
             }
             .formStyle(.grouped)
             Divider()
@@ -65,17 +47,9 @@ struct TimecodeSettingsSheet: View {
         .accessibilityIdentifier("timecodeSettingsSheet")
     }
 
-    /// Apply the current picker + (parsed) text to the document. Invalid text is
-    /// flagged and left as-is rather than applied; valid text is canonicalised.
     private func commit() {
-        guard let start = Timecode.parse(startText, rate: framerate) else {
-            startInvalid = true
-            return
-        }
-        startInvalid = false
-        startText = start.displayString
         CueCommands.setProjectTimecodeSettings(
-            ProjectTimecodeSettings(framerate: framerate, startOffsetFrames: start.frameCount),
+            ProjectTimecodeSettings(framerate: framerate),
             document: document,
             undoManager: undoManager
         )

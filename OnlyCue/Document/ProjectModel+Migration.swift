@@ -6,6 +6,7 @@ import Foundation
 /// with every schema bump.
 extension ProjectModel {
 
+    // swiftlint:disable:next cyclomatic_complexity
     static func decode(from data: Data) throws -> ProjectModel {
         let probe = try JSONDecoder().decode(VersionProbe.self, from: data)
         switch probe.schemaVersion {
@@ -379,22 +380,6 @@ extension ProjectModel {
         let items: [LegacyMediaItemPreV8]
         let activeItemID: UUID?
         let timecodeSettings: LegacyPreV10TimecodeSettings
-    }
-
-    /// The pre-v10 shape of `ProjectTimecodeSettings`: framerate +
-    /// `startOffsetFrames` (now lifted onto each `MediaItem`). Used by every
-    /// pre-v10 migration's `Legacy` snapshot so the offset survives the chain.
-    fileprivate struct LegacyPreV10TimecodeSettings: Decodable {
-        let framerate: SMPTEFramerate
-        let startOffsetFrames: Int
-
-        private enum CodingKeys: String, CodingKey { case framerate, startOffsetFrames }
-
-        init(from decoder: Decoder) throws {
-            let container = try decoder.container(keyedBy: CodingKeys.self)
-            framerate = try container.decode(SMPTEFramerate.self, forKey: .framerate)
-            startOffsetFrames = try container.decodeIfPresent(Int.self, forKey: .startOffsetFrames) ?? 0
-        }
     }
 
     private static func migrateFromV7(_ legacy: LegacyV7) -> ProjectModel {

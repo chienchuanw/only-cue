@@ -30,11 +30,15 @@ final class SpectralFluxTempoAnalyzerTests: XCTestCase {
     /// Deterministic pseudo-random noise in [-1, 1] (an LCG, so the test is repeatable).
     private func deterministicNoise(seconds: Double) -> [Float] {
         let count = Int(seconds * sampleRate)
+        let multiplier: UInt64 = 6_364_136_223_846_793_005
+        let increment: UInt64 = 1_442_695_040_888_963_407
+        let scale = 2_147_483_648.0
         var state: UInt64 = 0x2545_F491_4F6C_DD1D
         var out = [Float](repeating: 0, count: count)
         for sample in 0..<count {
-            state = state &* 6_364_136_223_846_793_005 &+ 1_442_695_040_888_963_407
-            out[sample] = Float(Double(state >> 33) / Double(1 << 31) * 2 - 1)
+            state = state &* multiplier &+ increment
+            let unit: Double = Double(state >> 33) / scale
+            out[sample] = Float(unit * 2.0 - 1.0)
         }
         return out
     }

@@ -127,8 +127,8 @@ struct SpectralFluxTempoAnalyzer: TempoAnalyzer {
         let score: (Double) -> Double = { value in
             let lower = max(lagRange.lowerBound, Int(value.rounded(.down)))
             let upper = min(lagRange.upperBound, lower + 1)
-            let frac = value - Double(lower)
-            return ac[lower] * (1 - frac) + ac[upper] * frac
+            let frac: Double = value - Double(lower)
+            return ac[lower] * (1.0 - frac) + ac[upper] * frac
         }
         let inHint = candidates.filter { hint.contains(60.0 * onsetRate / $0) }
         return inHint.max(by: { score($0) < score($1) }) ?? lag

@@ -34,8 +34,11 @@ struct WaveformView: View {
             for (index, peak) in columns.enumerated() {
                 let x = CGFloat(index) * dx
                 let y = midY - halfHeight(peak)
-                if index == 0 { path.move(to: CGPoint(x: x, y: y)) }
-                else { path.addLine(to: CGPoint(x: x, y: y)) }
+                if index == 0 {
+                    path.move(to: CGPoint(x: x, y: y))
+                } else {
+                    path.addLine(to: CGPoint(x: x, y: y))
+                }
             }
             // Bottom contour, right -> left.
             for index in stride(from: columns.count - 1, through: 0, by: -1) {

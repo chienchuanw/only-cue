@@ -27,10 +27,11 @@ enum CueInspectorCommit {
         return .parsed(parsed)
     }
 
-    static func commitCueNumber(draft: String, current: Double) -> NumberOutcome {
+    static func commitCueNumber(draft: String, current: Double?) -> NumberOutcome {
         let trimmed = draft.trimmingCharacters(in: .whitespaces)
+        let canonical = current.map(FadeTime.formatNumber) ?? ""
         guard !trimmed.isEmpty, let parsed = Double(trimmed), parsed.isFinite else {
-            return .revert(canonical: FadeTime.formatNumber(current))
+            return .revert(canonical: canonical)
         }
         if parsed == current {
             return .noChange

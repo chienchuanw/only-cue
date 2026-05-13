@@ -130,7 +130,7 @@ struct CueInspectorView: View {
     /// otherwise an external mutation (marker drag retime, undo) clobbers in-progress input.
     private func syncDrafts(from cue: Cue) {
         if focused != .name { nameDraft = cue.name }
-        if focused != .number { numberDraft = FadeTime.formatNumber(cue.cueNumber) }
+        if focused != .number { numberDraft = cue.cueNumber.map(FadeTime.formatNumber) ?? "" }
         if focused != .fade { fadeDraft = cue.fadeTime.format() }
         if focused != .notes { notesDraft = cue.notes }
     }
@@ -160,7 +160,7 @@ struct CueInspectorView: View {
             CueCommands.setCueNumber(cueId: cue.id, to: value, document: document, undoManager: undoManager)
             numberDraft = FadeTime.formatNumber(value)
         case .noChange:
-            numberDraft = FadeTime.formatNumber(cue.cueNumber)
+            numberDraft = cue.cueNumber.map(FadeTime.formatNumber) ?? ""
         case .revert(let canonical):
             numberDraft = canonical
         }

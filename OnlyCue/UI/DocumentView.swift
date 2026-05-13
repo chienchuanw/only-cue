@@ -64,50 +64,36 @@ struct DocumentView: View {
 
     private var mainPane: some View {
         let activeItem = document.model.activeItem
-        return VStack(spacing: 12) {
-            Text("Only Cue")
-                .font(.title)
-                .accessibilityIdentifier("documentTitle")
+        return Group {
+            if activeItem == nil {
+                DocumentEmptyState(onImport: { showImporter = true })
+            } else {
+                VStack(spacing: 12) {
+                    PreviewPane(
+                        document: document,
+                        engine: engine,
+                        selectedCueIDs: cueSelection,
+                        onSelectCue: { cueSelection = [$0] },
+                        onToggleCue: { cueSelection.formSymmetricDifference([$0]) }
+                    )
 
-            mediaSummary(activeItem)
-                .accessibilityIdentifier("mediaSummary")
+                    TransportBar(
+                        engine: engine,
+                        cues: activeItem?.cues ?? [],
+                        mediaDuration: activeItem?.media.duration ?? 0,
+                        timecodeSettings: document.model.timecodeSettings
+                    )
+                        .padding(.top, 4)
 
-            PreviewPane(
-                document: document,
-                engine: engine,
-                selectedCueIDs: cueSelection,
-                onSelectCue: { cueSelection = [$0] },
-                onToggleCue: { cueSelection.formSymmetricDifference([$0]) }
-            )
+                    Button("Add Cue") { addCueAtPlayhead() }
+                        .accessibilityIdentifier("addCueButton")
+                        .keyboardShortcut(shortcut(.addCue))
 
-            Text("\(activeItem?.cues.count ?? 0) cue\((activeItem?.cues.count ?? 0) == 1 ? "" : "s")")
-                .foregroundStyle(.secondary)
-                .accessibilityIdentifier("cueCount")
-
-            TransportBar(
-                engine: engine,
-                cues: activeItem?.cues ?? [],
-                mediaDuration: activeItem?.media.duration ?? 0,
-                timecodeSettings: document.model.timecodeSettings
-            )
-                .padding(.top, 4)
-
-            HStack {
-                Button("Import Media…") { showImporter = true }
-                    .accessibilityIdentifier("importMediaButton")
-                    .help("Import Media (⌘O)")
-
-                Button("Add Cue") { addCueAtPlayhead() }
-                    .accessibilityIdentifier("addCueButton")
-                    .keyboardShortcut(shortcut(.addCue))
-                    .disabled(activeItem == nil)
+                    transportShortcuts
+                    digitShortcuts
+                    playheadStepShortcuts
+                }
             }
-
-            transportShortcuts
-            digitShortcuts
-            playheadStepShortcuts
-
-            DocumentShortcutHints()
         }
         .frame(minWidth: 560, minHeight: 480)
         .padding()
@@ -160,18 +146,6 @@ struct DocumentView: View {
             try await MediaImporter.loadActive(into: document, engine: engine)
         } catch {
             pendingAlert = .relink(document.model.activeItem?.media.displayName ?? "The media file")
-        }
-    }
-
-    @ViewBuilder
-    private func mediaSummary(_ item: MediaItem?) -> some View {
-        if let item {
-            Text("\(item.media.displayName) — \(TimeFormat.hms(item.media.duration))")
-                .font(.system(.body, design: .monospaced))
-                .foregroundStyle(.secondary)
-        } else {
-            Text("No media imported")
-                .foregroundStyle(.tertiary)
         }
     }
 

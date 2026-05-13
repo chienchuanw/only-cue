@@ -10,29 +10,27 @@ final class DocumentLaunchTests: XCTestCase {
     /// Given the app is launched fresh
     /// When the user creates a new document (⌘N)
     /// Then a window appears
-    /// And the placeholder content (title + cue count) is visible.
+    /// And the no-media onboarding content (Import button + shortcut hints) is visible.
     ///
     /// Note: macOS `DocumentGroup` does not auto-open an untitled document
     /// on cold launch; it shows the launcher / start window. The user
     /// reaches a document window via ⌘N or the "New Document" button. We
     /// drive ⌘N to mirror the Gherkin "When the user creates a new
     /// document".
-    func test_newDocument_showsPlaceholderContent() throws {
+    func test_newDocument_showsEmptyStateOnboarding() throws {
         let app = XCUIApplication()
         app.launch()
 
         app.typeKey("n", modifierFlags: .command)
 
-        let documentTitle = app.staticTexts["documentTitle"]
+        let importButton = app.buttons["importMediaButton"]
         XCTAssertTrue(
-            documentTitle.waitForExistence(timeout: 5),
-            "documentTitle should appear within 5 seconds of ⌘N"
+            importButton.waitForExistence(timeout: 5),
+            "Import Media button should appear within 5 seconds of ⌘N"
         )
-
-        let cueCount = app.staticTexts["cueCount"]
         XCTAssertTrue(
-            cueCount.exists,
-            "cueCount label should be visible alongside the title"
+            app.staticTexts["documentShortcutHints"].exists,
+            "Shortcut hints should be visible in the no-media state"
         )
     }
 }

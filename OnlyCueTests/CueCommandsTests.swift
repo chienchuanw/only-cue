@@ -60,6 +60,57 @@ final class CueCommandsTests: XCTestCase {
         XCTAssertEqual(activeCues(document)[0].name, originalName)
     }
 
+    func test_retime_preservesCueNumberEvenWhenOrderingInverts() throws {
+        // Two numbered cues at times 1.0 (number 1) and 5.0 (number 2). Retiming the
+        // earlier cue past the later one inverts time-ordering, but per the spec
+        // retime must not modify cueNumber on any cue. The user re-enters numbers
+        // themselves when they want them re-aligned.
+        let document = makeDocumentWithItem()
+        let undo = makeUndoManager()
+        CueCommands.addCueAtPlayhead(time: 1.0, document: document, undoManager: undo)
+        CueCommands.addCueAtPlayhead(time: 5.0, document: document, undoManager: undo)
+        let firstID = try XCTUnwrap(activeCues(document).first?.id)
+        let secondID = try XCTUnwrap(activeCues(document).last?.id)
+        CueCommands.setCueNumber(cueId: firstID, to: 1.0, document: document, undoManager: undo)
+        CueCommands.setCueNumber(cueId: secondID, to: 2.0, document: document, undoManager: undo)
+
+        CueCommands.retime(cueId: firstID, to: 9.0, document: document, undoManager: undo)
+
+        let cues = activeCues(document)
+        let movedCue = try XCTUnwrap(cues.first { $0.id == firstID })
+        let staticCue = try XCTUnwrap(cues.first { $0.id == secondID })
+        XCTAssertEqual(movedCue.cueNumber, 1.0, "retime must preserve cueNumber even when ordering inverts")
+        XCTAssertEqual(staticCue.cueNumber, 2.0)
+    }
+
+    func test_nudgeCues_preservesCueNumber() throws {
+        let document = makeDocumentWithItem()
+        let undo = makeUndoManager()
+        CueCommands.addCueAtPlayhead(time: 2.0, document: document, undoManager: undo)
+        CueCommands.addCueAtPlayhead(time: 5.0, document: document, undoManager: undo)
+        let firstID = try XCTUnwrap(activeCues(document).first?.id)
+        CueCommands.setCueNumber(cueId: firstID, to: 1.0, document: document, undoManager: undo)
+
+        CueCommands.nudgeCues([firstID], by: 10.0, document: document, undoManager: undo)
+
+        let moved = try XCTUnwrap(activeCues(document).first { $0.id == firstID })
+        XCTAssertEqual(moved.cueNumber, 1.0)
+    }
+
+    func test_snapCues_preservesCueNumber() throws {
+        let document = makeDocumentWithItem()
+        let undo = makeUndoManager()
+        CueCommands.addCueAtPlayhead(time: 2.0, document: document, undoManager: undo)
+        CueCommands.addCueAtPlayhead(time: 5.0, document: document, undoManager: undo)
+        let firstID = try XCTUnwrap(activeCues(document).first?.id)
+        CueCommands.setCueNumber(cueId: firstID, to: 1.0, document: document, undoManager: undo)
+
+        CueCommands.snapCues([firstID], to: 12.0, document: document, undoManager: undo)
+
+        let snapped = try XCTUnwrap(activeCues(document).first { $0.id == firstID })
+        XCTAssertEqual(snapped.cueNumber, 1.0)
+    }
+
     func test_retime_updatesTime_undoRestoresPriorTime() throws {
         let document = makeDocumentWithItem()
         let undo = makeUndoManager()

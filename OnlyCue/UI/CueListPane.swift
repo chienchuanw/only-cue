@@ -65,9 +65,45 @@ struct CueListPane: View {
         .onReceive(NotificationCenter.default.publisher(for: .duplicateSelectedCueAtPlayhead)) { _ in
             duplicateSelectedAtPlayhead()
         }
+        .onReceive(NotificationCenter.default.publisher(for: .snapSelectedCuesToBeat)) { _ in
+            snapSelectedToGrid(.beat)
+        }
+        .onReceive(NotificationCenter.default.publisher(for: .snapSelectedCuesToBar)) { _ in
+            snapSelectedToGrid(.bar)
+        }
+        .onReceive(NotificationCenter.default.publisher(for: .addCuesOnEveryBeat)) { _ in
+            addCuesOnGrid(.beat)
+        }
+        .onReceive(NotificationCenter.default.publisher(for: .addCuesOnEveryBar)) { _ in
+            addCuesOnGrid(.bar)
+        }
     }
 
     private static let nudgeStep: TimeInterval = 1.0 / 30.0
+
+    private var activeTempoMap: TempoMap { document.model.activeItem?.tempoMap ?? TempoMap() }
+    private var activeItemDuration: TimeInterval { document.model.activeItem?.media.duration ?? 0 }
+
+    private func snapSelectedToGrid(_ resolution: CueCommands.GridResolution) {
+        let map = activeTempoMap
+        let duration = activeItemDuration
+        switch resolution {
+        case .beat:
+            CueCommands.snapCues(selection, toBeatIn: map, itemDuration: duration, document: document, undoManager: undoManager)
+        case .bar:
+            CueCommands.snapCues(selection, toBarIn: map, itemDuration: duration, document: document, undoManager: undoManager)
+        }
+    }
+
+    private func addCuesOnGrid(_ resolution: CueCommands.GridResolution) {
+        CueCommands.addCuesOnGrid(
+            in: 0...activeItemDuration,
+            every: resolution,
+            type: nil,
+            document: document,
+            undoManager: undoManager
+        )
+    }
 
     private func duplicateSelectedAtPlayhead() {
         guard let id = soleSelectedID else { return }

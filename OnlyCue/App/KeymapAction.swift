@@ -26,6 +26,8 @@ enum KeymapAction: String, CaseIterable, Codable, Identifiable, Sendable {
     case splitTempoSectionAtPlayhead
     // View menu — selected-cue editing
     case snapSelectedCueToPlayhead
+    case snapSelectedCuesToBeat
+    case snapSelectedCuesToBar
     case duplicateCueAtPlayhead
     case nudgeSelectedCueBack
     case nudgeSelectedCueForward
@@ -80,6 +82,8 @@ enum KeymapAction: String, CaseIterable, Codable, Identifiable, Sendable {
         .togglePauseAtEachCue: "Pause at Each Cue",
         .splitTempoSectionAtPlayhead: "Split Tempo Section at Playhead",
         .snapSelectedCueToPlayhead: "Snap Selected Cue to Playhead",
+        .snapSelectedCuesToBeat: "Snap Selected Cues to Nearest Beat",
+        .snapSelectedCuesToBar: "Snap Selected Cues to Nearest Bar",
         .duplicateCueAtPlayhead: "Duplicate Cue at Playhead",
         .nudgeSelectedCueBack: "Nudge Selected Cue Back",
         .nudgeSelectedCueForward: "Nudge Selected Cue Forward",

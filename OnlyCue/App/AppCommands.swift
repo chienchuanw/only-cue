@@ -112,6 +112,16 @@ struct AppCommands: Commands {
             }
             .keyboardShortcut(shortcut(.snapSelectedCueToPlayhead))
 
+            Button("Snap Selected Cues to Nearest Beat") {
+                NotificationCenter.default.post(name: .snapSelectedCuesToBeat, object: nil)
+            }
+            .keyboardShortcut(shortcut(.snapSelectedCuesToBeat))
+
+            Button("Snap Selected Cues to Nearest Bar") {
+                NotificationCenter.default.post(name: .snapSelectedCuesToBar, object: nil)
+            }
+            .keyboardShortcut(shortcut(.snapSelectedCuesToBar))
+
             Button("Duplicate Cue at Playhead") {
                 NotificationCenter.default.post(name: .duplicateSelectedCueAtPlayhead, object: nil)
             }
@@ -153,6 +163,14 @@ struct AppCommands: Commands {
                 NotificationCenter.default.post(name: .splitTempoSectionAtPlayhead, object: nil)
             }
             .keyboardShortcut(shortcut(.splitTempoSectionAtPlayhead))
+
+            Button("Add Cues on Every Beat") {
+                NotificationCenter.default.post(name: .addCuesOnEveryBeat, object: nil)
+            }
+
+            Button("Add Cues on Every Bar") {
+                NotificationCenter.default.post(name: .addCuesOnEveryBar, object: nil)
+            }
         }
     }
 

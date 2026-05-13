@@ -7,14 +7,12 @@ enum CueNumberAssignment {
     /// (those with `cueNumber == nil`) are skipped when picking neighbors; the rule
     /// only considers cues that already carry a number.
     static func next(forInsertionAt time: TimeInterval, in cues: [Cue]) -> Double {
-        let numbered = cues
-            .compactMap { cue -> (TimeInterval, Double)? in
-                cue.cueNumber.map { (cue.time, $0) }
-            }
-            .sorted { $0.0 < $1.0 }
+        let numbered = cues.compactMap { cue -> (TimeInterval, Double)? in
+            cue.cueNumber.map { (cue.time, $0) }
+        }
         if numbered.isEmpty { return 1.0 }
-        let earlier = numbered.last { $0.0 <= time }
-        let later = numbered.first { $0.0 > time }
+        let earlier = numbered.filter { $0.0 <= time }.max(by: { $0.0 < $1.0 })
+        let later = numbered.filter { $0.0 > time }.min(by: { $0.0 < $1.0 })
         switch (earlier, later) {
         case (nil, .some(let next)):
             return next.1 - 1.0

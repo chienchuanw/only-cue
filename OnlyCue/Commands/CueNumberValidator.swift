@@ -30,15 +30,10 @@ enum CueNumberValidator {
 
         let target = cues.first(where: { $0.id == cueID })
 
-        // Uniqueness — any other cue with this exact number is a duplicate.
-        // A cue committing its own current number to itself is allowed.
         if cues.contains(where: { $0.id != cueID && $0.cueNumber == candidate }) {
             return .duplicate
         }
 
-        // Strictly ascending vs immediate numbered time-neighbors.
-        // Unnumbered cues (including the target if currently nil) are skipped
-        // when picking neighbors. Missing neighbor → open bound on that side.
         if let target {
             let numberedNeighbors = cues
                 .filter { $0.id != cueID }

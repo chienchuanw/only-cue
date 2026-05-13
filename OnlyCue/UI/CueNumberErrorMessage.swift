@@ -5,7 +5,7 @@ import Foundation
 /// unit-tested without spinning up a SwiftUI host.
 enum CueNumberErrorMessage {
 
-    static let invalidFormat = "Use 0.001–9999.999, up to 3 decimals."
+    static let invalidFormat = "Use \(FadeTime.formatNumber(CueNumberValidator.minimum))–\(FadeTime.formatNumber(CueNumberValidator.maximum)), up to 3 decimals."
     static let duplicate = "Already in use."
 
     /// Returns the user-facing message for a non-`.ok` validator result, or `nil`

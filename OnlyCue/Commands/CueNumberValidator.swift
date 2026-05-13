@@ -59,11 +59,11 @@ enum CueNumberValidator {
         return .ok
     }
 
-    private static func isWellFormatted(_ n: Double) -> Bool {
-        guard n.isFinite else { return false }
-        guard n >= minimum, n <= maximum else { return false }
-        // Three-decimal-place check via integer round-trip on n * 1000.
-        let scaled = n * 1000
+    private static func isWellFormatted(_ value: Double) -> Bool {
+        guard value.isFinite else { return false }
+        guard value >= minimum, value <= maximum else { return false }
+        // Three-decimal-place check via integer round-trip on value * 1000.
+        let scaled = value * 1000
         return scaled.rounded() == scaled
     }
 }

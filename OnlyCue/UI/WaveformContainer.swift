@@ -4,7 +4,7 @@ import SwiftUI
 struct WaveformContainer: View {
 
     let asset: AVURLAsset
-    var resolution: Int = 512
+    var resolution: Int = 12_000
     var cues: [Cue] = []
     var tempoMap: TempoMap = TempoMap()
     var resolveColorHex: (Cue) -> String? = { _ in nil }

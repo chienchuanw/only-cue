@@ -9,9 +9,10 @@ final class MainViewDeclutterUITests: XCTestCase {
     func test_noMediaState_showsOnboarding_andHidesLoadedChrome() throws {
         let app = XCUIApplication()
         app.launch()
+        app.typeKey("n", modifierFlags: .command)
 
-        // With no media imported the app shows the empty state: shortcut hints
-        // and the Import button.
+        // With no media imported the document shows the empty state: shortcut
+        // hints and the Import button.
         XCTAssertTrue(app.staticTexts["documentShortcutHints"].waitForExistence(timeout: 5))
         XCTAssertTrue(app.buttons["importMediaButton"].exists)
 

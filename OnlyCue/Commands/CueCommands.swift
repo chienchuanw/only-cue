@@ -75,10 +75,24 @@ enum CueCommands {
         }
     }
 
-    static func setCueNumber(cueId: Cue.ID, to newNumber: Double, document: CueListDocument, undoManager: UndoManager?) {
+    /// Sets or clears a cue's `cueNumber`. Validated against grandMA2 rules
+    /// (`CueNumberValidator`); the returned `Result` lets the UI surface an
+    /// inline error and revert the field on rejection. Mutating only occurs
+    /// on `.ok`.
+    @discardableResult
+    static func setCueNumber(
+        cueId: Cue.ID,
+        to newNumber: Double?,
+        document: CueListDocument,
+        undoManager: UndoManager?
+    ) -> CueNumberValidator.Result {
+        let cues = document.model.activeItem?.cues ?? []
+        let result = CueNumberValidator.validate(candidate: newNumber, for: cueId, in: cues)
+        guard result == .ok else { return result }
         updateCue(cueId: cueId, document: document, undoManager: undoManager, actionName: "Change Cue Number") {
             $0.cueNumber = newNumber
         }
+        return .ok
     }
 
     static func setFadeTime(cueId: Cue.ID, to newFade: FadeTime, document: CueListDocument, undoManager: UndoManager?) {

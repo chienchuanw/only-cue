@@ -65,7 +65,7 @@ struct DocumentView: View {
     private var mainPane: some View {
         let activeItem = document.model.activeItem
         return VStack(spacing: 12) {
-            Text("OnlyCue")
+            Text("Only Cue")
                 .font(.title)
                 .accessibilityIdentifier("documentTitle")
 

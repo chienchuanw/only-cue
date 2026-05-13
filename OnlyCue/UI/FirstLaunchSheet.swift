@@ -15,7 +15,7 @@ struct FirstLaunchSheet: View {
             Image(systemName: "waveform")
                 .font(.system(size: 48))
                 .foregroundStyle(.tint)
-            Text("Welcome to OnlyCue")
+            Text("Welcome to Only Cue")
                 .font(.title2.weight(.semibold))
             Text("Drop an audio or video file (or press ⌘O) to start. Press M at the playhead to add a cue. ⌘Z undoes anything.")
                 .multilineTextAlignment(.center)

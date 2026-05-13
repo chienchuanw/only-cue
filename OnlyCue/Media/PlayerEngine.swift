@@ -1,11 +1,16 @@
 import AVFoundation
 import Observation
+import QuartzCore
 
 @Observable
 @MainActor
 final class PlayerEngine {
 
     private(set) var currentTime: TimeInterval = 0
+    /// `CACurrentMediaTime()` captured when `currentTime` was last updated by
+    /// the periodic observer (or `seek`). `PlayheadInterpolator` slides the
+    /// rendered playhead forward from this anchor between observer ticks.
+    private(set) var currentTimeObservedAt: TimeInterval = CACurrentMediaTime()
     private(set) var rate: Float = 0
     private(set) var duration: TimeInterval = 0
 
@@ -71,10 +76,11 @@ final class PlayerEngine {
         let target = CMTime(seconds: seconds, preferredTimescale: 600)
         await player.seek(to: target, toleranceBefore: .zero, toleranceAfter: .zero)
         currentTime = seconds
+        currentTimeObservedAt = CACurrentMediaTime()
     }
 
     private func observeTime() {
-        let interval = CMTime(seconds: 0.1, preferredTimescale: 600)
+        let interval = CMTime(seconds: 1.0 / 60.0, preferredTimescale: 600)
         timeObserver = player.addPeriodicTimeObserver(
             forInterval: interval,
             queue: .main
@@ -82,6 +88,7 @@ final class PlayerEngine {
             MainActor.assumeIsolated {
                 guard let self else { return }
                 self.currentTime = CMTimeGetSeconds(time)
+                self.currentTimeObservedAt = CACurrentMediaTime()
                 self.rate = self.player.rate
             }
         }

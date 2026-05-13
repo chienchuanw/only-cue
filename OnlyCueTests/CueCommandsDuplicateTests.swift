@@ -31,7 +31,22 @@ final class CueCommandsDuplicateTests: XCTestCase {
         XCTAssertEqual(duplicate.fadeTime, source.fadeTime)
         XCTAssertEqual(duplicate.time, 30.0, accuracy: 0.001)
         XCTAssertNotEqual(duplicate.id, source.id)
-        XCTAssertNotEqual(duplicate.cueNumber, source.cueNumber)
+        XCTAssertNil(duplicate.cueNumber, "duplicates are unnumbered; the user assigns a number manually")
+    }
+
+    func test_duplicateAtPlayhead_sourceCueIsNumbered_duplicateIsStillNil() throws {
+        let document = makeDocumentWithItem()
+        let undo = makeUndoManager()
+
+        CueCommands.addCueAtPlayhead(time: 5.0, document: document, undoManager: undo)
+        let sourceID = try XCTUnwrap(activeCues(document).first?.id)
+        CueCommands.setCueNumber(cueId: sourceID, to: 1.0, document: document, undoManager: undo)
+
+        CueCommands.duplicateAtPlayhead(cueId: sourceID, time: 20.0, document: document, undoManager: undo)
+
+        let duplicate = try XCTUnwrap(activeCues(document).first { $0.id != sourceID })
+        XCTAssertEqual(activeCues(document).first { $0.id == sourceID }?.cueNumber, 1.0)
+        XCTAssertNil(duplicate.cueNumber)
     }
 
     func test_duplicateAtPlayhead_undoRemovesDuplicate_redoRestores() throws {

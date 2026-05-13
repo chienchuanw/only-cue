@@ -6,6 +6,7 @@ struct WaveformContainer: View {
     let asset: AVURLAsset
     var resolution: Int = 512
     var cues: [Cue] = []
+    var tempoMap: TempoMap = TempoMap()
     var resolveColorHex: (Cue) -> String? = { _ in nil }
     var selectedCueIDs: Set<Cue.ID> = []
     var onSelectCue: (Cue.ID) -> Void = { _ in }
@@ -16,12 +17,13 @@ struct WaveformContainer: View {
 
     @State private var peaks: [Float]?
     @State private var failed = false
-    @State private var loadedDuration: TimeInterval = 0
+    @State var loadedDuration: TimeInterval = 0
     @State private var scrub = ScrubController()
     @State private var seekTask: Task<Void, Never>?
     @State var zoom = WaveformZoomController()
     @State var verticalZoom = WaveformVerticalZoomController()
     @State private var leadingAnchor: Int? = 0
+    @AppStorage("showTempoGrid") var showTempoGrid = false
 
     // scrollOffset and viewportWidth are stored on the `zoom` controller (an
     // @Observable reference type) so they survive SwiftUI struct copies and are
@@ -85,22 +87,6 @@ struct WaveformContainer: View {
     }
 
     @ViewBuilder
-    private func markersOverlay() -> some View {
-        if loadedDuration > 0 {
-            CueMarkersOverlay(
-                cues: cues,
-                duration: loadedDuration,
-                resolveColorHex: resolveColorHex,
-                selectedCueIDs: selectedCueIDs,
-                onSelectCue: onSelectCue,
-                onToggleCue: onToggleCue,
-                onSeek: onSeek,
-                onRetime: onRetime
-            )
-        }
-    }
-
-    @ViewBuilder
     private func waveformBody(peaks: [Float]) -> some View {
         GeometryReader { proxy in
             let width = proxy.size.width
@@ -109,6 +95,7 @@ struct WaveformContainer: View {
             ScrollView(.horizontal, showsIndicators: zoom.zoom > 1) {
                 ZStack(alignment: .topLeading) {
                     WaveformView(peaks: peaks, verticalZoom: verticalZoom.zoom)
+                    tempoGridOverlay()
                     markersOverlay()
                     if let engine, loadedDuration > 0 {
                         WaveformPlayheadLayer(

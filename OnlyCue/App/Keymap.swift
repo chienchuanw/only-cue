@@ -101,6 +101,7 @@ struct Keymap: Codable, Equatable, Sendable {
         .waveformVerticalZoomReset: KeyChord(key: "0", modifiers: [.command, .option]),
         .toggleNotesOverlay: KeyChord(key: "n", modifiers: [.command, .shift]),
         .toggleTimelineBreakdown: KeyChord(key: "b", modifiers: [.command, .shift]),
+        .toggleTempoGrid: KeyChord(key: "g", modifiers: [.command, .shift]),
         .togglePauseAtEachCue: KeyChord(key: "p", modifiers: [.command, .shift]),
         .snapSelectedCueToPlayhead: KeyChord(key: "s"),
         .duplicateCueAtPlayhead: KeyChord(key: "d", modifiers: [.command]),

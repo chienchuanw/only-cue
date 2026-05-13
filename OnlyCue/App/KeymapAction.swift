@@ -20,6 +20,7 @@ enum KeymapAction: String, CaseIterable, Codable, Identifiable, Sendable {
     // View menu — toggles
     case toggleNotesOverlay
     case toggleTimelineBreakdown
+    case toggleTempoGrid
     case togglePauseAtEachCue
     // View menu — selected-cue editing
     case snapSelectedCueToPlayhead
@@ -73,6 +74,7 @@ enum KeymapAction: String, CaseIterable, Codable, Identifiable, Sendable {
         .waveformVerticalZoomReset: "Actual Vertical Size",
         .toggleNotesOverlay: "Show Notes Overlay",
         .toggleTimelineBreakdown: "Show Timeline Breakdown",
+        .toggleTempoGrid: "Show Tempo Grid",
         .togglePauseAtEachCue: "Pause at Each Cue",
         .snapSelectedCueToPlayhead: "Snap Selected Cue to Playhead",
         .duplicateCueAtPlayhead: "Duplicate Cue at Playhead",

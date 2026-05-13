@@ -34,20 +34,7 @@ extension ProjectModel {
         let cuePointTypes: [CuePointType]
         let items: [LegacyV8Item]
         let activeItemID: UUID?
-        let timecodeSettings: LegacyV8TimecodeSettings
-    }
-
-    private struct LegacyV8TimecodeSettings: Decodable {
-        let framerate: SMPTEFramerate
-        let startOffsetFrames: Int
-
-        private enum CodingKeys: String, CodingKey { case framerate, startOffsetFrames }
-
-        init(from decoder: Decoder) throws {
-            let container = try decoder.container(keyedBy: CodingKeys.self)
-            framerate = try container.decode(SMPTEFramerate.self, forKey: .framerate)
-            startOffsetFrames = try container.decodeIfPresent(Int.self, forKey: .startOffsetFrames) ?? 0
-        }
+        let timecodeSettings: LegacyPreV10TimecodeSettings
     }
 
     private struct LegacyV8Item: Decodable {

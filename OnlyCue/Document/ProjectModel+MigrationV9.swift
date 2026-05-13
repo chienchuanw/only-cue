@@ -37,7 +37,7 @@ extension ProjectModel {
         let cuePointTypes: [CuePointType]
         let items: [LegacyV9Item]
         let activeItemID: UUID?
-        let timecodeSettings: LegacyV9TimecodeSettings
+        let timecodeSettings: LegacyPreV10TimecodeSettings
     }
 
     private struct LegacyV9Item: Decodable {
@@ -45,21 +45,5 @@ extension ProjectModel {
         let media: MediaReference
         let cues: [Cue]
         let tempoMap: TempoMap
-    }
-
-    /// Captures the v9 shape of `ProjectTimecodeSettings` (framerate + the
-    /// dropped `startOffsetFrames`). The current struct decodes only
-    /// `framerate`; this legacy shape is what the migration reads from.
-    private struct LegacyV9TimecodeSettings: Decodable {
-        let framerate: SMPTEFramerate
-        let startOffsetFrames: Int
-
-        private enum CodingKeys: String, CodingKey { case framerate, startOffsetFrames }
-
-        init(from decoder: Decoder) throws {
-            let container = try decoder.container(keyedBy: CodingKeys.self)
-            framerate = try container.decode(SMPTEFramerate.self, forKey: .framerate)
-            startOffsetFrames = try container.decodeIfPresent(Int.self, forKey: .startOffsetFrames) ?? 0
-        }
     }
 }

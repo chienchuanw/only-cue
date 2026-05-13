@@ -1,3 +1,4 @@
+import QuartzCore
 import SwiftUI
 
 struct WaveformPlayheadLayer: View {
@@ -16,25 +17,38 @@ struct WaveformPlayheadLayer: View {
     var body: some View {
         GeometryReader { geometry in
             let width = geometry.size.width
-            let displayedTime = scrub.state?.scrubTime ?? engine.currentTime
-            let x = CueMarkersGeometry.position(
-                forTime: displayedTime,
-                width: width,
-                duration: duration
-            )
+            TimelineView(.animation) { _ in
+                let displayedTime = renderedTime()
+                let x = CueMarkersGeometry.position(
+                    forTime: displayedTime,
+                    width: width,
+                    duration: duration
+                )
 
-            ZStack(alignment: .topLeading) {
-                PlayheadOverlay(currentTime: displayedTime, duration: duration)
+                ZStack(alignment: .topLeading) {
+                    PlayheadOverlay(currentTime: displayedTime, duration: duration)
 
-                Color.clear
-                    .contentShape(Rectangle())
-                    .frame(width: Self.grabberWidth, height: geometry.size.height)
-                    .offset(x: x - Self.grabberWidth / 2)
-                    .gesture(scrubGesture(width: width))
-                    .accessibilityIdentifier("playheadGrabber")
+                    Color.clear
+                        .contentShape(Rectangle())
+                        .frame(width: Self.grabberWidth, height: geometry.size.height)
+                        .offset(x: x - Self.grabberWidth / 2)
+                        .gesture(scrubGesture(width: width))
+                        .accessibilityIdentifier("playheadGrabber")
+                }
+                .onChange(of: displayedTime) { _, _ in maybeAutoFollow() }
             }
-            .onChange(of: displayedTime) { _, _ in maybeAutoFollow() }
         }
+    }
+
+    private func renderedTime() -> TimeInterval {
+        if let scrubTime = scrub.state?.scrubTime { return scrubTime }
+        return PlayheadInterpolator.renderedTime(
+            observedTime: engine.currentTime,
+            observedAt: engine.currentTimeObservedAt,
+            now: CACurrentMediaTime(),
+            rate: Double(engine.rate),
+            duration: duration
+        )
     }
 
     private func maybeAutoFollow() {

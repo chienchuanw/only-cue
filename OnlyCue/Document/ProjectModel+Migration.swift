@@ -25,6 +25,8 @@ extension ProjectModel {
             return migrateFromV7(try JSONDecoder().decode(LegacyV7.self, from: data))
         case 8:
             return try migrateFromV8(data: data)
+        case 9:
+            return try migrateFromV9(data: data)
         case currentSchemaVersion:
             return try JSONDecoder().decode(ProjectModel.self, from: data)
         default:
@@ -330,8 +332,15 @@ extension ProjectModel {
         let media: MediaReference
         let cues: [Cue]
 
-        func toMediaItem() -> MediaItem {
-            MediaItem(id: id, media: media, cues: cues, tempoMap: TempoMap())
+        func toMediaItem(startTimecodeFrames: Int = 0) -> MediaItem {
+            MediaItem(
+                id: id,
+                media: media,
+                cues: cues,
+                tempoMap: TempoMap(),
+                startTimecodeFrames: startTimecodeFrames,
+                ltcMuted: false
+            )
         }
     }
 
@@ -358,9 +367,10 @@ extension ProjectModel {
         )
     }
 
-    /// v7 = the schema before `MediaItem.tempoMap` (epic #199). Same shape as
-    /// the current `ProjectModel` minus that per-item field; migration just seeds
-    /// an empty tempo map on every item.
+    /// v7 = the schema before `MediaItem.tempoMap` (epic #199). Migration seeds
+    /// an empty tempo map on every item and fans the project-wide
+    /// `startOffsetFrames` (dropped in v10) onto each item's
+    /// `startTimecodeFrames`.
     private struct LegacyV7: Decodable {
         let schemaVersion: Int
         let id: UUID
@@ -368,18 +378,35 @@ extension ProjectModel {
         let cuePointTypes: [CuePointType]
         let items: [LegacyMediaItemPreV8]
         let activeItemID: UUID?
-        let timecodeSettings: ProjectTimecodeSettings
+        let timecodeSettings: LegacyPreV10TimecodeSettings
+    }
+
+    /// The pre-v10 shape of `ProjectTimecodeSettings`: framerate +
+    /// `startOffsetFrames` (now lifted onto each `MediaItem`). Used by every
+    /// pre-v10 migration's `Legacy` snapshot so the offset survives the chain.
+    fileprivate struct LegacyPreV10TimecodeSettings: Decodable {
+        let framerate: SMPTEFramerate
+        let startOffsetFrames: Int
+
+        private enum CodingKeys: String, CodingKey { case framerate, startOffsetFrames }
+
+        init(from decoder: Decoder) throws {
+            let container = try decoder.container(keyedBy: CodingKeys.self)
+            framerate = try container.decode(SMPTEFramerate.self, forKey: .framerate)
+            startOffsetFrames = try container.decodeIfPresent(Int.self, forKey: .startOffsetFrames) ?? 0
+        }
     }
 
     private static func migrateFromV7(_ legacy: LegacyV7) -> ProjectModel {
-        ProjectModel(
+        let offset = legacy.timecodeSettings.startOffsetFrames
+        return ProjectModel(
             schemaVersion: currentSchemaVersion,
             id: legacy.id,
             name: legacy.name,
             cuePointTypes: legacy.cuePointTypes,
-            items: legacy.items.map { $0.toMediaItem() },
+            items: legacy.items.map { $0.toMediaItem(startTimecodeFrames: offset) },
             activeItemID: legacy.activeItemID,
-            timecodeSettings: legacy.timecodeSettings
+            timecodeSettings: ProjectTimecodeSettings(framerate: legacy.timecodeSettings.framerate)
         )
     }
 

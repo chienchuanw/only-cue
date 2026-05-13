@@ -12,7 +12,7 @@ final class CueCommandsTimecodeTests: XCTestCase {
         let undo = makeUndoManager()
         XCTAssertEqual(doc.model.timecodeSettings, .default)
 
-        let newSettings = ProjectTimecodeSettings(framerate: .fps25, startOffsetFrames: 90_000)
+        let newSettings = ProjectTimecodeSettings(framerate: .fps25)
         CueCommands.setProjectTimecodeSettings(newSettings, document: doc, undoManager: undo)
         XCTAssertEqual(doc.model.timecodeSettings, newSettings)
 
@@ -33,13 +33,12 @@ final class CueCommandsTimecodeTests: XCTestCase {
     func test_change_landsInDocumentSnapshot() throws {
         let doc = CueListDocument()
         CueCommands.setProjectTimecodeSettings(
-            ProjectTimecodeSettings(framerate: .fps30drop, startOffsetFrames: 1800),
+            ProjectTimecodeSettings(framerate: .fps30drop),
             document: doc,
             undoManager: nil
         )
         let snapshot = try doc.snapshot(contentType: .cueList)
         XCTAssertEqual(snapshot.timecodeSettings.framerate, .fps30drop)
-        XCTAssertEqual(snapshot.timecodeSettings.startOffsetFrames, 1800)
     }
 
     private func makeUndoManager() -> UndoManager {

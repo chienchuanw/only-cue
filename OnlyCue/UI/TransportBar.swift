@@ -6,6 +6,10 @@ struct TransportBar: View {
     var cues: [Cue] = []
     var mediaDuration: TimeInterval = 0
     var timecodeSettings: ProjectTimecodeSettings = .default
+    /// Active media item — drives the SMPTE readout's per-clip start TC.
+    /// `nil` when no item is loaded, in which case the readout falls back to
+    /// rendering `00:00:00:00` at the project framerate.
+    var activeItem: MediaItem?
 
     /// LTC decoded off the active media file, if any (supplied via the
     /// environment by `StripedTimecodeHost`) — takes priority over
@@ -49,12 +53,16 @@ struct TransportBar: View {
     }
 
     /// The SMPTE timecode at the playhead — the active file's striped LTC when
-    /// it has any, otherwise derived from the project settings.
+    /// it has any, otherwise derived from the project settings + active item's
+    /// `startTimecodeFrames` (or `00:00:00:00` when no item is loaded).
     private var smpteReadout: String {
         if let striped = stripedTimecode {
             return striped.timecode(atPlaybackSeconds: engine.currentTime).displayString
         }
-        return timecodeSettings.timecode(atPlaybackSeconds: engine.currentTime).displayString
+        guard let activeItem else {
+            return Timecode(frameCount: 0, rate: timecodeSettings.framerate).displayString
+        }
+        return timecodeSettings.timecode(atPlaybackSeconds: engine.currentTime, forItem: activeItem).displayString
     }
 
     private var smpteReadoutHelp: String {

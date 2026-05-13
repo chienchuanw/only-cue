@@ -5,6 +5,12 @@ struct MediaItem: Codable, Identifiable, Equatable {
     var media: MediaReference
     var cues: [Cue]
     var tempoMap: TempoMap = TempoMap()
+    /// Frames since `00:00:00:00` at the project framerate. Replaces the
+    /// schema-v9 project-wide `timecodeSettings.startOffsetFrames` (v10).
+    var startTimecodeFrames: Int = 0
+    /// Persistent per-clip silence flag for the LTC output channel. Encoder
+    /// keeps running; only the LTC channel's samples are zeroed when set.
+    var ltcMuted: Bool = false
 }
 
 extension MediaItem {

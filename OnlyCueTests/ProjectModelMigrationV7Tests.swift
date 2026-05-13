@@ -59,7 +59,8 @@ final class ProjectModelMigrationV7Tests: XCTestCase {
         XCTAssertTrue(item.tempoMap.isEmpty, "a migrated v7 item must have an empty tempo map")
         XCTAssertEqual(item.cues.first?.cueNumber, 1.0)
         XCTAssertEqual(model.timecodeSettings.framerate, .fps25)
-        XCTAssertEqual(model.timecodeSettings.startOffsetFrames, 90_000)
+        // v10 fans the legacy project-wide offset onto each item.
+        XCTAssertEqual(item.startTimecodeFrames, 90_000)
     }
 
     func test_v8_roundTripsAPopulatedTempoMap() throws {

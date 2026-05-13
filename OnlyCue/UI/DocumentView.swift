@@ -291,6 +291,10 @@ extension Notification.Name {
     static let timecodeSettingsRequested = Notification.Name("OnlyCue.timecodeSettingsRequested")
     static let tempoMapRequested = Notification.Name("OnlyCue.tempoMapRequested")
     static let splitTempoSectionAtPlayhead = Notification.Name("OnlyCue.splitTempoSectionAtPlayhead")
+    static let snapSelectedCuesToBeat = Notification.Name("OnlyCue.snapSelectedCuesToBeat")
+    static let snapSelectedCuesToBar = Notification.Name("OnlyCue.snapSelectedCuesToBar")
+    static let addCuesOnEveryBeat = Notification.Name("OnlyCue.addCuesOnEveryBeat")
+    static let addCuesOnEveryBar = Notification.Name("OnlyCue.addCuesOnEveryBar")
 }
 
 enum DocumentAlert: Identifiable {

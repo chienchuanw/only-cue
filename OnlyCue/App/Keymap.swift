@@ -105,6 +105,8 @@ struct Keymap: Codable, Equatable, Sendable {
         .togglePauseAtEachCue: KeyChord(key: "p", modifiers: [.command, .shift]),
         .splitTempoSectionAtPlayhead: KeyChord(key: "t", modifiers: [.command, .shift]),
         .snapSelectedCueToPlayhead: KeyChord(key: "s"),
+        .snapSelectedCuesToBeat: KeyChord(key: "s", modifiers: [.option]),
+        .snapSelectedCuesToBar: KeyChord(key: "s", modifiers: [.option, .shift]),
         .duplicateCueAtPlayhead: KeyChord(key: "d", modifiers: [.command]),
         .nudgeSelectedCueBack: KeyChord(key: "leftArrow", modifiers: [.option]),
         .nudgeSelectedCueForward: KeyChord(key: "rightArrow", modifiers: [.option]),

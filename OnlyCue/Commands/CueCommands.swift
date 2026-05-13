@@ -186,7 +186,7 @@ enum CueCommands {
         }
     }
 
-    private static func mutateCues(
+    static func mutateCues(
         _ document: CueListDocument,
         undoManager: UndoManager?,
         actionName: String,

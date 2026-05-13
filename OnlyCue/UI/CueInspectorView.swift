@@ -175,7 +175,7 @@ struct CueInspectorView: View {
             case .ok:
                 numberError = nil
                 numberDraft = FadeTime.formatNumber(value)
-            default:
+            case .invalidFormat, .duplicate, .outOfRange:
                 numberError = CueNumberErrorMessage.text(for: result)
                 numberDraft = cue.cueNumber.map(FadeTime.formatNumber) ?? ""
             }

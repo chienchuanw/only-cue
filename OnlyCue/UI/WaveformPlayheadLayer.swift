@@ -1,3 +1,4 @@
+import AppKit
 import QuartzCore
 import SwiftUI
 
@@ -26,6 +27,18 @@ struct WaveformPlayheadLayer: View {
                 )
 
                 ZStack(alignment: .topLeading) {
+                    // Tap anywhere on the waveform body -> seek there immediately.
+                    Color.clear
+                        .contentShape(Rectangle())
+                        .onTapGesture { location in
+                            seekTask?.cancel()
+                            let target = CueMarkersGeometry.time(
+                                forX: location.x, width: width, duration: duration
+                            )
+                            seekTask = Task { await engine.seek(to: target) }
+                        }
+                        .accessibilityIdentifier("waveformSeekSurface")
+
                     PlayheadOverlay(currentTime: displayedTime, duration: duration)
 
                     Color.clear
@@ -33,6 +46,12 @@ struct WaveformPlayheadLayer: View {
                         .frame(width: Self.grabberWidth, height: geometry.size.height)
                         .offset(x: x - Self.grabberWidth / 2)
                         .gesture(scrubGesture(width: width))
+                        .onContinuousHover { phase in
+                            switch phase {
+                            case .active: NSCursor.openHand.set()
+                            case .ended: NSCursor.arrow.set()
+                            }
+                        }
                         .accessibilityIdentifier("playheadGrabber")
                 }
                 .onChange(of: displayedTime) { _, _ in maybeAutoFollow() }
@@ -72,10 +91,12 @@ struct WaveformPlayheadLayer: View {
                 if scrub.state == nil {
                     scrub.begin(originalTime: engine.currentTime, isPlaying: engine.isPlaying)
                     engine.pause()
+                    NSCursor.closedHand.set()
                 }
                 scrub.update(dx: value.translation.width, width: width, duration: duration)
             }
             .onEnded { _ in
+                NSCursor.arrow.set()
                 guard let finished = scrub.end() else { return }
                 seekTask?.cancel()
                 seekTask = Task {

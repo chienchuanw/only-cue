@@ -21,6 +21,5 @@ struct DocumentEmptyState: View {
             DocumentShortcutHints()
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .accessibilityIdentifier("documentEmptyState")
     }
 }

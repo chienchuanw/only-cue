@@ -64,36 +64,35 @@ struct DocumentView: View {
 
     private var mainPane: some View {
         let activeItem = document.model.activeItem
-        return Group {
+        return VStack(spacing: 12) {
             if activeItem == nil {
                 DocumentEmptyState(onImport: { showImporter = true })
             } else {
-                VStack(spacing: 12) {
-                    PreviewPane(
-                        document: document,
-                        engine: engine,
-                        selectedCueIDs: cueSelection,
-                        onSelectCue: { cueSelection = [$0] },
-                        onToggleCue: { cueSelection.formSymmetricDifference([$0]) }
-                    )
-
-                    TransportBar(
-                        engine: engine,
-                        cues: activeItem?.cues ?? [],
-                        mediaDuration: activeItem?.media.duration ?? 0,
-                        timecodeSettings: document.model.timecodeSettings
-                    )
-                        .padding(.top, 4)
-
-                    Button("Add Cue") { addCueAtPlayhead() }
-                        .accessibilityIdentifier("addCueButton")
-                        .keyboardShortcut(shortcut(.addCue))
-
-                    transportShortcuts
-                    digitShortcuts
-                    playheadStepShortcuts
-                }
+                PreviewPane(
+                    document: document,
+                    engine: engine,
+                    selectedCueIDs: cueSelection,
+                    onSelectCue: { cueSelection = [$0] },
+                    onToggleCue: { cueSelection.formSymmetricDifference([$0]) }
+                )
             }
+
+            TransportBar(
+                engine: engine,
+                cues: activeItem?.cues ?? [],
+                mediaDuration: activeItem?.media.duration ?? 0,
+                timecodeSettings: document.model.timecodeSettings
+            )
+                .padding(.top, 4)
+
+            Button("Add Cue") { addCueAtPlayhead() }
+                .accessibilityIdentifier("addCueButton")
+                .keyboardShortcut(shortcut(.addCue))
+                .disabled(activeItem == nil)
+
+            transportShortcuts
+            digitShortcuts
+            playheadStepShortcuts
         }
         .frame(minWidth: 560, minHeight: 480)
         .padding()

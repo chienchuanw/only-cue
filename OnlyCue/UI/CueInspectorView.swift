@@ -9,6 +9,7 @@ struct CueInspectorView: View {
 
     @State private var nameDraft = ""
     @State private var numberDraft = ""
+    @State private var numberError: String?
     @State private var fadeDraft = ""
     @State private var notesDraft = ""
     @State private var showTypesSheet = false
@@ -53,12 +54,22 @@ struct CueInspectorView: View {
     private func fields(for cue: Cue) -> some View {
         VStack(alignment: .leading, spacing: 10) {
             typePicker(for: cue)
-            row("Number") {
-                TextField("", text: $numberDraft)
-                    .textFieldStyle(.roundedBorder)
-                    .focused($focused, equals: .number)
-                    .onSubmit { commitNumber(for: cue) }
-                    .accessibilityIdentifier("cueInspectorNumber")
+            VStack(alignment: .leading, spacing: 2) {
+                row("Number") {
+                    TextField("", text: $numberDraft)
+                        .textFieldStyle(.roundedBorder)
+                        .focused($focused, equals: .number)
+                        .onSubmit { commitNumber(for: cue) }
+                        .onChange(of: numberDraft) { _, _ in numberError = nil }
+                        .accessibilityIdentifier("cueInspectorNumber")
+                }
+                if let numberError {
+                    Text(numberError)
+                        .font(.caption2)
+                        .foregroundStyle(.red)
+                        .padding(.leading, 60)
+                        .accessibilityIdentifier("cueInspectorNumberError")
+                }
             }
             row("Name") {
                 TextField("", text: $nameDraft)
@@ -157,11 +168,26 @@ struct CueInspectorView: View {
     private func commitNumber(for cue: Cue) {
         switch CueInspectorCommit.commitCueNumber(draft: numberDraft, current: cue.cueNumber) {
         case .parsed(let value):
-            CueCommands.setCueNumber(cueId: cue.id, to: value, document: document, undoManager: undoManager)
-            numberDraft = FadeTime.formatNumber(value)
+            let result = CueCommands.setCueNumber(
+                cueId: cue.id, to: value, document: document, undoManager: undoManager
+            )
+            switch result {
+            case .ok:
+                numberError = nil
+                numberDraft = FadeTime.formatNumber(value)
+            default:
+                numberError = CueNumberErrorMessage.text(for: result)
+                numberDraft = cue.cueNumber.map(FadeTime.formatNumber) ?? ""
+            }
+        case .cleared:
+            CueCommands.setCueNumber(cueId: cue.id, to: nil, document: document, undoManager: undoManager)
+            numberError = nil
+            numberDraft = ""
         case .noChange:
+            numberError = nil
             numberDraft = cue.cueNumber.map(FadeTime.formatNumber) ?? ""
         case .revert(let canonical):
+            numberError = CueNumberErrorMessage.invalidFormat
             numberDraft = canonical
         }
     }

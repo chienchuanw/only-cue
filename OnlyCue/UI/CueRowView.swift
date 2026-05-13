@@ -6,32 +6,75 @@ struct CueRowView: View {
     let cue: Cue
     var resolvedColorHex: String?
     var onRename: (String) -> Void = { _ in }
+    var onCommitNumber: (Double?) -> CueNumberValidator.Result = { _ in .ok }
 
     @State private var isEditingName = false
     @State private var draftName = ""
     @FocusState private var nameFieldFocused: Bool
 
+    @State private var isEditingNumber = false
+    @State private var numberDraft = ""
+    @State private var numberError: String?
+    @FocusState private var numberFieldFocused: Bool
+
     var body: some View {
-        HStack(spacing: 8) {
-            Text("\(index)")
-                .font(.system(.body, design: .monospaced))
-                .foregroundStyle(.secondary)
-                .frame(width: 28, alignment: .trailing)
+        VStack(alignment: .leading, spacing: 0) {
+            HStack(spacing: 8) {
+                Text("\(index)")
+                    .font(.system(.body, design: .monospaced))
+                    .foregroundStyle(.secondary)
+                    .frame(width: 28, alignment: .trailing)
 
-            CueColorSwatch(hex: resolvedColorHex, diameter: 14)
-                .accessibilityIdentifier("cueColorSwatch-\(index)")
+                numberCell
+                    .frame(width: 56, alignment: .leading)
+                    .accessibilityIdentifier("cueNumber-\(index)")
 
-            nameField
-                .accessibilityIdentifier("cueName-\(index)")
+                CueColorSwatch(hex: resolvedColorHex, diameter: 14)
+                    .accessibilityIdentifier("cueColorSwatch-\(index)")
 
-            Spacer(minLength: 8)
+                nameField
+                    .accessibilityIdentifier("cueName-\(index)")
 
-            Text(TimeFormat.hms(cue.time))
-                .font(.system(.caption, design: .monospaced))
-                .foregroundStyle(.secondary)
+                Spacer(minLength: 8)
+
+                Text(TimeFormat.hms(cue.time))
+                    .font(.system(.caption, design: .monospaced))
+                    .foregroundStyle(.secondary)
+            }
+            if let numberError {
+                Text(numberError)
+                    .font(.caption2)
+                    .foregroundStyle(.red)
+                    .padding(.leading, 36)
+                    .accessibilityIdentifier("cueNumberError-\(index)")
+            }
         }
         .padding(.vertical, 2)
         .accessibilityIdentifier("cueRow-\(index)")
+    }
+
+    @ViewBuilder
+    private var numberCell: some View {
+        if isEditingNumber {
+            TextField("", text: $numberDraft)
+                .textFieldStyle(.plain)
+                .font(.system(.body, design: .monospaced))
+                .focused($numberFieldFocused)
+                .onSubmit { commitNumber() }
+                .onExitCommand { cancelNumberEdit() }
+                .onChange(of: numberFieldFocused) { _, isFocused in
+                    if !isFocused { commitNumber() }
+                }
+                .onChange(of: numberDraft) { _, _ in numberError = nil }
+                .onAppear { numberFieldFocused = true }
+        } else {
+            Text(cue.cueNumber.map(FadeTime.formatNumber) ?? "")
+                .font(.system(.body, design: .monospaced))
+                .foregroundStyle(cue.cueNumber == nil ? .tertiary : .primary)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .contentShape(Rectangle())
+                .onTapGesture(count: 2) { beginNumberEdit() }
+        }
     }
 
     @ViewBuilder
@@ -66,5 +109,33 @@ struct CueRowView: View {
 
     private func cancelRename() {
         isEditingName = false
+    }
+
+    private func beginNumberEdit() {
+        numberDraft = cue.cueNumber.map(FadeTime.formatNumber) ?? ""
+        numberError = nil
+        isEditingNumber = true
+    }
+
+    private func cancelNumberEdit() {
+        numberError = nil
+        isEditingNumber = false
+    }
+
+    private func commitNumber() {
+        defer { isEditingNumber = false }
+        switch CueInspectorCommit.commitCueNumber(draft: numberDraft, current: cue.cueNumber) {
+        case .parsed(let value):
+            let result = onCommitNumber(value)
+            if result != .ok {
+                numberError = CueNumberErrorMessage.text(for: result)
+            }
+        case .cleared:
+            _ = onCommitNumber(nil)
+        case .noChange:
+            break
+        case .revert:
+            numberError = CueNumberErrorMessage.invalidFormat
+        }
     }
 }

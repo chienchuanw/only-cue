@@ -1,9 +1,10 @@
 import SwiftUI
 
-/// Document-scoped editor for the project's SMPTE framerate. As of schema v10
-/// each `MediaItem` carries its own `startTimecodeFrames`; this sheet only
-/// edits the project-wide framerate. The per-media start TC editor is added
-/// in a later leaf. Reachable via `Tools → Timecode Settings…`.
+/// Document-scoped editor for the project framerate and per-media start
+/// timecode. Schema v10 lifted the start TC out of the project and onto each
+/// `MediaItem`; this sheet exposes both: the framerate picker at the top, and
+/// a list of every media item with an editable HH:MM:SS:FF field below.
+/// Reachable via `Tools → Timecode Settings…`.
 struct TimecodeSettingsSheet: View {
 
     @ObservedObject var document: CueListDocument
@@ -29,27 +30,49 @@ struct TimecodeSettingsSheet: View {
                     }
                 }
                 .accessibilityIdentifier("timecodeFrameratePicker")
-                .onChange(of: framerate) { _, _ in commit() }
+                .onChange(of: framerate) { _, _ in commitFramerate() }
+
+                if !document.model.items.isEmpty {
+                    Section("Media start timecodes") {
+                        ForEach(document.model.items) { item in
+                            MediaTimecodeRow(
+                                item: item,
+                                framerate: framerate,
+                                onCommit: { frames in commitStartTimecode(itemID: item.id, frames: frames) }
+                            )
+                        }
+                    }
+                }
             }
             .formStyle(.grouped)
+            .accessibilityIdentifier("timecodeSheetItemList")
+
             Divider()
             HStack {
                 Spacer()
                 Button("Done") {
-                    commit()
                     dismiss()
                 }
                 .keyboardShortcut(.defaultAction)
             }
         }
         .padding()
-        .frame(width: 380)
+        .frame(width: 460)
         .accessibilityIdentifier("timecodeSettingsSheet")
     }
 
-    private func commit() {
+    private func commitFramerate() {
         CueCommands.setProjectTimecodeSettings(
             ProjectTimecodeSettings(framerate: framerate),
+            document: document,
+            undoManager: undoManager
+        )
+    }
+
+    private func commitStartTimecode(itemID: MediaItem.ID, frames: Int) {
+        CueCommands.setStartTimecode(
+            itemID: itemID,
+            frames: frames,
             document: document,
             undoManager: undoManager
         )

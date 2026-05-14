@@ -44,8 +44,19 @@ struct ItemListPane: View {
     private var itemList: some View {
         List(selection: selectionBinding) {
             ForEach(document.model.items) { item in
-                ItemRowView(item: item)
-                    .tag(Optional(item.id))
+                ItemRowView(
+                    item: item,
+                    framerate: document.model.timecodeSettings.framerate,
+                    onSetStartTimecode: { frames in
+                        CueCommands.setStartTimecode(
+                            itemID: item.id,
+                            frames: frames,
+                            document: document,
+                            undoManager: undoManager
+                        )
+                    }
+                )
+                .tag(Optional(item.id))
             }
             .onMove(perform: move)
             .onDelete(perform: deleteAtOffsets)

@@ -41,6 +41,41 @@ final class CueCommandsTimecodeTests: XCTestCase {
         XCTAssertEqual(snapshot.timecodeSettings.framerate, .fps30drop)
     }
 
+    // MARK: - setStartTimecode
+
+    func test_setStartTimecode_setsFrames_andIsUndoable() throws {
+        let doc = CueListDocument()
+        let item = Self.fixtureItem()
+        doc.model.items = [item]
+        let undo = makeUndoManager()
+
+        CueCommands.setStartTimecode(itemID: item.id, frames: 90_000, document: doc, undoManager: undo)
+        XCTAssertEqual(doc.model.items[0].startTimecodeFrames, 90_000)
+
+        undo.undo()
+        XCTAssertEqual(doc.model.items[0].startTimecodeFrames, 0)
+        undo.redo()
+        XCTAssertEqual(doc.model.items[0].startTimecodeFrames, 90_000)
+    }
+
+    func test_setStartTimecode_negativeFrames_rejectedAsNoOp() throws {
+        let doc = CueListDocument()
+        let item = Self.fixtureItem()
+        doc.model.items = [item]
+        let undo = makeUndoManager()
+
+        CueCommands.setStartTimecode(itemID: item.id, frames: -1, document: doc, undoManager: undo)
+        XCTAssertEqual(doc.model.items[0].startTimecodeFrames, 0)
+        XCTAssertFalse(undo.canUndo)
+    }
+
+    func test_setStartTimecode_unknownItemID_isANoOp() throws {
+        let doc = CueListDocument()
+        let undo = makeUndoManager()
+        CueCommands.setStartTimecode(itemID: UUID(), frames: 90_000, document: doc, undoManager: undo)
+        XCTAssertFalse(undo.canUndo)
+    }
+
     // MARK: - setLTCMuted
 
     func test_setLTCMuted_flipsField_andIsUndoable() throws {

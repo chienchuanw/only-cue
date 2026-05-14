@@ -22,8 +22,6 @@ enum KeymapAction: String, CaseIterable, Codable, Identifiable, Sendable {
     case toggleTimelineBreakdown
     case toggleTempoGrid
     case togglePauseAtEachCue
-    // Tools menu
-    case splitTempoSectionAtPlayhead
     // View menu — selected-cue editing
     case snapSelectedCueToPlayhead
     case snapSelectedCuesToBeat
@@ -80,7 +78,6 @@ enum KeymapAction: String, CaseIterable, Codable, Identifiable, Sendable {
         .toggleTimelineBreakdown: "Show Timeline Breakdown",
         .toggleTempoGrid: "Show Tempo Grid",
         .togglePauseAtEachCue: "Pause at Each Cue",
-        .splitTempoSectionAtPlayhead: "Split Tempo Section at Playhead",
         .snapSelectedCueToPlayhead: "Snap Selected Cue to Playhead",
         .snapSelectedCuesToBeat: "Snap Selected Cues to Nearest Beat",
         .snapSelectedCuesToBar: "Snap Selected Cues to Nearest Bar",

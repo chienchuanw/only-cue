@@ -71,12 +71,6 @@ struct CueListPane: View {
         .onReceive(NotificationCenter.default.publisher(for: .snapSelectedCuesToBar)) { _ in
             snapSelectedToGrid(.bar)
         }
-        .onReceive(NotificationCenter.default.publisher(for: .addCuesOnEveryBeat)) { _ in
-            addCuesOnGrid(.beat)
-        }
-        .onReceive(NotificationCenter.default.publisher(for: .addCuesOnEveryBar)) { _ in
-            addCuesOnGrid(.bar)
-        }
     }
 
     private static let nudgeStep: TimeInterval = 1.0 / 30.0
@@ -97,12 +91,6 @@ struct CueListPane: View {
         case .bar:
             CueCommands.snapCues(selection, toBarIn: grid, itemDuration: duration, document: document, undoManager: undoManager)
         }
-    }
-
-    // `addCuesOnGrid` removed in v11 (#245); the receivers below are kept until
-    // the notification names disappear in #248.
-    private func addCuesOnGrid(_ resolution: CueCommands.GridResolution) {
-        _ = resolution
     }
 
     private func duplicateSelectedAtPlayhead() {

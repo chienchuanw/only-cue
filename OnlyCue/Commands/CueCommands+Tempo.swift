@@ -1,14 +1,9 @@
 import Foundation
 
-/// Per-cue tempo commands (v11). The cue's time is bar 1, beat 1 of the segment
+/// Per-cue tempo command (v11). The cue's time is bar 1, beat 1 of the segment
 /// it opens; `bpm`/`beatsPerBar` are clamped (20…400 / 1…16) and either nil
 /// (no tempo change at this cue) or set. Passing both `nil` clears tempo from
 /// the cue.
-///
-/// Legacy section-based commands (`setTempoMap`, `addTempoSection`, etc.) live
-/// at the bottom as `@available(*, deprecated)` no-op stubs so the soon-to-be-
-/// deleted `TempoMapSheet` keeps compiling. Both the sheet and these stubs go
-/// away in #248.
 @MainActor
 extension CueCommands {
 
@@ -53,61 +48,5 @@ extension CueCommands {
             )
         }
         undoManager?.setActionName("Change Cue Tempo")
-    }
-
-    // MARK: - Legacy stubs (deleted in #248)
-
-    @available(*, deprecated, message: "Removed in #248 along with TempoMapSheet")
-    static func setTempoMap(_ map: TempoMap, item itemID: MediaItem.ID, document: CueListDocument, undoManager: UndoManager?) {
-        _ = (map, itemID, document, undoManager)
-    }
-
-    @available(*, deprecated, message: "Removed in #248 along with TempoMapSheet")
-    static func addTempoSection(
-        atSeconds seconds: TimeInterval,
-        item itemID: MediaItem.ID,
-        document: CueListDocument,
-        undoManager: UndoManager?
-    ) {
-        _ = (seconds, itemID, document, undoManager)
-    }
-
-    @available(*, deprecated, message: "Removed in #248 along with TempoMapSheet")
-    static func splitTempoSection(
-        atSeconds seconds: TimeInterval,
-        item itemID: MediaItem.ID,
-        document: CueListDocument,
-        undoManager: UndoManager?
-    ) {
-        _ = (seconds, itemID, document, undoManager)
-    }
-
-    @available(*, deprecated, message: "Removed in #248 along with TempoMapSheet")
-    static func removeTempoSection(
-        _ id: TempoSection.ID,
-        item itemID: MediaItem.ID,
-        document: CueListDocument,
-        undoManager: UndoManager?
-    ) {
-        _ = (id, itemID, document, undoManager)
-    }
-
-    @available(*, deprecated, message: "Removed in #248 along with TempoMapSheet")
-    static func updateTempoSection(
-        _ id: TempoSection.ID,
-        startSeconds: TimeInterval? = nil,
-        bpm: Double? = nil,
-        beatsPerBar: Int? = nil,
-        downbeatOffsetSeconds: TimeInterval? = nil,
-        item itemID: MediaItem.ID,
-        document: CueListDocument,
-        undoManager: UndoManager?
-    ) {
-        _ = (id, startSeconds, bpm, beatsPerBar, downbeatOffsetSeconds, itemID, document, undoManager)
-    }
-
-    @available(*, deprecated, message: "Removed in #248 along with TempoMapSheet")
-    static func clearTempoMap(item itemID: MediaItem.ID, document: CueListDocument, undoManager: UndoManager?) {
-        _ = (itemID, document, undoManager)
     }
 }

@@ -103,7 +103,6 @@ struct Keymap: Codable, Equatable, Sendable {
         .toggleTimelineBreakdown: KeyChord(key: "b", modifiers: [.command, .shift]),
         .toggleTempoGrid: KeyChord(key: "g", modifiers: [.command, .shift]),
         .togglePauseAtEachCue: KeyChord(key: "p", modifiers: [.command, .shift]),
-        .splitTempoSectionAtPlayhead: KeyChord(key: "t", modifiers: [.command, .shift]),
         .snapSelectedCueToPlayhead: KeyChord(key: "s"),
         .snapSelectedCuesToBeat: KeyChord(key: "s", modifiers: [.option]),
         .snapSelectedCuesToBar: KeyChord(key: "s", modifiers: [.option, .shift]),

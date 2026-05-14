@@ -5,17 +5,21 @@ struct CueInspectorView: View {
     @ObservedObject var document: CueListDocument
     let cue: Cue?
 
-    @Environment(\.undoManager) private var undoManager
+    @Environment(\.undoManager) var undoManager
 
     @State private var nameDraft = ""
     @State private var numberDraft = ""
     @State private var numberError: String?
     @State private var fadeDraft = ""
     @State private var notesDraft = ""
+    @State var bpmDraft = ""
+    @State var beatsPerBarDraft = ""
+    @State var detectingCueID: Cue.ID?
+    @State var detectMessage: String?
     @State private var showTypesSheet = false
     @FocusState private var focused: Field?
 
-    private enum Field: Hashable { case name, number, fade, notes }
+    private enum Field: Hashable { case name, number, fade, notes, bpm, beatsPerBar }
 
     var body: some View {
         VStack(spacing: 8) {
@@ -96,10 +100,44 @@ struct CueInspectorView: View {
                     )
                     .accessibilityIdentifier("cueInspectorNotes")
             }
+            tempoSection(for: cue)
         }
         .onAppear { syncDrafts(from: cue) }
         .onChange(of: cue) { _, new in syncDrafts(from: new) }
         .onChange(of: focused) { old, _ in commitOnFocusLeave(field: old, cue: cue) }
+    }
+
+    @ViewBuilder
+    private func tempoSection(for cue: Cue) -> some View {
+        row("BPM") {
+            HStack(spacing: 6) {
+                TextField("inherited", text: $bpmDraft)
+                    .textFieldStyle(.roundedBorder)
+                    .focused($focused, equals: .bpm)
+                    .onSubmit { commitBPM(for: cue) }
+                    .accessibilityIdentifier("cueInspectorBPM")
+                TextField("4", text: $beatsPerBarDraft)
+                    .textFieldStyle(.roundedBorder)
+                    .focused($focused, equals: .beatsPerBar)
+                    .onSubmit { commitBeatsPerBar(for: cue) }
+                    .frame(width: 40)
+                    .accessibilityIdentifier("cueInspectorBeatsPerBar")
+                Text("/ bar").font(.caption).foregroundStyle(.secondary)
+            }
+        }
+        HStack(spacing: 8) {
+            Button("Detect") { detectTempo(for: cue) }
+                .accessibilityIdentifier("cueInspectorDetectTempo")
+                .disabled(detectingCueID == cue.id)
+            Button("Clear") { clearTempo(for: cue) }
+                .accessibilityIdentifier("cueInspectorClearTempo")
+                .disabled(cue.bpm == nil && cue.beatsPerBar == nil)
+            if let detectMessage {
+                Text(detectMessage).font(.caption2).foregroundStyle(.secondary)
+            }
+            Spacer()
+        }
+        .padding(.leading, 60)
     }
 
     private func typePicker(for cue: Cue) -> some View {
@@ -144,6 +182,8 @@ struct CueInspectorView: View {
         if focused != .number { numberDraft = cue.cueNumber.map(FadeTime.formatNumber) ?? "" }
         if focused != .fade { fadeDraft = cue.fadeTime.format() }
         if focused != .notes { notesDraft = cue.notes }
+        if focused != .bpm { bpmDraft = cue.bpm.map { String(Int($0.rounded())) } ?? "" }
+        if focused != .beatsPerBar { beatsPerBarDraft = cue.beatsPerBar.map(String.init) ?? "" }
     }
 
     private func commitOnFocusLeave(field: Field?, cue: Cue) {
@@ -153,6 +193,8 @@ struct CueInspectorView: View {
         case .number: commitNumber(for: cue)
         case .fade: commitFade(for: cue)
         case .notes: commitNotes(for: cue)
+        case .bpm: commitBPM(for: cue)
+        case .beatsPerBar: commitBeatsPerBar(for: cue)
         }
     }
 
@@ -208,4 +250,5 @@ struct CueInspectorView: View {
         guard notesDraft != cue.notes else { return }
         CueCommands.setNotes(cueId: cue.id, to: notesDraft, document: document, undoManager: undoManager)
     }
+
 }

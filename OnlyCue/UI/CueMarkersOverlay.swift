@@ -67,7 +67,13 @@ struct CueMarkersOverlay: View {
     }
 
     private func handleDragChanged(grabbedID: Cue.ID, translationWidth: CGFloat, width: CGFloat) {
+        // Defer starting "drag mode" until raw translation crosses the tap/drag
+        // threshold. Otherwise the first onChanged (translation == 0) would
+        // hijack modifier-clicks: ⌘-click on an unselected marker would replace
+        // the selection here, then the subsequent tap path would toggle the
+        // grabbed cue out — netting an empty selection.
         if activeDrag == nil {
+            guard abs(translationWidth) >= Self.dragThreshold else { return }
             let isGroup = selectedCueIDs.contains(grabbedID) && selectedCueIDs.count >= 2
             let moving: Set<Cue.ID>
             if isGroup {
@@ -96,17 +102,19 @@ struct CueMarkersOverlay: View {
 
     private func handleDragEnded(grabbedID: Cue.ID, translationWidth: CGFloat, width: CGFloat) {
         defer { activeDrag = nil }
+        // Tap-vs-drag gate uses RAW translation, not post-snap dx. Post-snap dx
+        // can clear the threshold even when the user only clicked (e.g. Shift-
+        // click landing a couple of pixels off a beat would snap onto the beat
+        // and otherwise trigger an unintended retime).
+        if abs(translationWidth) < Self.dragThreshold {
+            handleTap(grabbedID: grabbedID)
+            return
+        }
         guard let drag = activeDrag, drag.grabbedID == grabbedID else {
-            // Gesture ended without onChanged (shouldn't happen with minimumDistance:0);
-            // treat as tap.
             handleTap(grabbedID: grabbedID)
             return
         }
         let dxFinal = applySnap(dxRaw: translationWidth, grabbedID: grabbedID, width: width)
-        if abs(dxFinal) < Self.dragThreshold {
-            handleTap(grabbedID: grabbedID)
-            return
-        }
         guard let grabbed = cue(for: grabbedID) else { return }
         let newTime = CueMarkersGeometry.time(
             originalTime: grabbed.time,

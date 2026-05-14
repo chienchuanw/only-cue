@@ -14,6 +14,10 @@ struct DocumentView: View {
     @AppStorage(NotesOverlayPreferences.storageKey) var overlayPrefsData = NotesOverlayPreferences.defaultEncoded
     @AppStorage("pauseAtEachCue") var pauseAtEachCue = false
     @ObservedObject private var keymapStore = KeymapStore.shared
+    /// Drives the main-view LTC strip's visibility — it appears whenever LTC
+    /// routing is enabled. Observing the singleton here means flipping the
+    /// switch in Preferences updates the strip in real time.
+    @ObservedObject private var ltcRoutingStore = LTCRoutingStore.shared
     @Environment(\.undoManager) private var undoManager
 
     private func shortcut(_ action: KeymapAction) -> KeyboardShortcut {
@@ -77,6 +81,8 @@ struct DocumentView: View {
                 )
             }
 
+            ltcStripIfEnabled(activeItem)
+
             TransportBar(
                 engine: engine,
                 cues: activeItem?.cues ?? [],
@@ -117,6 +123,25 @@ struct DocumentView: View {
             pendingErrorMessage: pendingAlertMessageBinding,
             undoManager: undoManager
         )
+    }
+
+    @ViewBuilder
+    private func ltcStripIfEnabled(_ activeItem: MediaItem?) -> some View {
+        if let activeItem, ltcRoutingStore.settings.isEnabled {
+            LTCStrip(
+                item: activeItem,
+                framerate: document.model.timecodeSettings.framerate,
+                duration: activeItem.media.duration,
+                onToggleMute: {
+                    CueCommands.setLTCMuted(
+                        itemID: activeItem.id,
+                        muted: !activeItem.ltcMuted,
+                        document: document,
+                        undoManager: undoManager
+                    )
+                }
+            )
+        }
     }
 
     private func alertContent(_ alert: DocumentAlert) -> Alert {

@@ -180,6 +180,13 @@ struct CueMarkerView: View {
         }
     }
 
+    /// Whether to render the hover halo behind the cap. Selected markers
+    /// suppress the halo: the selected style (thicker line + larger cap)
+    /// already conveys focus, and stacking both reads as noisy.
+    static func showHalo(isHovered: Bool, isSelected: Bool) -> Bool {
+        isHovered && !isSelected
+    }
+
     let cue: Cue
     var resolvedColorHex: String?
     let baseX: CGFloat

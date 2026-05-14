@@ -74,7 +74,7 @@ struct CueListPane: View {
             }
             .frame(minHeight: 120)
 
-            CueInspectorView(document: document, cue: selectedCue)
+            CueInspectorView(document: document, engine: engine, cue: selectedCue)
                 .frame(minHeight: 180)
         }
         .frame(minWidth: 240)

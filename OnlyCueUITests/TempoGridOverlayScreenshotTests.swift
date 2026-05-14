@@ -19,7 +19,7 @@ final class TempoGridOverlayScreenshotTests: XCTestCase {
         app.typeKey("n", modifierFlags: .command)            // new document
 
         XCTAssertTrue(
-            app.buttons["playPauseButton"].waitForExistence(timeout: 5),
+            app.staticTexts["currentTimeReadout"].waitForExistence(timeout: 5),
             "a document window should open"
         )
 

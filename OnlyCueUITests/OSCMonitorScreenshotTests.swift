@@ -22,10 +22,10 @@ final class OSCMonitorScreenshotTests: XCTestCase {
         app.launch()
         app.typeKey("n", modifierFlags: .command)
 
-        let playPauseButton = app.buttons["playPauseButton"]
+        let timeReadout = app.staticTexts["currentTimeReadout"]
         XCTAssertTrue(
-            playPauseButton.waitForExistence(timeout: 5),
-            "playPauseButton should appear within 5 seconds of opening a document"
+            timeReadout.waitForExistence(timeout: 5),
+            "currentTimeReadout should appear within 5 seconds of opening a document"
         )
 
         app.activate()

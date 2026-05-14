@@ -14,7 +14,7 @@ final class AudioSettingsUITests: XCTestCase {
         app.launch()
         app.typeKey("n", modifierFlags: .command)
         XCTAssertTrue(
-            app.buttons["playPauseButton"].waitForExistence(timeout: 5),
+            app.staticTexts["currentTimeReadout"].waitForExistence(timeout: 5),
             "a document window should open within 5 seconds"
         )
 

@@ -162,6 +162,12 @@ struct CueListPane: View {
         // widths, same flexible Name. The resize handles are mounted as
         // non-layout-participating trailing overlays so they do not
         // perturb the intrinsic width of the header (#269).
+        //
+        // The handles intentionally sit fully inside the parent text frame
+        // (no .offset escaping the parent): an overlay whose hit-test
+        // region extends outside its parent confuses NSHostingView min-size
+        // reporting and feeds the NSSplitView constraint-update loop
+        // during outer-divider tracking (#271).
         HStack(spacing: CueListLayout.rowHorizontalSpacing) {
             Text("Time")
                 .frame(width: timeColumnWidth, alignment: .leading)
@@ -170,7 +176,6 @@ struct CueListPane: View {
                         width: timeColumnWidthBinding,
                         range: CueListColumnWidths.timeRange
                     )
-                    .offset(x: 3)
                     .accessibilityIdentifier("cueListTimeColumnResizeHandle")
                 }
             Text("Cue #")
@@ -180,7 +185,6 @@ struct CueListPane: View {
                         width: numberColumnWidthBinding,
                         range: CueListColumnWidths.numberRange
                     )
-                    .offset(x: 3)
                     .accessibilityIdentifier("cueListNumberColumnResizeHandle")
                 }
             Text("Name")

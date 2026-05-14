@@ -34,6 +34,20 @@ struct CueListPane: View {
         CueListColumnWidths.clampNumber(CGFloat(numberColumnWidthRaw))
     }
 
+    private var timeColumnWidthBinding: Binding<CGFloat> {
+        Binding(
+            get: { CueListColumnWidths.clampTime(CGFloat(timeColumnWidthRaw)) },
+            set: { timeColumnWidthRaw = Double(CueListColumnWidths.clampTime($0)) }
+        )
+    }
+
+    private var numberColumnWidthBinding: Binding<CGFloat> {
+        Binding(
+            get: { CueListColumnWidths.clampNumber(CGFloat(numberColumnWidthRaw)) },
+            set: { numberColumnWidthRaw = Double(CueListColumnWidths.clampNumber($0)) }
+        )
+    }
+
     private var cues: [Cue] { document.model.activeItem?.cues ?? [] }
 
     private var selectedCue: Cue? {
@@ -143,11 +157,29 @@ struct CueListPane: View {
     }
 
     private var headerRow: some View {
-        HStack(spacing: CueListLayout.rowHorizontalSpacing) {
-            Text("Time")
-                .frame(width: timeColumnWidth, alignment: .leading)
-            Text("Cue #")
-                .frame(width: numberColumnWidth, alignment: .leading)
+        HStack(spacing: 0) {
+            HStack(spacing: 0) {
+                Text("Time")
+                    .frame(width: timeColumnWidth, alignment: .leading)
+                ColumnResizeHandle(
+                    width: timeColumnWidthBinding,
+                    range: CueListColumnWidths.timeRange
+                )
+                .accessibilityIdentifier("cueListTimeColumnResizeHandle")
+            }
+            .padding(.trailing, CueListLayout.rowHorizontalSpacing - 6)
+
+            HStack(spacing: 0) {
+                Text("Cue #")
+                    .frame(width: numberColumnWidth, alignment: .leading)
+                ColumnResizeHandle(
+                    width: numberColumnWidthBinding,
+                    range: CueListColumnWidths.numberRange
+                )
+                .accessibilityIdentifier("cueListNumberColumnResizeHandle")
+            }
+            .padding(.trailing, CueListLayout.rowHorizontalSpacing - 6)
+
             Text("Name")
                 .frame(maxWidth: .infinity, alignment: .leading)
         }

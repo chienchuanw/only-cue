@@ -9,7 +9,6 @@ struct DocumentView: View {
     @State var pendingAlert: DocumentAlert?
     @State private var seekTask: Task<Void, Never>?
     @State private var showOverlayAppearance = false
-    @State private var showManageTypes = false
     @State var cueSelection: Set<Cue.ID> = []
     @AppStorage(FirstLaunchFlag.key) var didShowFirstLaunch = false
     @AppStorage(NotesOverlayPreferences.storageKey) var overlayPrefsData = NotesOverlayPreferences.defaultEncoded
@@ -57,15 +56,10 @@ struct DocumentView: View {
         .onReceive(NotificationCenter.default.publisher(for: .editNotesOverlayAppearance)) { _ in
             showOverlayAppearance = true
         }
-        .onReceive(NotificationCenter.default.publisher(for: .manageTypesRequested)) { _ in
-            showManageTypes = true
-        }
         .sheet(isPresented: $showOverlayAppearance) {
             NotesOverlayPreferencesSheet(prefs: overlayPrefsBinding)
         }
-        .sheet(isPresented: $showManageTypes) {
-            TypeManagementSheet(document: document)
-        }
+        .manageTypesSheet(document: document)
         .timecodeSettingsSheet(document: document)
         .exportSheet(model: document.model, pendingErrorMessage: pendingAlertMessageBinding)
         .oscServerHost(engine: engine, document: document, undoManager: undoManager)

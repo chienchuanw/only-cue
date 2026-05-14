@@ -54,6 +54,11 @@ struct CueMarkersOverlay: View {
                 }
             }
         }
+        // `.contain` keeps the overlay a queryable element AND lets XCUITest
+        // walk its children — important so individual `cueMarker-<id>` views
+        // surface in the AX tree. Without this, GeometryReader's default
+        // accessibility container collapses children into the overlay.
+        .accessibilityElement(children: .contain)
         .accessibilityIdentifier("cueMarkersOverlay")
     }
 
@@ -224,6 +229,9 @@ struct CueMarkerView: View {
                 .onChanged { value in onDragChanged(value.translation.width) }
                 .onEnded { value in onDragEnded(value.translation.width) }
         )
+        // The parent overlay uses `.accessibilityElement(children: .contain)`
+        // so the marker is queryable by id without needing `.combine` here —
+        // adding `.combine` would create a duplicate AX element wrapper.
         .accessibilityIdentifier("cueMarker-\(cue.id.uuidString)")
     }
 

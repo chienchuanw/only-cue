@@ -17,6 +17,8 @@ struct CueRowView: View {
     @State private var numberError: String?
     @FocusState private var numberFieldFocused: Bool
 
+    @AppStorage("showBPMColumn") private var showBPMColumn = false
+
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
             HStack(spacing: 8) {
@@ -36,6 +38,14 @@ struct CueRowView: View {
                     .accessibilityIdentifier("cueName-\(index)")
 
                 Spacer(minLength: 8)
+
+                if showBPMColumn {
+                    Text(cue.bpm.map { String(Int($0.rounded())) } ?? "")
+                        .font(.system(.caption, design: .monospaced))
+                        .foregroundStyle(cue.bpm == nil ? .tertiary : .secondary)
+                        .frame(width: 36, alignment: .trailing)
+                        .accessibilityIdentifier("cueBPM-\(index)")
+                }
 
                 Text(TimeFormat.hms(cue.time))
                     .font(.system(.caption, design: .monospaced))

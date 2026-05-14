@@ -6,6 +6,7 @@ struct AppCommands: Commands {
     @AppStorage("showNotesOverlay") private var showNotesOverlay = false
     @AppStorage("showTimelineBreakdown") private var showTimelineBreakdown = false
     @AppStorage("showTempoGrid") private var showTempoGrid = false
+    @AppStorage("showBPMColumn") private var showBPMColumn = false
     @AppStorage("pauseAtEachCue") private var pauseAtEachCue = false
     @ObservedObject private var keymapStore = KeymapStore.shared
 
@@ -101,6 +102,8 @@ struct AppCommands: Commands {
 
             Toggle("Show Tempo Grid", isOn: $showTempoGrid)
                 .keyboardShortcut(shortcut(.toggleTempoGrid))
+
+            Toggle("Show BPM Column", isOn: $showBPMColumn)
 
             Toggle("Pause at Each Cue", isOn: $pauseAtEachCue)
                 .keyboardShortcut(shortcut(.togglePauseAtEachCue))

@@ -32,4 +32,26 @@ struct Cue: Codable, Identifiable, Equatable {
         self.bpm = bpm.map { min(max($0, 20), 400) }
         self.beatsPerBar = beatsPerBar.map { max(1, min($0, 16)) }
     }
+
+    /// Route every decode through the clamping init so an out-of-range
+    /// `bpm`/`beatsPerBar` on disk (hand-edited document, future-format leak)
+    /// is normalized rather than silently accepted.
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        self.init(
+            id: try container.decode(UUID.self, forKey: .id),
+            typeID: try container.decode(UUID.self, forKey: .typeID),
+            cueNumber: try container.decodeIfPresent(Double.self, forKey: .cueNumber),
+            name: try container.decode(String.self, forKey: .name),
+            time: try container.decode(TimeInterval.self, forKey: .time),
+            notes: try container.decode(String.self, forKey: .notes),
+            fadeTime: try container.decode(FadeTime.self, forKey: .fadeTime),
+            bpm: try container.decodeIfPresent(Double.self, forKey: .bpm),
+            beatsPerBar: try container.decodeIfPresent(Int.self, forKey: .beatsPerBar)
+        )
+    }
+
+    private enum CodingKeys: String, CodingKey {
+        case id, typeID, cueNumber, name, time, notes, fadeTime, bpm, beatsPerBar
+    }
 }

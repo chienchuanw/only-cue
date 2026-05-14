@@ -38,7 +38,12 @@ extension ProjectModel {
         defaultTypeID: UUID?
     ) -> [Cue] {
         var working = cues
-        for section in sections {
+        // Sort by anchor time so out-of-order legacy input produces deterministic
+        // output. Two sections competing for the same cue resolve by anchor order.
+        let ordered = sections.sorted { lhs, rhs in
+            (lhs.startSeconds + lhs.downbeatOffsetSeconds) < (rhs.startSeconds + rhs.downbeatOffsetSeconds)
+        }
+        for section in ordered {
             let anchor = section.startSeconds + section.downbeatOffsetSeconds
             let tolerance = 60.0 / max(section.bpm, 1)
             if let index = nearestCueIndex(in: working, to: anchor, within: tolerance) {

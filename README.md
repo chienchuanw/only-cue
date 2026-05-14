@@ -104,8 +104,7 @@ The top-level per-`.cuelist` window. A three-pane `NavigationSplitView` with a s
     - **Notes Overlay** (`NotesOverlayView`) — HUD-style cue-notes overlay rendered on top of the preview when `⇧⌘N` is on.
     - **Empty Preview Placeholder** (`DocumentEmptyState`, ID `emptyPreview`) — shown when no media is loaded; clickable.
   - **LTC Strip** (`LTCStrip`) — per-clip timecode ruler with a mute button. Visible only when LTC routing is enabled and a media item is loaded (per-media LTC, epic #231).
-  - **Transport Bar** (`TransportBar`) — play / pause, scrub bar, HH:MM:SS readout, SMPTE readout (when LTC striping is detected on the active media), and prev / next cue buttons.
-  - **Add Cue Button** (ID `addCueButton`) — explicit button below the transport bar; the `m` shortcut also fires this.
+  - **Transport Bar** (`TransportBar`) — single-line HH:MM:SS readout (`current / total`, ID `currentTimeReadout`), an optional `SMPTE …` readout (ID `smpteTimecode`) shown only when LTC output is enabled in Settings, and the `Next:` countdown to the upcoming cue. No visible Play/Pause or Add Cue buttons — both are wired through hidden commands; Space toggles playback and the `.addCue` shortcut adds a cue at the playhead.
 - **Cue Inspector Pane** (`CueListPane`, ID `cueListPane`) — right inspector. A `VSplitView` containing:
   - **Cue List** — filterable list of cues for the active item; rows are `CueRowView`. Includes the optional **BPM Column** (cue-anchored tempo). When no cues exist, shows the **Cue List Empty State**.
   - **Cue Inspector** (`CueInspectorView`) — details for the single selected cue: name, time, fade time, type, cue number, color, notes, and the **Tempo Group** (`CueInspectorView+Tempo`) with BPM / beats-per-bar fields and the Detect button.

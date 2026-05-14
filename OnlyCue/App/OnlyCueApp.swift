@@ -2,6 +2,15 @@ import SwiftUI
 
 @main
 struct OnlyCueApp: App {
+
+    #if DEBUG
+    init() {
+        Task { @MainActor in
+            UITestSeedHandler.openSeededDocumentIfRequested()
+        }
+    }
+    #endif
+
     var body: some Scene {
         DocumentGroup(newDocument: CueListDocument.init) { file in
             DocumentView(document: file.document)

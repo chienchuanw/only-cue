@@ -139,6 +139,13 @@ struct AppCommands: Commands {
         }
 
         CommandMenu("Tools") {
+            Button("Manage Types…") {
+                NotificationCenter.default.post(name: .manageTypesRequested, object: nil)
+            }
+            .accessibilityIdentifier("manageTypesButton")
+
+            Divider()
+
             Button("Edit Note Overlay Appearance…") {
                 NotificationCenter.default.post(name: .editNotesOverlayAppearance, object: nil)
             }

@@ -12,6 +12,10 @@ A native macOS application for lighting designers and show programmers, inspired
     - [Current release](#current-release)
     - [Shipped beyond MVP (on `dev`)](#shipped-beyond-mvp-on-dev)
     - [In progress / next](#in-progress--next)
+  - [UI sections (canonical names)](#ui-sections-canonical-names)
+    - [Document Window](#document-window)
+    - [Auxiliary surfaces](#auxiliary-surfaces)
+    - [Settings tabs](#settings-tabs)
   - [Build](#build)
     - [When to re-run xcodegen / clean the build folder](#when-to-re-run-xcodegen--clean-the-build-folder)
     - [Run tests and lint locally](#run-tests-and-lint-locally)
@@ -71,7 +75,10 @@ System requirements: macOS 14 (Sonoma) or later, Apple silicon or Intel.
 | **Epic [#38](https://github.com/chienchuanw/only-cue/issues/38) — notes overlay** | **In progress.** HUD-style overlay rendering the active cue's notes on top of the preview; Tools-menu appearance sheet customising position, font scale (0.75×–3×), text color, optional solid background, optional cue-number prefix; restore-defaults button. |
 | **Epic [#40](https://github.com/chienchuanw/only-cue/issues/40) — custom keyboard shortcuts** | **Complete.** Settings → Keyboard tab lets you rebind any command — menu items *and* the document-window keys (`m` add cue, `0`–`9` cue-type hotkeys, Space, ←→ jump, ↑↓ step cues) — click a row, press a new chord, Esc cancels; per-row reset-to-default, conflict ⚠︎ (advisory — duplicates allowed), Reset All. The keymap is a sparse, forward-tolerant JSON object under `keymap.v1` (`KeymapStore`); `AppCommands` / `DocumentView` / the on-screen cheat-sheet all read it; defaults equal the prior hardcoded shortcuts (ADR-018). |
 | **Epic [#39](https://github.com/chienchuanw/only-cue/issues/39) — templates** | **Complete.** Save the project's `CuePointType` set as a `.cuelist-template` under `~/Documents/OnlyCue/Templates/`; File → Load Template… merges a template into the open project (append + fresh UUIDs so existing cues' `typeID` references never break — ADR-015); File → New from Template… starts a new document pre-loaded with a template's Type set. |
-| **Stand-alone leaves** | Cue inspector commits drafts on outside-click (window-scoped `NSEvent` monitor); File → Import Media… menu entry with ⌘O (canonical menu owner); ⇧⌘P "pause at each cue" mode; ⇧⌘N notes-overlay toggle; clickable empty-preview placeholder. |
+| **Epic [#231](https://github.com/chienchuanw/only-cue/issues/231) — per-media LTC** | **Complete.** Per-`MediaItem` start timecode and mute flag (schema v10 with deterministic migration from v9); `LTCStrip` rendered in the main pane when LTC routing is enabled, with a per-clip mute control and a timecode ruler; per-media TC editor in the sidebar plus a project-wide Timecode Settings sheet. PRs [#238–#243](https://github.com/chienchuanw/only-cue/pulls?q=is%3Apr+is%3Amerged+238..243). |
+| **Tempo (cue-anchored)** | **Complete.** Tempo is anchored to cues, not stored as a separate map: each `Cue` carries an optional `bpm` and `beatsPerBar`, and `DerivedTempoGrid` derives beat / bar lines from the cue sequence at render time. Per-cue tempo inspector with a "Detect" button (`SpectralFluxTempoAnalyzer` over the audio span up to the next tempo-bearing cue); optional BPM column in the cue list; the standalone TempoMap, Tempo Map sheet, and auto-cue-on-grid menu items were removed in favor of this simpler model. Schema settled at v11 with migrations from v10. Supersedes the earlier `TempoMap` work from epic #199. |
+| **Main-view polish** | **Complete.** Rename to "Only Cue" in the main view, decluttered layout, hi-res waveform (12k peaks), smooth playhead interpolation, click-to-seek anywhere on the waveform, and a fixed playhead time-label clipping bug. PRs #221–#228. |
+| **Stand-alone leaves** | Cue inspector commits drafts on outside-click (window-scoped `NSEvent` monitor); File → Import Media… menu entry with ⌘O (canonical menu owner); ⇧⌘P "pause at each cue" mode; ⇧⌘N notes-overlay toggle; clickable empty-preview placeholder; manual cue numbering (`CueNumberValidator`, schema v8→v9). |
 | **Release pipeline** | Self-serve: `bash scripts/build-release.sh && bash scripts/make-dmg.sh` produces a drag-installable DMG. Default `RELEASE_MODE=unsigned` is free-tier-friendly (ad-hoc signed). `RELEASE_MODE=signed` opt-in for Developer ID + notarization once on a paid Apple Developer Program. Procedure in [`docs/release.md`](docs/release.md). |
 
 ### In progress / next
@@ -80,6 +87,50 @@ System requirements: macOS 14 (Sonoma) or later, Apple silicon or Intel.
 - **Live status** — [`docs/task_plan.md`](docs/task_plan.md) is the source of truth for what's open / in flight.
 - **Append-only history** — [`docs/progress.md`](docs/progress.md) carries the per-PR narrative with rationale for every load-bearing decision.
 - **Issue board** — [github.com/chienchuanw/only-cue/issues](https://github.com/chienchuanw/only-cue/issues).
+
+## UI sections (canonical names)
+
+These are the stable names to use in specs, issues, PRs, design docs, and verification scripts when referring to a part of the UI. The Swift type implementing each section is in parentheses; the accessibility identifier (where one exists) is in `code` so UI tests can target it directly.
+
+### Document Window
+
+The top-level per-`.cuelist` window. A three-pane `NavigationSplitView` with a stacked center column.
+
+- **Media Library Sidebar** (`ItemListPane`) — left column. The list of `MediaItem`s in the project, with drag-reorder, multi-file picker entry, the per-item TC editor row (`MediaTimecodeRow`), and drop targets for new media. Row view: `ItemRowView`.
+- **Main Pane** (`DocumentView.mainPane`) — center column. Stacks the following from top to bottom:
+  - **Preview Pane** (`PreviewPane`, ID `previewPane`) — video surface or audio waveform display.
+    - **Video Surface** (`AVPlayerLayerView`, ID `videoPreview`) — present only when the active item is a video.
+    - **Timeline Strip** — either the **Waveform View** (`WaveformContainer` / `WaveformView`, IDs `videoWaveform` / `audioWaveform`) with cue markers and the draggable **Playhead Overlay** (`PlayheadOverlay`), or the **Timeline Breakdown** (`TimelineBreakdownView`, ID `timelineBreakdownArea`) when `View → Show Timeline Breakdown` is on. The waveform is overlaid by **Cue Markers** (`CueMarkersOverlay`), the **Tempo Grid Overlay** (`TempoGridOverlay`) when enabled, and the **Waveform Zoom Magnifier** (`WaveformZoomMagnifier`) on hover.
+    - **Notes Overlay** (`NotesOverlayView`) — HUD-style cue-notes overlay rendered on top of the preview when `⇧⌘N` is on.
+    - **Empty Preview Placeholder** (`DocumentEmptyState`, ID `emptyPreview`) — shown when no media is loaded; clickable.
+  - **LTC Strip** (`LTCStrip`) — per-clip timecode ruler with a mute button. Visible only when LTC routing is enabled and a media item is loaded (per-media LTC, epic #231).
+  - **Transport Bar** (`TransportBar`) — play / pause, scrub bar, HH:MM:SS readout, SMPTE readout (when LTC striping is detected on the active media), and prev / next cue buttons.
+  - **Add Cue Button** (ID `addCueButton`) — explicit button below the transport bar; the `m` shortcut also fires this.
+- **Cue Inspector Pane** (`CueListPane`, ID `cueListPane`) — right inspector. A `VSplitView` containing:
+  - **Cue List** — filterable list of cues for the active item; rows are `CueRowView`. Includes the optional **BPM Column** (cue-anchored tempo). When no cues exist, shows the **Cue List Empty State**.
+  - **Cue Inspector** (`CueInspectorView`) — details for the single selected cue: name, time, fade time, type, cue number, color, notes, and the **Tempo Group** (`CueInspectorView+Tempo`) with BPM / beats-per-bar fields and the Detect button.
+
+### Auxiliary surfaces
+
+Sheets, panels, and overlays that float over (or replace) the Document Window:
+
+- **First Launch Sheet** (`FirstLaunchSheet`) — one-time welcome.
+- **Export Cues Sheet** (`ExportSheet`, via `ExportSheetPresenter`) — `File → Export Cues…` (`⇧⌘E`).
+- **Timecode Settings Sheet** (`TimecodeSettingsSheet`) — project-wide framerate and start TC.
+- **Type Management Sheet** (`TypeManagementSheet`) — `CuePointType` editor.
+- **Notes Overlay Appearance Sheet** (`NotesOverlayPreferencesSheet`) — overlay position / font / color.
+- **OSC Monitor Sheet** (`OSCMonitorView`) — `Tools → OSC Monitor…`.
+- **Document Shortcut Hints** (`DocumentShortcutHints`) — on-screen cheat-sheet.
+
+### Settings tabs
+
+The app's Settings window (`⌘,`) hosts these tabs as siblings:
+
+- **Audio** (`AudioSettingsView`) — master LTC enable toggle and per-channel role routing.
+- **OSC** (`OSCSettingsView`) — receive-only OSC server enable + listen port.
+- **Keyboard** (`KeyboardSettingsView`) — rebind any command, per-row reset, Reset All.
+
+When adding a new UI surface, give it a canonical name here in the same PR — specs and verification scripts reference these names rather than file paths.
 
 ## Build
 
@@ -127,7 +178,7 @@ Read in this order:
 | UI | SwiftUI (`@Observable`, `DocumentGroup`) |
 | Media | AVFoundation (`AVPlayer`, `AVAssetReader`) |
 | Min OS | macOS 14 (Sonoma) |
-| Project file | `.cuelist` (JSON) |
+| Project file | `.cuelist` (JSON, schema v11) |
 | Distribution | Ad-hoc signed DMG (Developer ID + notarization opt-in) |
 
 ## Reference

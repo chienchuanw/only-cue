@@ -4,6 +4,8 @@ struct CueRowView: View {
 
     let cue: Cue
     var resolvedColorHex: String?
+    var timeColumnWidth: CGFloat = CueListColumnWidths.timeDefault
+    var numberColumnWidth: CGFloat = CueListColumnWidths.numberDefault
     var onRename: (String) -> Void = { _ in }
     var onCommitNumber: (Double?) -> CueNumberValidator.Result = { _ in .ok }
 
@@ -22,11 +24,11 @@ struct CueRowView: View {
                 Text(TimeFormat.hms(cue.time))
                     .font(.system(.body, design: .monospaced))
                     .foregroundStyle(.secondary)
-                    .frame(width: CueListLayout.timeColumnWidth, alignment: .leading)
+                    .frame(width: timeColumnWidth, alignment: .leading)
                     .accessibilityIdentifier("cueTime-\(cue.id)")
 
                 numberCell
-                    .frame(width: CueListLayout.numberColumnWidth, alignment: .leading)
+                    .frame(width: numberColumnWidth, alignment: .leading)
                     .accessibilityIdentifier("cueNumber-\(cue.id)")
 
                 nameField
@@ -37,7 +39,7 @@ struct CueRowView: View {
                 Text(numberError)
                     .font(.caption2)
                     .foregroundStyle(.red)
-                    .padding(.leading, CueListLayout.timeColumnWidth + CueListLayout.rowHorizontalSpacing)
+                    .padding(.leading, timeColumnWidth + CueListLayout.rowHorizontalSpacing)
                     .accessibilityIdentifier("cueNumberError-\(cue.id)")
             }
         }

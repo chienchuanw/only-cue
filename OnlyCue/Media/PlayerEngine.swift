@@ -27,6 +27,15 @@ final class PlayerEngine {
         observeTime()
     }
 
+#if DEBUG
+    /// Test seam — directly sets `currentTime` without an `AVPlayer` round-trip.
+    /// Production code must go through `seek(to:)` instead.
+    func debugSetCurrentTime(_ seconds: TimeInterval) {
+        currentTime = seconds
+        currentTimeObservedAt = CACurrentMediaTime()
+    }
+#endif
+
     deinit {
         if let timeObserver {
             player.removeTimeObserver(timeObserver)

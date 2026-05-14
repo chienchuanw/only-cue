@@ -3,6 +3,7 @@ import SwiftUI
 struct CueInspectorView: View {
 
     @ObservedObject var document: CueListDocument
+    let engine: PlayerEngine
     let cue: Cue?
 
     @Environment(\.undoManager) var undoManager
@@ -22,6 +23,7 @@ struct CueInspectorView: View {
 
     var body: some View {
         VStack(spacing: 8) {
+            InspectorClockHeader(engine: engine)
             Group {
                 if let cue {
                     fields(for: cue)
@@ -34,6 +36,7 @@ struct CueInspectorView: View {
         }
         .padding(12)
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+        .accessibilityElement(children: .contain)
         .accessibilityIdentifier("cueInspector")
     }
 

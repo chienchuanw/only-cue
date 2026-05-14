@@ -27,7 +27,7 @@ final class CueInspectorTempoSnapshotTests: XCTestCase {
     // MARK: - Helpers
 
     private func inspector(for doc: CueListDocument) -> some View {
-        CueInspectorView(document: doc, cue: doc.model.items.first?.cues.first)
+        CueInspectorView(document: doc, engine: PlayerEngine(), cue: doc.model.items.first?.cues.first)
             .frame(width: 280, height: 360)
     }
 

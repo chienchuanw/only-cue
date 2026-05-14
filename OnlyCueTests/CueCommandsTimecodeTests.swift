@@ -116,7 +116,6 @@ final class CueCommandsTimecodeTests: XCTestCase {
             id: UUID(),
             media: MediaReference(displayName: "a.wav", kind: .audio, duration: 10, bookmarkData: Data()),
             cues: [],
-            tempoMap: TempoMap(),
             startTimecodeFrames: 0,
             ltcMuted: false
         )

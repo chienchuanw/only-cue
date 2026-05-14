@@ -36,32 +36,30 @@ final class CueTempoFieldsTests: XCTestCase {
     }
 
     func testCueClampsBPMOnConstruction() {
-        let low = Cue(
-            id: UUID(), typeID: UUID(), cueNumber: nil,
-            name: "", time: 0, notes: "", fadeTime: .zero,
-            bpm: 5
-        )
-        let high = Cue(
-            id: UUID(), typeID: UUID(), cueNumber: nil,
-            name: "", time: 0, notes: "", fadeTime: .zero,
-            bpm: 9999
-        )
+        let low = makeCue(bpm: 5)
+        let high = makeCue(bpm: 9999)
         XCTAssertEqual(low.bpm, 20)
         XCTAssertEqual(high.bpm, 400)
     }
 
     func testCueClampsBeatsPerBarOnConstruction() {
-        let low = Cue(
-            id: UUID(), typeID: UUID(), cueNumber: nil,
-            name: "", time: 0, notes: "", fadeTime: .zero,
-            beatsPerBar: 0
-        )
-        let high = Cue(
-            id: UUID(), typeID: UUID(), cueNumber: nil,
-            name: "", time: 0, notes: "", fadeTime: .zero,
-            beatsPerBar: 99
-        )
+        let low = makeCue(beatsPerBar: 0)
+        let high = makeCue(beatsPerBar: 99)
         XCTAssertEqual(low.beatsPerBar, 1)
         XCTAssertEqual(high.beatsPerBar, 16)
+    }
+
+    private func makeCue(bpm: Double? = nil, beatsPerBar: Int? = nil) -> Cue {
+        Cue(
+            id: UUID(),
+            typeID: UUID(),
+            cueNumber: nil,
+            name: "",
+            time: 0,
+            notes: "",
+            fadeTime: .zero,
+            bpm: bpm,
+            beatsPerBar: beatsPerBar
+        )
     }
 }

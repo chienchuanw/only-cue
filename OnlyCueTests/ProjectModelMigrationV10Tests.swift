@@ -71,7 +71,7 @@ final class ProjectModelMigrationV10Tests: XCTestCase {
     func test_v9ToV10_fansProjectWideOffsetOntoEveryItem() throws {
         let model = try ProjectModel.decode(from: Data(v9FixtureWithProjectOffset.utf8))
 
-        XCTAssertEqual(model.schemaVersion, 10)
+        XCTAssertEqual(model.schemaVersion, 11)
         XCTAssertEqual(model.items.count, 2)
         XCTAssertTrue(model.items.allSatisfy { $0.startTimecodeFrames == 90_000 })
         XCTAssertTrue(model.items.allSatisfy { $0.ltcMuted == false })
@@ -81,7 +81,7 @@ final class ProjectModelMigrationV10Tests: XCTestCase {
     func test_v9ToV10_zeroOffset_yieldsZeroOnEveryItem() throws {
         let model = try ProjectModel.decode(from: Data(v9FixtureWithZeroOffset.utf8))
 
-        XCTAssertEqual(model.schemaVersion, 10)
+        XCTAssertEqual(model.schemaVersion, 11)
         XCTAssertEqual(model.items.first?.startTimecodeFrames, 0)
         XCTAssertEqual(model.items.first?.ltcMuted, false)
     }

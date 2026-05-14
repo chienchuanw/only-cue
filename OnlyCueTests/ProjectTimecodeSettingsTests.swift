@@ -93,7 +93,6 @@ final class ProjectTimecodeSettingsTests: XCTestCase {
                 bookmarkData: Data()
             ),
             cues: [],
-            tempoMap: TempoMap(),
             startTimecodeFrames: startTimecodeFrames,
             ltcMuted: false
         )

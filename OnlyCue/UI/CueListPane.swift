@@ -1,8 +1,6 @@
 import SwiftUI
 
 enum CueListLayout {
-    static let timeColumnWidth: CGFloat = 96
-    static let numberColumnWidth: CGFloat = 56
     static let rowHorizontalSpacing: CGFloat = 8
     static let rowTintOpacity: Double = 0.18
 }
@@ -21,6 +19,20 @@ struct CueListPane: View {
     private var soleSelectedID: Cue.ID? { selection.count == 1 ? selection.first : nil }
 
     @Environment(\.undoManager) private var undoManager
+
+    @AppStorage(CueListColumnWidths.timeStorageKey)
+    private var timeColumnWidthRaw: Double = Double(CueListColumnWidths.timeDefault)
+
+    @AppStorage(CueListColumnWidths.numberStorageKey)
+    private var numberColumnWidthRaw: Double = Double(CueListColumnWidths.numberDefault)
+
+    private var timeColumnWidth: CGFloat {
+        CueListColumnWidths.clampTime(CGFloat(timeColumnWidthRaw))
+    }
+
+    private var numberColumnWidth: CGFloat {
+        CueListColumnWidths.clampNumber(CGFloat(numberColumnWidthRaw))
+    }
 
     private var cues: [Cue] { document.model.activeItem?.cues ?? [] }
 
@@ -133,9 +145,9 @@ struct CueListPane: View {
     private var headerRow: some View {
         HStack(spacing: CueListLayout.rowHorizontalSpacing) {
             Text("Time")
-                .frame(width: CueListLayout.timeColumnWidth, alignment: .leading)
+                .frame(width: timeColumnWidth, alignment: .leading)
             Text("Cue #")
-                .frame(width: CueListLayout.numberColumnWidth, alignment: .leading)
+                .frame(width: numberColumnWidth, alignment: .leading)
             Text("Name")
                 .frame(maxWidth: .infinity, alignment: .leading)
         }
@@ -161,6 +173,8 @@ struct CueListPane: View {
                     CueRowView(
                         cue: cue,
                         resolvedColorHex: document.model.colorHex(for: cue),
+                        timeColumnWidth: timeColumnWidth,
+                        numberColumnWidth: numberColumnWidth,
                         onRename: { newName in
                             CueCommands.rename(cueId: cue.id, to: newName, document: document, undoManager: undoManager)
                         },

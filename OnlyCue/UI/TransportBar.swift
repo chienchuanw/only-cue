@@ -40,19 +40,6 @@ struct TransportBar: View {
             .map { $0 - currentTime }
     }
 
-    /// Mirror of `nextCueInterval`: time elapsed since the most recent cue at
-    /// `time <= currentTime`. Inclusive `<=` so a cue exactly at `currentTime`
-    /// reads as "Last: 0.0s" (operator just hit it). Returns nil when no past
-    /// cue exists. Like the forward helper, doesn't assume sortedness — `max()`
-    /// picks the most recent regardless of input order.
-    static func lastCueElapsed(currentTime: TimeInterval, cues: [Cue]) -> TimeInterval? {
-        cues
-            .map(\.time)
-            .filter { $0 <= currentTime }
-            .max()
-            .map { currentTime - $0 }
-    }
-
     /// The SMPTE timecode at the playhead — the active file's striped LTC when
     /// it has any, otherwise derived from the project settings + active item's
     /// `startTimecodeFrames` (or `00:00:00:00` when no item is loaded).
@@ -86,13 +73,6 @@ struct TransportBar: View {
                     .foregroundStyle(.secondary)
                     .accessibilityIdentifier("smpteTimecode")
                     .help(smpteReadoutHelp)
-            }
-
-            if let interval = Self.lastCueElapsed(currentTime: engine.currentTime, cues: cues) {
-                Text("Last: \(TimeFormat.compactCountdown(interval))")
-                    .font(.system(.body, design: .monospaced))
-                    .foregroundStyle(.secondary)
-                    .accessibilityIdentifier("lastCueElapsed")
             }
 
             if let interval = Self.nextCueInterval(currentTime: engine.currentTime, cues: cues) {

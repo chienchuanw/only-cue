@@ -67,7 +67,16 @@ struct ItemListPane: View {
     private var selectionBinding: Binding<MediaItem.ID?> {
         Binding(
             get: { document.model.activeItemID },
-            set: { newID in CueCommands.setActiveItem(id: newID, in: document) }
+            set: { newID in
+                // SwiftUI's List writes the selection binding from inside the
+                // view-update pass; mutating the @Published activeItemID
+                // synchronously here triggers the "Publishing changes from
+                // within view updates" runtime warning. Defer to the next
+                // runloop tick to escape the update pass.
+                DispatchQueue.main.async {
+                    CueCommands.setActiveItem(id: newID, in: document)
+                }
+            }
         )
     }
 

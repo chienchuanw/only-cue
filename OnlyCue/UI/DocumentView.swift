@@ -91,11 +91,6 @@ struct DocumentView: View {
             )
                 .padding(.top, 4)
 
-            Button("Add Cue") { addCueAtPlayhead() }
-                .accessibilityIdentifier("addCueButton")
-                .keyboardShortcut(shortcut(.addCue))
-                .disabled(activeItem == nil)
-
             transportShortcuts
             digitShortcuts
             playheadStepShortcuts
@@ -215,6 +210,9 @@ struct DocumentView: View {
                 .keyboardShortcut(shortcut(.jumpBack))
             Button("Forward 1s") { jump(by: 1) }
                 .keyboardShortcut(shortcut(.jumpForward))
+            Button("Add Cue") { addCueAtPlayhead() }
+                .keyboardShortcut(shortcut(.addCue))
+                .disabled(document.model.activeItem == nil)
         }
         .frame(width: 0, height: 0)
         .opacity(0)

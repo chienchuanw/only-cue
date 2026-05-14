@@ -7,12 +7,28 @@ struct CueMarkersOverlay: View {
     let duration: TimeInterval
     var resolveColorHex: (Cue) -> String? = { _ in nil }
     var selectedCueIDs: Set<Cue.ID> = []
+    var tempoGrid: DerivedTempoGrid = DerivedTempoGrid(segments: [])
     /// Plain marker click → replace the selection with this cue.
     var onSelectCue: (Cue.ID) -> Void = { _ in }
     /// ⌘- (or ⇧-) marker click → toggle this cue in/out of the selection.
     var onToggleCue: (Cue.ID) -> Void = { _ in }
     var onSeek: (TimeInterval) -> Void = { _ in }
     var onRetime: (Cue.ID, TimeInterval) -> Void = { _, _ in }
+    /// Rigid shift of every cue in the set by the same Δt (clamped at 0 per cue),
+    /// committed as a single undo entry. Used by group drag.
+    var onNudge: (Set<Cue.ID>, TimeInterval) -> Void = { _, _ in }
+
+    @State private var activeDrag: ActiveDrag? = nil
+
+    fileprivate struct ActiveDrag: Equatable {
+        let grabbedID: Cue.ID
+        let movingIDs: Set<Cue.ID>
+        let isGroup: Bool
+        var dxRaw: CGFloat
+        var dxApplied: CGFloat
+    }
+
+    private static let dragThreshold: CGFloat = 4
 
     var body: some View {
         GeometryReader { geometry in
@@ -27,18 +43,12 @@ struct CueMarkersOverlay: View {
                             duration: duration
                         ),
                         isSelected: selectedCueIDs.contains(cue.id),
-                        onSelect: { extending in
-                            if extending { onToggleCue(cue.id) } else { onSelectCue(cue.id) }
+                        visualOffset: visualOffset(for: cue.id),
+                        onDragChanged: { translationWidth in
+                            handleDragChanged(grabbedID: cue.id, translationWidth: translationWidth, width: geometry.size.width)
                         },
-                        onSeek: { onSeek(cue.time) },
-                        onRetimeBy: { dx in
-                            let newTime = CueMarkersGeometry.time(
-                                originalTime: cue.time,
-                                dx: dx,
-                                width: geometry.size.width,
-                                duration: duration
-                            )
-                            onRetime(cue.id, newTime)
+                        onDragEnded: { translationWidth in
+                            handleDragEnded(grabbedID: cue.id, translationWidth: translationWidth, width: geometry.size.width)
                         }
                     )
                 }
@@ -46,13 +56,104 @@ struct CueMarkersOverlay: View {
         }
         .accessibilityIdentifier("cueMarkersOverlay")
     }
+
+    private func visualOffset(for id: Cue.ID) -> CGFloat {
+        guard let drag = activeDrag, drag.movingIDs.contains(id) else { return 0 }
+        return drag.dxApplied
+    }
+
+    private func cue(for id: Cue.ID) -> Cue? {
+        cues.first(where: { $0.id == id })
+    }
+
+    private func handleDragChanged(grabbedID: Cue.ID, translationWidth: CGFloat, width: CGFloat) {
+        if activeDrag == nil {
+            let isGroup = selectedCueIDs.contains(grabbedID) && selectedCueIDs.count >= 2
+            let moving: Set<Cue.ID>
+            if isGroup {
+                moving = selectedCueIDs
+            } else {
+                // Solo drag of an unselected marker while a multi-selection exists:
+                // replace selection with just this cue, mirroring plain-click.
+                if !selectedCueIDs.contains(grabbedID) && selectedCueIDs.count >= 2 {
+                    onSelectCue(grabbedID)
+                }
+                moving = [grabbedID]
+            }
+            activeDrag = ActiveDrag(
+                grabbedID: grabbedID,
+                movingIDs: moving,
+                isGroup: isGroup,
+                dxRaw: translationWidth,
+                dxApplied: translationWidth
+            )
+        }
+        guard var drag = activeDrag else { return }
+        drag.dxRaw = translationWidth
+        drag.dxApplied = applySnap(dxRaw: translationWidth, grabbedID: drag.grabbedID, width: width)
+        activeDrag = drag
+    }
+
+    private func handleDragEnded(grabbedID: Cue.ID, translationWidth: CGFloat, width: CGFloat) {
+        defer { activeDrag = nil }
+        guard let drag = activeDrag, drag.grabbedID == grabbedID else {
+            // Gesture ended without onChanged (shouldn't happen with minimumDistance:0);
+            // treat as tap.
+            handleTap(grabbedID: grabbedID)
+            return
+        }
+        let dxFinal = applySnap(dxRaw: translationWidth, grabbedID: grabbedID, width: width)
+        if abs(dxFinal) < Self.dragThreshold {
+            handleTap(grabbedID: grabbedID)
+            return
+        }
+        guard let grabbed = cue(for: grabbedID) else { return }
+        let newTime = CueMarkersGeometry.time(
+            originalTime: grabbed.time,
+            dx: dxFinal,
+            width: width,
+            duration: duration
+        )
+        let deltaT = newTime - grabbed.time
+        if drag.isGroup {
+            onNudge(drag.movingIDs, deltaT)
+        } else {
+            onRetime(grabbedID, newTime)
+        }
+    }
+
+    private func handleTap(grabbedID: Cue.ID) {
+        let modifiers = NSEvent.modifierFlags
+        let extending = modifiers.contains(.command) || modifiers.contains(.shift)
+        if extending {
+            onToggleCue(grabbedID)
+        } else {
+            onSelectCue(grabbedID)
+            if let c = cue(for: grabbedID) {
+                onSeek(c.time)
+            }
+        }
+    }
+
+    private func applySnap(dxRaw: CGFloat, grabbedID: Cue.ID, width: CGFloat) -> CGFloat {
+        // Shift held + tempo grid available → snap anchor (grabbed cue) to nearest beat.
+        guard NSEvent.modifierFlags.contains(.shift),
+              !tempoGrid.isEmpty,
+              let anchor = cue(for: grabbedID) else {
+            return dxRaw
+        }
+        return CueMarkersGeometry.snapDeltaToBeat(
+            dxPixels: dxRaw,
+            anchorTime: anchor.time,
+            grid: tempoGrid,
+            width: width,
+            duration: duration
+        )
+    }
 }
 
 struct CueMarkerView: View {
 
-    /// Layout dimensions for the marker line + cap. Selected markers emphasize via
-    /// thicker line and larger cap; the type color (`markerColor`) is unchanged so
-    /// the cue's CuePointType identity is preserved on selection.
     struct MarkerStyle: Equatable {
         let lineWidth: CGFloat
         let capWidth: CGFloat
@@ -70,15 +171,11 @@ struct CueMarkerView: View {
     var resolvedColorHex: String?
     let baseX: CGFloat
     var isSelected: Bool = false
-    /// `true` when ⌘ or ⇧ was held during the click (extend the selection vs. replace it).
-    var onSelect: (_ extending: Bool) -> Void = { _ in }
-    var onSeek: () -> Void = {}
-    var onRetimeBy: (CGFloat) -> Void = { _ in }
-
-    @State private var dragOffset: CGFloat = 0
+    var visualOffset: CGFloat = 0
+    var onDragChanged: (_ translationWidth: CGFloat) -> Void = { _ in }
+    var onDragEnded: (_ translationWidth: CGFloat) -> Void = { _ in }
 
     private static let hitWidth: CGFloat = 14
-    private static let dragThreshold: CGFloat = 4
     private static let labelGap: CGFloat = 1
 
     private var style: MarkerStyle { MarkerStyle.style(isSelected: isSelected) }
@@ -96,6 +193,13 @@ struct CueMarkerView: View {
                 Capsule()
                     .fill(.clear)
                     .frame(width: Self.hitWidth)
+                    .onHover { inside in
+                        if inside {
+                            NSCursor.resizeLeftRight.push()
+                        } else {
+                            NSCursor.pop()
+                        }
+                    }
                 Rectangle()
                     .fill(markerColor)
                     .frame(width: style.lineWidth)
@@ -105,44 +209,18 @@ struct CueMarkerView: View {
                     .frame(width: style.capWidth, height: style.capHeight)
             }
         }
-        // Pin the layout column to hitWidth so wide cueNumber labels (e.g. "99.5",
-        // "100") don't expand the VStack and pull the line off baseX. The label's
-        // `.fixedSize()` lets it overflow visually around the column's center while
-        // the line stays anchored at the cue's exact time.
         .frame(width: Self.hitWidth)
-        .offset(x: baseX + dragOffset - Self.hitWidth / 2)
-        // Gesture intentionally on the VStack (not the inner ZStack) so clicking
-        // anywhere — line, cap, label, or hit-capsule — drags or seeks the marker.
-        .gesture(dragOrTapGesture)
+        .offset(x: baseX + visualOffset - Self.hitWidth / 2)
+        .gesture(
+            DragGesture(minimumDistance: 0)
+                .onChanged { value in onDragChanged(value.translation.width) }
+                .onEnded { value in onDragEnded(value.translation.width) }
+        )
         .accessibilityIdentifier("cueMarker-\(cue.id.uuidString)")
     }
 
     private var markerColor: Color {
         guard let hex = resolvedColorHex else { return .accentColor }
         return Color(hex: hex) ?? .accentColor
-    }
-
-    private var dragOrTapGesture: some Gesture {
-        DragGesture(minimumDistance: 0)
-            .onChanged { value in
-                dragOffset = value.translation.width
-            }
-            .onEnded { value in
-                let dx = value.translation.width
-                if abs(dx) < Self.dragThreshold {
-                    // Select first so the cue list highlight + inspector update
-                    // land before the seek; engine.seek is idempotent so the
-                    // CueListPane.onChange(of: selection) seek that follows is
-                    // a redundant no-op against the same target time. ⌘/⇧ extends
-                    // the selection instead of replacing it (no seek then).
-                    let modifiers = NSEvent.modifierFlags
-                    let extending = modifiers.contains(.command) || modifiers.contains(.shift)
-                    onSelect(extending)
-                    if !extending { onSeek() }
-                } else {
-                    onRetimeBy(dx)
-                }
-                dragOffset = 0
-            }
     }
 }

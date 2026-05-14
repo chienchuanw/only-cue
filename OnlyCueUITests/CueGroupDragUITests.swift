@@ -50,6 +50,27 @@ final class CueGroupDragUITests: XCTestCase {
         XCTAssertEqual(markerElements.count, 3, "Seeded document should render exactly three markers (unique by id).")
     }
 
+    /// Verifies the #264 fix: cue rows can be interacted with via
+    /// coordinate-based taps even though XCUITest's standard hit-test lands
+    /// on the enclosing ScrollView. Before the fix, the first click line
+    /// below would fail with "Unable to find hit point for ScrollView".
+    func test_rowClick_succeedsViaCoordinateTap() throws {
+        let app = launchWithSeed(.threeCuesAt1And3And6)
+        defer { app.terminate() }
+
+        _ = try Self.waitForMarkers(in: app, count: 3)
+        let rows = Self.sortedCueRows(in: app)
+        XCTAssertEqual(rows.count, 3)
+
+        // The mere fact that `clickRow` returns without throwing a hit-test
+        // error is the #264 contract. SwiftUI List's `isSelected` doesn't
+        // surface reliably through the row's AX wrapper, so we don't assert
+        // selection state — that's a separate concern.
+        Self.clickRow(rows[0])
+        Self.clickRow(rows[1])
+        Self.clickRow(rows[2])
+    }
+
     // MARK: - Scenarios
 
     /// Scenario: Group drag shifts all selected cues rigidly
@@ -59,9 +80,9 @@ final class CueGroupDragUITests: XCTestCase {
     /// And the undo stack has one entry (single ⌘Z restores everything)
     func test_groupDrag_shiftsAllSelectedCuesRigidly() throws {
         throw XCTSkip(
-            "Pending follow-up: cueRow elements are nested in an unhittable ScrollView in the AX tree, " +
-            "so XCUITest can't click rows to build the selection. " +
-            "Underlying behavior is covered by CueMarkersOverlayDispatchTests + CueMarkersGeometryTests."
+            "Row-click is now coordinate-based (#264 fix), but XCUITest's " +
+            "synthesised press-and-drag doesn't reach SwiftUI's DragGesture " +
+            "on macOS — cues never move. Tracked in #273."
         )
         let app = launchWithSeed(.threeCuesAt1And3And6)
         defer { app.terminate() }
@@ -70,11 +91,14 @@ final class CueGroupDragUITests: XCTestCase {
         let rows = Self.sortedCueRows(in: app)
         XCTAssertEqual(rows.count, 3)
 
-        // ⌘A on the first row to select all three cues.
-        rows[0].click()
-        rows[0].typeKey("a", modifierFlags: .command)
+        // Click row 0 first to give the cue list keyboard focus, then send
+        // ⌘A to the app (typing on the row element doesn't propagate to the
+        // List's selection logic). Coordinate click bypasses the hit-test
+        // chain that lands on the enclosing ScrollView.
+        Self.clickRow(rows[0])
+        app.typeKey("a", modifierFlags: .command)
 
-        let start = markers[1].coordinate(withNormalizedOffset: .init(dx: 0.5, dy: 0.5))
+        let start = Self.markerHitCoordinate(markers[1])
         let end = start.withOffset(.init(dx: 80, dy: 0))
         start.press(forDuration: 0.1, thenDragTo: end)
 
@@ -98,8 +122,8 @@ final class CueGroupDragUITests: XCTestCase {
     /// And the selection is exactly { cue at moved-time }
     func test_dragUnselectedMarker_replacesSelectionAndMovesSolo() throws {
         throw XCTSkip(
-            "Pending follow-up: see test_groupDrag_shiftsAllSelectedCuesRigidly " +
-            "for the same AX/ScrollView blocker."
+            "Same XCUITest/SwiftUI drag-synthesis blocker (#273) as " +
+            "test_groupDrag_shiftsAllSelectedCuesRigidly."
         )
         let app = launchWithSeed(.threeCuesAt1And3And6)
         defer { app.terminate() }
@@ -109,12 +133,12 @@ final class CueGroupDragUITests: XCTestCase {
         XCTAssertEqual(rows.count, 3)
 
         // Build the multi-selection: click row 0, ⌘-click row 1.
-        rows[0].click()
+        Self.clickRow(rows[0])
         XCUIElement.perform(withKeyModifiers: .command) {
-            rows[1].click()
+            Self.clickRow(rows[1])
         }
 
-        let start = markers[2].coordinate(withNormalizedOffset: .init(dx: 0.5, dy: 0.5))
+        let start = Self.markerHitCoordinate(markers[2])
         let end = start.withOffset(.init(dx: 40, dy: 0))
         start.press(forDuration: 0.1, thenDragTo: end)
 
@@ -133,8 +157,8 @@ final class CueGroupDragUITests: XCTestCase {
     /// Then on release the cue's time is exactly on a beat (within tolerance)
     func test_shiftDrag_snapsAnchorToNearestBeat() throws {
         throw XCTSkip(
-            "Pending follow-up: see test_groupDrag_shiftsAllSelectedCuesRigidly " +
-            "for the same AX/ScrollView blocker."
+            "Same XCUITest/SwiftUI drag-synthesis blocker (#273) as " +
+            "test_groupDrag_shiftsAllSelectedCuesRigidly."
         )
         let app = launchWithSeed(.threeCuesAt1And3And6With120BPM)
         defer { app.terminate() }
@@ -148,7 +172,7 @@ final class CueGroupDragUITests: XCTestCase {
         let originalTime: TimeInterval = 1.0
 
         XCUIElement.perform(withKeyModifiers: .shift) {
-            let start = markers[targetIndex].coordinate(withNormalizedOffset: .init(dx: 0.5, dy: 0.5))
+            let start = Self.markerHitCoordinate(markers[targetIndex])
             let end = start.withOffset(.init(dx: 30, dy: 0))
             start.press(forDuration: 0.1, thenDragTo: end)
         }
@@ -235,6 +259,23 @@ final class CueGroupDragUITests: XCTestCase {
 
     /// Cue rows sorted by their x-coordinate (left-to-right inside the cue list).
     /// Same de-dup approach as `sortedMarkers`.
+    /// Clicks a cue row via its coordinate center, bypassing the standard
+    /// hit-test that would otherwise fail with "Unable to find hit point for
+    /// ScrollView" — the row's `accessibilityIdentifier` surfaces on a
+    /// SwiftUI wrapper whose hit-test chain terminates at the enclosing
+    /// `ScrollView` rather than the row. Coordinate clicks talk to the
+    /// AppKit window directly.
+    static func clickRow(_ row: XCUIElement) {
+        row.coordinate(withNormalizedOffset: .init(dx: 0.5, dy: 0.5)).click()
+    }
+
+    /// The marker's AX frame spans the full vertical column (label + line +
+    /// cap, ~516 px tall). Targeting the center misses the actual gesture
+    /// receiver, which is the top hit-capsule. Aim near the top.
+    static func markerHitCoordinate(_ marker: XCUIElement) -> XCUICoordinate {
+        marker.coordinate(withNormalizedOffset: .init(dx: 0.5, dy: 0.05))
+    }
+
     static func sortedCueRows(in app: XCUIApplication) -> [XCUIElement] {
         let window = seedWindow(in: app) ?? app.windows.firstMatch
         let elements = window.descendants(matching: .any).matching(
@@ -243,15 +284,15 @@ final class CueGroupDragUITests: XCTestCase {
         return Self.dedupedByIdentifier(elements).sorted { $0.frame.minY < $1.frame.minY }
     }
 
-    /// Reads the cue time off each row's `cueTime-<id>` Text — its label is the
-    /// `TimeFormat.hms(cue.time)` formatted string `H:MM:SS.mmm`.
+    /// Reads cue times off each row's AX value. SwiftUI publishes the row
+    /// identifier on TWO AX nodes per row (first carries the time `value`,
+    /// second carries the name `value`); `sortedCueRows` keeps the first
+    /// occurrence per id, so `.value` gives us the time string directly.
+    /// Child `cueTime-<id>` identifiers don't surface — see #264.
     static func cueTimes(rows: [XCUIElement]) -> [TimeInterval] {
         rows.map { row in
-            let id = String(row.identifier.dropFirst("cueRow-".count))
-            let timeLabel = row.descendants(matching: .any)
-                .matching(identifier: "cueTime-\(id)")
-                .firstMatch.label
-            return parseSeconds(fromAccessibilityLabel: timeLabel)
+            guard let value = row.value as? String else { return .nan }
+            return parseSeconds(fromAccessibilityLabel: value)
         }
     }
 

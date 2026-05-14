@@ -19,7 +19,7 @@ final class DocumentLaunchTests: XCTestCase {
         app.typeKey("n", modifierFlags: .command)
 
         XCTAssertTrue(
-            app.buttons["playPauseButton"].waitForExistence(timeout: 10),
+            app.staticTexts["currentTimeReadout"].waitForExistence(timeout: 10),
             "document window should open within 10s of ⌘N"
         )
         XCTAssertTrue(

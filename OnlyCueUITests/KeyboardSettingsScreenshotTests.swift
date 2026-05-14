@@ -20,8 +20,8 @@ final class KeyboardSettingsScreenshotTests: XCTestCase {
         app.launch()
         app.typeKey("n", modifierFlags: .command)
         XCTAssertTrue(
-            app.buttons["playPauseButton"].waitForExistence(timeout: 5),
-            "playPauseButton should appear within 5 seconds of opening a document"
+            app.staticTexts["currentTimeReadout"].waitForExistence(timeout: 5),
+            "currentTimeReadout should appear within 5 seconds of opening a document"
         )
 
         let windowsBefore = app.windows.count

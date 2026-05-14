@@ -16,7 +16,7 @@ final class MainViewDeclutterUITests: XCTestCase {
 
         // Sanity: the document window opened (TransportBar renders in both states).
         XCTAssertTrue(
-            app.buttons["playPauseButton"].waitForExistence(timeout: 10),
+            app.staticTexts["currentTimeReadout"].waitForExistence(timeout: 10),
             "document window should open within 10s of ⌘N"
         )
 

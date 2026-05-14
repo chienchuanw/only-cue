@@ -65,4 +65,65 @@ final class CueMarkersGeometryTests: XCTestCase {
         let roundTrip = CueMarkersGeometry.time(forX: position, width: 240, duration: 12)
         XCTAssertEqual(roundTrip, 3.3, accuracy: 1e-6)
     }
+
+    // MARK: - snapDeltaToBeat
+
+    func test_snapDeltaToBeat_snapsAnchorToNearestBeat() {
+        // 120 BPM => beats every 0.5s. Anchor at 1.0s. width=200px, duration=10s
+        // => 20 px/s. Raw dx=+12px => proposed anchor time = 1.6s.
+        // Nearest beat in [1.0, 1.5, 2.0, ...] is 1.5s. Adjusted dx = (1.5-1.0)*20 = +10px.
+        let grid = DerivedTempoGrid(segments: [
+            .init(startSeconds: 0, bpm: 120, beatsPerBar: 4)
+        ])
+        let adjusted = CueMarkersGeometry.snapDeltaToBeat(
+            dxPixels: 12,
+            anchorTime: 1.0,
+            grid: grid,
+            width: 200,
+            duration: 10
+        )
+        XCTAssertEqual(adjusted, 10, accuracy: 0.001)
+    }
+
+    func test_snapDeltaToBeat_negativeDelta_snapsBackward() {
+        // Same 120 BPM grid. Anchor at 2.0s. Raw dx=-6px => proposed = 1.7s.
+        // Nearest beat is 1.5s. Adjusted dx = (1.5-2.0)*20 = -10px.
+        let grid = DerivedTempoGrid(segments: [
+            .init(startSeconds: 0, bpm: 120, beatsPerBar: 4)
+        ])
+        let adjusted = CueMarkersGeometry.snapDeltaToBeat(
+            dxPixels: -6,
+            anchorTime: 2.0,
+            grid: grid,
+            width: 200,
+            duration: 10
+        )
+        XCTAssertEqual(adjusted, -10, accuracy: 0.001)
+    }
+
+    func test_snapDeltaToBeat_emptyGrid_returnsDxUnchanged() {
+        let grid = DerivedTempoGrid(segments: [])
+        let adjusted = CueMarkersGeometry.snapDeltaToBeat(
+            dxPixels: 17,
+            anchorTime: 2.0,
+            grid: grid,
+            width: 200,
+            duration: 10
+        )
+        XCTAssertEqual(adjusted, 17, accuracy: 0.001)
+    }
+
+    func test_snapDeltaToBeat_zeroWidth_returnsDxUnchanged() {
+        let grid = DerivedTempoGrid(segments: [
+            .init(startSeconds: 0, bpm: 120, beatsPerBar: 4)
+        ])
+        let adjusted = CueMarkersGeometry.snapDeltaToBeat(
+            dxPixels: 17,
+            anchorTime: 2.0,
+            grid: grid,
+            width: 0,
+            duration: 10
+        )
+        XCTAssertEqual(adjusted, 17, accuracy: 0.001)
+    }
 }

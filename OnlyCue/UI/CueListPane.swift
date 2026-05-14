@@ -157,29 +157,32 @@ struct CueListPane: View {
     }
 
     private var headerRow: some View {
-        HStack(spacing: 0) {
-            HStack(spacing: 0) {
-                Text("Time")
-                    .frame(width: timeColumnWidth, alignment: .leading)
-                ColumnResizeHandle(
-                    width: timeColumnWidthBinding,
-                    range: CueListColumnWidths.timeRange
-                )
-                .accessibilityIdentifier("cueListTimeColumnResizeHandle")
-            }
-            .padding(.trailing, CueListLayout.rowHorizontalSpacing - 6)
-
-            HStack(spacing: 0) {
-                Text("Cue #")
-                    .frame(width: numberColumnWidth, alignment: .leading)
-                ColumnResizeHandle(
-                    width: numberColumnWidthBinding,
-                    range: CueListColumnWidths.numberRange
-                )
-                .accessibilityIdentifier("cueListNumberColumnResizeHandle")
-            }
-            .padding(.trailing, CueListLayout.rowHorizontalSpacing - 6)
-
+        // Keep the header's layout identical to CueRowView so the columns
+        // line up exactly: same HStack spacing, same fixed Time/Number
+        // widths, same flexible Name. The resize handles are mounted as
+        // non-layout-participating trailing overlays so they do not
+        // perturb the intrinsic width of the header (#269).
+        HStack(spacing: CueListLayout.rowHorizontalSpacing) {
+            Text("Time")
+                .frame(width: timeColumnWidth, alignment: .leading)
+                .overlay(alignment: .trailing) {
+                    ColumnResizeHandle(
+                        width: timeColumnWidthBinding,
+                        range: CueListColumnWidths.timeRange
+                    )
+                    .offset(x: 3)
+                    .accessibilityIdentifier("cueListTimeColumnResizeHandle")
+                }
+            Text("Cue #")
+                .frame(width: numberColumnWidth, alignment: .leading)
+                .overlay(alignment: .trailing) {
+                    ColumnResizeHandle(
+                        width: numberColumnWidthBinding,
+                        range: CueListColumnWidths.numberRange
+                    )
+                    .offset(x: 3)
+                    .accessibilityIdentifier("cueListNumberColumnResizeHandle")
+                }
             Text("Name")
                 .frame(maxWidth: .infinity, alignment: .leading)
         }

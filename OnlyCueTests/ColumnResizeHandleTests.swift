@@ -44,4 +44,31 @@ final class ColumnResizeHandleTests: XCTestCase {
             90
         )
     }
+
+    /// Regression for #269: writing to the binding on every drag tick even
+    /// when the value is unchanged triggers @AppStorage notifications that
+    /// feed into NSSplitView layout invalidation. The drag handler must
+    /// skip no-op writes so a zero-translation gesture activation cannot
+    /// drive constraint-update recursion.
+    func test_writeIfChanged_skipsWhenValueEqual() {
+        var writes = 0
+        let binding = Binding<CGFloat>(
+            get: { 100 },
+            set: { _ in writes += 1 }
+        )
+        ColumnResizeHandle.writeIfChanged(binding, to: 100)
+        XCTAssertEqual(writes, 0, "Equal values must not invoke the setter")
+    }
+
+    func test_writeIfChanged_writesWhenValueDiffers() {
+        var stored: CGFloat = 100
+        var writes = 0
+        let binding = Binding<CGFloat>(
+            get: { stored },
+            set: { stored = $0; writes += 1 }
+        )
+        ColumnResizeHandle.writeIfChanged(binding, to: 120)
+        XCTAssertEqual(writes, 1)
+        XCTAssertEqual(stored, 120)
+    }
 }

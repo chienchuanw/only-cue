@@ -10,6 +10,23 @@ struct MediaItem: Codable, Identifiable, Equatable {
     /// Persistent per-clip silence flag for the LTC output channel. Encoder
     /// keeps running; only the LTC channel's samples are zeroed when set.
     var ltcMuted: Bool = false
+    /// Per-clip user-facing display override. nil/empty/whitespace falls back
+    /// to `media.displayName` (the file basename). v12.
+    var alternateName: String? = nil
+}
+
+extension MediaItem {
+    /// User-facing name for this clip. Returns the trimmed `alternateName` when
+    /// set to a non-empty string, otherwise falls back to the file basename in
+    /// `media.displayName`. Use everywhere the clip's name is shown to the
+    /// user; keep `media.displayName` for file-system lookups.
+    var resolvedName: String {
+        if let trimmed = alternateName?.trimmingCharacters(in: .whitespacesAndNewlines),
+           !trimmed.isEmpty {
+            return trimmed
+        }
+        return media.displayName
+    }
 }
 
 extension MediaItem {

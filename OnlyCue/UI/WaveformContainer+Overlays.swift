@@ -7,11 +7,11 @@ import SwiftUI
 extension WaveformContainer {
 
     /// The beat/bar grid behind the cue markers — shown only when the toggle is on,
-    /// the audio's duration is known, and the active item actually has a tempo map.
+    /// the audio's duration is known, and the active item actually has BPM cues.
     @ViewBuilder
     func tempoGridOverlay() -> some View {
-        if showTempoGrid, loadedDuration > 0, !tempoMap.sections.isEmpty {
-            TempoGridOverlay(tempoMap: tempoMap, duration: loadedDuration)
+        if showTempoGrid, loadedDuration > 0, !tempoGrid.isEmpty {
+            TempoGridOverlay(grid: tempoGrid, duration: loadedDuration)
         }
     }
 

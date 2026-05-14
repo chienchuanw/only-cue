@@ -16,7 +16,6 @@ struct CueInspectorView: View {
     @State var beatsPerBarDraft = ""
     @State var detectingCueID: Cue.ID?
     @State var detectMessage: String?
-    @State private var showTypesSheet = false
     @FocusState private var focused: Field?
 
     private enum Field: Hashable { case name, number, fade, notes, bpm, beatsPerBar }
@@ -32,19 +31,10 @@ struct CueInspectorView: View {
                 }
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
-
-            Divider()
-
-            Button("Manage Types…") { showTypesSheet = true }
-                .accessibilityIdentifier("manageTypesButton")
-                .frame(maxWidth: .infinity)
         }
         .padding(12)
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
         .accessibilityIdentifier("cueInspector")
-        .sheet(isPresented: $showTypesSheet) {
-            TypeManagementSheet(document: document)
-        }
     }
 
     private var emptyState: some View {

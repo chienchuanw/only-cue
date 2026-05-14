@@ -56,16 +56,4 @@ extension CueCommands {
             .sorted { $0.time < $1.time }
     }
 
-    /// Removed in v11 (#245). The notification receivers in `CueListPane` still
-    /// reference this entry point until #248 deletes those wires; the body is
-    /// a deliberate no-op so the build stays green.
-    static func addCuesOnGrid(
-        in range: ClosedRange<TimeInterval>,
-        every resolution: GridResolution,
-        type typeID: CuePointType.ID?,
-        document: CueListDocument,
-        undoManager: UndoManager?
-    ) {
-        _ = (range, resolution, typeID, document, undoManager)
-    }
 }

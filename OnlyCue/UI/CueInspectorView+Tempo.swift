@@ -14,17 +14,21 @@ extension CueInspectorView {
         guard let itemID = itemID(for: cue) else { return }
         let trimmed = bpmDraft.trimmingCharacters(in: .whitespacesAndNewlines)
         if trimmed.isEmpty {
+            // Clearing BPM also clears the meter — a meter without a BPM is
+            // orphaned data (DerivedTempoGrid only walks cues with bpm != nil).
             CueCommands.setCueTempo(
                 cueID: cue.id,
                 bpm: nil,
-                beatsPerBar: cue.beatsPerBar,
+                beatsPerBar: nil,
                 item: itemID,
                 document: document,
                 undoManager: undoManager
             )
             return
         }
-        guard let value = Double(trimmed) else {
+        // Reject NaN / infinity: `Double("nan")` parses to .nan but would
+        // propagate into the model and corrupt every grid time downstream.
+        guard let value = Double(trimmed), value.isFinite else {
             bpmDraft = cue.bpm.map { String(Int($0.rounded())) } ?? ""
             return
         }

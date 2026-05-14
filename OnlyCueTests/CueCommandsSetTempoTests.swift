@@ -88,6 +88,32 @@ final class CueCommandsSetTempoTests: XCTestCase {
         XCTAssertEqual(env.doc.model, snapshot)
     }
 
+    func testSetCueTempoNaNBPMResolvesToNil() {
+        let env = makeDocWithOneCue()
+        CueCommands.setCueTempo(
+            cueID: env.cueID,
+            bpm: .nan,
+            beatsPerBar: 4,
+            item: env.itemID,
+            document: env.doc,
+            undoManager: nil
+        )
+        XCTAssertNil(env.doc.model.items[0].cues[0].bpm, "NaN must not reach the model")
+    }
+
+    func testSetCueTempoInfinityBPMResolvesToNil() {
+        let env = makeDocWithOneCue()
+        CueCommands.setCueTempo(
+            cueID: env.cueID,
+            bpm: .infinity,
+            beatsPerBar: 4,
+            item: env.itemID,
+            document: env.doc,
+            undoManager: nil
+        )
+        XCTAssertNil(env.doc.model.items[0].cues[0].bpm, "infinity must not reach the model")
+    }
+
     func testSetCueTempoSameValueIsNoOp() {
         let env = makeDocWithOneCue()
         let undo = UndoManager()

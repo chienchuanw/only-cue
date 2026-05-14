@@ -229,7 +229,6 @@ struct CueMarkerView: View {
                     .blur(radius: Self.haloBlurRadius)
                     .animation(.easeOut(duration: 0.12), value: haloVisible)
                     .allowsHitTesting(false)
-                    .accessibilityHidden(true)
                 Capsule()
                     .fill(.clear)
                     .frame(width: Self.hitWidth)

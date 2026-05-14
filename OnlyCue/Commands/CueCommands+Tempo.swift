@@ -24,7 +24,14 @@ extension CueCommands {
         guard let itemIndex = document.model.items.firstIndex(where: { $0.id == itemID }) else { return }
         guard let cueIndex = document.model.items[itemIndex].cues.firstIndex(where: { $0.id == cueID }) else { return }
 
-        let clampedBPM = bpm.map { min(max($0, 20), 400) }
+        // NaN / infinity defeats min/max clamping (IEEE 754 comparisons with
+        // NaN are always false). Drop to nil rather than corrupt the model.
+        let clampedBPM: Double?
+        if let bpm, bpm.isFinite {
+            clampedBPM = min(max(bpm, 20), 400)
+        } else {
+            clampedBPM = nil
+        }
         let clampedMeter = beatsPerBar.map { max(1, min($0, 16)) }
         let before = document.model.items[itemIndex].cues[cueIndex]
         guard before.bpm != clampedBPM || before.beatsPerBar != clampedMeter else { return }

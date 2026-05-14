@@ -29,7 +29,13 @@ struct Cue: Codable, Identifiable, Equatable {
         self.time = time
         self.notes = notes
         self.fadeTime = fadeTime
-        self.bpm = bpm.map { min(max($0, 20), 400) }
+        // NaN / infinity defeats min/max clamping; drop to nil rather than
+        // accept a value that would propagate through every grid computation.
+        if let bpm, bpm.isFinite {
+            self.bpm = min(max(bpm, 20), 400)
+        } else {
+            self.bpm = nil
+        }
         self.beatsPerBar = beatsPerBar.map { max(1, min($0, 16)) }
     }
 

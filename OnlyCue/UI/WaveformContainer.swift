@@ -13,6 +13,7 @@ struct WaveformContainer: View {
     var onToggleCue: (Cue.ID) -> Void = { _ in }
     var onSeek: (TimeInterval) -> Void = { _ in }
     var onRetime: (Cue.ID, TimeInterval) -> Void = { _, _ in }
+    var onNudge: (Set<Cue.ID>, TimeInterval) -> Void = { _, _ in }
     var engine: PlayerEngine?
 
     @State private var peaks: [Float]?

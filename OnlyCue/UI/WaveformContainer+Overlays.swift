@@ -23,10 +23,12 @@ extension WaveformContainer {
                 duration: loadedDuration,
                 resolveColorHex: resolveColorHex,
                 selectedCueIDs: selectedCueIDs,
+                tempoGrid: tempoGrid,
                 onSelectCue: onSelectCue,
                 onToggleCue: onToggleCue,
                 onSeek: onSeek,
-                onRetime: onRetime
+                onRetime: onRetime,
+                onNudge: onNudge
             )
         }
     }

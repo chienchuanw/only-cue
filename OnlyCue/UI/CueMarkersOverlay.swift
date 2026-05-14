@@ -197,8 +197,17 @@ struct CueMarkerView: View {
 
     private static let hitWidth: CGFloat = 14
     private static let labelGap: CGFloat = 1
+    private static let haloPadding: CGFloat = 8
+    private static let haloOpacity: Double = 0.35
+    private static let haloBlurRadius: CGFloat = 2
+
+    @State private var isHovered: Bool = false
 
     private var style: MarkerStyle { MarkerStyle.style(isSelected: isSelected) }
+
+    private var haloVisible: Bool {
+        Self.showHalo(isHovered: isHovered, isSelected: isSelected)
+    }
 
     var body: some View {
         VStack(spacing: Self.labelGap) {
@@ -210,10 +219,22 @@ struct CueMarkerView: View {
                     .accessibilityIdentifier("cueMarkerLabel-\(cue.id.uuidString)")
             }
             ZStack(alignment: .top) {
+                Circle()
+                    .fill(markerColor)
+                    .frame(
+                        width: style.capWidth + Self.haloPadding,
+                        height: style.capWidth + Self.haloPadding
+                    )
+                    .opacity(haloVisible ? Self.haloOpacity : 0)
+                    .blur(radius: Self.haloBlurRadius)
+                    .animation(.easeOut(duration: 0.12), value: haloVisible)
+                    .allowsHitTesting(false)
+                    .accessibilityHidden(true)
                 Capsule()
                     .fill(.clear)
                     .frame(width: Self.hitWidth)
                     .onHover { inside in
+                        isHovered = inside
                         if inside {
                             NSCursor.resizeLeftRight.push()
                         } else {

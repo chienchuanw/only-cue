@@ -16,6 +16,7 @@ struct TransportBar: View {
     /// `timecodeSettings` for the SMPTE readout.
     @Environment(\.stripedTimecode) private var stripedTimecode
     @AppStorage("pauseAtEachCue") private var pauseAtEachCue = false
+    @ObservedObject private var ltcRoutingStore = LTCRoutingStore.shared
 
     /// Single-Text readout so the slash kerns correctly with monospaced digits and
     /// stays aligned on resize. When `mediaDuration` is 0 (no active item) the slash
@@ -89,11 +90,13 @@ struct TransportBar: View {
                 .foregroundStyle(.secondary)
                 .accessibilityIdentifier("currentTimeReadout")
 
-            Text(smpteReadout)
-                .font(.system(.body, design: .monospaced))
-                .foregroundStyle(.secondary)
-                .accessibilityIdentifier("smpteTimecode")
-                .help(smpteReadoutHelp)
+            if ltcRoutingStore.settings.isEnabled {
+                Text("SMPTE \(smpteReadout)")
+                    .font(.system(.body, design: .monospaced))
+                    .foregroundStyle(.secondary)
+                    .accessibilityIdentifier("smpteTimecode")
+                    .help(smpteReadoutHelp)
+            }
 
             if let interval = Self.lastCueElapsed(currentTime: engine.currentTime, cues: cues) {
                 Text("Last: \(TimeFormat.compactCountdown(interval))")

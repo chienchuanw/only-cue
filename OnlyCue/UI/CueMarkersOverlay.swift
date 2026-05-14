@@ -18,7 +18,7 @@ struct CueMarkersOverlay: View {
     /// committed as a single undo entry. Used by group drag.
     var onNudge: (Set<Cue.ID>, TimeInterval) -> Void = { _, _ in }
 
-    @State private var activeDrag: ActiveDrag? = nil
+    @State private var activeDrag: ActiveDrag?
 
     fileprivate struct ActiveDrag: Equatable {
         let grabbedID: Cue.ID
@@ -129,8 +129,8 @@ struct CueMarkersOverlay: View {
             onToggleCue(grabbedID)
         } else {
             onSelectCue(grabbedID)
-            if let c = cue(for: grabbedID) {
-                onSeek(c.time)
+            if let grabbed = cue(for: grabbedID) {
+                onSeek(grabbed.time)
             }
         }
     }

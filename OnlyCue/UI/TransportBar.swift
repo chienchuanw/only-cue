@@ -15,7 +15,6 @@ struct TransportBar: View {
     /// environment by `StripedTimecodeHost`) — takes priority over
     /// `timecodeSettings` for the SMPTE readout.
     @Environment(\.stripedTimecode) private var stripedTimecode
-    @AppStorage("pauseAtEachCue") private var pauseAtEachCue = false
     @ObservedObject private var ltcRoutingStore = LTCRoutingStore.shared
 
     /// Single-Text readout so the slash kerns correctly with monospaced digits and
@@ -82,16 +81,6 @@ struct TransportBar: View {
                     .accessibilityIdentifier("nextCueCountdown")
             }
 
-            if pauseAtEachCue {
-                HStack(spacing: 4) {
-                    Image(systemName: "pause.circle")
-                    Text("Pause: each cue")
-                }
-                .font(.system(.body, design: .monospaced))
-                .foregroundStyle(.secondary)
-                .accessibilityIdentifier("pauseAtEachCueIndicator")
-                .help("Toggle with ⇧⌘P")
-            }
         }
     }
 }

@@ -81,28 +81,28 @@ struct CueListPane: View {
 
     private static let nudgeStep: TimeInterval = 1.0 / 30.0
 
-    private var activeTempoMap: TempoMap { document.model.activeItem?.tempoMap ?? TempoMap() }
     private var activeItemDuration: TimeInterval { document.model.activeItem?.media.duration ?? 0 }
 
+    private var activeTempoGrid: DerivedTempoGrid {
+        guard let item = document.model.activeItem else { return DerivedTempoGrid(segments: []) }
+        return DerivedTempoGrid.from(cues: item.cues, itemDuration: item.media.duration)
+    }
+
     private func snapSelectedToGrid(_ resolution: CueCommands.GridResolution) {
-        let map = activeTempoMap
+        let grid = activeTempoGrid
         let duration = activeItemDuration
         switch resolution {
         case .beat:
-            CueCommands.snapCues(selection, toBeatIn: map, itemDuration: duration, document: document, undoManager: undoManager)
+            CueCommands.snapCues(selection, toBeatIn: grid, itemDuration: duration, document: document, undoManager: undoManager)
         case .bar:
-            CueCommands.snapCues(selection, toBarIn: map, itemDuration: duration, document: document, undoManager: undoManager)
+            CueCommands.snapCues(selection, toBarIn: grid, itemDuration: duration, document: document, undoManager: undoManager)
         }
     }
 
+    // `addCuesOnGrid` removed in v11 (#245); the receivers below are kept until
+    // the notification names disappear in #248.
     private func addCuesOnGrid(_ resolution: CueCommands.GridResolution) {
-        CueCommands.addCuesOnGrid(
-            in: 0...activeItemDuration,
-            every: resolution,
-            type: nil,
-            document: document,
-            undoManager: undoManager
-        )
+        _ = resolution
     }
 
     private func duplicateSelectedAtPlayhead() {

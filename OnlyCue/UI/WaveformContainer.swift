@@ -6,7 +6,7 @@ struct WaveformContainer: View {
     let asset: AVURLAsset
     var resolution: Int = 12_000
     var cues: [Cue] = []
-    var tempoMap: TempoMap = TempoMap()
+    var tempoGrid: DerivedTempoGrid = DerivedTempoGrid(segments: [])
     var resolveColorHex: (Cue) -> String? = { _ in nil }
     var selectedCueIDs: Set<Cue.ID> = []
     var onSelectCue: (Cue.ID) -> Void = { _ in }

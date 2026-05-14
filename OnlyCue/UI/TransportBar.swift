@@ -75,16 +75,6 @@ struct TransportBar: View {
 
     var body: some View {
         HStack(spacing: 12) {
-            Button {
-                engine.toggle()
-            } label: {
-                Image(systemName: engine.rate > 0 ? "pause.fill" : "play.fill")
-                    .frame(width: 16, height: 16)
-            }
-            .accessibilityIdentifier("playPauseButton")
-            .accessibilityLabel(engine.rate > 0 ? "Pause" : "Play")
-            .help("Play / Pause (Space)")
-
             Text(timeReadout)
                 .font(.system(.body, design: .monospaced))
                 .foregroundStyle(.secondary)

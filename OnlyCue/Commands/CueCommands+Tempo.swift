@@ -1,60 +1,91 @@
 import Foundation
 
-/// Undoable mutations of a media item's `TempoMap` (epic #199). Mirrors the
-/// `mutateCues` shape: each call is exactly one undo step with a clear action
-/// name, and a no-op when the resulting map equals the current one (so
-/// committing on every editor keystroke is cheap). Operates on an explicit
-/// `item` id rather than the active item, so callers (the Tempo Map sheet) are
-/// unambiguous.
+/// Per-cue tempo commands (v11). The cue's time is bar 1, beat 1 of the segment
+/// it opens; `bpm`/`beatsPerBar` are clamped (20…400 / 1…16) and either nil
+/// (no tempo change at this cue) or set. Passing both `nil` clears tempo from
+/// the cue.
+///
+/// Legacy section-based commands (`setTempoMap`, `addTempoSection`, etc.) live
+/// at the bottom as `@available(*, deprecated)` no-op stubs so the soon-to-be-
+/// deleted `TempoMapSheet` keeps compiling. Both the sheet and these stubs go
+/// away in #248.
 @MainActor
 extension CueCommands {
 
-    /// Replace the item's tempo map with `map` (normalized).
-    static func setTempoMap(_ map: TempoMap, item itemID: MediaItem.ID, document: CueListDocument, undoManager: UndoManager?) {
-        mutateTempoMap(item: itemID, document: document, undoManager: undoManager, actionName: "Edit Tempo Map") { _ in
-            TempoMap(sections: map.sections)
+    // swiftlint:disable:next function_parameter_count
+    static func setCueTempo(
+        cueID: Cue.ID,
+        bpm: Double?,
+        beatsPerBar: Int?,
+        item itemID: MediaItem.ID,
+        document: CueListDocument,
+        undoManager: UndoManager?
+    ) {
+        guard let itemIndex = document.model.items.firstIndex(where: { $0.id == itemID }) else { return }
+        guard let cueIndex = document.model.items[itemIndex].cues.firstIndex(where: { $0.id == cueID }) else { return }
+
+        let clampedBPM = bpm.map { min(max($0, 20), 400) }
+        let clampedMeter = beatsPerBar.map { max(1, min($0, 16)) }
+        let before = document.model.items[itemIndex].cues[cueIndex]
+        guard before.bpm != clampedBPM || before.beatsPerBar != clampedMeter else { return }
+
+        undoManager?.beginUndoGrouping()
+        defer { undoManager?.endUndoGrouping() }
+        document.model.items[itemIndex].cues[cueIndex].bpm = clampedBPM
+        document.model.items[itemIndex].cues[cueIndex].beatsPerBar = clampedMeter
+        let oldBPM = before.bpm
+        let oldMeter = before.beatsPerBar
+        undoManager?.registerUndo(withTarget: document) { doc in
+            Self.setCueTempo(
+                cueID: cueID,
+                bpm: oldBPM,
+                beatsPerBar: oldMeter,
+                item: itemID,
+                document: doc,
+                undoManager: undoManager
+            )
         }
+        undoManager?.setActionName("Change Cue Tempo")
     }
 
-    /// Add a tempo section: seeds a whole-item section on an empty map, otherwise
-    /// inserts a boundary at `seconds` cloning the covering section's tempo.
+    // MARK: - Legacy stubs (deleted in #248)
+
+    @available(*, deprecated, message: "Removed in #248 along with TempoMapSheet")
+    static func setTempoMap(_ map: TempoMap, item itemID: MediaItem.ID, document: CueListDocument, undoManager: UndoManager?) {
+        _ = (map, itemID, document, undoManager)
+    }
+
+    @available(*, deprecated, message: "Removed in #248 along with TempoMapSheet")
     static func addTempoSection(
         atSeconds seconds: TimeInterval,
         item itemID: MediaItem.ID,
         document: CueListDocument,
         undoManager: UndoManager?
     ) {
-        mutateTempoMap(item: itemID, document: document, undoManager: undoManager, actionName: "Add Tempo Section") {
-            $0.addingSection(atSeconds: seconds)
-        }
+        _ = (seconds, itemID, document, undoManager)
     }
 
-    /// Split the section covering `seconds` at `seconds`, keeping the beat/bar grid
-    /// continuous across the cut. No-op when `seconds` is at/before a boundary.
+    @available(*, deprecated, message: "Removed in #248 along with TempoMapSheet")
     static func splitTempoSection(
         atSeconds seconds: TimeInterval,
         item itemID: MediaItem.ID,
         document: CueListDocument,
         undoManager: UndoManager?
     ) {
-        mutateTempoMap(item: itemID, document: document, undoManager: undoManager, actionName: "Split Tempo Section") {
-            $0.splitting(atSeconds: seconds)
-        }
+        _ = (seconds, itemID, document, undoManager)
     }
 
-    /// Remove the section with `id`; the previous section's span extends to cover it.
+    @available(*, deprecated, message: "Removed in #248 along with TempoMapSheet")
     static func removeTempoSection(
         _ id: TempoSection.ID,
         item itemID: MediaItem.ID,
         document: CueListDocument,
         undoManager: UndoManager?
     ) {
-        mutateTempoMap(item: itemID, document: document, undoManager: undoManager, actionName: "Delete Tempo Section") {
-            $0.removingSection(id)
-        }
+        _ = (id, itemID, document, undoManager)
     }
 
-    /// Change fields on the section with `id` (any argument left `nil` is unchanged).
+    @available(*, deprecated, message: "Removed in #248 along with TempoMapSheet")
     static func updateTempoSection(
         _ id: TempoSection.ID,
         startSeconds: TimeInterval? = nil,
@@ -65,62 +96,11 @@ extension CueCommands {
         document: CueListDocument,
         undoManager: UndoManager?
     ) {
-        mutateTempoMap(item: itemID, document: document, undoManager: undoManager, actionName: "Change Tempo") {
-            $0.updatingSection(
-                id,
-                startSeconds: startSeconds,
-                bpm: bpm,
-                beatsPerBar: beatsPerBar,
-                downbeatOffsetSeconds: downbeatOffsetSeconds
-            )
-        }
+        _ = (id, startSeconds, bpm, beatsPerBar, downbeatOffsetSeconds, itemID, document, undoManager)
     }
 
-    /// Remove the whole tempo map (no grid).
+    @available(*, deprecated, message: "Removed in #248 along with TempoMapSheet")
     static func clearTempoMap(item itemID: MediaItem.ID, document: CueListDocument, undoManager: UndoManager?) {
-        mutateTempoMap(item: itemID, document: document, undoManager: undoManager, actionName: "Clear Tempo Map") { _ in
-            TempoMap()
-        }
-    }
-
-    // MARK: - Internals
-
-    private static func mutateTempoMap(
-        item itemID: MediaItem.ID,
-        document: CueListDocument,
-        undoManager: UndoManager?,
-        actionName: String,
-        _ change: (TempoMap) -> TempoMap
-    ) {
-        guard let index = document.model.items.firstIndex(where: { $0.id == itemID }) else { return }
-        let before = document.model.items[index].tempoMap
-        let after = change(before)
-        guard after != before else { return }
-
-        undoManager?.beginUndoGrouping()
-        defer { undoManager?.endUndoGrouping() }
-        document.model.items[index].tempoMap = after
-        undoManager?.registerUndo(withTarget: document) { doc in
-            Self.restoreTempoMap(itemID: itemID, to: before, document: doc, undoManager: undoManager, actionName: actionName)
-        }
-        undoManager?.setActionName(actionName)
-    }
-
-    private static func restoreTempoMap(
-        itemID: MediaItem.ID,
-        to oldMap: TempoMap,
-        document: CueListDocument,
-        undoManager: UndoManager?,
-        actionName: String
-    ) {
-        guard let index = document.model.items.firstIndex(where: { $0.id == itemID }) else { return }
-        undoManager?.beginUndoGrouping()
-        defer { undoManager?.endUndoGrouping() }
-        let current = document.model.items[index].tempoMap
-        document.model.items[index].tempoMap = oldMap
-        undoManager?.registerUndo(withTarget: document) { doc in
-            Self.restoreTempoMap(itemID: itemID, to: current, document: doc, undoManager: undoManager, actionName: actionName)
-        }
-        undoManager?.setActionName(actionName)
+        _ = (itemID, document, undoManager)
     }
 }

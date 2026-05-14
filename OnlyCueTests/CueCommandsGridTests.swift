@@ -46,7 +46,7 @@ final class CueCommandsGridTests: XCTestCase {
 
     private func grid(_ doc: CueListDocument) -> DerivedTempoGrid {
         guard let item = doc.model.activeItem else { return DerivedTempoGrid(segments: []) }
-        return DerivedTempoGrid.from(cues: item.cues, itemDuration: item.media.duration)
+        return DerivedTempoGrid.from(cues: item.cues)
     }
 
     // MARK: - snapCues(toBeatIn:) / toBarIn:

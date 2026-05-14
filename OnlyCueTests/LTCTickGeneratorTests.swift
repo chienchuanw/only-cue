@@ -49,20 +49,33 @@ final class LTCTickGeneratorTests: XCTestCase {
     }
 
     func test_zeroDurationOrWidth_yieldsEmpty() {
-        XCTAssertEqual(LTCTickGenerator.ticks(
-            duration: 0, framerate: .fps30, startTimecodeFrames: 0,
-            bucketSeconds: 1, contentWidth: 100
-        ).count, 0)
-        XCTAssertEqual(LTCTickGenerator.ticks(
-            duration: 10, framerate: .fps30, startTimecodeFrames: 0,
-            bucketSeconds: 1, contentWidth: 0
-        ).count, 0)
+        let zeroDuration = LTCTickGenerator.ticks(
+            duration: 0,
+            framerate: .fps30,
+            startTimecodeFrames: 0,
+            bucketSeconds: 1,
+            contentWidth: 100
+        )
+        XCTAssertEqual(zeroDuration.count, 0)
+
+        let zeroWidth = LTCTickGenerator.ticks(
+            duration: 10,
+            framerate: .fps30,
+            startTimecodeFrames: 0,
+            bucketSeconds: 1,
+            contentWidth: 0
+        )
+        XCTAssertEqual(zeroWidth.count, 0)
     }
 
     func test_zeroBucketSeconds_yieldsEmpty() {
-        XCTAssertEqual(LTCTickGenerator.ticks(
-            duration: 10, framerate: .fps30, startTimecodeFrames: 0,
-            bucketSeconds: 0, contentWidth: 100
-        ).count, 0)
+        let result = LTCTickGenerator.ticks(
+            duration: 10,
+            framerate: .fps30,
+            startTimecodeFrames: 0,
+            bucketSeconds: 0,
+            contentWidth: 100
+        )
+        XCTAssertEqual(result.count, 0)
     }
 }

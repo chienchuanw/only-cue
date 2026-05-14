@@ -13,46 +13,29 @@ struct WaveformPlayheadLayer: View {
     var scrollOffset: CGFloat = 0
     var applyAutoFollow: ((CGFloat, CGFloat) -> Void)?
 
-    private static let grabberWidth: CGFloat = 12
-
     var body: some View {
         GeometryReader { geometry in
             let width = geometry.size.width
             TimelineView(.animation) { _ in
                 let displayedTime = renderedTime()
-                let x = CueMarkersGeometry.position(
-                    forTime: displayedTime,
-                    width: width,
-                    duration: duration
-                )
 
                 ZStack(alignment: .topLeading) {
-                    // Tap anywhere on the waveform body -> seek there immediately.
+                    // Click-to-seek + hold-to-scrub. A zero-translation drag
+                    // collapses to a single seek (the click case). A non-zero
+                    // drag pauses on press (only if playing), scrubs while
+                    // held, and resumes on release if it was playing.
                     Color.clear
                         .contentShape(Rectangle())
-                        .onTapGesture { location in
-                            seekTask?.cancel()
-                            let target = CueMarkersGeometry.time(
-                                forX: location.x, width: width, duration: duration
-                            )
-                            seekTask = Task { await engine.seek(to: target) }
-                        }
-                        .accessibilityIdentifier("waveformSeekSurface")
-
-                    PlayheadOverlay(currentTime: displayedTime, duration: duration)
-
-                    Color.clear
-                        .contentShape(Rectangle())
-                        .frame(width: Self.grabberWidth, height: geometry.size.height)
-                        .offset(x: x - Self.grabberWidth / 2)
-                        .gesture(scrubGesture(width: width))
+                        .gesture(timelineDragGesture(width: width))
                         .onContinuousHover { phase in
                             switch phase {
                             case .active: NSCursor.openHand.set()
                             case .ended: NSCursor.arrow.set()
                             }
                         }
-                        .accessibilityIdentifier("playheadGrabber")
+                        .accessibilityIdentifier("waveformSeekSurface")
+
+                    PlayheadOverlay(currentTime: displayedTime, duration: duration)
                 }
                 .onChange(of: displayedTime) { _, _ in maybeAutoFollow() }
             }
@@ -85,12 +68,25 @@ struct WaveformPlayheadLayer: View {
         }
     }
 
-    private func scrubGesture(width: CGFloat) -> some Gesture {
+    private func timelineDragGesture(width: CGFloat) -> some Gesture {
         DragGesture(minimumDistance: 0)
             .onChanged { value in
                 if scrub.state == nil {
-                    scrub.begin(originalTime: engine.currentTime, isPlaying: engine.isPlaying)
-                    engine.pause()
+                    let pressedTime = CueMarkersGeometry.time(
+                        forX: value.startLocation.x,
+                        width: width,
+                        duration: duration
+                    )
+                    switch TimelineScrubOrchestrator.begin(
+                        pressedTime: pressedTime,
+                        isPlaying: engine.isPlaying
+                    ) {
+                    case .startScrubAndPause(let originalTime):
+                        scrub.begin(originalTime: originalTime, isPlaying: true)
+                        engine.pause()
+                    case .startScrub(let originalTime):
+                        scrub.begin(originalTime: originalTime, isPlaying: false)
+                    }
                     NSCursor.closedHand.set()
                 }
                 scrub.update(dx: value.translation.width, width: width, duration: duration)
@@ -98,11 +94,12 @@ struct WaveformPlayheadLayer: View {
             .onEnded { _ in
                 NSCursor.arrow.set()
                 guard let finished = scrub.end() else { return }
+                let effect = TimelineScrubOrchestrator.end(finished: finished)
                 seekTask?.cancel()
                 seekTask = Task {
-                    await engine.seek(to: finished.scrubTime)
+                    await engine.seek(to: effect.seekTo)
                     if Task.isCancelled { return }
-                    if finished.resumeOnRelease {
+                    if effect.resume {
                         engine.play()
                     }
                 }

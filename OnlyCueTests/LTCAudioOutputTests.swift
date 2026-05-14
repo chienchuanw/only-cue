@@ -16,6 +16,12 @@ final class LTCAudioOutputTests: XCTestCase {
         XCTAssertNil(LTCAudioOutput.renderFormat(channelCount: 0, sampleRate: 48_000))
     }
 
+    func test_mutedSamples_zerosTheLTCStreamButPreservesLength() {
+        let mono: [Float] = [0.1, -0.2, 0.3, -0.4]
+        XCTAssertEqual(LTCAudioOutput.mutedSamples(mono, isMuted: true), [0, 0, 0, 0])
+        XCTAssertEqual(LTCAudioOutput.mutedSamples(mono, isMuted: false), mono)
+    }
+
     func test_makeBuffer_placesSamplesOnTargetChannelAndSilencesOthers() throws {
         let mono: [Float] = [0.1, -0.2, 0.3, -0.4]
         let buffer = try XCTUnwrap(LTCAudioOutput.makeBuffer(monoSamples: mono, format: try format(channels: 4), channel: 2))

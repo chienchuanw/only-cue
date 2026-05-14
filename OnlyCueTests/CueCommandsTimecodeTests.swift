@@ -41,6 +41,52 @@ final class CueCommandsTimecodeTests: XCTestCase {
         XCTAssertEqual(snapshot.timecodeSettings.framerate, .fps30drop)
     }
 
+    // MARK: - setLTCMuted
+
+    func test_setLTCMuted_flipsField_andIsUndoable() throws {
+        let doc = CueListDocument()
+        let item = Self.fixtureItem()
+        doc.model.items = [item]
+        let undo = makeUndoManager()
+
+        CueCommands.setLTCMuted(itemID: item.id, muted: true, document: doc, undoManager: undo)
+        XCTAssertTrue(doc.model.items[0].ltcMuted)
+
+        undo.undo()
+        XCTAssertFalse(doc.model.items[0].ltcMuted)
+        undo.redo()
+        XCTAssertTrue(doc.model.items[0].ltcMuted)
+    }
+
+    func test_setLTCMuted_noOpWhenUnchanged_registersNoUndo() throws {
+        let doc = CueListDocument()
+        let item = Self.fixtureItem()
+        doc.model.items = [item]
+        let undo = makeUndoManager()
+
+        CueCommands.setLTCMuted(itemID: item.id, muted: false, document: doc, undoManager: undo)
+        XCTAssertFalse(undo.canUndo)
+        XCTAssertFalse(doc.model.items[0].ltcMuted)
+    }
+
+    func test_setLTCMuted_unknownItemID_isANoOp() throws {
+        let doc = CueListDocument()
+        let undo = makeUndoManager()
+        CueCommands.setLTCMuted(itemID: UUID(), muted: true, document: doc, undoManager: undo)
+        XCTAssertFalse(undo.canUndo)
+    }
+
+    private static func fixtureItem() -> MediaItem {
+        MediaItem(
+            id: UUID(),
+            media: MediaReference(displayName: "a.wav", kind: .audio, duration: 10, bookmarkData: Data()),
+            cues: [],
+            tempoMap: TempoMap(),
+            startTimecodeFrames: 0,
+            ltcMuted: false
+        )
+    }
+
     private func makeUndoManager() -> UndoManager {
         let undo = UndoManager()
         undo.groupsByEvent = false

@@ -145,6 +145,9 @@ struct PreviewPane: View {
                     undoManager: undoManager
                 )
             },
+            onNudge: { ids, delta in
+                CueCommands.nudgeCues(ids, by: delta, document: document, undoManager: undoManager)
+            },
             engine: withPlayhead ? engine : nil
         )
         .id(url)

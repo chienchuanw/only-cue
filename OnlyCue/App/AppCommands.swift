@@ -153,24 +153,9 @@ struct AppCommands: Commands {
                 NotificationCenter.default.post(name: .timecodeSettingsRequested, object: nil)
             }
 
-            Divider()
-
-            Button("Tempo Map…") {
-                NotificationCenter.default.post(name: .tempoMapRequested, object: nil)
-            }
-
-            Button("Split Tempo Section at Playhead") {
-                NotificationCenter.default.post(name: .splitTempoSectionAtPlayhead, object: nil)
-            }
-            .keyboardShortcut(shortcut(.splitTempoSectionAtPlayhead))
-
-            Button("Add Cues on Every Beat") {
-                NotificationCenter.default.post(name: .addCuesOnEveryBeat, object: nil)
-            }
-
-            Button("Add Cues on Every Bar") {
-                NotificationCenter.default.post(name: .addCuesOnEveryBar, object: nil)
-            }
+            // Tempo Map / Split / Add-Cues-on-Beat-or-Bar menu items removed in v11
+            // transition (#244). The Tempo Map sheet, its notifications, the related
+            // KeymapAction cases, and the underlying commands get deleted in #248.
         }
     }
 

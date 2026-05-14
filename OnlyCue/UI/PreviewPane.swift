@@ -131,7 +131,7 @@ struct PreviewPane: View {
         WaveformContainer(
             asset: AVURLAsset(url: url),
             cues: item.cues,
-            tempoGrid: DerivedTempoGrid.from(cues: item.cues, itemDuration: item.media.duration),
+            tempoGrid: DerivedTempoGrid.from(cues: item.cues),
             resolveColorHex: { document.model.colorHex(for: $0) },
             selectedCueIDs: selectedCueIDs,
             onSelectCue: onSelectCue,

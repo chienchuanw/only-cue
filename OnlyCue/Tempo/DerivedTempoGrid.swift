@@ -27,7 +27,7 @@ struct DerivedTempoGrid: Equatable {
 
     var isEmpty: Bool { segments.isEmpty }
 
-    static func from(cues: [Cue], itemDuration: TimeInterval) -> Self {
+    static func from(cues: [Cue]) -> Self {
         let bpmCues = cues
             .filter { $0.bpm != nil }
             .sorted { $0.time < $1.time }
@@ -38,14 +38,25 @@ struct DerivedTempoGrid: Equatable {
             let meter = cue.beatsPerBar ?? built.last?.beatsPerBar ?? defaultBeatsPerBar
             let clampedBPM = min(max(bpm, 20), 400)
             let clampedMeter = max(1, min(meter, 16))
-            built.append(Segment(
-                startSeconds: max(0, cue.time),
-                bpm: clampedBPM,
-                beatsPerBar: clampedMeter
-            ))
+            let startSeconds = max(0, cue.time)
+            // De-dup co-located BPM cues: the last one wins (matches the user's
+            // mental model of "most recent edit takes effect"). Without this,
+            // a zero-width earlier segment would contribute no beats and the
+            // earlier cue's tempo would silently disappear.
+            if let last = built.last, abs(last.startSeconds - startSeconds) < Self.epsilon {
+                built[built.count - 1] = Segment(
+                    startSeconds: startSeconds,
+                    bpm: clampedBPM,
+                    beatsPerBar: clampedMeter
+                )
+            } else {
+                built.append(Segment(
+                    startSeconds: startSeconds,
+                    bpm: clampedBPM,
+                    beatsPerBar: clampedMeter
+                ))
+            }
         }
-        // itemDuration is implicit in segment-end lookups, not stored on Self.
-        _ = itemDuration
         return Self(segments: built)
     }
 

@@ -85,7 +85,7 @@ struct CueListPane: View {
 
     private var activeTempoGrid: DerivedTempoGrid {
         guard let item = document.model.activeItem else { return DerivedTempoGrid(segments: []) }
-        return DerivedTempoGrid.from(cues: item.cues, itemDuration: item.media.duration)
+        return DerivedTempoGrid.from(cues: item.cues)
     }
 
     private func snapSelectedToGrid(_ resolution: CueCommands.GridResolution) {

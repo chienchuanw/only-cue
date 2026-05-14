@@ -28,6 +28,8 @@ extension ProjectModel {
             return try migrateFromV8(data: data)
         case 9:
             return try migrateFromV9(data: data)
+        case 10:
+            return try migrateFromV10(data: data)
         case currentSchemaVersion:
             return try JSONDecoder().decode(ProjectModel.self, from: data)
         default:
@@ -338,7 +340,6 @@ extension ProjectModel {
                 id: id,
                 media: media,
                 cues: cues,
-                tempoMap: TempoMap(),
                 startTimecodeFrames: startTimecodeFrames,
                 ltcMuted: false
             )

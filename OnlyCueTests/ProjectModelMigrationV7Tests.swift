@@ -56,37 +56,11 @@ final class ProjectModelMigrationV7Tests: XCTestCase {
         XCTAssertEqual(model.schemaVersion, ProjectModel.currentSchemaVersion)
         XCTAssertEqual(model.items.count, 1)
         let item = try XCTUnwrap(model.items.first)
-        XCTAssertTrue(item.tempoMap.isEmpty, "a migrated v7 item must have an empty tempo map")
         XCTAssertEqual(item.cues.first?.cueNumber, 1.0)
         XCTAssertEqual(model.timecodeSettings.framerate, .fps25)
         // v10 fans the legacy project-wide offset onto each item.
         XCTAssertEqual(item.startTimecodeFrames, 90_000)
-    }
-
-    func test_v8_roundTripsAPopulatedTempoMap() throws {
-        let item = MediaItem(
-            id: UUID(),
-            media: MediaReference(displayName: "song.wav", kind: .audio, duration: 200, bookmarkData: Data([0x00])),
-            cues: [],
-            tempoMap: TempoMap(sections: [
-                TempoSection(startSeconds: 0, bpm: 128, beatsPerBar: 4, downbeatOffsetSeconds: 0.1),
-                TempoSection(startSeconds: 64, bpm: 140, beatsPerBar: 3, downbeatOffsetSeconds: 0)
-            ])
-        )
-        let model = ProjectModel(
-            schemaVersion: ProjectModel.currentSchemaVersion,
-            id: UUID(),
-            name: "TempoShow",
-            cuePointTypes: [],
-            items: [item],
-            activeItemID: item.id
-        )
-
-        let data = try JSONEncoder().encode(model)
-        let decoded = try ProjectModel.decode(from: data)
-
-        XCTAssertEqual(decoded, model)
-        XCTAssertEqual(decoded.items.first?.tempoMap.sections.count, 2)
-        XCTAssertEqual(decoded.items.first?.tempoMap.sections.first?.bpm, 128)
+        // v11 no longer carries a per-item tempo map; cues are blank of tempo.
+        XCTAssertTrue(item.cues.allSatisfy { $0.bpm == nil && $0.beatsPerBar == nil })
     }
 }

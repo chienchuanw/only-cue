@@ -1,20 +1,26 @@
 import Foundation
 
-/// v9 → current (v10) migration. Schema v10 drops the project-wide
-/// `timecodeSettings.startOffsetFrames` and fans the value onto each
-/// `MediaItem.startTimecodeFrames`; `MediaItem.ltcMuted` defaults to `false`.
-/// A v9 project with offset = 0 round-trips to a v10 with every item at 0.
+/// v9 → current migration. Schema v10 dropped the project-wide
+/// `timecodeSettings.startOffsetFrames` and fanned it onto each
+/// `MediaItem.startTimecodeFrames`; schema v11 (this migration's target) moves
+/// tempo from `MediaItem.tempoMap` onto per-cue `bpm`/`beatsPerBar`. A v9
+/// project with offset = 0 and an empty tempo map round-trips to v11 cleanly.
 extension ProjectModel {
 
     static func migrateFromV9(data: Data) throws -> ProjectModel {
         let legacy = try JSONDecoder().decode(LegacyV9.self, from: data)
         let offset = legacy.timecodeSettings.startOffsetFrames
-        let items = legacy.items.map { item in
-            MediaItem(
+        let defaultTypeID = legacy.cuePointTypes.first?.id
+        let items = legacy.items.map { item -> MediaItem in
+            let migratedCues = ProjectModel.applyLegacyTempoSectionsToCues(
+                item.tempoMap.sections,
+                cues: item.cues,
+                defaultTypeID: defaultTypeID
+            )
+            return MediaItem(
                 id: item.id,
                 media: item.media,
-                cues: item.cues,
-                tempoMap: item.tempoMap,
+                cues: migratedCues,
                 startTimecodeFrames: offset,
                 ltcMuted: false
             )
@@ -44,6 +50,6 @@ extension ProjectModel {
         let id: UUID
         let media: MediaReference
         let cues: [Cue]
-        let tempoMap: TempoMap
+        let tempoMap: LegacyTempoMap
     }
 }

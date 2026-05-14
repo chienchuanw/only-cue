@@ -4,6 +4,13 @@ import SwiftUI
 /// A 6pt-wide invisible drag region for resizing a column's trailing edge.
 /// Cursor flips to `resizeLeftRight` on hover; dragging writes the clamped
 /// width back through the supplied binding.
+///
+/// The gesture requires a 2pt minimum drag distance so a plain mouse-down
+/// — including click-through events fired inside `NSSplitView`'s tracking
+/// loop — does not activate it. A bare activation would write the current
+/// width back through `@AppStorage`, triggering `enqueueLayoutInvalidation`
+/// mid-tracking and recursing constraint passes until AppKit asserts. See
+/// issue #269 for the original crash.
 struct ColumnResizeHandle: View {
 
     @Binding var width: CGFloat
@@ -18,17 +25,18 @@ struct ColumnResizeHandle: View {
             .contentShape(Rectangle())
             .onHover { hovering in
                 if hovering {
-                    NSCursor.resizeLeftRight.push()
+                    NSCursor.resizeLeftRight.set()
                 } else {
-                    NSCursor.pop()
+                    NSCursor.arrow.set()
                 }
             }
             .gesture(
-                DragGesture(minimumDistance: 0)
+                DragGesture(minimumDistance: 2)
                     .onChanged { value in
                         if dragStartWidth == nil { dragStartWidth = width }
                         let start = dragStartWidth ?? width
-                        width = Self.apply(delta: value.translation.width, start: start, range: range)
+                        let proposed = Self.apply(delta: value.translation.width, start: start, range: range)
+                        Self.writeIfChanged($width, to: proposed)
                     }
                     .onEnded { _ in
                         dragStartWidth = nil
@@ -41,5 +49,13 @@ struct ColumnResizeHandle: View {
     static func apply(delta: CGFloat, start: CGFloat, range: ClosedRange<CGFloat>) -> CGFloat {
         let proposed = start + delta
         return min(max(proposed, range.lowerBound), range.upperBound)
+    }
+
+    /// Skip the setter when the incoming value equals the current value.
+    /// Prevents redundant `@AppStorage` writes from triggering SwiftUI
+    /// invalidation during AppKit mouse-tracking loops (#269).
+    static func writeIfChanged(_ binding: Binding<CGFloat>, to value: CGFloat) {
+        guard binding.wrappedValue != value else { return }
+        binding.wrappedValue = value
     }
 }

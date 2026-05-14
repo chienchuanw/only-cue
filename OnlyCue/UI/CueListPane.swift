@@ -1,6 +1,15 @@
 import SwiftUI
 
+enum CueListLayout {
+    static let timeColumnWidth: CGFloat = 96
+    static let numberColumnWidth: CGFloat = 56
+    static let rowHorizontalSpacing: CGFloat = 8
+    static let rowTintOpacity: Double = 0.18
+}
+
 struct CueListPane: View {
+
+    static let headerAccessibilityIdentifier = "cueListHeader"
 
     @ObservedObject var document: CueListDocument
     let engine: PlayerEngine
@@ -12,29 +21,20 @@ struct CueListPane: View {
     private var soleSelectedID: Cue.ID? { selection.count == 1 ? selection.first : nil }
 
     @Environment(\.undoManager) private var undoManager
-    @State private var searchQuery: String = ""
 
     private var cues: [Cue] { document.model.activeItem?.cues ?? [] }
-    private var visibleCues: [Cue] { Self.filtered(cues, by: searchQuery) }
-
-    /// Pure filter helper — case-insensitive localized contains on name OR notes.
-    /// Whitespace-only queries return the unfiltered list (matches macOS spotlight
-    /// behavior). Selection state is intentionally independent of this filter:
-    /// callers continue to look up `selectedCue` against the full `cues` array,
-    /// so a cue can stay selected (and emphasized on the waveform) while filtered
-    /// out of the rendered list.
-    static func filtered(_ cues: [Cue], by query: String) -> [Cue] {
-        let trimmed = query.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard !trimmed.isEmpty else { return cues }
-        return cues.filter { cue in
-            cue.name.localizedCaseInsensitiveContains(trimmed) ||
-            cue.notes.localizedCaseInsensitiveContains(trimmed)
-        }
-    }
 
     private var selectedCue: Cue? {
         guard let id = soleSelectedID else { return nil }
         return cues.first(where: { $0.id == id })
+    }
+
+    private func rowTint(for cue: Cue) -> Color {
+        guard let hex = document.model.colorHex(for: cue),
+              let base = Color(hex: hex) else {
+            return Color.clear
+        }
+        return base.opacity(CueListLayout.rowTintOpacity)
     }
 
     var body: some View {
@@ -130,17 +130,25 @@ struct CueListPane: View {
         .accessibilityIdentifier("cueListEmptyState")
     }
 
-    private var searchField: some View {
-        TextField("Search cues", text: $searchQuery)
-            .textFieldStyle(.roundedBorder)
-            .padding(.horizontal, 8)
-            .padding(.vertical, 6)
-            .accessibilityIdentifier("cueListSearchField")
+    private var headerRow: some View {
+        HStack(spacing: CueListLayout.rowHorizontalSpacing) {
+            Text("Time")
+                .frame(width: CueListLayout.timeColumnWidth, alignment: .leading)
+            Text("Cue #")
+                .frame(width: CueListLayout.numberColumnWidth, alignment: .leading)
+            Text("Name")
+                .frame(maxWidth: .infinity, alignment: .leading)
+        }
+        .font(.caption)
+        .foregroundStyle(.secondary)
+        .padding(.horizontal, 8)
+        .padding(.vertical, 6)
+        .accessibilityIdentifier(Self.headerAccessibilityIdentifier)
     }
 
     private var cueList: some View {
         VStack(spacing: 0) {
-            searchField
+            headerRow
             Divider()
             scrollableList
         }
@@ -149,9 +157,8 @@ struct CueListPane: View {
     private var scrollableList: some View {
         ScrollViewReader { proxy in
             List(selection: $selection) {
-                ForEach(Array(visibleCues.enumerated()), id: \.element.id) { index, cue in
+                ForEach(cues, id: \.id) { cue in
                     CueRowView(
-                        index: index + 1,
                         cue: cue,
                         resolvedColorHex: document.model.colorHex(for: cue),
                         onRename: { newName in
@@ -167,6 +174,7 @@ struct CueListPane: View {
                         }
                     )
                     .tag(cue.id)
+                    .listRowBackground(rowTint(for: cue))
                 }
                 .onDelete(perform: deleteAtOffsets)
             }
@@ -191,12 +199,9 @@ struct CueListPane: View {
     }
 
     private func deleteAtOffsets(_ offsets: IndexSet) {
-        // ForEach iterates `visibleCues`, so swipe-to-delete offsets index into
-        // the filtered list — resolve via `visibleCues` to get the right cue ID.
-        let target = visibleCues
         for index in offsets {
-            guard target.indices.contains(index) else { continue }
-            let cue = target[index]
+            guard cues.indices.contains(index) else { continue }
+            let cue = cues[index]
             CueCommands.delete(cueId: cue.id, document: document, undoManager: undoManager)
         }
     }

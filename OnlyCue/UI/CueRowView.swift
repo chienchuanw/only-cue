@@ -2,7 +2,6 @@ import SwiftUI
 
 struct CueRowView: View {
 
-    let index: Int
     let cue: Cue
     var resolvedColorHex: String?
     var onRename: (String) -> Void = { _ in }
@@ -17,50 +16,33 @@ struct CueRowView: View {
     @State private var numberError: String?
     @FocusState private var numberFieldFocused: Bool
 
-    @AppStorage("showBPMColumn") private var showBPMColumn = false
-
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
-            HStack(spacing: 8) {
-                Text("\(index)")
+            HStack(spacing: CueListLayout.rowHorizontalSpacing) {
+                Text(TimeFormat.hms(cue.time))
                     .font(.system(.body, design: .monospaced))
                     .foregroundStyle(.secondary)
-                    .frame(width: 28, alignment: .trailing)
+                    .frame(width: CueListLayout.timeColumnWidth, alignment: .leading)
+                    .accessibilityIdentifier("cueTime-\(cue.id)")
 
                 numberCell
-                    .frame(width: 56, alignment: .leading)
-                    .accessibilityIdentifier("cueNumber-\(index)")
-
-                CueColorSwatch(hex: resolvedColorHex, diameter: 14)
-                    .accessibilityIdentifier("cueColorSwatch-\(index)")
+                    .frame(width: CueListLayout.numberColumnWidth, alignment: .leading)
+                    .accessibilityIdentifier("cueNumber-\(cue.id)")
 
                 nameField
-                    .accessibilityIdentifier("cueName-\(index)")
-
-                Spacer(minLength: 8)
-
-                if showBPMColumn {
-                    Text(cue.bpm.map { String(Int($0.rounded())) } ?? "")
-                        .font(.system(.caption, design: .monospaced))
-                        .foregroundStyle(cue.bpm == nil ? .tertiary : .secondary)
-                        .frame(width: 36, alignment: .trailing)
-                        .accessibilityIdentifier("cueBPM-\(index)")
-                }
-
-                Text(TimeFormat.hms(cue.time))
-                    .font(.system(.caption, design: .monospaced))
-                    .foregroundStyle(.secondary)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .accessibilityIdentifier("cueName-\(cue.id)")
             }
             if let numberError {
                 Text(numberError)
                     .font(.caption2)
                     .foregroundStyle(.red)
-                    .padding(.leading, 36)
-                    .accessibilityIdentifier("cueNumberError-\(index)")
+                    .padding(.leading, CueListLayout.timeColumnWidth + CueListLayout.rowHorizontalSpacing)
+                    .accessibilityIdentifier("cueNumberError-\(cue.id)")
             }
         }
         .padding(.vertical, 2)
-        .accessibilityIdentifier("cueRow-\(index)")
+        .accessibilityIdentifier("cueRow-\(cue.id)")
     }
 
     @ViewBuilder

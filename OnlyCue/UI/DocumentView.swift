@@ -287,6 +287,7 @@ extension Notification.Name {
     static let timecodeSettingsRequested = Notification.Name("OnlyCue.timecodeSettingsRequested")
     static let snapSelectedCuesToBeat = Notification.Name("OnlyCue.snapSelectedCuesToBeat")
     static let snapSelectedCuesToBar = Notification.Name("OnlyCue.snapSelectedCuesToBar")
+    static let manageTypesRequested = Notification.Name("OnlyCue.manageTypesRequested")
 }
 
 enum DocumentAlert: Identifiable {

@@ -13,6 +13,7 @@ The bottom of the Main Pane has accumulated controls and readouts that duplicate
 - The **Add Cue** button duplicates the `A` shortcut.
 - Two clocks render side by side (`HMS current / total` and a frame-accurate `SMPTE` timecode), causing confusion about which is which.
 - A `Last: …` elapsed-since-last-cue readout adds visual noise that does not drive operator decisions (the `Next:` countdown is the actionable one).
+- The `Pause: each cue` indicator restates a state the operator just toggled via `⇧⌘P`; it costs horizontal space without adding actionable information.
 
 The goal is a neater, keyboard-first transport bar that only carries information the operator cannot get from the playhead itself.
 
@@ -36,6 +37,7 @@ Immediately below, `DocumentView` renders a standalone `Button("Add Cue")` with 
 1. **Play/Pause button** in `TransportBar`. Playback continues to be controlled by the Space shortcut. No replacement glyph is added — playhead motion is the play indicator. (`accessibilityIdentifier("playPauseButton")` is dropped; tests referring to it must be updated or removed.)
 2. **`Add Cue` button** in `DocumentView` (the `Button("Add Cue") { addCueAtPlayhead() }` block). The `A` shortcut is preserved by wiring it into a hidden command — see [Preserving shortcuts](#preserving-shortcuts) below. (`accessibilityIdentifier("addCueButton")` is dropped.)
 3. **`Last: …` readout** in `TransportBar` and the associated `lastCueElapsed` rendering. The static helper `TransportBar.lastCueElapsed(currentTime:cues:)` is also removed if no other call sites remain (grep before deletion).
+4. **`Pause: each cue` indicator** in `TransportBar` (the conditional `HStack` keyed off the `pauseAtEachCue` `@AppStorage`). The `@AppStorage` property itself is removed from `TransportBar` (the toggle elsewhere — the `⇧⌘P` shortcut and any menu — continues to read/write the same key, so behavior is unchanged). `accessibilityIdentifier("pauseAtEachCueIndicator")` is dropped.
 
 ### Time readout — SMPTE gating and labeling
 
@@ -58,7 +60,6 @@ A clip configured with a custom `startTimecodeFrames` will *not* surface that SM
 1. `Text(timeReadout)` — `00:00:03.250 / 00:01:23.456`
 2. `Text("SMPTE " + smpteReadout)` — *only when `LTCRoutingStore.shared.settings.isEnabled`*
 3. `Text("Next: …")` — *conditional, unchanged*
-4. `Pause: each cue` indicator — *conditional, unchanged*
 
 When no media is loaded: only the bare `current` HMS shows (existing fallback path in `timeReadout`).
 
@@ -81,7 +82,8 @@ The Space shortcut for Play/Pause is already declared on the engine-level comman
 
 - No change to `ProjectModel`, `Cue`, `MediaItem`, or any schema. No migration.
 - No change to `LTCStrip`, the per-media LTC editor, or the LTC routing store. Only the read side (TransportBar) consumes `settings.isEnabled` as a new gate.
-- No change to `Next:` formatting or the `Pause: each cue` indicator.
+- No change to `Next:` formatting.
+- No change to the `pauseAtEachCue` `@AppStorage` semantics or the `⇧⌘P` toggle — only the visual indicator inside `TransportBar` is removed.
 - No change to `TimeFormat` helpers.
 - The `lastCueElapsed` static helper is removed only if it has no remaining call sites; do not refactor unrelated callers.
 
@@ -92,6 +94,7 @@ The Space shortcut for Play/Pause is already declared on the engine-level comman
   - assert the SMPTE readout is hidden when `LTCRoutingStore.shared.settings.isEnabled == false`
   - assert the SMPTE readout, when shown, is prefixed with `SMPTE `
   - assert `Last:` is never rendered
+  - assert the `Pause: each cue` indicator is never rendered (regardless of `pauseAtEachCue` flag value)
 - **Snapshot:** regenerate the cue-inspector / tempo-group baselines from c58441b if they include the transport bar; otherwise add a new TransportBar snapshot covering the two states (LTC on / LTC off).
 - **UI test:** remove references to `playPauseButton` and `addCueButton` identifiers; ensure existing `A` and `Space` shortcut tests still pass.
 - **Manual:** with LTC routing disabled in Settings, confirm only the HMS clock is visible at the bottom. Enable LTC routing, confirm `SMPTE …` appears alongside HMS. Press Space to toggle playback, press `A` to add a cue, both still work.

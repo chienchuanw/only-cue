@@ -52,6 +52,9 @@ private struct LTCOutputHost: ViewModifier {
             .onChange(of: timecodeSettings) { _, _ in
                 refresh(playing: engine.isPlaying)
             }
+            .onChange(of: document.model.activeItem?.ltcMuted ?? false) { _, newMuted in
+                output.setLTCMuted(newMuted)
+            }
             .onDisappear { teardown() }
     }
 
@@ -67,6 +70,9 @@ private struct LTCOutputHost: ViewModifier {
             routing: routing,
             programRing: wantsProgramAudio ? programRing : nil
         )
+        // Honour the active clip's persisted mute on fresh start (handles the
+        // case where the clip began muted before play).
+        output.setLTCMuted(item.ltcMuted)
         if wantsProgramAudio, output.isRunning, let item = engine.player.currentItem {
             installTap(on: item)
             engine.setAudioMuted(true)

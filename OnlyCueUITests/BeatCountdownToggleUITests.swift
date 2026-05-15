@@ -56,14 +56,16 @@ final class BeatCountdownToggleUITests: XCTestCase {
             "Post-click label should match either time or beat format, got: '\(labelB)'"
         )
         XCTAssertNotEqual(
-            isTimeFormat(labelA), isTimeFormat(labelB),
+            isTimeFormat(labelA),
+            isTimeFormat(labelB),
             "Click should swap the format family (time ↔ beat). A='\(labelA)' B='\(labelB)'"
         )
 
         clickCenter(of: toggle)
         let labelC = waitForLabelChange(from: labelB, on: toggle, timeout: 3.0)
         XCTAssertEqual(
-            isTimeFormat(labelA), isTimeFormat(labelC),
+            isTimeFormat(labelA),
+            isTimeFormat(labelC),
             "Two clicks should restore the original format family. A='\(labelA)' C='\(labelC)'"
         )
     }

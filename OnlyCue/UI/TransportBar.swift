@@ -108,8 +108,8 @@ struct TransportBar: View {
                 return "Next: \(timeBody) ⓘ"
             }
             switch beatCountdown(interval: interval, bpm: tempo.bpm, beatsPerBar: tempo.beatsPerBar) {
-            case .bars(let n):
-                return "Next: ~\(n) bar\(n == 1 ? "" : "s")"
+            case .bars(let bars):
+                return "Next: ~\(bars) bar\(bars == 1 ? "" : "s")"
             case .pulse:
                 let dots = (1...tempo.beatsPerBar)
                     .reversed()

@@ -31,9 +31,9 @@ struct TransportBar: View {
     /// stays aligned on resize. When `mediaDuration` is 0 (no active item) the slash
     /// and total are omitted — `"00:00:00.000 / 00:00:00.000"` would be misleading.
     private var timeReadout: String {
-        let current = TimeFormat.hms(engine.currentTime)
+        let current = TimeFormat.smpte(engine.currentTime, rate: timecodeSettings.framerate)
         guard mediaDuration > 0 else { return current }
-        return "\(current) / \(TimeFormat.hms(mediaDuration))"
+        return "\(current) / \(TimeFormat.smpte(mediaDuration, rate: timecodeSettings.framerate))"
     }
 
     /// Strictly-greater filter: a cue exactly at `currentTime` is "now," not "next."
@@ -97,9 +97,10 @@ struct TransportBar: View {
     static func countdownLabel(
         mode: CountdownMode,
         interval: TimeInterval,
-        activeTempo: (bpm: Double, beatsPerBar: Int)?
+        activeTempo: (bpm: Double, beatsPerBar: Int)?,
+        rate: SMPTEFramerate
     ) -> String {
-        let timeBody = TimeFormat.compactCountdown(interval)
+        let timeBody = TimeFormat.smpteCountdown(interval, rate: rate)
         switch mode {
         case .time:
             return "Next: \(timeBody)"
@@ -162,7 +163,8 @@ struct TransportBar: View {
                 let label = Self.countdownLabel(
                     mode: countdownMode,
                     interval: interval,
-                    activeTempo: tempo
+                    activeTempo: tempo,
+                    rate: timecodeSettings.framerate
                 )
                 Button(action: cycleCountdownMode) {
                     Text(label)

@@ -157,13 +157,15 @@ final class NextCueCountdownTests: XCTestCase {
 
     // MARK: - TransportBar.countdownLabel
 
-    func test_countdownLabel_timeMode_formatsAsCompactCountdown() {
+    func test_countdownLabel_timeMode_formatsAsSMPTECountdown() {
         let label = TransportBar.countdownLabel(
             mode: .time,
             interval: 4.2,
-            activeTempo: nil
+            activeTempo: nil,
+            rate: .fps30
         )
-        XCTAssertEqual(label, "Next: 4.2")
+        // 4.2s @ 30fps = 4 sec, 6 frames
+        XCTAssertEqual(label, "Next: 04:06")
     }
 
     func test_countdownLabel_beatsMode_underOneBar_formatsAsPulse() {
@@ -173,7 +175,8 @@ final class NextCueCountdownTests: XCTestCase {
         let label = TransportBar.countdownLabel(
             mode: .beats,
             interval: 1.0,
-            activeTempo: (bpm: 120, beatsPerBar: 4)
+            activeTempo: (bpm: 120, beatsPerBar: 4),
+            rate: .fps30
         )
         XCTAssertEqual(label, "Next: 4 · 3 · 2 · 1")
     }
@@ -182,7 +185,8 @@ final class NextCueCountdownTests: XCTestCase {
         let label = TransportBar.countdownLabel(
             mode: .beats,
             interval: 4.5,
-            activeTempo: (bpm: 120, beatsPerBar: 4)
+            activeTempo: (bpm: 120, beatsPerBar: 4),
+            rate: .fps30
         )
         XCTAssertEqual(label, "Next: ~2 bars")
     }
@@ -192,7 +196,8 @@ final class NextCueCountdownTests: XCTestCase {
         let label = TransportBar.countdownLabel(
             mode: .beats,
             interval: 5.0,
-            activeTempo: (bpm: 60, beatsPerBar: 4)
+            activeTempo: (bpm: 60, beatsPerBar: 4),
+            rate: .fps30
         )
         XCTAssertEqual(label, "Next: ~1 bar")
     }
@@ -201,9 +206,11 @@ final class NextCueCountdownTests: XCTestCase {
         let label = TransportBar.countdownLabel(
             mode: .beats,
             interval: 4.2,
-            activeTempo: nil
+            activeTempo: nil,
+            rate: .fps30
         )
-        XCTAssertEqual(label, "Next: 4.2 ⓘ")
+        // 4.2s @ 30fps = 4 sec, 6 frames
+        XCTAssertEqual(label, "Next: 04:06 ⓘ")
     }
 
     private func makeCue(

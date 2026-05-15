@@ -1,5 +1,4 @@
 import AppKit
-import QuartzCore
 import SwiftUI
 
 /// Full-bleed transparent surface that bears the click-to-seek and
@@ -11,10 +10,11 @@ import SwiftUI
 /// time-label badge are rendered separately by `WaveformPlayheadVisual`,
 /// which sits ABOVE the markers with hit-testing disabled.
 ///
-/// A zero-translation drag collapses to a single seek (the click case).
-/// A non-zero drag pauses on press (only if the engine is playing),
-/// scrubs while held, and resumes on release if it was playing — see
-/// `TimelineScrubOrchestrator`.
+/// Click handling uses a `SpatialTapGesture` (bare clicks); hold-to-scrub
+/// uses a `DragGesture(minimumDistance: 1)`. The two compose with
+/// `.simultaneously` and don't conflict in practice — see the in-line
+/// comment in `body`. Pause-on-press / resume-on-release physics for
+/// scrub live in `TimelineScrubOrchestrator`.
 struct WaveformSeekSurface: View {
 
     let engine: PlayerEngine
@@ -27,7 +27,25 @@ struct WaveformSeekSurface: View {
             let width = geometry.size.width
             Color.clear
                 .contentShape(Rectangle())
-                .gesture(timelineDragGesture(width: width))
+                // SpatialTapGesture handles bare clicks (no translation).
+                // DragGesture(minimumDistance: 1) handles hold-to-scrub.
+                // The two run simultaneously and don't conflict: a click
+                // never accumulates 1 pt of translation so the drag stays
+                // idle, and a drag is never a bare touch-up at the press
+                // point so the tap stays idle.
+                //
+                // Why `minimumDistance: 1` on the drag (not 0): with both
+                // this surface and a `CueMarkerView` carrying drag
+                // gestures, the previous `minimumDistance: 0` here meant
+                // SwiftUI delivered every press to whichever sibling was
+                // topmost — absorbing marker clicks (#285). Bumping to 1
+                // lets the marker's `minimumDistance: 0` win arbitration
+                // on a press that lands on a cap.
+                .gesture(
+                    SpatialTapGesture()
+                        .onEnded { value in seek(toX: value.location.x, width: width) }
+                        .simultaneously(with: timelineDragGesture(width: width))
+                )
                 .onContinuousHover { phase in
                     switch phase {
                     case .active: NSCursor.openHand.set()
@@ -38,11 +56,15 @@ struct WaveformSeekSurface: View {
         }
     }
 
+    private func seek(toX x: CGFloat, width: CGFloat) {
+        let target = CueMarkersGeometry.time(forX: x, width: width, duration: duration)
+        seekTask?.cancel()
+        seekTask = Task {
+            await engine.seek(to: target)
+        }
+    }
+
     private func timelineDragGesture(width: CGFloat) -> some Gesture {
-        // minimumDistance: 1 lets a marker's `DragGesture(minimumDistance: 0)`
-        // win arbitration when the press lands on a cap. Click-to-seek still
-        // works because the seek surface's gesture collapses zero-translation
-        // drags to a single seek (`TimelineScrubOrchestrator.end`).
         DragGesture(minimumDistance: 1)
             .onChanged { value in
                 if scrub.state == nil {

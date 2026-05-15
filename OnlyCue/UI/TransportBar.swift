@@ -147,6 +147,8 @@ struct TransportBar: View {
                 .foregroundStyle(.secondary)
                 .accessibilityIdentifier("currentTimeReadout")
 
+            PlaybackRateBadge(engine: engine)
+
             if ltcRoutingStore.settings.isEnabled {
                 Text("SMPTE \(smpteReadout)")
                     .font(.system(.body, design: .monospaced))

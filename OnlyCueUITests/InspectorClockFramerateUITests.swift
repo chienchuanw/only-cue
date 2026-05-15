@@ -27,10 +27,10 @@ final class InspectorClockFramerateUITests: XCTestCase {
         let clock = window.descendants(matching: .staticText)
             .matching(identifier: "inspectorClock").firstMatch
         XCTAssertTrue(clock.waitForExistence(timeout: 15), "inspectorClock must exist")
-        let before = clock.label
+        let before = clock.label.isEmpty ? (clock.value as? String ?? "") : clock.label
         XCTAssertNotNil(
             before.range(of: #"^\d{2}:\d{2}:\d{2}[:;]\d{2}$"#, options: .regularExpression),
-            "expected SMPTE shape before flip, got \(before)"
+            "expected SMPTE shape before flip, got label='\(clock.label)' value='\(clock.value ?? "nil")'"
         )
 
         // Open Tools → Timecode Settings…
@@ -64,10 +64,10 @@ final class InspectorClockFramerateUITests: XCTestCase {
         // before and after — guard with a relaxed assertion: just confirm the
         // clock is still visible and SMPTE-shaped after the flip.
         XCTAssertTrue(clock.waitForExistence(timeout: 5))
-        let after = clock.label
+        let after = clock.label.isEmpty ? (clock.value as? String ?? "") : clock.label
         XCTAssertNotNil(
             after.range(of: #"^\d{2}:\d{2}:\d{2}[:;]\d{2}$"#, options: .regularExpression),
-            "expected SMPTE shape after flip, got \(after)"
+            "expected SMPTE shape after flip, got label='\(clock.label)' value='\(clock.value ?? "nil")'"
         )
     }
 

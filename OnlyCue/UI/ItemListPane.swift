@@ -86,7 +86,6 @@ struct ItemListPane: View {
                     item: item,
                     framerate: document.model.timecodeSettings.framerate
                 )
-                .tag(Optional(item.id))
                 .contextMenu {
                     Button("Edit Media…") { editingItemID = item.id }
                         .accessibilityIdentifier("contextMenuEditMedia")
@@ -96,6 +95,7 @@ struct ItemListPane: View {
                         Text("Remove")
                     }
                 }
+                .tag(Optional(item.id))
             }
             .onMove(perform: move)
             .onDelete(perform: deleteAtOffsets)

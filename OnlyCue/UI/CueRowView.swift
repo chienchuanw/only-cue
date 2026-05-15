@@ -6,8 +6,10 @@ struct CueRowView: View {
     var resolvedColorHex: String?
     var timeColumnWidth: CGFloat = CueListColumnWidths.timeDefault
     var numberColumnWidth: CGFloat = CueListColumnWidths.numberDefault
+    var fadeColumnWidth: CGFloat = CueListColumnWidths.fadeDefault
     var onRename: (String) -> Void = { _ in }
     var onCommitNumber: (Double?) -> CueNumberValidator.Result = { _ in .ok }
+    var onCommitFade: (FadeTime) -> Void = { _ in }
 
     @State private var isEditingName = false
     @State private var draftName = ""
@@ -18,35 +20,58 @@ struct CueRowView: View {
     @State private var numberError: String?
     @FocusState private var numberFieldFocused: Bool
 
+    @State private var isEditingFade = false
+    @State private var fadeDraft = ""
+    @FocusState private var fadeFieldFocused: Bool
+
     @Environment(\.projectFramerate) private var framerate
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 0) {
-            HStack(spacing: CueListLayout.rowHorizontalSpacing) {
-                Text(TimeFormat.smpte(cue.time, rate: framerate))
-                    .font(.system(.body, design: .monospaced))
-                    .foregroundStyle(.secondary)
-                    .frame(width: timeColumnWidth, alignment: .leading)
-                    .accessibilityIdentifier("cueTime-\(cue.id)")
+        HStack(spacing: 0) {
+            stripe
+                .frame(width: 3)
+                .accessibilityIdentifier("cueRowStripe-\(cue.id)")
+            VStack(alignment: .leading, spacing: 0) {
+                HStack(spacing: CueListLayout.rowHorizontalSpacing) {
+                    Text(TimeFormat.smpte(cue.time, rate: framerate))
+                        .font(.system(.body, design: .monospaced))
+                        .foregroundStyle(.secondary)
+                        .frame(width: timeColumnWidth, alignment: .leading)
+                        .accessibilityIdentifier("cueTime-\(cue.id)")
 
-                numberCell
-                    .frame(width: numberColumnWidth, alignment: .leading)
-                    .accessibilityIdentifier("cueNumber-\(cue.id)")
+                    numberCell
+                        .frame(width: numberColumnWidth, alignment: .leading)
+                        .accessibilityIdentifier("cueNumber-\(cue.id)")
 
-                nameField
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                    .accessibilityIdentifier("cueName-\(cue.id)")
+                    nameField
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .accessibilityIdentifier("cueName-\(cue.id)")
+
+                    fadeCell
+                        .frame(width: fadeColumnWidth, alignment: .leading)
+                        .accessibilityIdentifier("cueRowFade-\(cue.id)")
+                }
+                if let numberError {
+                    Text(numberError)
+                        .font(.caption2)
+                        .foregroundStyle(.red)
+                        .padding(.leading, timeColumnWidth + CueListLayout.rowHorizontalSpacing)
+                        .accessibilityIdentifier("cueNumberError-\(cue.id)")
+                }
             }
-            if let numberError {
-                Text(numberError)
-                    .font(.caption2)
-                    .foregroundStyle(.red)
-                    .padding(.leading, timeColumnWidth + CueListLayout.rowHorizontalSpacing)
-                    .accessibilityIdentifier("cueNumberError-\(cue.id)")
-            }
+            .padding(.leading, 6)
         }
         .padding(.vertical, 2)
         .accessibilityIdentifier("cueRow-\(cue.id)")
+    }
+
+    @ViewBuilder
+    private var stripe: some View {
+        if let hex = resolvedColorHex, let color = Color(hex: hex) {
+            Rectangle().fill(color)
+        } else {
+            Rectangle().fill(Color.clear)
+        }
     }
 
     @ViewBuilder
@@ -87,6 +112,29 @@ struct CueRowView: View {
                 .lineLimit(1)
                 .truncationMode(.tail)
                 .onTapGesture(count: 2) { beginRename() }
+        }
+    }
+
+    @ViewBuilder
+    private var fadeCell: some View {
+        if isEditingFade {
+            TextField("", text: $fadeDraft)
+                .textFieldStyle(.plain)
+                .font(.system(.body, design: .monospaced))
+                .focused($fadeFieldFocused)
+                .onSubmit { commitFade() }
+                .onExitCommand { cancelFadeEdit() }
+                .onChange(of: fadeFieldFocused) { _, isFocused in
+                    if !isFocused { commitFade() }
+                }
+                .onAppear { fadeFieldFocused = true }
+        } else {
+            Text(cue.fadeTime.format())
+                .font(.system(.body, design: .monospaced))
+                .foregroundStyle(.secondary)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .contentShape(Rectangle())
+                .onTapGesture(count: 2) { beginFadeEdit() }
         }
     }
 
@@ -133,5 +181,21 @@ struct CueRowView: View {
         case .revert:
             numberError = CueNumberErrorMessage.invalidFormat
         }
+    }
+
+    private func beginFadeEdit() {
+        fadeDraft = cue.fadeTime.format()
+        isEditingFade = true
+    }
+
+    private func cancelFadeEdit() {
+        isEditingFade = false
+    }
+
+    private func commitFade() {
+        defer { isEditingFade = false }
+        guard let parsed = FadeTime.parse(fadeDraft) else { return }
+        guard parsed != cue.fadeTime else { return }
+        onCommitFade(parsed)
     }
 }

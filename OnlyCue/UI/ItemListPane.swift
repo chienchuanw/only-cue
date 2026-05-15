@@ -82,15 +82,7 @@ struct ItemListPane: View {
             ForEach(document.model.items) { item in
                 ItemRowView(
                     item: item,
-                    framerate: document.model.timecodeSettings.framerate,
-                    onSetStartTimecode: { frames in
-                        CueCommands.setStartTimecode(
-                            itemID: item.id,
-                            frames: frames,
-                            document: document,
-                            undoManager: undoManager
-                        )
-                    }
+                    framerate: document.model.timecodeSettings.framerate
                 )
                 .tag(Optional(item.id))
                 .contextMenu {

@@ -1,9 +1,9 @@
 import Foundation
 
-/// Audio-side spectral-flux tempo detection extracted from the inspector
-/// extension so the new `CueTempoSheet` can call it without depending on
-/// `CueInspectorView`. Behavior is byte-for-byte identical to the previous
-/// `CueInspectorView+Tempo.detect` static.
+/// Audio-side spectral-flux tempo detection. Called from `CueTempoSheet`
+/// to populate its BPM draft when the user taps "Detect". Behavior is
+/// byte-for-byte identical to the previous `CueInspectorView+Tempo.detect`
+/// static (the extension and its host view were deleted in #291 and #293).
 enum CueTempoDetect {
 
     enum Outcome { case found(TempoEstimate), notDetected, noAudio, failed }

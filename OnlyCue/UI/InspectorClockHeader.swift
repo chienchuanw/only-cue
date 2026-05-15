@@ -15,8 +15,8 @@ struct InspectorClockHeader: View {
                 .font(.system(size: 30, weight: .semibold, design: .monospaced))
                 .monospacedDigit()
                 .foregroundStyle(.primary)
-                .frame(maxWidth: .infinity, alignment: .center)
                 .accessibilityIdentifier("inspectorClock")
+                .frame(maxWidth: .infinity, alignment: .center)
             Divider()
         }
         .padding(.top, 4)

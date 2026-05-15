@@ -25,10 +25,10 @@ A native macOS application for lighting designers and show programmers, inspired
 
 ## Screenshots
 
-Document window (fresh, untitled) — media preview area, transport bar, and the empty cue list:
+Document window (fresh, untitled) — media library sidebar, preview / waveform area, transport bar with SMPTE readout, and the cue list pane with the playhead clock pinned above it:
 
 ![OnlyCue document window](static/document-window.png)
-<!-- Regenerate: xcodebuild test -project OnlyCue.xcodeproj -scheme OnlyCue -destination 'platform=macOS' -only-testing:OnlyCueUITests/TransportBarScreenshotTests, then copy transport-bar-baseline.png from the runner tmp dir. TODO: a media-loaded variant needs a new UI test + media fixture. -->
+<!-- Regenerate: xcodebuild test -project OnlyCue.xcodeproj -scheme OnlyCue -destination 'platform=macOS' -only-testing:OnlyCueUITests/TransportBarScreenshotTests, then copy transport-bar-baseline.png from the runner tmp dir (~/Library/Containers/com.chienchuanw.OnlyCueUITests.xctrunner/Data/tmp/screenshots/) into static/document-window.png. TODO: a media-loaded variant needs a new UI test + media fixture. -->
 
 
 Export Cues sheet (`⇧⌘E`) — format picker and per-cue-type filter:
@@ -78,6 +78,12 @@ System requirements: macOS 14 (Sonoma) or later, Apple silicon or Intel.
 | **Epic [#231](https://github.com/chienchuanw/only-cue/issues/231) — per-media LTC** | **Complete.** Per-`MediaItem` start timecode and mute flag (schema v10 with deterministic migration from v9); `LTCStrip` rendered in the main pane when LTC routing is enabled, with a per-clip mute control and a timecode ruler; per-media TC editor in the sidebar plus a project-wide Timecode Settings sheet. PRs [#238–#243](https://github.com/chienchuanw/only-cue/pulls?q=is%3Apr+is%3Amerged+238..243). |
 | **Tempo (cue-anchored)** | **Complete.** Tempo is anchored to cues, not stored as a separate map: each `Cue` carries an optional `bpm` and `beatsPerBar`, and `DerivedTempoGrid` derives beat / bar lines from the cue sequence at render time. Per-cue tempo inspector with a "Detect" button (`SpectralFluxTempoAnalyzer` over the audio span up to the next tempo-bearing cue); optional BPM column in the cue list; the standalone TempoMap, Tempo Map sheet, and auto-cue-on-grid menu items were removed in favor of this simpler model. Schema settled at v11 with migrations from v10. Supersedes the earlier `TempoMap` work from epic #199. |
 | **Main-view polish** | **Complete.** Rename to "Only Cue" in the main view, decluttered layout, hi-res waveform (12k peaks), smooth playhead interpolation, click-to-seek anywhere on the waveform, and a fixed playhead time-label clipping bug. PRs #221–#228. |
+| **CueList redesign** | **Complete.** Resizable Time / Number columns, moved Manage Types to the Tools menu, draggable cue markers / group drags on the timeline, and a `UITestSeedHandler` for deterministic UI test fixtures. PRs #260–#268. |
+| **SMPTE timecode rendering** ([#289](https://github.com/chienchuanw/only-cue/issues/289)) | **Complete.** Every displayed time — transport readout, next-cue countdown, cue row, media row, playhead label, timeline ticks — renders as HH:MM:SS:FF at the project framerate via a shared `TimeFormat` formatter and a `projectFramerate` SwiftUI environment value seeded at `DocumentView`. The old `HH:MM:SS.mmm` formatters were removed. |
+| **Cue Inspector redesign** ([#291](https://github.com/chienchuanw/only-cue/issues/291), [#293](https://github.com/chienchuanw/only-cue/issues/293)) | **Complete.** The standalone `CueInspectorView` pane was removed. Cue rows now expose Number / Name / Fade inline, and Type / Notes / Tempo move to right-click → modal sheets (`CueTypeSheet`, `CueNotesSheet`, `CueTempoSheet`). A playhead clock (`PlayheadClockHeader`) is pinned above the cue list and renders the current transport as SMPTE timecode. |
+| **Playback speed** ([#283](https://github.com/chienchuanw/only-cue/issues/283)) | **Complete.** 0.1×–3.0× pitch-preserving time-stretch via `AVAudioMixInputParameters`; `[` / `]` / `\` shortcuts plus a Playback menu; a rate badge on the transport bar; LTC interlock blocks non-1.0× rates while LTC output is enabled. PR #284. |
+| **Beat-tempo countdown** ([#281](https://github.com/chienchuanw/only-cue/issues/281)) | **Complete.** The transport's `Next:` countdown switches to beat-tempo units when the upcoming cue carries a tempo, falling back to SMPTE otherwise. PR #282. |
+| **Per-media edit panel** ([#279](https://github.com/chienchuanw/only-cue/issues/279)) | **In progress.** Per-`MediaItem` `alternateName` (display override) and `resolvedName` (effective name resolver) with schema migration v11 → v12. |
 | **Stand-alone leaves** | Cue inspector commits drafts on outside-click (window-scoped `NSEvent` monitor); File → Import Media… menu entry with ⌘O (canonical menu owner); ⇧⌘P "pause at each cue" mode; ⇧⌘N notes-overlay toggle; clickable empty-preview placeholder; manual cue numbering (`CueNumberValidator`, schema v8→v9). |
 | **Release pipeline** | Self-serve: `bash scripts/build-release.sh && bash scripts/make-dmg.sh` produces a drag-installable DMG. Default `RELEASE_MODE=unsigned` is free-tier-friendly (ad-hoc signed). `RELEASE_MODE=signed` opt-in for Developer ID + notarization once on a paid Apple Developer Program. Procedure in [`docs/release.md`](docs/release.md). |
 
@@ -100,14 +106,15 @@ The top-level per-`.cuelist` window. A three-pane `NavigationSplitView` with a s
 - **Main Pane** (`DocumentView.mainPane`) — center column. Stacks the following from top to bottom:
   - **Preview Pane** (`PreviewPane`, ID `previewPane`) — video surface or audio waveform display.
     - **Video Surface** (`AVPlayerLayerView`, ID `videoPreview`) — present only when the active item is a video.
-    - **Timeline Strip** — either the **Waveform View** (`WaveformContainer` / `WaveformView`, IDs `videoWaveform` / `audioWaveform`) with cue markers and the draggable **Playhead Overlay** (`PlayheadOverlay`), or the **Timeline Breakdown** (`TimelineBreakdownView`, ID `timelineBreakdownArea`) when `View → Show Timeline Breakdown` is on. The waveform is overlaid by **Cue Markers** (`CueMarkersOverlay`), the **Tempo Grid Overlay** (`TempoGridOverlay`) when enabled, and the **Waveform Zoom Magnifier** (`WaveformZoomMagnifier`) on hover.
+    - **Timeline Strip** — either the **Waveform View** (`WaveformContainer` / `WaveformView`, IDs `videoWaveform` / `audioWaveform`) with cue markers and the draggable **Playhead Overlay** (`PlayheadOverlay`), or the **Timeline Breakdown** (`TimelineBreakdownView`, ID `timelineBreakdownArea`) when `View → Show Timeline Breakdown` is on. The waveform is overlaid by **Cue Markers** (`CueMarkersOverlay`), the **Tempo Grid Overlay** (`TempoGridOverlay`) when enabled, and the **Waveform Zoom Magnifier** (`WaveformZoomMagnifier`) on hover. Seek surface and visual layer are split (`WaveformSeekSurface` + `WaveformPlayheadVisual`) so cue markers remain reachable to clicks.
     - **Notes Overlay** (`NotesOverlayView`) — HUD-style cue-notes overlay rendered on top of the preview when `⇧⌘N` is on.
     - **Empty Preview Placeholder** (`DocumentEmptyState`, ID `emptyPreview`) — shown when no media is loaded; clickable.
   - **LTC Strip** (`LTCStrip`) — per-clip timecode ruler with a mute button. Visible only when LTC routing is enabled and a media item is loaded (per-media LTC, epic #231).
-  - **Transport Bar** (`TransportBar`) — single-line HH:MM:SS readout (`current / total`, ID `currentTimeReadout`), an optional `SMPTE …` readout (ID `smpteTimecode`) shown only when LTC output is enabled in Settings, and the `Next:` countdown to the upcoming cue. No visible Play/Pause or Add Cue buttons — both are wired through hidden commands; Space toggles playback and the `.addCue` shortcut adds a cue at the playhead.
-- **Cue Inspector Pane** (`CueListPane`, ID `cueListPane`) — right inspector. A `VSplitView` containing:
-  - **Cue List** — filterable list of cues for the active item; rows are `CueRowView`. Includes the optional **BPM Column** (cue-anchored tempo). When no cues exist, shows the **Cue List Empty State**.
-  - **Cue Inspector** (`CueInspectorView`) — details for the single selected cue: name, time, fade time, type, cue number, color, notes, and the **Tempo Group** (`CueInspectorView+Tempo`) with BPM / beats-per-bar fields and the Detect button.
+  - **Transport Bar** (`TransportBar`) — single-line SMPTE readout (`current / total` rendered as HH:MM:SS:FF at the project framerate, ID `currentTimeReadout`), an optional `SMPTE …` readout (ID `smpteTimecode`) shown only when LTC output is enabled in Settings, and the `Next:` countdown to the upcoming cue (also SMPTE-shaped, with an optional beat-tempo countdown when the next cue carries a tempo). No visible Play/Pause or Add Cue buttons — both are wired through hidden commands; Space toggles playback and the `.addCue` shortcut adds a cue at the playhead.
+- **Cue List Pane** (`CueListPane`, ID `cueListPane`) — right pane. Stacks the following:
+  - **Playhead Clock** (`PlayheadClockHeader`) — pinned at the top of the pane, renders the current transport time as SMPTE timecode (HH:MM:SS:FF) at the project framerate.
+  - **Cue List** — filterable list of cues for the active item with a leading color stripe and columns for Time, Number, Name, and Fade; rows are `CueRowView`. Includes the optional **BPM Column** (cue-anchored tempo). When no cues exist, shows the **Cue List Empty State**.
+  - **Cue Row Context Menu** — right-click on a row to edit Type, Notes, or Tempo. Each launches a modal sheet (`CueTypeSheet`, `CueNotesSheet`, `CueTempoSheet`) rather than a persistent inspector pane. Inline editing on the row itself covers Number, Name, and Fade. The standalone `CueInspectorView` was removed in favor of this row-and-modal model.
 
 ### Auxiliary surfaces
 
@@ -177,7 +184,7 @@ Read in this order:
 | UI | SwiftUI (`@Observable`, `DocumentGroup`) |
 | Media | AVFoundation (`AVPlayer`, `AVAssetReader`) |
 | Min OS | macOS 14 (Sonoma) |
-| Project file | `.cuelist` (JSON, schema v11) |
+| Project file | `.cuelist` (JSON, schema v12) |
 | Distribution | Ad-hoc signed DMG (Developer ID + notarization opt-in) |
 
 ## Reference

@@ -2,9 +2,9 @@ import XCTest
 @testable import OnlyCue
 
 @MainActor
-final class InspectorClockHeaderTests: XCTestCase {
+final class PlayheadClockHeaderTests: XCTestCase {
 
-    /// The inspector clock formats its readout via `TimeFormat.smpte` at the
+    /// The playhead clock formats its readout via `TimeFormat.smpte` at the
     /// project framerate seeded into the environment. The static helper went
     /// away when the view switched to an `@Environment` framerate, so these
     /// tests assert the underlying formatter contract the view uses.

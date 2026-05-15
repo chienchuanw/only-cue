@@ -29,8 +29,9 @@ enum FirstResponderResign {
 /// whether the click should resign the active text first responder. If yes,
 /// calls `window.makeFirstResponder(nil)`, which propagates back through
 /// SwiftUI's `@FocusState` and triggers the existing `commitOnFocusLeave`
-/// machinery in `CueInspectorView`. Returns the event unchanged so normal
-/// click handling proceeds.
+/// machinery in `CueRowView` (inline edits for Number / Name / Fade) and the
+/// modal sheets hosted by `CueListPane` (Notes / Tempo). Returns the event
+/// unchanged so normal click handling proceeds.
 struct FirstResponderResignOnOutsideClick: ViewModifier {
     func body(content: Content) -> some View {
         content.background(FirstResponderResignMonitor())

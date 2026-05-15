@@ -14,6 +14,11 @@ final class PlayerEngine {
     private(set) var rate: Float = 0
     private(set) var duration: TimeInterval = 0
 
+    /// User-facing playback rate. Range `[0.1, 3.0]`, snapped to 0.1.
+    /// Distinct from `rate`, which reflects `AVPlayer.rate` (0 when paused).
+    /// `playbackRate` is the rate `play()` will apply to the player.
+    private(set) var playbackRate: Float = 1.0
+
     var isPlaying: Bool { rate > 0 }
 
     @ObservationIgnored
@@ -86,6 +91,41 @@ final class PlayerEngine {
         await player.seek(to: target, toleranceBefore: .zero, toleranceAfter: .zero)
         currentTime = seconds
         currentTimeObservedAt = CACurrentMediaTime()
+    }
+
+    // MARK: - Playback rate
+
+    /// Allowed playback rate range, inclusive.
+    static let playbackRateRange: ClosedRange<Float> = 0.1...3.0
+    /// Snap step for `setPlaybackRate(_:)`.
+    static let playbackRateStep: Float = 0.1
+
+    /// Set the playback rate, clamped to `playbackRateRange` and snapped to the
+    /// nearest `playbackRateStep`. If the player is currently playing, the live
+    /// `AVPlayer.rate` is updated to match.
+    ///
+    /// LTC interlock is enforced by callers (the keymap action + menu item);
+    /// this method does not consult LTC state so unit tests can drive the rate
+    /// without standing up a routing store.
+    func setPlaybackRate(_ rate: Float) {
+        let range = Self.playbackRateRange
+        let step = Self.playbackRateStep
+        let clamped = min(max(rate, range.lowerBound), range.upperBound)
+        let snapped = (clamped / step).rounded() * step
+        playbackRate = min(max(snapped, range.lowerBound), range.upperBound)
+        if player.rate > 0 {
+            player.rate = playbackRate
+        }
+    }
+
+    /// Increment / decrement by `delta` (typically ±0.1). Clamps via `setPlaybackRate(_:)`.
+    func nudgePlaybackRate(by delta: Float) {
+        setPlaybackRate(playbackRate + delta)
+    }
+
+    /// Reset to 1.0×.
+    func resetPlaybackRate() {
+        setPlaybackRate(1.0)
     }
 
     private func observeTime() {

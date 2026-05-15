@@ -70,11 +70,6 @@ struct CueListPane: View {
         )
     }
 
-    private var selectedCue: Cue? {
-        guard let id = soleSelectedID else { return nil }
-        return cues.first(where: { $0.id == id })
-    }
-
     func rowTint(for cue: Cue) -> Color {
         guard let hex = document.model.colorHex(for: cue),
               let base = Color(hex: hex) else {
@@ -84,7 +79,8 @@ struct CueListPane: View {
     }
 
     var body: some View {
-        VSplitView {
+        VStack(spacing: 0) {
+            PlayheadClockHeader(engine: engine)
             Group {
                 if cues.isEmpty {
                     emptyState
@@ -92,10 +88,7 @@ struct CueListPane: View {
                     cueList
                 }
             }
-            .frame(minHeight: 120)
-
-            CueInspectorView(document: document, engine: engine, cue: selectedCue)
-                .frame(minHeight: 180)
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
         }
         .frame(minWidth: 240)
         .accessibilityIdentifier("cueListPane")

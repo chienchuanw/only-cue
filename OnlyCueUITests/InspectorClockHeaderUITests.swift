@@ -38,10 +38,12 @@ final class InspectorClockHeaderUITests: XCTestCase {
         let clock = window.descendants(matching: .staticText)
             .matching(identifier: "inspectorClock").firstMatch
         XCTAssertTrue(clock.waitForExistence(timeout: 15))
-        let value = clock.label
+        // SwiftUI Text exposes its content via either .label or .value
+        // depending on the macOS AX convention chosen — try both.
+        let text = clock.label.isEmpty ? (clock.value as? String ?? "") : clock.label
         XCTAssertNotNil(
-            value.range(of: #"^\d{2}:\d{2}:\d{2}[:;]\d{2}$"#, options: .regularExpression),
-            "expected HH:MM:SS:FF (or ;FF) form, got \(value)"
+            text.range(of: #"^\d{2}:\d{2}:\d{2}[:;]\d{2}$"#, options: .regularExpression),
+            "expected HH:MM:SS:FF (or ;FF) form, got label='\(clock.label)' value='\(clock.value ?? "nil")'"
         )
     }
 

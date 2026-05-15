@@ -25,6 +25,23 @@ final class InspectorClockHeaderUITests: XCTestCase {
         )
     }
 
+    /// The inspector clock renders SMPTE timecode (`HH:MM:SS:FF` or
+    /// `HH:MM:SS;FF` for drop-frame) at the project's framerate, replacing
+    /// the legacy `HH:MM:SS.mmm` form.
+    func testClockRendersAsSMPTE() throws {
+        let app = launchWithSeed(.threeCuesAt1And3And6)
+        let window = try waitForSeedWindow(in: app)
+
+        let clock = window.descendants(matching: .any)
+            .matching(identifier: "inspectorClock").firstMatch
+        XCTAssertTrue(clock.waitForExistence(timeout: 15))
+        let value = clock.label
+        XCTAssertNotNil(
+            value.range(of: #"^\d{2}:\d{2}:\d{2}[:;]\d{2}$"#, options: .regularExpression),
+            "expected HH:MM:SS:FF (or ;FF) form, got \(value)"
+        )
+    }
+
     /// With a cue selected, the inspector renders its field stack. The clock
     /// header must remain visible above the fields. Row selection via
     /// coordinate click is flaky in headless CI envs (tracked separately as

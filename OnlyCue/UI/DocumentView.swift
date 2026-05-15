@@ -37,7 +37,7 @@ struct DocumentView: View {
                         .inspectorColumnWidth(min: 240, ideal: 300, max: 400)
                 }
         }
-        .navigationSubtitle(document.model.activeItem?.media.displayName ?? "")
+        .navigationSubtitle(document.model.activeItem?.resolvedName ?? "")
         .sheet(isPresented: firstLaunchBinding) {
             FirstLaunchSheet { didShowFirstLaunch = true }
         }

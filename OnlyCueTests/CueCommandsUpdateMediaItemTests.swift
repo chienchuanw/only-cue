@@ -28,56 +28,50 @@ final class CueCommandsUpdateMediaItemTests: XCTestCase {
     }
 
     func test_updateMediaItem_setsAllThreeFields_inOneStep() {
-        let a = makeItem(name: "a.wav")
-        let b = makeItem(name: "b.wav")
-        let doc = makeDocument(items: [a, b])
+        let itemA = makeItem(name: "a.wav")
+        let itemB = makeItem(name: "b.wav")
+        let doc = makeDocument(items: [itemA, itemB])
 
         CueCommands.updateMediaItem(
-            id: a.id,
-            alternateName: "Intro",
-            startTimecodeFrames: 600,
-            ltcMuted: true,
+            id: itemA.id,
+            edit: MediaItemEdit(alternateName: "Intro", startTimecodeFrames: 600, ltcMuted: true),
             document: doc,
             undoManager: nil
         )
 
-        let updated = doc.model.items.first { $0.id == a.id }
+        let updated = doc.model.items.first { $0.id == itemA.id }
         XCTAssertEqual(updated?.alternateName, "Intro")
         XCTAssertEqual(updated?.startTimecodeFrames, 600)
         XCTAssertEqual(updated?.ltcMuted, true)
     }
 
     func test_updateMediaItem_doesNotTouchOtherItems() {
-        let a = makeItem(name: "a.wav")
-        let b = makeItem(name: "b.wav")
-        let doc = makeDocument(items: [a, b])
+        let itemA = makeItem(name: "a.wav")
+        let itemB = makeItem(name: "b.wav")
+        let doc = makeDocument(items: [itemA, itemB])
 
         CueCommands.updateMediaItem(
-            id: a.id,
-            alternateName: "X",
-            startTimecodeFrames: 1,
-            ltcMuted: true,
+            id: itemA.id,
+            edit: MediaItemEdit(alternateName: "X", startTimecodeFrames: 1, ltcMuted: true),
             document: doc,
             undoManager: nil
         )
 
-        let other = doc.model.items.first { $0.id == b.id }
+        let other = doc.model.items.first { $0.id == itemB.id }
         XCTAssertNil(other?.alternateName)
         XCTAssertEqual(other?.startTimecodeFrames, 0)
         XCTAssertEqual(other?.ltcMuted, false)
     }
 
     func test_updateMediaItem_isSingleUndoStep() {
-        let a = makeItem(name: "a.wav")
-        let doc = makeDocument(items: [a])
+        let itemA = makeItem(name: "a.wav")
+        let doc = makeDocument(items: [itemA])
         let undo = UndoManager()
         undo.groupsByEvent = false
 
         CueCommands.updateMediaItem(
-            id: a.id,
-            alternateName: "Intro",
-            startTimecodeFrames: 600,
-            ltcMuted: true,
+            id: itemA.id,
+            edit: MediaItemEdit(alternateName: "Intro", startTimecodeFrames: 600, ltcMuted: true),
             document: doc,
             undoManager: undo
         )
@@ -85,7 +79,7 @@ final class CueCommandsUpdateMediaItemTests: XCTestCase {
         XCTAssertTrue(undo.canUndo)
         undo.undo()
 
-        let restored = doc.model.items.first { $0.id == a.id }
+        let restored = doc.model.items.first { $0.id == itemA.id }
         XCTAssertNil(restored?.alternateName)
         XCTAssertEqual(restored?.startTimecodeFrames, 0)
         XCTAssertEqual(restored?.ltcMuted, false)
@@ -93,33 +87,29 @@ final class CueCommandsUpdateMediaItemTests: XCTestCase {
     }
 
     func test_updateMediaItem_unknownID_isNoOp() {
-        let a = makeItem(name: "a.wav")
-        let doc = makeDocument(items: [a])
+        let itemA = makeItem(name: "a.wav")
+        let doc = makeDocument(items: [itemA])
 
         CueCommands.updateMediaItem(
             id: UUID(),
-            alternateName: "X",
-            startTimecodeFrames: 999,
-            ltcMuted: true,
+            edit: MediaItemEdit(alternateName: "X", startTimecodeFrames: 999, ltcMuted: true),
             document: doc,
             undoManager: nil
         )
 
-        let unchanged = doc.model.items.first { $0.id == a.id }
+        let unchanged = doc.model.items.first { $0.id == itemA.id }
         XCTAssertNil(unchanged?.alternateName)
         XCTAssertEqual(unchanged?.startTimecodeFrames, 0)
         XCTAssertEqual(unchanged?.ltcMuted, false)
     }
 
     func test_updateMediaItem_negativeFrames_clampedToZero() {
-        let a = makeItem(name: "a.wav")
-        let doc = makeDocument(items: [a])
+        let itemA = makeItem(name: "a.wav")
+        let doc = makeDocument(items: [itemA])
 
         CueCommands.updateMediaItem(
-            id: a.id,
-            alternateName: nil,
-            startTimecodeFrames: -10,
-            ltcMuted: false,
+            id: itemA.id,
+            edit: MediaItemEdit(alternateName: nil, startTimecodeFrames: -10, ltcMuted: false),
             document: doc,
             undoManager: nil
         )

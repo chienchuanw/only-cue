@@ -1,5 +1,14 @@
 import Foundation
 
+/// Bundle of user-editable per-media fields. Wraps the three values committed
+/// by the "Edit Media…" sheet so `CueCommands.updateMediaItem` stays under
+/// SwiftLint's parameter-count cap.
+struct MediaItemEdit: Equatable {
+    var alternateName: String?
+    var startTimecodeFrames: Int
+    var ltcMuted: Bool
+}
+
 @MainActor
 extension CueCommands {
 
@@ -12,37 +21,38 @@ extension CueCommands {
     /// "Save" presses don't pollute the undo stack.
     static func updateMediaItem(
         id: MediaItem.ID,
-        alternateName: String?,
-        startTimecodeFrames: Int,
-        ltcMuted: Bool,
+        edit: MediaItemEdit,
         document: CueListDocument,
         undoManager: UndoManager?
     ) {
         guard let index = document.model.items.firstIndex(where: { $0.id == id }) else { return }
-        let clampedFrames = max(0, startTimecodeFrames)
+        let clampedFrames = max(0, edit.startTimecodeFrames)
         let previous = document.model.items[index]
+        let normalized = MediaItemEdit(
+            alternateName: edit.alternateName,
+            startTimecodeFrames: clampedFrames,
+            ltcMuted: edit.ltcMuted
+        )
 
-        let alreadyMatches = previous.alternateName == alternateName
-            && previous.startTimecodeFrames == clampedFrames
-            && previous.ltcMuted == ltcMuted
+        let alreadyMatches = previous.alternateName == normalized.alternateName
+            && previous.startTimecodeFrames == normalized.startTimecodeFrames
+            && previous.ltcMuted == normalized.ltcMuted
         if alreadyMatches { return }
 
         undoManager?.beginUndoGrouping()
         defer { undoManager?.endUndoGrouping() }
 
-        document.model.items[index].alternateName = alternateName
-        document.model.items[index].startTimecodeFrames = clampedFrames
-        document.model.items[index].ltcMuted = ltcMuted
+        document.model.items[index].alternateName = normalized.alternateName
+        document.model.items[index].startTimecodeFrames = normalized.startTimecodeFrames
+        document.model.items[index].ltcMuted = normalized.ltcMuted
 
+        let previousEdit = MediaItemEdit(
+            alternateName: previous.alternateName,
+            startTimecodeFrames: previous.startTimecodeFrames,
+            ltcMuted: previous.ltcMuted
+        )
         undoManager?.registerUndo(withTarget: document) { doc in
-            Self.updateMediaItem(
-                id: id,
-                alternateName: previous.alternateName,
-                startTimecodeFrames: previous.startTimecodeFrames,
-                ltcMuted: previous.ltcMuted,
-                document: doc,
-                undoManager: undoManager
-            )
+            Self.updateMediaItem(id: id, edit: previousEdit, document: doc, undoManager: undoManager)
         }
         undoManager?.setActionName("Edit Media")
     }

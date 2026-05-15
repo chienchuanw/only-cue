@@ -37,3 +37,39 @@ final class TimeFormatTests: XCTestCase {
         XCTAssertEqual(TimeFormat.hms(0.0015), "00:00:00.002")
     }
 }
+
+final class TimeFormatSMPTETests: XCTestCase {
+
+    func test_smpte_zero_isAllZeros() {
+        XCTAssertEqual(TimeFormat.smpte(0, rate: .fps30), "00:00:00:00")
+    }
+
+    func test_smpte_oneFrameAt30_isFrame01() {
+        XCTAssertEqual(TimeFormat.smpte(1.0 / 30.0, rate: .fps30), "00:00:00:01")
+    }
+
+    func test_smpte_halfSecondAt24_is12Frames() {
+        XCTAssertEqual(TimeFormat.smpte(3661.5, rate: .fps24), "01:01:01:12")
+    }
+
+    func test_smpte_negative_clampsToZero() {
+        XCTAssertEqual(TimeFormat.smpte(-5, rate: .fps30), "00:00:00:00")
+    }
+
+    func test_smpte_dropFrame_usesSemicolonSeparator() {
+        let s = TimeFormat.smpte(60.0, rate: .fps30drop)
+        XCTAssertTrue(s.contains(";"), "drop-frame should use ';' between SS and FF, got \(s)")
+        XCTAssertFalse(s.range(of: #"\d{2};\d{2}$"#, options: .regularExpression) == nil)
+    }
+
+    func test_smpte_matchesTimecodeDisplayString() {
+        let samples: [(TimeInterval, SMPTEFramerate)] = [
+            (0, .fps30), (1.234, .fps30), (3600, .fps24), (75.5, .fps25), (61.0, .fps30drop)
+        ]
+        for (seconds, rate) in samples {
+            let expected = Timecode(totalSeconds: seconds, rate: rate).displayString
+            XCTAssertEqual(TimeFormat.smpte(seconds, rate: rate), expected,
+                           "smpte(\(seconds), \(rate)) should equal Timecode.displayString")
+        }
+    }
+}

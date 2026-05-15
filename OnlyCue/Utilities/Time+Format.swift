@@ -1,6 +1,13 @@
 import Foundation
 
 enum TimeFormat {
+    /// Formats `seconds` as SMPTE timecode `HH:MM:SS:FF` (`HH:MM:SS;FF` for
+    /// drop-frame) at the given `rate`. Negative values clamp to zero; sub-frame
+    /// values round half-away-from-zero (inherited from `Timecode`).
+    static func smpte(_ seconds: TimeInterval, rate: SMPTEFramerate) -> String {
+        Timecode(totalSeconds: max(0, seconds), rate: rate).displayString
+    }
+
     /// Formats `seconds` as `HH:MM:SS.mmm`.
     /// Negative values clamp to zero. Sub-millisecond values round half-away-from-zero.
     static func hms(_ seconds: TimeInterval) -> String {

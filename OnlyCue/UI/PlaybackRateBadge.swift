@@ -8,6 +8,7 @@ struct PlaybackRateBadge: View {
     let engine: PlayerEngine
 
     @State private var flashUntil: Date = .distantPast
+    @State private var flashTick: Int = 0
     @State private var interlockMessage: String?
     @State private var showPopover = false
 
@@ -19,9 +20,22 @@ struct PlaybackRateBadge: View {
         String(format: "%.1f×", engine.playbackRate)
     }
 
-    private var isFlashing: Bool { Date() < flashUntil }
+    private var isFlashing: Bool {
+        _ = flashTick // re-evaluate when tick advances
+        return Date() < flashUntil
+    }
     private var isAtNormalRate: Bool { abs(engine.playbackRate - 1.0) < 0.0001 }
     private var isVisible: Bool { !isAtNormalRate || isFlashing || interlockMessage != nil }
+
+    private func scheduleFlashEnd() {
+        let until = flashUntil
+        DispatchQueue.main.asyncAfter(deadline: .now() + Self.flashDuration + 0.05) {
+            // Only advance the tick if no later flash has extended the window.
+            if Date() >= until {
+                flashTick &+= 1
+            }
+        }
+    }
 
     var body: some View {
         Group {
@@ -30,9 +44,10 @@ struct PlaybackRateBadge: View {
                     Text(interlockMessage ?? rateText)
                         .font(.system(.body, design: .monospaced))
                         .foregroundStyle(interlockMessage != nil ? Color.red : Color.secondary)
-                        .accessibilityIdentifier("playbackRateBadge")
                 }
                 .buttonStyle(.plain)
+                .accessibilityIdentifier("playbackRateBadge")
+                .accessibilityLabel(interlockMessage ?? rateText)
                 .help("Playback rate (click to adjust)")
                 .popover(isPresented: $showPopover) {
                     PlaybackRatePopover(engine: engine)
@@ -42,6 +57,7 @@ struct PlaybackRateBadge: View {
         }
         .onChange(of: engine.playbackRate) { _, _ in
             flashUntil = Date().addingTimeInterval(Self.flashDuration)
+            scheduleFlashEnd()
         }
         .onReceive(NotificationCenter.default.publisher(for: .playbackRateInterlockBlocked)) { _ in
             flashInterlock(Self.interlockBlockedMessage)

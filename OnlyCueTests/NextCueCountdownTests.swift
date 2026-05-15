@@ -40,31 +40,31 @@ final class NextCueCountdownTests: XCTestCase {
         XCTAssertEqual(interval, 5.0, accuracy: 0.001)
     }
 
-    // MARK: - TimeFormat.compactCountdown
+    // MARK: - TimeFormat.smpteCountdown
 
-    func test_compactCountdown_subSecond_formatsAsDecisecond() {
-        XCTAssertEqual(TimeFormat.compactCountdown(0.0), "0.0")
-        XCTAssertEqual(TimeFormat.compactCountdown(0.5), "0.5")
+    func test_smpteCountdown_subSecond_formatsAsSSColonFF() {
+        XCTAssertEqual(TimeFormat.smpteCountdown(0.0, rate: .fps30), "00:00")
+        XCTAssertEqual(TimeFormat.smpteCountdown(0.5, rate: .fps30), "00:15")
     }
 
-    func test_compactCountdown_subMinute_formatsAsSecondsDecisecond() {
-        XCTAssertEqual(TimeFormat.compactCountdown(5.2), "5.2")
-        XCTAssertEqual(TimeFormat.compactCountdown(59.9), "59.9")
+    func test_smpteCountdown_subMinute_formatsAsSSColonFF() {
+        XCTAssertEqual(TimeFormat.smpteCountdown(5.5, rate: .fps30), "05:15")
+        XCTAssertEqual(TimeFormat.smpteCountdown(59.9, rate: .fps30), "59:27")
     }
 
-    func test_compactCountdown_subHour_formatsAsMinutesSecondsDecisecond() {
-        XCTAssertEqual(TimeFormat.compactCountdown(60.0), "1:00.0")
-        XCTAssertEqual(TimeFormat.compactCountdown(75.5), "1:15.5")
-        XCTAssertEqual(TimeFormat.compactCountdown(125.3), "2:05.3")
+    func test_smpteCountdown_subHour_includesMinute() {
+        XCTAssertEqual(TimeFormat.smpteCountdown(60.0, rate: .fps30), "1:00:00")
+        XCTAssertEqual(TimeFormat.smpteCountdown(75.5, rate: .fps30), "1:15:15")
+        XCTAssertEqual(TimeFormat.smpteCountdown(125.3, rate: .fps30), "2:05:09")
     }
 
-    func test_compactCountdown_hour_formatsWithHourPrefix() {
-        XCTAssertEqual(TimeFormat.compactCountdown(3600.0), "1:00:00.0")
-        XCTAssertEqual(TimeFormat.compactCountdown(3725.4), "1:02:05.4")
+    func test_smpteCountdown_hour_includesHour() {
+        XCTAssertEqual(TimeFormat.smpteCountdown(3600.0, rate: .fps30), "1:00:00:00")
+        XCTAssertEqual(TimeFormat.smpteCountdown(3725.4, rate: .fps30), "1:02:05:12")
     }
 
-    func test_compactCountdown_negative_clampsToZero() {
-        XCTAssertEqual(TimeFormat.compactCountdown(-5.0), "0.0")
+    func test_smpteCountdown_negative_clampsToZero() {
+        XCTAssertEqual(TimeFormat.smpteCountdown(-5.0, rate: .fps30), "00:00")
     }
 
     // MARK: - TransportBar.activeBPM

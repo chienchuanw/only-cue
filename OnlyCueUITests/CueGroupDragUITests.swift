@@ -297,20 +297,24 @@ final class CueGroupDragUITests: XCTestCase {
     }
 
     /// `CueRowView` exposes cue time via the row's accessibility label, derived
-    /// from `TimeFormat.hms` (`HH:MM:SS.mmm`). Extract the seconds component.
-    /// Adjust this regex if the row label construction changes.
+    /// from `TimeFormat.smpte` (`HH:MM:SS:FF` or `HH:MM:SS;FF` for drop-frame).
+    /// Extract the components and convert frames to fractional seconds at the
+    /// assumed-fps30 project rate used by these UI tests. Adjust this regex if
+    /// the row label construction changes.
     private static func parseSeconds(fromAccessibilityLabel label: String) -> TimeInterval {
-        let pattern = #"(\d+):(\d+):(\d+(?:\.\d+)?)"#
+        let pattern = #"(\d+):(\d+):(\d+)[:;](\d+)"#
         guard let regex = try? NSRegularExpression(pattern: pattern),
               let match = regex.firstMatch(in: label, range: NSRange(label.startIndex..., in: label)),
               let hRange = Range(match.range(at: 1), in: label),
               let mRange = Range(match.range(at: 2), in: label),
               let sRange = Range(match.range(at: 3), in: label),
+              let fRange = Range(match.range(at: 4), in: label),
               let hours = Double(label[hRange]),
               let minutes = Double(label[mRange]),
-              let seconds = Double(label[sRange]) else {
+              let seconds = Double(label[sRange]),
+              let frames = Double(label[fRange]) else {
             return .nan
         }
-        return hours * 3600 + minutes * 60 + seconds
+        return hours * 3600 + minutes * 60 + seconds + frames / 30.0
     }
 }

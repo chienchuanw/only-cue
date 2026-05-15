@@ -60,4 +60,26 @@ final class PlayerEnginePlaybackRateTests: XCTestCase {
         engine.resetPlaybackRate()
         XCTAssertEqual(engine.playbackRate, 1.0, accuracy: 0.0001)
     }
+
+    func test_play_appliesCustomPlaybackRate() async throws {
+        let url = try SilentAudioFixture.makeWAV(duration: 1)
+        defer { try? FileManager.default.removeItem(at: url) }
+
+        let engine = PlayerEngine()
+        await engine.load(asset: AVURLAsset(url: url))
+        engine.setPlaybackRate(0.5)
+        engine.play()
+        try await Task.sleep(nanoseconds: 80_000_000)
+        XCTAssertEqual(engine.player.rate, 0.5, accuracy: 0.01)
+        engine.pause()
+    }
+
+    func test_load_setsSpectralTimePitchAlgorithm() async throws {
+        let url = try SilentAudioFixture.makeWAV(duration: 1)
+        defer { try? FileManager.default.removeItem(at: url) }
+
+        let engine = PlayerEngine()
+        await engine.load(asset: AVURLAsset(url: url))
+        XCTAssertEqual(engine.player.currentItem?.audioTimePitchAlgorithm, .spectral)
+    }
 }

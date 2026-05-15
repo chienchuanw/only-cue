@@ -21,30 +21,37 @@ final class CueMarkerHitTestUITests: XCTestCase {
 
     /// Given a seeded document with cues at 1s, 3s, 6s,
     /// When the user clicks the marker for the cue at 3s,
-    /// Then the row for that cue becomes the only selected row.
+    /// Then exactly that marker carries the `isSelected` accessibility trait.
+    ///
+    /// `CueMarkerView` adds `.accessibilityAddTraits(.isSelected)` when its
+    /// `isSelected` flag is set, which is the same flag the parent overlay
+    /// derives from `selectedCueIDs`. So a green assertion here proves the
+    /// click reached `CueMarkerView`'s drag-gesture (`onSelectCue` was
+    /// dispatched) — the exact behaviour broken before this fix, when the
+    /// click was absorbed by the seek surface above.
     func test_clickOnMarker_selectsTheUnderlyingCue() throws {
         let app = launchWithSeed(.threeCuesAt1And3And6)
         defer { app.terminate() }
 
-        let markers = try CueGroupDragUITests.waitForMarkers(in: app, count: 3)
-        let rows = CueGroupDragUITests.sortedCueRows(in: app)
-        XCTAssertEqual(rows.count, 3, "Seed should produce three cue rows.")
+        var markers = try CueGroupDragUITests.waitForMarkers(in: app, count: 3)
 
         // Sanity: nothing selected at launch.
-        XCTAssertEqual(rows.filter { $0.isSelected }.count, 0,
-                       "No cue should be selected before the click.")
+        XCTAssertEqual(markers.filter { $0.isSelected }.count, 0,
+                       "No marker should carry the isSelected trait at launch.")
 
         // Click the middle marker (cue at 3s).
+        let middleID = markers[1].identifier
         let middle = CueGroupDragUITests.markerHitCoordinate(markers[1])
         middle.click()
         Thread.sleep(forTimeInterval: 0.4)
 
-        let selected = rows.filter { $0.isSelected }
+        // Re-query — XCUIElement caches don't refresh after a state change.
+        markers = try CueGroupDragUITests.waitForMarkers(in: app, count: 3)
+        let selected = markers.filter { $0.isSelected }
         XCTAssertEqual(selected.count, 1,
-                       "Clicking a marker should select exactly one cue.")
-        XCTAssertEqual(selected.first?.identifier,
-                       rows[1].identifier,
-                       "The selected cue should be the one whose marker was clicked.")
+                       "Clicking a marker should leave exactly one marker carrying the isSelected trait.")
+        XCTAssertEqual(selected.first?.identifier, middleID,
+                       "The selected marker should be the one that was clicked.")
     }
 
     private func launchWithSeed(_ key: SeedKey) -> XCUIApplication {

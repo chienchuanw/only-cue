@@ -39,7 +39,11 @@ struct WaveformSeekSurface: View {
     }
 
     private func timelineDragGesture(width: CGFloat) -> some Gesture {
-        DragGesture(minimumDistance: 0)
+        // minimumDistance: 1 lets a marker's `DragGesture(minimumDistance: 0)`
+        // win arbitration when the press lands on a cap. Click-to-seek still
+        // works because the seek surface's gesture collapses zero-translation
+        // drags to a single seek (`TimelineScrubOrchestrator.end`).
+        DragGesture(minimumDistance: 1)
             .onChanged { value in
                 if scrub.state == nil {
                     let pressedTime = CueMarkersGeometry.time(

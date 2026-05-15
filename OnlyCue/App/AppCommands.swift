@@ -8,6 +8,7 @@ struct AppCommands: Commands {
     @AppStorage("showTempoGrid") private var showTempoGrid = false
     @AppStorage("pauseAtEachCue") private var pauseAtEachCue = false
     @ObservedObject private var keymapStore = KeymapStore.shared
+    @ObservedObject private var ltcRoutingStore = LTCRoutingStore.shared
 
     private func shortcut(_ action: KeymapAction) -> KeyboardShortcut {
         keymapStore.keymap.chord(for: action).keyboardShortcut
@@ -139,23 +140,32 @@ struct AppCommands: Commands {
         }
 
         CommandMenu("Playback") {
+            // Spec §3.5: disable the speed items while LTC output is active —
+            // any change would be rejected by the interlock anyway. The
+            // keyboard shortcuts in `PlaybackRateShortcuts` still fire the
+            // interlock beep/flash if used.
+            let ltcOn = ltcRoutingStore.settings.isEnabled
+
             Button("Speed Up") {
                 NotificationCenter.default.post(name: .playbackRateUp, object: nil)
             }
             .keyboardShortcut(shortcut(.playbackRateUp))
             .accessibilityIdentifier("playbackRateUpMenuItem")
+            .disabled(ltcOn)
 
             Button("Slow Down") {
                 NotificationCenter.default.post(name: .playbackRateDown, object: nil)
             }
             .keyboardShortcut(shortcut(.playbackRateDown))
             .accessibilityIdentifier("playbackRateDownMenuItem")
+            .disabled(ltcOn)
 
             Button("Reset Speed") {
                 NotificationCenter.default.post(name: .playbackRateReset, object: nil)
             }
             .keyboardShortcut(shortcut(.playbackRateReset))
             .accessibilityIdentifier("playbackRateResetMenuItem")
+            .disabled(ltcOn)
         }
 
         CommandMenu("Tools") {

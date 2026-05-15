@@ -74,6 +74,65 @@ final class PlayerEnginePlaybackRateTests: XCTestCase {
         engine.pause()
     }
 
+    func test_setPlaybackRate_whilePlaying_updatesAVPlayerRateLive() async throws {
+        let url = try SilentAudioFixture.makeWAV(duration: 1)
+        defer { try? FileManager.default.removeItem(at: url) }
+
+        let engine = PlayerEngine()
+        await engine.load(asset: AVURLAsset(url: url))
+        engine.play()
+        try await Task.sleep(nanoseconds: 80_000_000)
+
+        engine.setPlaybackRate(1.5)
+        try await Task.sleep(nanoseconds: 30_000_000)
+        XCTAssertEqual(engine.player.rate, 1.5, accuracy: 0.01)
+
+        engine.setPlaybackRate(0.5)
+        try await Task.sleep(nanoseconds: 30_000_000)
+        XCTAssertEqual(engine.player.rate, 0.5, accuracy: 0.01)
+
+        engine.pause()
+    }
+
+    func test_controller_rateChangeRejectedWhileLTCActive() {
+        let engine = PlayerEngine()
+        var blockedSignals = 0
+        let observer = NotificationCenter.default.addObserver(
+            forName: .playbackRateInterlockBlocked,
+            object: nil,
+            queue: .main
+        ) { _ in blockedSignals += 1 }
+        defer { NotificationCenter.default.removeObserver(observer) }
+
+        // Allowed: target rate == 1.0× while LTC active is fine.
+        PlaybackRateController.apply(.reset, engine: engine, ltcEnabled: true)
+        XCTAssertEqual(engine.playbackRate, 1.0, accuracy: 0.0001)
+        XCTAssertEqual(blockedSignals, 0)
+
+        // Blocked: any non-1.0× target while LTC active is a no-op + signal.
+        PlaybackRateController.apply(.up, engine: engine, ltcEnabled: true)
+        XCTAssertEqual(engine.playbackRate, 1.0, accuracy: 0.0001)
+        XCTAssertEqual(blockedSignals, 1)
+
+        PlaybackRateController.apply(.down, engine: engine, ltcEnabled: true)
+        XCTAssertEqual(engine.playbackRate, 1.0, accuracy: 0.0001)
+        XCTAssertEqual(blockedSignals, 2)
+    }
+
+    func test_controller_appliesChangeWhenLTCInactive() {
+        let engine = PlayerEngine()
+
+        PlaybackRateController.apply(.up, engine: engine, ltcEnabled: false)
+        XCTAssertEqual(engine.playbackRate, 1.1, accuracy: 0.0001)
+
+        PlaybackRateController.apply(.down, engine: engine, ltcEnabled: false)
+        PlaybackRateController.apply(.down, engine: engine, ltcEnabled: false)
+        XCTAssertEqual(engine.playbackRate, 0.9, accuracy: 0.0001)
+
+        PlaybackRateController.apply(.reset, engine: engine, ltcEnabled: false)
+        XCTAssertEqual(engine.playbackRate, 1.0, accuracy: 0.0001)
+    }
+
     func test_load_setsPitchPreservingTimeStretch() async throws {
         let url = try SilentAudioFixture.makeWAV(duration: 1)
         defer { try? FileManager.default.removeItem(at: url) }

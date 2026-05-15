@@ -6,6 +6,10 @@ import SwiftUI
 struct PlaybackRateBadge: View {
 
     let engine: PlayerEngine
+    /// When `true`, the popover's slider + reset are disabled so the LTC
+    /// interlock can't be bypassed through the popover. The badge itself
+    /// stays clickable so the user can read the current rate.
+    var ltcEnabled: Bool = false
 
     @State private var flashUntil: Date = .distantPast
     @State private var flashTick: Int = 0
@@ -50,7 +54,7 @@ struct PlaybackRateBadge: View {
                 .accessibilityLabel(interlockMessage ?? rateText)
                 .help("Playback rate (click to adjust)")
                 .popover(isPresented: $showPopover) {
-                    PlaybackRatePopover(engine: engine)
+                    PlaybackRatePopover(engine: engine, ltcEnabled: ltcEnabled)
                         .padding()
                 }
             }
@@ -82,6 +86,7 @@ struct PlaybackRateBadge: View {
 private struct PlaybackRatePopover: View {
 
     @Bindable var engine: PlayerEngine
+    let ltcEnabled: Bool
 
     private var rateBinding: Binding<Double> {
         Binding(
@@ -103,6 +108,12 @@ private struct PlaybackRatePopover: View {
             .accessibilityIdentifier("playbackRateSlider")
             Button("Reset to 1.0×") { engine.resetPlaybackRate() }
                 .accessibilityIdentifier("playbackRateResetButton")
+            if ltcEnabled {
+                Text("Disable LTC to change playback rate.")
+                    .font(.caption)
+                    .foregroundStyle(.red)
+            }
         }
+        .disabled(ltcEnabled)
     }
 }

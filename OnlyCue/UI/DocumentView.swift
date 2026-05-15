@@ -95,8 +95,17 @@ struct DocumentView: View {
 
             transportShortcuts
             digitShortcuts
-            playheadStepShortcuts
-            playbackRateShortcuts
+            PlayheadStepShortcuts(
+                onStepPrev: { stepPlayhead(.previous) },
+                onStepNext: { stepPlayhead(.next) },
+                isEnabled: document.model.activeItem != nil,
+                shortcutFor: shortcut
+            )
+            PlaybackRateShortcuts(
+                engine: engine,
+                ltcEnabled: ltcRoutingStore.settings.isEnabled,
+                shortcutFor: shortcut
+            )
         }
         .frame(minWidth: 560, minHeight: 480)
         .padding()
@@ -115,21 +124,7 @@ struct DocumentView: View {
         .onReceive(NotificationCenter.default.publisher(for: .importMediaRequested)) { _ in
             showImporter = true
         }
-        .onReceive(NotificationCenter.default.publisher(for: .playbackRateUp)) { _ in
-            handlePlaybackRateChange(.up)
-        }
-        .onReceive(NotificationCenter.default.publisher(for: .playbackRateDown)) { _ in
-            handlePlaybackRateChange(.down)
-        }
-        .onReceive(NotificationCenter.default.publisher(for: .playbackRateReset)) { _ in
-            handlePlaybackRateChange(.reset)
-        }
-        .onChange(of: ltcRoutingStore.settings.isEnabled) { _, newValue in
-            // Spec §3.5 (2): turning LTC on while rate != 1.0× resets rate first.
-            guard newValue, abs(engine.playbackRate - 1.0) > 0.0001 else { return }
-            engine.resetPlaybackRate()
-            NotificationCenter.default.post(name: .playbackRateInterlockReset, object: nil)
-        }
+        .playbackRateBindings(engine: engine, ltcEnabled: ltcRoutingStore.settings.isEnabled)
         .templateMenuReceiver(
             document: document,
             pendingErrorMessage: pendingAlertMessageBinding,
@@ -248,35 +243,6 @@ struct DocumentView: View {
         .opacity(0)
         .accessibilityHidden(true)
         .disabled(document.model.activeItem == nil)
-    }
-
-    private var playheadStepShortcuts: some View {
-        ZStack {
-            Button("Previous Cue") { stepPlayhead(.previous) }
-                .keyboardShortcut(shortcut(.stepPrevCue))
-            Button("Next Cue") { stepPlayhead(.next) }
-                .keyboardShortcut(shortcut(.stepNextCue))
-        }
-        .frame(width: 0, height: 0)
-        .opacity(0)
-        .accessibilityHidden(true)
-        .disabled(document.model.activeItem == nil)
-    }
-
-    private var playbackRateShortcuts: some View {
-        PlaybackRateShortcuts(
-            engine: engine,
-            ltcEnabled: ltcRoutingStore.settings.isEnabled,
-            shortcutFor: shortcut
-        )
-    }
-
-    private func handlePlaybackRateChange(_ change: PlaybackRateShortcuts.Change) {
-        PlaybackRateController.apply(
-            change,
-            engine: engine,
-            ltcEnabled: ltcRoutingStore.settings.isEnabled
-        )
     }
 
     private func triggerHotkey(_ digit: Int) {

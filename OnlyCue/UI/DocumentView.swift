@@ -264,39 +264,19 @@ struct DocumentView: View {
     }
 
     private var playbackRateShortcuts: some View {
-        ZStack {
-            Button("Speed Up") { handlePlaybackRateChange(.up) }
-                .keyboardShortcut(shortcut(.playbackRateUp))
-            Button("Slow Down") { handlePlaybackRateChange(.down) }
-                .keyboardShortcut(shortcut(.playbackRateDown))
-            Button("Reset Speed") { handlePlaybackRateChange(.reset) }
-                .keyboardShortcut(shortcut(.playbackRateReset))
-        }
-        .frame(width: 0, height: 0)
-        .opacity(0)
-        .accessibilityHidden(true)
+        PlaybackRateShortcuts(
+            engine: engine,
+            ltcEnabled: ltcRoutingStore.settings.isEnabled,
+            shortcutFor: shortcut
+        )
     }
 
-    private enum PlaybackRateChange { case up, down, reset }
-
-    private func handlePlaybackRateChange(_ change: PlaybackRateChange) {
-        let ltcOn = ltcRoutingStore.settings.isEnabled
-        let target: Float
-        switch change {
-        case .up:    target = engine.playbackRate + 0.1
-        case .down:  target = engine.playbackRate - 0.1
-        case .reset: target = 1.0
-        }
-        if ltcOn && abs(target - 1.0) > 0.0001 {
-            NSSound.beep()
-            NotificationCenter.default.post(name: .playbackRateInterlockBlocked, object: nil)
-            return
-        }
-        switch change {
-        case .up:    engine.nudgePlaybackRate(by: 0.1)
-        case .down:  engine.nudgePlaybackRate(by: -0.1)
-        case .reset: engine.resetPlaybackRate()
-        }
+    private func handlePlaybackRateChange(_ change: PlaybackRateShortcuts.Change) {
+        PlaybackRateController.apply(
+            change,
+            engine: engine,
+            ltcEnabled: ltcRoutingStore.settings.isEnabled
+        )
     }
 
     private func triggerHotkey(_ digit: Int) {

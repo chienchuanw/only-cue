@@ -6,6 +6,7 @@ struct ItemListPane: View {
     let onDropURLs: ([URL]) -> Void
 
     @Environment(\.undoManager) private var undoManager
+    @State private var editingItemID: MediaItem.ID?
 
     var body: some View {
         Group {
@@ -22,6 +23,41 @@ struct ItemListPane: View {
             onDropURLs(urls)
             return true
         }
+        .sheet(item: editingItemBinding) { editing in
+            MediaEditSheet(
+                item: editing.item,
+                framerate: document.model.timecodeSettings.framerate,
+                onSave: { alt, frames, muted in
+                    CueCommands.updateMediaItem(
+                        id: editing.item.id,
+                        alternateName: alt,
+                        startTimecodeFrames: frames,
+                        ltcMuted: muted,
+                        document: document,
+                        undoManager: undoManager
+                    )
+                    editingItemID = nil
+                },
+                onCancel: { editingItemID = nil }
+            )
+        }
+    }
+
+    private struct EditingTarget: Identifiable {
+        let item: MediaItem
+        var id: MediaItem.ID { item.id }
+    }
+
+    private var editingItemBinding: Binding<EditingTarget?> {
+        Binding(
+            get: {
+                guard let id = editingItemID,
+                      let item = document.model.items.first(where: { $0.id == id })
+                else { return nil }
+                return EditingTarget(item: item)
+            },
+            set: { newValue in editingItemID = newValue?.id }
+        )
     }
 
     private var emptyState: some View {
@@ -57,6 +93,15 @@ struct ItemListPane: View {
                     }
                 )
                 .tag(Optional(item.id))
+                .contextMenu {
+                    Button("Edit Media…") { editingItemID = item.id }
+                        .accessibilityIdentifier("contextMenuEditMedia")
+                    Button(role: .destructive) {
+                        CueCommands.removeItem(id: item.id, document: document, undoManager: undoManager)
+                    } label: {
+                        Text("Remove")
+                    }
+                }
             }
             .onMove(perform: move)
             .onDelete(perform: deleteAtOffsets)

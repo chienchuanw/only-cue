@@ -12,7 +12,7 @@ struct MediaItem: Codable, Identifiable, Equatable {
     var ltcMuted: Bool = false
     /// Per-clip user-facing display override. nil/empty/whitespace falls back
     /// to `media.displayName` (the file basename). v12.
-    var alternateName: String? = nil
+    var alternateName: String?
 }
 
 extension MediaItem {

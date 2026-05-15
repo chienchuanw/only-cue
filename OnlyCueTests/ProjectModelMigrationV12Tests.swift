@@ -34,9 +34,9 @@ final class ProjectModelMigrationV12Tests: XCTestCase {
           "activeItemID": null,
           "timecodeSettings": {"framerate":"30"}
         }
-        """.data(using: .utf8)!
+        """
 
-        let model = try ProjectModel.decode(from: json)
+        let model = try ProjectModel.decode(from: Data(json.utf8))
 
         XCTAssertEqual(model.schemaVersion, ProjectModel.currentSchemaVersion)
         XCTAssertEqual(model.items.count, 1)

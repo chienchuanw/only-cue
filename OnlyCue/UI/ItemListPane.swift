@@ -30,9 +30,11 @@ struct ItemListPane: View {
                 onSave: { alt, frames, muted in
                     CueCommands.updateMediaItem(
                         id: editing.item.id,
-                        alternateName: alt,
-                        startTimecodeFrames: frames,
-                        ltcMuted: muted,
+                        edit: MediaItemEdit(
+                            alternateName: alt,
+                            startTimecodeFrames: frames,
+                            ltcMuted: muted
+                        ),
                         document: document,
                         undoManager: undoManager
                     )

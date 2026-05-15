@@ -4,7 +4,7 @@ import XCTest
 /// Pins the play/pause/resume policy of the waveform-body hold-to-scrub
 /// gesture. Geometry (x → time) stays in `CueMarkersGeometry`; state (current
 /// scrub time) stays in `ScrubController`. This type owns only the
-/// engine-side policy so the gesture handler in `WaveformPlayheadLayer` can
+/// engine-side policy so the gesture handler in `WaveformSeekSurface` can
 /// be driven from pure data in tests instead of a live `PlayerEngine`.
 final class TimelineScrubOrchestratorTests: XCTestCase {
 

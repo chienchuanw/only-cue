@@ -97,13 +97,26 @@ struct WaveformContainer: View {
                 ZStack(alignment: .topLeading) {
                     WaveformView(peaks: peaks, verticalZoom: verticalZoom.zoom)
                     tempoGridOverlay()
-                    markersOverlay()
                     if let engine, loadedDuration > 0 {
-                        WaveformPlayheadLayer(
+                        // Seek surface BELOW the markers so a press on a cue
+                        // marker reaches `CueMarkerView` instead of being
+                        // absorbed by the full-bleed click-to-seek surface.
+                        WaveformSeekSurface(
                             engine: engine,
                             duration: loadedDuration,
                             scrub: $scrub,
-                            seekTask: $seekTask,
+                            seekTask: $seekTask
+                        )
+                    }
+                    markersOverlay()
+                    if let engine, loadedDuration > 0 {
+                        // Playhead line + time-label badge ABOVE the markers
+                        // so a selected (wider) cap never visually occludes
+                        // them. Hit-testing is disabled inside.
+                        WaveformPlayheadVisual(
+                            engine: engine,
+                            duration: loadedDuration,
+                            scrub: $scrub,
                             zoom: zoom,
                             viewportWidth: width,
                             scrollOffset: scrollOffset,

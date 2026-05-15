@@ -260,6 +260,7 @@ struct CueMarkerView: View {
         // so the marker is queryable by id without needing `.combine` here —
         // adding `.combine` would create a duplicate AX element wrapper.
         .accessibilityIdentifier("cueMarker-\(cue.id.uuidString)")
+        .accessibilityAddTraits(isSelected ? .isSelected : [])
     }
 
     private var markerColor: Color {

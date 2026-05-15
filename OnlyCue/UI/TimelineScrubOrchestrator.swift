@@ -2,7 +2,7 @@ import Foundation
 
 /// Pure decision helper for the waveform timeline's hold-to-scrub gesture.
 ///
-/// The gesture handler in `WaveformPlayheadLayer` calls `begin` on the first
+/// The gesture handler in `WaveformSeekSurface` calls `begin` on the first
 /// `onChanged` and `end` on `onEnded`. Geometry (x → time) stays in
 /// `CueMarkersGeometry`; state (current scrub time) stays in `ScrubController`.
 /// This type owns only the play/pause/resume policy so it can be unit-tested

@@ -25,8 +25,8 @@ final class InspectorClockFramerateUITests: XCTestCase {
         // `.accessibilityElement(children: .contain)`, so a `.any` descendant
         // query returns the container (whose .label is empty), not the Text.
         let clock = window.descendants(matching: .staticText)
-            .matching(identifier: "inspectorClock").firstMatch
-        XCTAssertTrue(clock.waitForExistence(timeout: 15), "inspectorClock must exist")
+            .matching(identifier: "playheadClock").firstMatch
+        XCTAssertTrue(clock.waitForExistence(timeout: 15), "playheadClock must exist")
         let before = clock.label.isEmpty ? (clock.value as? String ?? "") : clock.label
         XCTAssertNotNil(
             before.range(of: #"^\d{2}:\d{2}:\d{2}[:;]\d{2}$"#, options: .regularExpression),

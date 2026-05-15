@@ -49,6 +49,7 @@ final class PlayerEngine {
 
     func load(asset: AVAsset) async {
         let item = AVPlayerItem(asset: asset)
+        item.audioTimePitchAlgorithm = .spectral
         player.replaceCurrentItem(with: item)
         rate = 0
         currentTime = 0
@@ -67,6 +68,9 @@ final class PlayerEngine {
 
     func play() {
         player.play()
+        // Set after play() so AVPlayer's timeControlStatus flips first; otherwise
+        // it can snap rate back to 1.0.
+        player.rate = playbackRate
         rate = player.rate
     }
 

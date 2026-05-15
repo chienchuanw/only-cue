@@ -65,6 +65,7 @@ struct DocumentView: View {
         .exportSheet(model: document.model, pendingErrorMessage: pendingAlertMessageBinding)
         .oscServerHost(engine: engine, document: document, undoManager: undoManager)
         .ltcOutput(engine: engine, document: document)
+        .environment(\.projectFramerate, document.model.timecodeSettings.framerate)
     }
 
     private var mainPane: some View {

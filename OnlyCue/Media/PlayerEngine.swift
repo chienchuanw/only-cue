@@ -27,6 +27,13 @@ final class PlayerEngine {
     @ObservationIgnored
     private var timeObserver: Any?
 
+    /// Last user intent: `true` between `play()` and the next `pause()` /
+    /// `unload()`. `setPlaybackRate(_:)` pushes the new rate to `AVPlayer.rate`
+    /// while this is `true`, regardless of whether the player has actually
+    /// started yet (on slower hosts `player.rate` lags behind intent).
+    @ObservationIgnored
+    private var wantsToPlay = false
+
     init(player: AVPlayer = AVPlayer()) {
         self.player = player
         observeTime()
@@ -59,6 +66,7 @@ final class PlayerEngine {
     }
 
     func unload() async {
+        wantsToPlay = false
         player.pause()
         player.replaceCurrentItem(with: nil)
         rate = 0
@@ -67,6 +75,7 @@ final class PlayerEngine {
     }
 
     func play() {
+        wantsToPlay = true
         player.play()
         // Set after play() so AVPlayer's timeControlStatus flips first; otherwise
         // it can snap rate back to 1.0.
@@ -75,6 +84,7 @@ final class PlayerEngine {
     }
 
     func pause() {
+        wantsToPlay = false
         player.pause()
         rate = player.rate
     }
@@ -117,7 +127,10 @@ final class PlayerEngine {
         let clamped = min(max(rate, range.lowerBound), range.upperBound)
         let snapped = (clamped / step).rounded() * step
         playbackRate = min(max(snapped, range.lowerBound), range.upperBound)
-        if player.rate > 0 {
+        // Push to AVPlayer whenever the user has called play() — checking
+        // `player.rate > 0` is unreliable because rate lags intent on slow hosts
+        // (AVPlayer.rate stays at 0 while the item is still buffering).
+        if wantsToPlay {
             player.rate = playbackRate
         }
     }

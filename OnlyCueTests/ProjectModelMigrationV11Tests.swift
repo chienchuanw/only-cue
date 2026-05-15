@@ -56,7 +56,7 @@ final class ProjectModelMigrationV11Tests: XCTestCase {
 
         let migrated = try ProjectModel.decode(from: Data(json.utf8))
 
-        XCTAssertEqual(migrated.schemaVersion, 11)
+        XCTAssertEqual(migrated.schemaVersion, ProjectModel.currentSchemaVersion)
         XCTAssertEqual(migrated.items[0].cues.count, 1, "no synthetic cue when alignment fits")
         XCTAssertEqual(migrated.items[0].cues[0].id, cueID)
         XCTAssertEqual(migrated.items[0].cues[0].bpm, 120)
@@ -103,7 +103,7 @@ final class ProjectModelMigrationV11Tests: XCTestCase {
         """)
 
         let migrated = try ProjectModel.decode(from: Data(json.utf8))
-        XCTAssertEqual(migrated.schemaVersion, 11)
+        XCTAssertEqual(migrated.schemaVersion, ProjectModel.currentSchemaVersion)
         XCTAssertEqual(migrated.items[0].cues.count, 0)
     }
 
@@ -166,7 +166,7 @@ final class ProjectModelMigrationV11Tests: XCTestCase {
         """
 
         let migrated = try ProjectModel.decode(from: Data(json.utf8))
-        XCTAssertEqual(migrated.schemaVersion, 11)
+        XCTAssertEqual(migrated.schemaVersion, ProjectModel.currentSchemaVersion)
         XCTAssertEqual(migrated.items[0].cues.count, 0, "no type to assign — synthetic cue is dropped")
     }
 
@@ -175,7 +175,7 @@ final class ProjectModelMigrationV11Tests: XCTestCase {
         let typeID = UUID()
         let cueID = UUID()
         let original = ProjectModel(
-            schemaVersion: 11,
+            schemaVersion: ProjectModel.currentSchemaVersion,
             id: UUID(),
             name: "rt",
             cuePointTypes: [CuePointType(id: typeID, name: "G", colorHex: "#fff")],

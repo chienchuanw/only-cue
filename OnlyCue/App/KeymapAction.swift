@@ -35,6 +35,10 @@ enum KeymapAction: String, CaseIterable, Codable, Identifiable, Sendable {
     case jumpForward
     case stepPrevCue
     case stepNextCue
+    // Document window — playback rate (rehearsal aid; never persisted to .cuelist).
+    case playbackRateUp
+    case playbackRateDown
+    case playbackRateReset
     case addCue
     // Document window — create a cue of the Nth CuePointType (epic #32 cue model rework)
     case addCueOfType0
@@ -89,6 +93,9 @@ enum KeymapAction: String, CaseIterable, Codable, Identifiable, Sendable {
         .jumpForward: "Jump Forward 1 Second",
         .stepPrevCue: "Go to Previous Cue",
         .stepNextCue: "Go to Next Cue",
+        .playbackRateUp: "Speed Up",
+        .playbackRateDown: "Slow Down",
+        .playbackRateReset: "Reset Speed",
         .addCue: "Add Cue at Playhead",
         .addCueOfType0: "Add Cue of Type 0",
         .addCueOfType1: "Add Cue of Type 1",

@@ -39,6 +39,19 @@ struct TransportBar: View {
             .map { $0 - currentTime }
     }
 
+    /// The bpm/beatsPerBar in effect at `currentTime` — taken from the most
+    /// recent cue with `time ≤ currentTime` AND a non-nil `bpm`. Cues without
+    /// `bpm` are skipped (a tempo-less cue does not "clear" prior tempo).
+    /// `beatsPerBar` defaults to 4 when the cue has bpm but no explicit meter.
+    /// Doesn't assume `cues` is time-sorted (mirrors `nextCueInterval`).
+    static func activeBPM(currentTime: TimeInterval, cues: [Cue]) -> (bpm: Double, beatsPerBar: Int)? {
+        let candidate = cues
+            .filter { $0.time <= currentTime && $0.bpm != nil }
+            .max(by: { $0.time < $1.time })
+        guard let cue = candidate, let bpm = cue.bpm else { return nil }
+        return (bpm: bpm, beatsPerBar: cue.beatsPerBar ?? 4)
+    }
+
     /// The SMPTE timecode at the playhead — the active file's striped LTC when
     /// it has any, otherwise derived from the project settings + active item's
     /// `startTimecodeFrames` (or `00:00:00:00` when no item is loaded).

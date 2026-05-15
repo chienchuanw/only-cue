@@ -74,6 +74,12 @@ final class PlayerEnginePlaybackRateTests: XCTestCase {
         engine.pause()
     }
 
+    /// `AVPlayer.rate` propagation through the play queue is non-deterministic
+    /// and slower on the GitHub `macos-latest` runner than on local Macs;
+    /// 30 ms is enough locally but not in CI. We poll up to 1 s instead of
+    /// sleeping a fixed window. Engine-level state (`engine.playbackRate`)
+    /// is asserted synchronously by `test_setPlaybackRate_clampsAndSnaps`
+    /// and friends, so this test only guards the AVPlayer-side wiring.
     func test_setPlaybackRate_whilePlaying_updatesAVPlayerRateLive() async throws {
         let url = try SilentAudioFixture.makeWAV(duration: 1)
         defer { try? FileManager.default.removeItem(at: url) }
@@ -84,14 +90,26 @@ final class PlayerEnginePlaybackRateTests: XCTestCase {
         try await Task.sleep(nanoseconds: 80_000_000)
 
         engine.setPlaybackRate(1.5)
-        try await Task.sleep(nanoseconds: 30_000_000)
+        try await waitForPlayerRate(engine: engine, expected: 1.5)
         XCTAssertEqual(engine.player.rate, 1.5, accuracy: 0.01)
 
         engine.setPlaybackRate(0.5)
-        try await Task.sleep(nanoseconds: 30_000_000)
+        try await waitForPlayerRate(engine: engine, expected: 0.5)
         XCTAssertEqual(engine.player.rate, 0.5, accuracy: 0.01)
 
         engine.pause()
+    }
+
+    private func waitForPlayerRate(
+        engine: PlayerEngine,
+        expected: Float,
+        timeout: TimeInterval = 1.0
+    ) async throws {
+        let deadline = Date().addingTimeInterval(timeout)
+        while Date() < deadline {
+            if abs(engine.player.rate - expected) < 0.01 { return }
+            try await Task.sleep(nanoseconds: 20_000_000)
+        }
     }
 
     func test_controller_rateChangeRejectedWhileLTCActive() {

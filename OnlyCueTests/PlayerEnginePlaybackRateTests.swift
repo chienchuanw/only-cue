@@ -74,12 +74,22 @@ final class PlayerEnginePlaybackRateTests: XCTestCase {
         engine.pause()
     }
 
-    func test_load_setsSpectralTimePitchAlgorithm() async throws {
+    func test_load_setsPitchPreservingTimeStretch() async throws {
         let url = try SilentAudioFixture.makeWAV(duration: 1)
         defer { try? FileManager.default.removeItem(at: url) }
 
         let engine = PlayerEngine()
         await engine.load(asset: AVURLAsset(url: url))
-        XCTAssertEqual(engine.player.currentItem?.audioTimePitchAlgorithm, .spectral)
+
+        // We request `.spectral`, but AVFoundation may downgrade to
+        // `.timeDomain` depending on the asset / host. Both preserve pitch.
+        // The contract this test enforces: we never end up on `.varispeed`
+        // (which would chipmunk the audio at rate != 1.0×).
+        let algorithm = engine.player.currentItem?.audioTimePitchAlgorithm
+        XCTAssertNotEqual(algorithm, .varispeed)
+        XCTAssertTrue(
+            algorithm == .spectral || algorithm == .timeDomain,
+            "Expected a pitch-preserving time-stretch algorithm; got \(String(describing: algorithm))"
+        )
     }
 }

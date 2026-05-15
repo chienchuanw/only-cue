@@ -3,7 +3,7 @@ import SwiftUI
 struct ItemRowView: View {
 
     let item: MediaItem
-    var framerate: SMPTEFramerate = .fps30
+    @Environment(\.projectFramerate) private var framerate
 
     var body: some View {
         HStack(spacing: 8) {
@@ -14,7 +14,7 @@ struct ItemRowView: View {
                 Text(item.resolvedName)
                     .lineLimit(1)
                     .truncationMode(.middle)
-                Text(TimeFormat.hms(item.media.duration))
+                Text(TimeFormat.smpte(item.media.duration, rate: framerate))
                     .font(.caption)
                     .foregroundStyle(.tertiary)
                     .monospacedDigit()

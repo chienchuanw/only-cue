@@ -155,6 +155,57 @@ final class NextCueCountdownTests: XCTestCase {
         XCTAssertEqual(result, .bars(1))
     }
 
+    // MARK: - TransportBar.countdownLabel
+
+    func test_countdownLabel_timeMode_formatsAsCompactCountdown() {
+        let label = TransportBar.countdownLabel(
+            mode: .time,
+            interval: 4.2,
+            activeTempo: nil
+        )
+        XCTAssertEqual(label, "Next: 4.2")
+    }
+
+    func test_countdownLabel_beatsMode_underOneBar_formatsAsPulse() {
+        // 120 bpm, 4/4, interval 1.0s → 2 beats → pulse. The pure label
+        // renders the full bar shape "4 · 3 · 2 · 1"; per-beat emphasis is
+        // a view concern, not in this string builder.
+        let label = TransportBar.countdownLabel(
+            mode: .beats,
+            interval: 1.0,
+            activeTempo: (bpm: 120, beatsPerBar: 4)
+        )
+        XCTAssertEqual(label, "Next: 4 · 3 · 2 · 1")
+    }
+
+    func test_countdownLabel_beatsMode_overOneBar_formatsAsBars() {
+        let label = TransportBar.countdownLabel(
+            mode: .beats,
+            interval: 4.5,
+            activeTempo: (bpm: 120, beatsPerBar: 4)
+        )
+        XCTAssertEqual(label, "Next: ~2 bars")
+    }
+
+    func test_countdownLabel_beatsMode_singleBar_pluralization() {
+        // 60 bpm, 4/4 → interval 5.0s → 5 beats > 4 → 1 bar. Singular "bar".
+        let label = TransportBar.countdownLabel(
+            mode: .beats,
+            interval: 5.0,
+            activeTempo: (bpm: 60, beatsPerBar: 4)
+        )
+        XCTAssertEqual(label, "Next: ~1 bar")
+    }
+
+    func test_countdownLabel_beatsMode_noActiveTempo_fallsBackToTimePlusHintGlyph() {
+        let label = TransportBar.countdownLabel(
+            mode: .beats,
+            interval: 4.2,
+            activeTempo: nil
+        )
+        XCTAssertEqual(label, "Next: 4.2 ⓘ")
+    }
+
     private func makeCue(
         time: TimeInterval,
         bpm: Double? = nil,

@@ -52,6 +52,26 @@ struct TransportBar: View {
         return (bpm: bpm, beatsPerBar: cue.beatsPerBar ?? 4)
     }
 
+    /// Beat-mode display value. Two zones:
+    /// - `.bars(n)` outside one bar (n ≥ 1, integer bars rounded down).
+    /// - `.pulse(remaining: r)` inside one bar (r ∈ 1...beatsPerBar), drives the
+    ///   per-beat "4 · 3 · 2 · 1" countdown.
+    enum BeatCountdown: Equatable {
+        case bars(Int)
+        case pulse(remaining: Int)
+    }
+
+    /// Computes the beat-mode display value from a time interval and the active
+    /// tempo. `beatsLeft = ceil(interval * bpm / 60)`. Pulse remaining is
+    /// floored at 1 so the readout never blanks at the cue boundary.
+    static func beatCountdown(interval: TimeInterval, bpm: Double, beatsPerBar: Int) -> BeatCountdown {
+        let beatsLeft = Int(ceil(max(interval, 0) * bpm / 60.0))
+        if beatsLeft > beatsPerBar {
+            return .bars(beatsLeft / beatsPerBar)
+        }
+        return .pulse(remaining: max(1, beatsLeft))
+    }
+
     /// The SMPTE timecode at the playhead — the active file's striped LTC when
     /// it has any, otherwise derived from the project settings + active item's
     /// `startTimecodeFrames` (or `00:00:00:00` when no item is loaded).

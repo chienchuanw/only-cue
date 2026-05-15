@@ -116,6 +116,45 @@ final class NextCueCountdownTests: XCTestCase {
         XCTAssertEqual(result.beatsPerBar, 4)
     }
 
+    // MARK: - TransportBar.beatCountdown
+
+    func test_beatCountdown_atZero_returnsPulseOne() {
+        // Non-zero floor — a 0s interval still shows ".pulse(remaining: 1)"
+        // so the readout never blanks at the cue boundary.
+        let result = TransportBar.beatCountdown(interval: 0.0, bpm: 120, beatsPerBar: 4)
+        XCTAssertEqual(result, .pulse(remaining: 1))
+    }
+
+    func test_beatCountdown_underOneBar_returnsPulseWithRemainingBeats() {
+        // 120 bpm, 4/4 → 1 beat = 0.5s. Interval 1.0s → 2 beats left.
+        let result = TransportBar.beatCountdown(interval: 1.0, bpm: 120, beatsPerBar: 4)
+        XCTAssertEqual(result, .pulse(remaining: 2))
+    }
+
+    func test_beatCountdown_exactlyOneBar_returnsPulseFull() {
+        // 120 bpm, 4/4 → 1 bar = 2.0s. Boundary case — still pulse, full bar.
+        let result = TransportBar.beatCountdown(interval: 2.0, bpm: 120, beatsPerBar: 4)
+        XCTAssertEqual(result, .pulse(remaining: 4))
+    }
+
+    func test_beatCountdown_overOneBar_returnsBarsRoundedDown() {
+        // 120 bpm, 4/4 → 1 beat = 0.5s. Interval 4.5s → ceil(9) = 9 beats → 9/4 = 2 bars.
+        let result = TransportBar.beatCountdown(interval: 4.5, bpm: 120, beatsPerBar: 4)
+        XCTAssertEqual(result, .bars(2))
+    }
+
+    func test_beatCountdown_wellOverOneBar_returnsBars() {
+        // 60 bpm, 4/4 → 1 beat = 1.0s, 1 bar = 4.0s. Interval 13.2s → 14 beats → 3 bars.
+        let result = TransportBar.beatCountdown(interval: 13.2, bpm: 60, beatsPerBar: 4)
+        XCTAssertEqual(result, .bars(3))
+    }
+
+    func test_beatCountdown_threeFourTime_respectsBeatsPerBar() {
+        // 90 bpm, 3/4 → 1 beat ≈ 0.6667s, 1 bar = 2.0s. Interval 2.5s → 4 beats → 1 bar.
+        let result = TransportBar.beatCountdown(interval: 2.5, bpm: 90, beatsPerBar: 3)
+        XCTAssertEqual(result, .bars(1))
+    }
+
     private func makeCue(
         time: TimeInterval,
         bpm: Double? = nil,

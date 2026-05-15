@@ -26,12 +26,19 @@ struct CueListPane: View {
     @AppStorage(CueListColumnWidths.numberStorageKey)
     private var numberColumnWidthRaw: Double = Double(CueListColumnWidths.numberDefault)
 
+    @AppStorage(CueListColumnWidths.fadeStorageKey)
+    private var fadeColumnWidthRaw: Double = Double(CueListColumnWidths.fadeDefault)
+
     private var timeColumnWidth: CGFloat {
         CueListColumnWidths.clampTime(CGFloat(timeColumnWidthRaw))
     }
 
     private var numberColumnWidth: CGFloat {
         CueListColumnWidths.clampNumber(CGFloat(numberColumnWidthRaw))
+    }
+
+    private var fadeColumnWidth: CGFloat {
+        CueListColumnWidths.clampFade(CGFloat(fadeColumnWidthRaw))
     }
 
     private var timeColumnWidthBinding: Binding<CGFloat> {
@@ -45,6 +52,13 @@ struct CueListPane: View {
         Binding(
             get: { CueListColumnWidths.clampNumber(CGFloat(numberColumnWidthRaw)) },
             set: { numberColumnWidthRaw = Double(CueListColumnWidths.clampNumber($0)) }
+        )
+    }
+
+    private var fadeColumnWidthBinding: Binding<CGFloat> {
+        Binding(
+            get: { CueListColumnWidths.clampFade(CGFloat(fadeColumnWidthRaw)) },
+            set: { fadeColumnWidthRaw = Double(CueListColumnWidths.clampFade($0)) }
         )
     }
 
@@ -189,6 +203,15 @@ struct CueListPane: View {
                 }
             Text("Name")
                 .frame(maxWidth: .infinity, alignment: .leading)
+            Text("Fade")
+                .frame(width: fadeColumnWidth, alignment: .leading)
+                .overlay(alignment: .trailing) {
+                    ColumnResizeHandle(
+                        width: fadeColumnWidthBinding,
+                        range: CueListColumnWidths.fadeRange
+                    )
+                    .accessibilityIdentifier("cueListFadeColumnResizeHandle")
+                }
         }
         .font(.caption)
         .foregroundStyle(.secondary)
@@ -214,6 +237,7 @@ struct CueListPane: View {
                         resolvedColorHex: document.model.colorHex(for: cue),
                         timeColumnWidth: timeColumnWidth,
                         numberColumnWidth: numberColumnWidth,
+                        fadeColumnWidth: fadeColumnWidth,
                         onRename: { newName in
                             CueCommands.rename(cueId: cue.id, to: newName, document: document, undoManager: undoManager)
                         },
@@ -221,6 +245,14 @@ struct CueListPane: View {
                             CueCommands.setCueNumber(
                                 cueId: cue.id,
                                 to: newNumber,
+                                document: document,
+                                undoManager: undoManager
+                            )
+                        },
+                        onCommitFade: { newFade in
+                            CueCommands.setFadeTime(
+                                cueId: cue.id,
+                                to: newFade,
                                 document: document,
                                 undoManager: undoManager
                             )

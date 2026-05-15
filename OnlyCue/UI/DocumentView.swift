@@ -1,3 +1,4 @@
+import AppKit
 import SwiftUI
 import UniformTypeIdentifiers
 
@@ -95,6 +96,7 @@ struct DocumentView: View {
             transportShortcuts
             digitShortcuts
             playheadStepShortcuts
+            playbackRateShortcuts
         }
         .frame(minWidth: 560, minHeight: 480)
         .padding()
@@ -112,6 +114,21 @@ struct DocumentView: View {
         .alert(item: $pendingAlert, content: alertContent)
         .onReceive(NotificationCenter.default.publisher(for: .importMediaRequested)) { _ in
             showImporter = true
+        }
+        .onReceive(NotificationCenter.default.publisher(for: .playbackRateUp)) { _ in
+            handlePlaybackRateChange(.up)
+        }
+        .onReceive(NotificationCenter.default.publisher(for: .playbackRateDown)) { _ in
+            handlePlaybackRateChange(.down)
+        }
+        .onReceive(NotificationCenter.default.publisher(for: .playbackRateReset)) { _ in
+            handlePlaybackRateChange(.reset)
+        }
+        .onChange(of: ltcRoutingStore.settings.isEnabled) { _, newValue in
+            // Spec §3.5 (2): turning LTC on while rate != 1.0× resets rate first.
+            guard newValue, abs(engine.playbackRate - 1.0) > 0.0001 else { return }
+            engine.resetPlaybackRate()
+            NotificationCenter.default.post(name: .playbackRateInterlockReset, object: nil)
         }
         .templateMenuReceiver(
             document: document,
@@ -246,6 +263,42 @@ struct DocumentView: View {
         .disabled(document.model.activeItem == nil)
     }
 
+    private var playbackRateShortcuts: some View {
+        ZStack {
+            Button("Speed Up") { handlePlaybackRateChange(.up) }
+                .keyboardShortcut(shortcut(.playbackRateUp))
+            Button("Slow Down") { handlePlaybackRateChange(.down) }
+                .keyboardShortcut(shortcut(.playbackRateDown))
+            Button("Reset Speed") { handlePlaybackRateChange(.reset) }
+                .keyboardShortcut(shortcut(.playbackRateReset))
+        }
+        .frame(width: 0, height: 0)
+        .opacity(0)
+        .accessibilityHidden(true)
+    }
+
+    private enum PlaybackRateChange { case up, down, reset }
+
+    private func handlePlaybackRateChange(_ change: PlaybackRateChange) {
+        let ltcOn = ltcRoutingStore.settings.isEnabled
+        let target: Float
+        switch change {
+        case .up:    target = engine.playbackRate + 0.1
+        case .down:  target = engine.playbackRate - 0.1
+        case .reset: target = 1.0
+        }
+        if ltcOn && abs(target - 1.0) > 0.0001 {
+            NSSound.beep()
+            NotificationCenter.default.post(name: .playbackRateInterlockBlocked, object: nil)
+            return
+        }
+        switch change {
+        case .up:    engine.nudgePlaybackRate(by: 0.1)
+        case .down:  engine.nudgePlaybackRate(by: -0.1)
+        case .reset: engine.resetPlaybackRate()
+        }
+    }
+
     private func triggerHotkey(_ digit: Int) {
         guard let type = document.model.cuePointType(forHotkey: digit) else { return }
         CueCommands.addCueAtPlayhead(
@@ -289,6 +342,11 @@ extension Notification.Name {
     static let snapSelectedCuesToBeat = Notification.Name("OnlyCue.snapSelectedCuesToBeat")
     static let snapSelectedCuesToBar = Notification.Name("OnlyCue.snapSelectedCuesToBar")
     static let manageTypesRequested = Notification.Name("OnlyCue.manageTypesRequested")
+    static let playbackRateUp = Notification.Name("OnlyCue.playbackRateUp")
+    static let playbackRateDown = Notification.Name("OnlyCue.playbackRateDown")
+    static let playbackRateReset = Notification.Name("OnlyCue.playbackRateReset")
+    static let playbackRateInterlockBlocked = Notification.Name("OnlyCue.playbackRateInterlockBlocked")
+    static let playbackRateInterlockReset = Notification.Name("OnlyCue.playbackRateInterlockReset")
 }
 
 enum DocumentAlert: Identifiable {

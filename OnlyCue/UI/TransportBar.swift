@@ -17,6 +17,16 @@ struct TransportBar: View {
     @Environment(\.stripedTimecode) private var stripedTimecode
     @ObservedObject private var ltcRoutingStore = LTCRoutingStore.shared
 
+    @AppStorage("transport.countdownMode") private var countdownModeRaw: String = CountdownMode.time.rawValue
+
+    private var countdownMode: CountdownMode {
+        CountdownMode(rawValue: countdownModeRaw) ?? .time
+    }
+
+    private func cycleCountdownMode() {
+        countdownModeRaw = (countdownMode == .time ? CountdownMode.beats : .time).rawValue
+    }
+
     /// Single-Text readout so the slash kerns correctly with monospaced digits and
     /// stays aligned on resize. When `mediaDuration` is 0 (no active item) the slash
     /// and total are omitted — `"00:00:00.000 / 00:00:00.000"` would be misleading.
@@ -146,10 +156,23 @@ struct TransportBar: View {
             }
 
             if let interval = Self.nextCueInterval(currentTime: engine.currentTime, cues: cues) {
-                Text("Next: \(TimeFormat.compactCountdown(interval))")
-                    .font(.system(.body, design: .monospaced))
-                    .foregroundStyle(.secondary)
-                    .accessibilityIdentifier("nextCueCountdown")
+                let tempo = Self.activeBPM(currentTime: engine.currentTime, cues: cues)
+                let label = Self.countdownLabel(
+                    mode: countdownMode,
+                    interval: interval,
+                    activeTempo: tempo
+                )
+                Button(action: cycleCountdownMode) {
+                    Text(label)
+                        .font(.system(.body, design: .monospaced))
+                        .foregroundStyle(.secondary)
+                        .accessibilityIdentifier("nextCueCountdown")
+                }
+                .buttonStyle(.plain)
+                .help(countdownMode == .beats && tempo == nil
+                      ? "Set a tempo on a cue to enable beat countdown. Click to switch back to time."
+                      : "Click to switch between time and beat countdown.")
+                .accessibilityIdentifier("nextCueCountdownToggle")
             }
 
         }

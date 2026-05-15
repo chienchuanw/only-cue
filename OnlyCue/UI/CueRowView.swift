@@ -62,6 +62,10 @@ struct CueRowView: View {
             .padding(.leading, 6)
         }
         .padding(.vertical, 2)
+        // Right-click hit-test needs the row's full width, not just text bounds —
+        // .contextMenu is applied by the parent `CueListPane` matching the
+        // ItemListPane pattern that's proven to work on macOS.
+        .contentShape(Rectangle())
         .accessibilityIdentifier("cueRow-\(cue.id)")
     }
 

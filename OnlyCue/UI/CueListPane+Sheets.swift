@@ -3,80 +3,80 @@ import SwiftUI
 /// Right-click context menu and modal sheet hosting for `CueListPane`.
 /// Pulled out of the main struct so the parent stays readable and
 /// SwiftLint's `type_body_length` rule keeps a margin.
-/// Identifiable wrapper used by `.sheet(item:)` to drive the Notes /
-/// Tempo sheets from a `Cue.ID?` binding. Looks the cue up lazily so the
-/// sheet always sees the current model state, never a stale snapshot.
-struct CueEditingTarget: Identifiable {
-    let cue: Cue
-    var id: Cue.ID { cue.id }
+/// Tagged identifier for the single `.sheet(item:)` modifier that hosts
+/// both the Notes and Tempo cue editors. SwiftUI only honors one
+/// `.sheet` modifier per view; stacking two `.sheet(item:)` modifiers
+/// silently drops state changes for both, which is what masked the
+/// click-doesn't-open-sheet bug behind the `.contextMenu` issue.
+enum CueSheetKind: Identifiable, Equatable {
+    case notes(Cue.ID)
+    case tempo(Cue.ID)
+
+    var id: String {
+        switch self {
+        case .notes(let id): return "notes-\(id.uuidString)"
+        case .tempo(let id): return "tempo-\(id.uuidString)"
+        }
+    }
+
+    var cueID: Cue.ID {
+        switch self {
+        case .notes(let id), .tempo(let id): return id
+        }
+    }
 }
 
 extension CueListPane {
 
-    /// `.sheet(item:)` bindings for the Notes / Tempo sheets. Looks the cue
-    /// up lazily on read so the sheet always sees current model state.
-    var notesEditingBinding: Binding<CueEditingTarget?> {
-        Binding(
-            get: {
-                guard let id = notesEditingID,
-                      let cue = cues.first(where: { $0.id == id })
-                else { return nil }
-                return CueEditingTarget(cue: cue)
-            },
-            set: { newValue in notesEditingID = newValue?.id }
-        )
-    }
-
-    var tempoEditingBinding: Binding<CueEditingTarget?> {
-        Binding(
-            get: {
-                guard let id = tempoEditingID,
-                      let cue = cues.first(where: { $0.id == id })
-                else { return nil }
-                return CueEditingTarget(cue: cue)
-            },
-            set: { newValue in tempoEditingID = newValue?.id }
-        )
-    }
-
-    /// Builds the right-click context menu for a single cue row.
-    /// `Change Type ▸` instant-commits via `CueCommands.setType`. `Edit
-    /// Notes…` and `Tempo…` set the sheet bindings owned by the parent;
-    /// the keyboard shortcuts on those menu items mean they fire even when
-    /// the menu isn't open (as long as a row is selected).
+    /// Resolves the active `CueSheetKind` into the corresponding modal
+    /// sheet view. Returns an empty placeholder if the cue has been
+    /// deleted between menu click and sheet presentation.
     @ViewBuilder
-    func cueRowContextMenu(for cue: Cue) -> some View {
-        Menu("Change Type") {
-            ForEach(document.model.cuePointTypes) { type in
-                Button {
-                    guard type.id != cue.typeID else { return }
-                    CueCommands.setType(
-                        cueId: cue.id,
-                        to: type.id,
-                        document: document,
-                        undoManager: undoManager
-                    )
-                } label: {
-                    Label {
-                        Text(type.name)
-                    } icon: {
-                        if type.id == cue.typeID {
-                            Image(systemName: "checkmark")
+    func cueSheetContent(for sheet: CueSheetKind) -> some View {
+        if let cue = cues.first(where: { $0.id == sheet.cueID }) {
+            switch sheet {
+            case .notes:
+                CueNotesSheet(
+                    cueLabel: cueSheetLabel(for: cue),
+                    initialNotes: cue.notes,
+                    onSave: { newNotes in
+                        CueCommands.setNotes(
+                            cueId: cue.id,
+                            to: newNotes,
+                            document: document,
+                            undoManager: undoManager
+                        )
+                        activeCueSheet = nil
+                    },
+                    onCancel: { activeCueSheet = nil }
+                )
+            case .tempo:
+                CueTempoSheet(
+                    cueLabel: cueSheetLabel(for: cue),
+                    initialBPM: cue.bpm,
+                    initialBeatsPerBar: cue.beatsPerBar,
+                    onDetect: { beats in
+                        await runTempoDetect(for: cue, beatsPerBar: beats)
+                    },
+                    onSave: { bpm, beats in
+                        if let itemID = itemID(owning: cue.id) {
+                            CueCommands.setCueTempo(
+                                cueID: cue.id,
+                                bpm: bpm,
+                                beatsPerBar: beats,
+                                item: itemID,
+                                document: document,
+                                undoManager: undoManager
+                            )
                         }
-                    }
-                }
-                .accessibilityIdentifier("cueRowContextChangeType-\(type.id)")
+                        activeCueSheet = nil
+                    },
+                    onCancel: { activeCueSheet = nil }
+                )
             }
+        } else {
+            Color.clear.onAppear { activeCueSheet = nil }
         }
-        .accessibilityIdentifier("cueRowContextChangeType")
-
-        Button("Edit Notes…") { notesEditingID = cue.id }
-            .keyboardShortcut("n", modifiers: [.command, .option])
-            .accessibilityIdentifier("cueRowContextEditNotes")
-
-        Button("Tempo…") { tempoEditingID = cue.id }
-            .keyboardShortcut("t", modifiers: [.command, .option])
-            .accessibilityIdentifier("cueRowContextTempo")
     }
 
     /// Display label for sheet titles — "Cue 12 · Blackout" when numbered,

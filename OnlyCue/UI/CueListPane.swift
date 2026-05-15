@@ -23,9 +23,10 @@ struct CueListPane: View {
 
     /// Notes / Tempo sheets are scoped to a Cue.ID so they survive selection
     /// changes elsewhere in the UI (a sheet anchored to cue A keeps editing
-    /// cue A even if the user single-clicks cue B in the list).
-    @State var notesEditingID: Cue.ID?
-    @State var tempoEditingID: Cue.ID?
+    /// cue A even if the user single-clicks cue B in the list). Both kinds
+    /// share a single `.sheet(item:)` binding because SwiftUI only honors
+    /// one `.sheet` modifier per view — stacking two silently breaks both.
+    @State var activeCueSheet: CueSheetKind?
 
     @AppStorage(CueListColumnWidths.timeStorageKey)
     private var timeColumnWidthRaw: Double = Double(CueListColumnWidths.timeDefault)
@@ -116,51 +117,9 @@ struct CueListPane: View {
         .onReceive(NotificationCenter.default.publisher(for: .snapSelectedCuesToBar)) { _ in
             snapSelectedToGrid(.bar)
         }
-        .sheet(item: notesEditingBinding) { editing in
-            CueNotesSheet(
-                cueLabel: cueSheetLabel(for: editing.cue),
-                initialNotes: editing.cue.notes,
-                onSave: { newNotes in
-                    CueCommands.setNotes(
-                        cueId: editing.cue.id,
-                        to: newNotes,
-                        document: document,
-                        undoManager: undoManager
-                    )
-                    notesEditingID = nil
-                },
-                onCancel: { notesEditingID = nil }
-            )
+        .sheet(item: $activeCueSheet) { sheet in
+            cueSheetContent(for: sheet)
         }
-        .sheet(item: tempoEditingBinding) { editing in
-            tempoSheet(for: editing.cue)
-        }
-    }
-
-    @ViewBuilder
-    private func tempoSheet(for cue: Cue) -> some View {
-        CueTempoSheet(
-            cueLabel: cueSheetLabel(for: cue),
-            initialBPM: cue.bpm,
-            initialBeatsPerBar: cue.beatsPerBar,
-            onDetect: { beats in
-                await runTempoDetect(for: cue, beatsPerBar: beats)
-            },
-            onSave: { bpm, beats in
-                if let itemID = itemID(owning: cue.id) {
-                    CueCommands.setCueTempo(
-                        cueID: cue.id,
-                        bpm: bpm,
-                        beatsPerBar: beats,
-                        item: itemID,
-                        document: document,
-                        undoManager: undoManager
-                    )
-                }
-                tempoEditingID = nil
-            },
-            onCancel: { tempoEditingID = nil }
-        )
     }
 
     var cues: [Cue] { document.model.activeItem?.cues ?? [] }
@@ -285,9 +244,39 @@ struct CueListPane: View {
             List(selection: $selection) {
                 ForEach(cues, id: \.id) { cue in
                     cueRow(for: cue)
+                        .contextMenu {
+                            Button("Edit Notes…") { activeCueSheet = .notes(cue.id) }
+                                .keyboardShortcut("n", modifiers: [.command, .option])
+                                .accessibilityIdentifier("cueRowContextEditNotes")
+                            Button("Tempo…") { activeCueSheet = .tempo(cue.id) }
+                                .keyboardShortcut("t", modifiers: [.command, .option])
+                                .accessibilityIdentifier("cueRowContextTempo")
+                            Menu("Change Type") {
+                                ForEach(document.model.cuePointTypes) { type in
+                                    Button {
+                                        guard type.id != cue.typeID else { return }
+                                        CueCommands.setType(
+                                            cueId: cue.id,
+                                            to: type.id,
+                                            document: document,
+                                            undoManager: undoManager
+                                        )
+                                    } label: {
+                                        Label {
+                                            Text(type.name)
+                                        } icon: {
+                                            if type.id == cue.typeID {
+                                                Image(systemName: "checkmark")
+                                            }
+                                        }
+                                    }
+                                    .accessibilityIdentifier("cueRowContextChangeType-\(type.id)")
+                                }
+                            }
+                            .accessibilityIdentifier("cueRowContextChangeType")
+                        }
                         .tag(cue.id)
                         .listRowBackground(rowTint(for: cue))
-                        .contextMenu { cueRowContextMenu(for: cue) }
                 }
                 .onDelete(perform: deleteAtOffsets)
             }

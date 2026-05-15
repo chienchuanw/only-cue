@@ -5,6 +5,7 @@ enum CueListLayout {
     static let rowTintOpacity: Double = 0.18
 }
 
+// swiftlint:disable:next type_body_length
 struct CueListPane: View {
 
     static let headerAccessibilityIdentifier = "cueListHeader"
@@ -16,9 +17,15 @@ struct CueListPane: View {
     /// The single selected cue's id, when exactly one is selected — the
     /// granularity the inspector / snap / nudge / duplicate commands work at
     /// (batch versions over the whole `selection` are a follow-up leaf).
-    private var soleSelectedID: Cue.ID? { selection.count == 1 ? selection.first : nil }
+    var soleSelectedID: Cue.ID? { selection.count == 1 ? selection.first : nil }
 
-    @Environment(\.undoManager) private var undoManager
+    @Environment(\.undoManager) var undoManager
+
+    /// Notes / Tempo sheets are scoped to a Cue.ID so they survive selection
+    /// changes elsewhere in the UI (a sheet anchored to cue A keeps editing
+    /// cue A even if the user single-clicks cue B in the list).
+    @State var notesEditingID: Cue.ID?
+    @State var tempoEditingID: Cue.ID?
 
     @AppStorage(CueListColumnWidths.timeStorageKey)
     private var timeColumnWidthRaw: Double = Double(CueListColumnWidths.timeDefault)
@@ -62,14 +69,12 @@ struct CueListPane: View {
         )
     }
 
-    private var cues: [Cue] { document.model.activeItem?.cues ?? [] }
-
     private var selectedCue: Cue? {
         guard let id = soleSelectedID else { return nil }
         return cues.first(where: { $0.id == id })
     }
 
-    private func rowTint(for cue: Cue) -> Color {
+    func rowTint(for cue: Cue) -> Color {
         guard let hex = document.model.colorHex(for: cue),
               let base = Color(hex: hex) else {
             return Color.clear
@@ -111,7 +116,54 @@ struct CueListPane: View {
         .onReceive(NotificationCenter.default.publisher(for: .snapSelectedCuesToBar)) { _ in
             snapSelectedToGrid(.bar)
         }
+        .sheet(item: notesEditingBinding) { editing in
+            CueNotesSheet(
+                cueLabel: cueSheetLabel(for: editing.cue),
+                initialNotes: editing.cue.notes,
+                onSave: { newNotes in
+                    CueCommands.setNotes(
+                        cueId: editing.cue.id,
+                        to: newNotes,
+                        document: document,
+                        undoManager: undoManager
+                    )
+                    notesEditingID = nil
+                },
+                onCancel: { notesEditingID = nil }
+            )
+        }
+        .sheet(item: tempoEditingBinding) { editing in
+            tempoSheet(for: editing.cue)
+        }
     }
+
+    @ViewBuilder
+    private func tempoSheet(for cue: Cue) -> some View {
+        CueTempoSheet(
+            cueLabel: cueSheetLabel(for: cue),
+            initialBPM: cue.bpm,
+            initialBeatsPerBar: cue.beatsPerBar,
+            onDetect: { beats in
+                await runTempoDetect(for: cue, beatsPerBar: beats)
+            },
+            onSave: { bpm, beats in
+                if let itemID = itemID(owning: cue.id) {
+                    CueCommands.setCueTempo(
+                        cueID: cue.id,
+                        bpm: bpm,
+                        beatsPerBar: beats,
+                        item: itemID,
+                        document: document,
+                        undoManager: undoManager
+                    )
+                }
+                tempoEditingID = nil
+            },
+            onCancel: { tempoEditingID = nil }
+        )
+    }
+
+    var cues: [Cue] { document.model.activeItem?.cues ?? [] }
 
     private static let nudgeStep: TimeInterval = 1.0 / 30.0
 
@@ -232,50 +284,20 @@ struct CueListPane: View {
         ScrollViewReader { proxy in
             List(selection: $selection) {
                 ForEach(cues, id: \.id) { cue in
-                    CueRowView(
-                        cue: cue,
-                        resolvedColorHex: document.model.colorHex(for: cue),
-                        timeColumnWidth: timeColumnWidth,
-                        numberColumnWidth: numberColumnWidth,
-                        fadeColumnWidth: fadeColumnWidth,
-                        onRename: { newName in
-                            CueCommands.rename(cueId: cue.id, to: newName, document: document, undoManager: undoManager)
-                        },
-                        onCommitNumber: { newNumber in
-                            CueCommands.setCueNumber(
-                                cueId: cue.id,
-                                to: newNumber,
-                                document: document,
-                                undoManager: undoManager
-                            )
-                        },
-                        onCommitFade: { newFade in
-                            CueCommands.setFadeTime(
-                                cueId: cue.id,
-                                to: newFade,
-                                document: document,
-                                undoManager: undoManager
-                            )
-                        }
-                    )
-                    .tag(cue.id)
-                    .listRowBackground(rowTint(for: cue))
+                    cueRow(for: cue)
+                        .tag(cue.id)
+                        .listRowBackground(rowTint(for: cue))
+                        .contextMenu { cueRowContextMenu(for: cue) }
                 }
                 .onDelete(perform: deleteAtOffsets)
             }
             .onDeleteCommand { deleteSelected() }
             .onChange(of: selection) { _, _ in
-                // Seek/scroll only on a single-cue selection — a multi-select
-                // shouldn't yank the playhead or re-center the list.
                 guard
                     let id = soleSelectedID,
                     let cue = cues.first(where: { $0.id == id })
                 else { return }
                 Task { await engine.seek(to: cue.time) }
-                // Centered scroll-to-selection brings offscreen rows into view when
-                // selection is driven externally (marker click, snap/nudge). For
-                // already-visible rows the re-center is a mild flicker — acceptable
-                // per the issue body's UX trade-off analysis.
                 withAnimation(.easeOut(duration: 0.2)) {
                     proxy.scrollTo(id, anchor: .center)
                 }
@@ -283,7 +305,26 @@ struct CueListPane: View {
         }
     }
 
-    private func deleteAtOffsets(_ offsets: IndexSet) {
+    private func cueRow(for cue: Cue) -> CueRowView {
+        CueRowView(
+            cue: cue,
+            resolvedColorHex: document.model.colorHex(for: cue),
+            timeColumnWidth: timeColumnWidth,
+            numberColumnWidth: numberColumnWidth,
+            fadeColumnWidth: fadeColumnWidth,
+            onRename: { newName in
+                CueCommands.rename(cueId: cue.id, to: newName, document: document, undoManager: undoManager)
+            },
+            onCommitNumber: { newNumber in
+                CueCommands.setCueNumber(cueId: cue.id, to: newNumber, document: document, undoManager: undoManager)
+            },
+            onCommitFade: { newFade in
+                CueCommands.setFadeTime(cueId: cue.id, to: newFade, document: document, undoManager: undoManager)
+            }
+        )
+    }
+
+    func deleteAtOffsets(_ offsets: IndexSet) {
         for index in offsets {
             guard cues.indices.contains(index) else { continue }
             let cue = cues[index]
@@ -291,7 +332,7 @@ struct CueListPane: View {
         }
     }
 
-    private func deleteSelected() {
+    func deleteSelected() {
         guard !selection.isEmpty else { return }
         for id in selection {
             CueCommands.delete(cueId: id, document: document, undoManager: undoManager)

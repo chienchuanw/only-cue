@@ -1,6 +1,6 @@
 import XCTest
 
-final class InspectorClockHeaderUITests: XCTestCase {
+final class PlayheadClockHeaderUITests: XCTestCase {
 
     override func setUp() {
         super.setUp()
@@ -10,24 +10,22 @@ final class InspectorClockHeaderUITests: XCTestCase {
         }
     }
 
-    /// With a seeded document open and no cue selected, the inspector is in
-    /// the empty state. The clock header sits above the "Select a cue"
-    /// placeholder and must still be visible.
-    func testClockVisibleInEmptyState() throws {
+    /// With a seeded document open, the playhead clock sits at the top of
+    /// the cue list pane and is visible.
+    func testClockVisibleAtTopOfCueListPane() throws {
         let app = launchWithSeed(.threeCuesAt1And3And6)
         let window = try waitForSeedWindow(in: app)
 
         let clock = window.descendants(matching: .any)
-            .matching(identifier: "inspectorClock").firstMatch
+            .matching(identifier: "playheadClock").firstMatch
         XCTAssertTrue(
             clock.waitForExistence(timeout: 15),
-            "inspectorClock should be visible in empty-state inspector"
+            "playheadClock should be visible above the cue list."
         )
     }
 
-    /// The inspector clock renders SMPTE timecode (`HH:MM:SS:FF` or
-    /// `HH:MM:SS;FF` for drop-frame) at the project's framerate, replacing
-    /// the legacy `HH:MM:SS.mmm` form.
+    /// The playhead clock renders SMPTE timecode (`HH:MM:SS:FF` or
+    /// `HH:MM:SS;FF` for drop-frame) at the project's framerate.
     func testClockRendersAsSMPTE() throws {
         let app = launchWithSeed(.threeCuesAt1And3And6)
         let window = try waitForSeedWindow(in: app)
@@ -36,10 +34,8 @@ final class InspectorClockHeaderUITests: XCTestCase {
         // `.accessibilityElement(children: .contain)`, so a `.any` descendant
         // query returns the container (whose .label is empty), not the Text.
         let clock = window.descendants(matching: .staticText)
-            .matching(identifier: "inspectorClock").firstMatch
+            .matching(identifier: "playheadClock").firstMatch
         XCTAssertTrue(clock.waitForExistence(timeout: 15))
-        // SwiftUI Text exposes its content via either .label or .value
-        // depending on the macOS AX convention chosen — try both.
         let text = clock.label.isEmpty ? (clock.value as? String ?? "") : clock.label
         XCTAssertNotNil(
             text.range(of: #"^\d{2}:\d{2}:\d{2}[:;]\d{2}$"#, options: .regularExpression),
@@ -47,12 +43,7 @@ final class InspectorClockHeaderUITests: XCTestCase {
         )
     }
 
-    /// With a cue selected, the inspector renders its field stack. The clock
-    /// header must remain visible above the fields. Row selection via
-    /// coordinate click is flaky in headless CI envs (tracked separately as
-    /// the cueRow AX hit-test issue), so we skip gracefully if the field
-    /// stack never appears — the empty-state test above already exercises
-    /// the same clock view.
+    /// Selecting a cue must not hide the clock — it stays pinned at the top.
     func testClockVisibleWhenCueSelected() throws {
         let app = launchWithSeed(.threeCuesAt1And3And6)
         let window = try waitForSeedWindow(in: app)
@@ -63,16 +54,11 @@ final class InspectorClockHeaderUITests: XCTestCase {
         XCTAssertTrue(firstRow.waitForExistence(timeout: 15), "First cue row should appear")
         firstRow.coordinate(withNormalizedOffset: .init(dx: 0.5, dy: 0.5)).click()
 
-        let nameField = window.textFields["cueInspectorName"]
-        guard nameField.waitForExistence(timeout: 5) else {
-            throw XCTSkip("Row click did not register on this host (known cueRow AX hit-test flake).")
-        }
-
         let clock = window.descendants(matching: .any)
-            .matching(identifier: "inspectorClock").firstMatch
+            .matching(identifier: "playheadClock").firstMatch
         XCTAssertTrue(
             clock.waitForExistence(timeout: 5),
-            "inspectorClock should remain visible when a cue is selected"
+            "playheadClock should remain visible when a cue is selected."
         )
     }
 

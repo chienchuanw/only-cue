@@ -36,8 +36,11 @@ final class CueMarkerHitTestUITests: XCTestCase {
         var markers = try CueGroupDragUITests.waitForMarkers(in: app, count: 3)
 
         // Sanity: nothing selected at launch.
-        XCTAssertEqual(markers.filter { $0.isSelected }.count, 0,
-                       "No marker should carry the isSelected trait at launch.")
+        XCTAssertEqual(
+            markers.filter { $0.isSelected }.count,
+            0,
+            "No marker should carry the isSelected trait at launch."
+        )
 
         // Click the middle marker (cue at 3s).
         let middleID = markers[1].identifier
@@ -48,10 +51,16 @@ final class CueMarkerHitTestUITests: XCTestCase {
         // Re-query — XCUIElement caches don't refresh after a state change.
         markers = try CueGroupDragUITests.waitForMarkers(in: app, count: 3)
         let selected = markers.filter { $0.isSelected }
-        XCTAssertEqual(selected.count, 1,
-                       "Clicking a marker should leave exactly one marker carrying the isSelected trait.")
-        XCTAssertEqual(selected.first?.identifier, middleID,
-                       "The selected marker should be the one that was clicked.")
+        XCTAssertEqual(
+            selected.count,
+            1,
+            "Clicking a marker should leave exactly one marker carrying the isSelected trait."
+        )
+        XCTAssertEqual(
+            selected.first?.identifier,
+            middleID,
+            "The selected marker should be the one that was clicked."
+        )
     }
 
     private func launchWithSeed(_ key: SeedKey) -> XCUIApplication {

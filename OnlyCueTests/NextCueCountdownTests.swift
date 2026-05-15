@@ -82,7 +82,7 @@ final class NextCueCountdownTests: XCTestCase {
         let cues = [
             makeCue(time: 0.0, bpm: 120, beatsPerBar: 4),
             makeCue(time: 10.0, bpm: 90, beatsPerBar: 3),
-            makeCue(time: 20.0, bpm: 140, beatsPerBar: 4),
+            makeCue(time: 20.0, bpm: 140, beatsPerBar: 4)
         ]
         let result = try XCTUnwrap(TransportBar.activeBPM(currentTime: 15.0, cues: cues))
         XCTAssertEqual(result.bpm, 90, accuracy: 0.001)
@@ -101,7 +101,7 @@ final class NextCueCountdownTests: XCTestCase {
         // and returns the earlier tempo'd cue.
         let cues = [
             makeCue(time: 0.0, bpm: 120, beatsPerBar: 4),
-            makeCue(time: 10.0),
+            makeCue(time: 10.0)
         ]
         let result = try XCTUnwrap(TransportBar.activeBPM(currentTime: 15.0, cues: cues))
         XCTAssertEqual(result.bpm, 120, accuracy: 0.001)

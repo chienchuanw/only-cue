@@ -21,7 +21,10 @@ final class InspectorClockFramerateUITests: XCTestCase {
 
         let window = try waitForSeedWindow(in: app)
 
-        let clock = window.descendants(matching: .any)
+        // Scope to .staticText: the clock view wraps its Text in a VStack with
+        // `.accessibilityElement(children: .contain)`, so a `.any` descendant
+        // query returns the container (whose .label is empty), not the Text.
+        let clock = window.descendants(matching: .staticText)
             .matching(identifier: "inspectorClock").firstMatch
         XCTAssertTrue(clock.waitForExistence(timeout: 15), "inspectorClock must exist")
         let before = clock.label

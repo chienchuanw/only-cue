@@ -138,6 +138,26 @@ struct AppCommands: Commands {
             .keyboardShortcut(shortcut(.nudgeSelectedCueForward))
         }
 
+        CommandMenu("Playback") {
+            Button("Speed Up") {
+                NotificationCenter.default.post(name: .playbackRateUp, object: nil)
+            }
+            .keyboardShortcut(shortcut(.playbackRateUp))
+            .accessibilityIdentifier("playbackRateUpMenuItem")
+
+            Button("Slow Down") {
+                NotificationCenter.default.post(name: .playbackRateDown, object: nil)
+            }
+            .keyboardShortcut(shortcut(.playbackRateDown))
+            .accessibilityIdentifier("playbackRateDownMenuItem")
+
+            Button("Reset Speed") {
+                NotificationCenter.default.post(name: .playbackRateReset, object: nil)
+            }
+            .keyboardShortcut(shortcut(.playbackRateReset))
+            .accessibilityIdentifier("playbackRateResetMenuItem")
+        }
+
         CommandMenu("Tools") {
             Button("Manage Types…") {
                 NotificationCenter.default.post(name: .manageTypesRequested, object: nil)

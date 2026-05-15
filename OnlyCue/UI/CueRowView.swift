@@ -18,10 +18,12 @@ struct CueRowView: View {
     @State private var numberError: String?
     @FocusState private var numberFieldFocused: Bool
 
+    @Environment(\.projectFramerate) private var framerate
+
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
             HStack(spacing: CueListLayout.rowHorizontalSpacing) {
-                Text(TimeFormat.hms(cue.time))
+                Text(TimeFormat.smpte(cue.time, rate: framerate))
                     .font(.system(.body, design: .monospaced))
                     .foregroundStyle(.secondary)
                     .frame(width: timeColumnWidth, alignment: .leading)

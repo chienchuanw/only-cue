@@ -82,10 +82,7 @@ struct ItemListPane: View {
     private var itemList: some View {
         List(selection: selectionBinding) {
             ForEach(document.model.items) { item in
-                ItemRowView(
-                    item: item,
-                    framerate: document.model.timecodeSettings.framerate
-                )
+                ItemRowView(item: item)
                 .contextMenu {
                     Button("Edit Media…") { editingItemID = item.id }
                         .accessibilityIdentifier("contextMenuEditMedia")

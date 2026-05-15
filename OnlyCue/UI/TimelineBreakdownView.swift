@@ -25,6 +25,8 @@ struct TimelineBreakdownView: View {
     var onShowAllTypes: () -> Void = {}
     var engine: PlayerEngine?
 
+    @Environment(\.projectFramerate) private var framerate
+
     private static let laneHeight: CGFloat = 30
     private static let labelWidth: CGFloat = 116
     private static let labelTrackGap: CGFloat = 6
@@ -126,7 +128,7 @@ struct TimelineBreakdownView: View {
                 onSelectCue(cue.id)
                 onSeek(cue.time)
             }
-            .help(cue.name.isEmpty ? "Cue at \(TimeFormat.hms(cue.time))" : cue.name)
+            .help(cue.name.isEmpty ? "Cue at \(TimeFormat.smpte(cue.time, rate: framerate))" : cue.name)
     }
 
     @ViewBuilder

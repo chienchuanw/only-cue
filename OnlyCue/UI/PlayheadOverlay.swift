@@ -5,6 +5,8 @@ struct PlayheadOverlay: View {
     let currentTime: TimeInterval
     let duration: TimeInterval
 
+    @Environment(\.projectFramerate) private var framerate
+
     private static let lineWidth: CGFloat = 1
     private static let labelWidth: CGFloat = 96
     private static let labelHeight: CGFloat = 18
@@ -29,7 +31,7 @@ struct PlayheadOverlay: View {
                     .offset(x: x - Self.lineWidth / 2)
                     .opacity(0.85)
 
-                Text(TimeFormat.hms(currentTime))
+                Text(TimeFormat.smpte(currentTime, rate: framerate))
                     .font(.caption2.monospacedDigit())
                     .foregroundStyle(.primary)
                     .padding(.horizontal, 6)

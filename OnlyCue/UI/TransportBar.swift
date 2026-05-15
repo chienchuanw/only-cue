@@ -72,6 +72,44 @@ struct TransportBar: View {
         return .pulse(remaining: max(1, beatsLeft))
     }
 
+    /// User preference for the next-cue countdown format. Persisted app-wide
+    /// via `@AppStorage("transport.countdownMode")`. A per-document preference
+    /// would require a ProjectModel schema bump; not worth it for a display toggle.
+    enum CountdownMode: String {
+        case time
+        case beats
+    }
+
+    /// Builds the countdown's display string. Pure — no view state, no engine.
+    /// In `.beats` mode without `activeTempo`, falls back to the time format
+    /// with a trailing `ⓘ` glyph so the user sees the mode is active but data
+    /// is missing (the View attaches a tooltip explaining how to fix it).
+    static func countdownLabel(
+        mode: CountdownMode,
+        interval: TimeInterval,
+        activeTempo: (bpm: Double, beatsPerBar: Int)?
+    ) -> String {
+        let timeBody = TimeFormat.compactCountdown(interval)
+        switch mode {
+        case .time:
+            return "Next: \(timeBody)"
+        case .beats:
+            guard let tempo = activeTempo else {
+                return "Next: \(timeBody) ⓘ"
+            }
+            switch beatCountdown(interval: interval, bpm: tempo.bpm, beatsPerBar: tempo.beatsPerBar) {
+            case .bars(let n):
+                return "Next: ~\(n) bar\(n == 1 ? "" : "s")"
+            case .pulse:
+                let dots = (1...tempo.beatsPerBar)
+                    .reversed()
+                    .map(String.init)
+                    .joined(separator: " · ")
+                return "Next: \(dots)"
+            }
+        }
+    }
+
     /// The SMPTE timecode at the playhead — the active file's striped LTC when
     /// it has any, otherwise derived from the project settings + active item's
     /// `startTimecodeFrames` (or `00:00:00:00` when no item is loaded).

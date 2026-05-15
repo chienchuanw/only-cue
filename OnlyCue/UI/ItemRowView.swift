@@ -16,7 +16,7 @@ struct ItemRowView: View {
                 .foregroundStyle(.secondary)
                 .frame(width: 16)
             VStack(alignment: .leading, spacing: 2) {
-                Text(item.media.displayName)
+                Text(item.resolvedName)
                     .lineLimit(1)
                     .truncationMode(.middle)
                 Text(TimeFormat.hms(item.media.duration))

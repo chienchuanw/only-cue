@@ -36,7 +36,7 @@ struct LTCStrip: View {
             .help(item.ltcMuted ? "Unmute LTC for this clip" : "Mute LTC for this clip")
             .accessibilityLabel(item.ltcMuted ? "LTC muted" : "LTC unmuted")
             .accessibilityIdentifier("ltcMuteToggle.\(item.id.uuidString)")
-            Text(item.media.displayName)
+            Text(item.resolvedName)
                 .font(.caption.monospaced())
                 .foregroundStyle(.secondary)
                 .lineLimit(1)

@@ -19,7 +19,7 @@ struct MediaTimecodeRow: View {
         HStack(spacing: 8) {
             Image(systemName: item.media.kind == .video ? "video" : "music.note")
                 .foregroundStyle(.secondary)
-            Text(item.media.displayName)
+            Text(item.resolvedName)
                 .lineLimit(1)
                 .truncationMode(.middle)
             Spacer()

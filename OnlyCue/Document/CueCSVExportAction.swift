@@ -27,7 +27,7 @@ enum CueCSVExportAction {
 
         let panel = NSSavePanel()
         panel.allowedContentTypes = [target.contentType]
-        panel.nameFieldStringValue = "\(item.media.displayName).\(target.fileExtension)"
+        panel.nameFieldStringValue = "\(item.resolvedName).\(target.fileExtension)"
         panel.canCreateDirectories = true
 
         guard panel.runModal() == .OK, let url = panel.url else { return }

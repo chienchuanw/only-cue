@@ -9,7 +9,7 @@ enum MediaPreviewPlan: Equatable {
     case poster(URL)
     case unavailable
 
-    static func make(kind: MediaKind, bookmarkData: Data) -> MediaPreviewPlan {
+    static func make(kind: MediaKind, bookmarkData: Data) -> Self {
         guard let resolved = try? Bookmarks.resolve(bookmarkData), !resolved.isStale else {
             return .unavailable
         }

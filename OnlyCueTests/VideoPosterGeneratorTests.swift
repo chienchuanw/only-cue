@@ -5,19 +5,19 @@ import XCTest
 final class VideoPosterGeneratorTests: XCTestCase {
 
     func test_captureTime_isTenPercentOfDuration() {
-        let t = VideoPosterGenerator.captureTime(forDurationSeconds: 100)
-        XCTAssertEqual(CMTimeGetSeconds(t), 10, accuracy: 0.001)
+        let time = VideoPosterGenerator.captureTime(forDurationSeconds: 100)
+        XCTAssertEqual(CMTimeGetSeconds(time), 10, accuracy: 0.001)
     }
 
     func test_captureTime_negativeDuration_clampsToZero() {
-        let t = VideoPosterGenerator.captureTime(forDurationSeconds: -5)
-        XCTAssertEqual(CMTimeGetSeconds(t), 0, accuracy: 0.001)
+        let time = VideoPosterGenerator.captureTime(forDurationSeconds: -5)
+        XCTAssertEqual(CMTimeGetSeconds(time), 0, accuracy: 0.001)
     }
 
     func test_captureTime_subSecondClip_isNonNegative() {
-        let t = VideoPosterGenerator.captureTime(forDurationSeconds: 0.5)
-        XCTAssertGreaterThanOrEqual(CMTimeGetSeconds(t), 0)
-        XCTAssertEqual(CMTimeGetSeconds(t), 0.05, accuracy: 0.001)
+        let time = VideoPosterGenerator.captureTime(forDurationSeconds: 0.5)
+        XCTAssertGreaterThanOrEqual(CMTimeGetSeconds(time), 0)
+        XCTAssertEqual(CMTimeGetSeconds(time), 0.05, accuracy: 0.001)
     }
 
     func test_poster_solidRedClip_returnsImageWithPositiveDimensions() async throws {

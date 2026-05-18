@@ -38,12 +38,18 @@ final class MenuBarReorganizationUITests: XCTestCase {
         let app = launchSeeded()
         _ = try waitForSeedWindow(in: app)
 
-        let viewMenu = app.menuBars.menuBarItems["View"]
-        XCTAssertTrue(viewMenu.waitForExistence(timeout: 5))
-        viewMenu.click()
-        XCTAssertFalse(app.menuItems["Snap to Playhead"].exists)
-        XCTAssertFalse(app.menuItems["Snap Selected Cue to Playhead"].exists)
-        XCTAssertFalse(app.menuItems["Pause at Each Cue"].exists)
+        let viewBarItem = app.menuBars.menuBarItems["View"]
+        XCTAssertTrue(viewBarItem.waitForExistence(timeout: 5))
+        viewBarItem.click()
+
+        // Scope to the open View dropdown — an app-wide menuItems query would
+        // also match the Cue/Playback menus, which legitimately host these now.
+        let viewMenu = viewBarItem.menus.firstMatch
+        XCTAssertTrue(viewMenu.waitForExistence(timeout: 3))
+        XCTAssertTrue(viewMenu.menuItems["Zoom In"].exists)
+        XCTAssertFalse(viewMenu.menuItems["Snap to Playhead"].exists)
+        XCTAssertFalse(viewMenu.menuItems["Snap Selected Cue to Playhead"].exists)
+        XCTAssertFalse(viewMenu.menuItems["Pause at Each Cue"].exists)
         app.typeKey(.escape, modifierFlags: [])
     }
 

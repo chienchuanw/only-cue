@@ -60,17 +60,17 @@ struct AppCommands: Commands {
         CommandGroup(after: .sidebar) {
             Divider()
 
-            Button("Zoom In") {
+            Button("Zoom In Horizontally") {
                 NotificationCenter.default.post(name: .waveformZoomIn, object: nil)
             }
             .keyboardShortcut(shortcut(.waveformZoomIn))
 
-            Button("Zoom Out") {
+            Button("Zoom Out Horizontally") {
                 NotificationCenter.default.post(name: .waveformZoomOut, object: nil)
             }
             .keyboardShortcut(shortcut(.waveformZoomOut))
 
-            Button("Actual Size") {
+            Button("Actual Horizontal Size") {
                 NotificationCenter.default.post(name: .waveformZoomReset, object: nil)
             }
             .keyboardShortcut(shortcut(.waveformZoomReset))

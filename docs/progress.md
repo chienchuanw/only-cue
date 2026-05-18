@@ -4,6 +4,14 @@ Append-only session log. Newer entries on top.
 
 ---
 
+## 2026-05-18 — Bypass-mode session: issue #300 — View menu zoom-label disambiguation (PR #301, merged to `dev`)
+
+**Shipped (PR [#301](https://github.com/chienchuanw/only-cue/pull/301), merged to `dev` as `34cc23f`, closes [#300](https://github.com/chienchuanw/only-cue/issues/300)):**
+- Follow-up to the menu reorganization (#298): the View menu's horizontal-zoom block gave no axis hint while the vertical block was self-describing. Brainstormed → spec (`docs/superpowers/specs/2026-05-18-view-menu-zoom-labels-design.md`) → plan (`docs/superpowers/plans/2026-05-18-view-menu-zoom-labels.md`) → strict-TDD in an isolated `issues/300` worktree.
+- Renamed three `Button` labels in `OnlyCue/App/AppCommands.swift` `CommandGroup(after: .sidebar)`: `Zoom In` → `Zoom In Horizontally`, `Zoom Out` → `Zoom Out Horizontally`, `Actual Size` → `Actual Horizontal Size` (mirrors existing `Actual Vertical Size` word order). User chose flat relabeling over submenus/Section headers. Zero behavior change — keyboard shortcuts, `NotificationCenter` names, vertical group, display toggles, dividers, structure all unchanged.
+- Updated the sole zoom-label test reference (`MenuBarReorganizationUITests`, line 49) to assert `Zoom In Horizontally` + `Zoom In Vertically` present and bare `Zoom In` absent. TDD red→green (`47e5235` → `9eaa245`, rebased to `6f13915`/`34cc23f`). CI green first run; autonomous review round 1 = approve (nit only).
+- Local UITests still TCC-blocked on this machine ("Timed out enabling automation mode"); local gate was build + SwiftLint + `OnlyCueTests` unit suite; UITests gated on CI.
+
 ## 2026-05-18 — Bypass-mode session: issue #298 — menu bar reorganization (PR #299, merged to `dev`)
 
 **Shipped (PR [#299](https://github.com/chienchuanw/only-cue/pull/299), merged to `dev` as `9fd13da`, closes [#298](https://github.com/chienchuanw/only-cue/issues/298)):**

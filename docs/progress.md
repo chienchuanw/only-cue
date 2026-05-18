@@ -4,6 +4,15 @@ Append-only session log. Newer entries on top.
 
 ---
 
+## 2026-05-18 — Bypass-mode session: issue #298 — menu bar reorganization (PR #299, merged to `dev`)
+
+**Shipped (PR [#299](https://github.com/chienchuanw/only-cue/pull/299), merged to `dev` as `9fd13da`, closes [#298](https://github.com/chienchuanw/only-cue/issues/298)):**
+- Brainstormed → spec (`docs/superpowers/specs/2026-05-18-menu-bar-reorganization-design.md`) → plan (`docs/superpowers/plans/2026-05-18-menu-bar-reorganization.md`) → strict-TDD execution in an isolated `issues/298` worktree.
+- New top-level **Cue** menu (between View and Playback) holding the cue-editing commands; the View menu (`CommandGroup(after: .sidebar)`) slimmed to zoom + display toggles only; **Pause at Each Cue** moved into the **Playback** menu after the speed controls. Single source file `OnlyCue/App/AppCommands.swift`.
+- Six cue commands relabeled (dropped redundant "Selected Cue(s)"): Duplicate at Playhead / Nudge Back / Nudge Forward / Snap to Playhead / Snap to Nearest Beat / Snap to Nearest Bar. Zero behavior change — every keyboard shortcut, `NotificationCenter` name, `.accessibilityIdentifier`, and the `@AppStorage("pauseAtEachCue")` binding preserved; UITest-frozen labels (Speed Up/Slow Down/Reset Speed, New from Template…, etc.) untouched.
+- New `MenuBarReorganizationUITests` (TDD red→green: failing test `941f0a8` → impl `f902196`). First CI run caught a flawed app-wide negative menu query; fixed by scoping the View-absence assertion to the open View dropdown (`9fd13da`). CI green; autonomous review round 1 = approve (nits only).
+- Local UITest execution was blocked by a macOS TCC automation-mode timeout on this machine; build, SwiftLint, and the `OnlyCueTests` unit suite passed locally — UITests were gated on CI (the workflow runs the full `xcodebuild test`).
+
 ## 2026-05-18 — Bypass-mode session: issue #295 Edit Media modal redesign (PR #296, merged to `dev`) + discovered crash #297
 
 **Shipped (PR [#296](https://github.com/chienchuanw/only-cue/pull/296), merged to `dev` as `f36b7bd`, closes [#295](https://github.com/chienchuanw/only-cue/issues/295)):**

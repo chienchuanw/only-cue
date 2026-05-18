@@ -20,9 +20,39 @@ struct MediaEditSheet: View {
     @State private var tcInvalid: Bool = false
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 16) {
+        VStack(alignment: .leading, spacing: 0) {
             Text("Edit Media")
                 .font(.headline)
+                .padding([.horizontal, .top], 20)
+                .padding(.bottom, 12)
+
+            MediaPreviewStrip(
+                kind: item.media.kind,
+                bookmarkData: item.media.bookmarkData
+            )
+
+            HStack(spacing: 8) {
+                Image(systemName: item.media.kind == .audio ? "waveform" : "film")
+                    .foregroundStyle(.secondary)
+                    .frame(width: 18)
+                VStack(alignment: .leading, spacing: 1) {
+                    Text(item.media.displayName)
+                        .fontWeight(.semibold)
+                        .lineLimit(1)
+                        .truncationMode(.middle)
+                    Text("\(item.media.kind == .audio ? "Audio" : "Video") · "
+                         + TimeFormat.smpte(item.media.duration, rate: framerate))
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                        .monospacedDigit()
+                }
+                Spacer()
+            }
+            .padding(.horizontal, 20)
+            .padding(.vertical, 10)
+            .accessibilityIdentifier("mediaEditIdentity")
+
+            Divider()
 
             Form {
                 LabeledContent("Name") {
@@ -45,6 +75,8 @@ struct MediaEditSheet: View {
                 Toggle("Mute LTC for this clip", isOn: $mutedDraft)
                     .accessibilityIdentifier("mediaEditMuteToggle")
             }
+            .padding(.horizontal, 20)
+            .padding(.top, 12)
 
             HStack {
                 Spacer()
@@ -55,9 +87,9 @@ struct MediaEditSheet: View {
                     .keyboardShortcut(.defaultAction)
                     .accessibilityIdentifier("mediaEditSave")
             }
+            .padding(20)
         }
-        .padding(20)
-        .frame(minWidth: 380)
+        .frame(width: 460)
         .onAppear { syncDraftsFromItem() }
     }
 

@@ -18,6 +18,14 @@ struct PlayheadClockHeader: View {
                 .font(.system(size: 30, weight: .semibold, design: .monospaced))
                 .monospacedDigit()
                 .foregroundStyle(.primary)
+                // Issue #297: a fixed 30pt monospaced timecode reports a
+                // large intrinsic minimum width. Without bounding it, that
+                // min can exceed the inspector column minimum and feed the
+                // NSSplitView constraint loop during divider tracking.
+                // lineLimit + minimumScaleFactor lets it shrink instead of
+                // forcing the hosting view's min width up.
+                .lineLimit(1)
+                .minimumScaleFactor(0.5)
                 .accessibilityIdentifier("playheadClock")
                 .frame(maxWidth: .infinity, alignment: .center)
             Divider()

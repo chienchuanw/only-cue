@@ -35,7 +35,11 @@ struct DocumentView: View {
             mainPane
                 .inspector(isPresented: .constant(true)) {
                     CueListPane(document: document, engine: engine, selection: $cueSelection)
-                        .inspectorColumnWidth(min: 240, ideal: 300, max: 400)
+                        .inspectorColumnWidth(
+                            min: CueListInspectorMetrics.minWidth,
+                            ideal: CueListInspectorMetrics.idealWidth,
+                            max: CueListInspectorMetrics.maxWidth
+                        )
                 }
         }
         .navigationSubtitle(document.model.activeItem?.resolvedName ?? "")

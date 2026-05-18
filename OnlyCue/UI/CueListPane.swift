@@ -10,6 +10,11 @@ struct CueListPane: View {
 
     static let headerAccessibilityIdentifier = "cueListHeader"
 
+    /// The pane's minimum width. Defers to the shared inspector-column
+    /// metric so it can never diverge from `.inspectorColumnWidth` and
+    /// reintroduce the issue #297 constraint loop.
+    static let minPaneWidth: CGFloat = CueListInspectorMetrics.minWidth
+
     @ObservedObject var document: CueListDocument
     let engine: PlayerEngine
     @Binding var selection: Set<Cue.ID>
@@ -90,7 +95,7 @@ struct CueListPane: View {
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity)
         }
-        .frame(minWidth: 240)
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
         .accessibilityIdentifier("cueListPane")
         .onReceive(NotificationCenter.default.publisher(for: .snapSelectedCueToPlayhead)) { _ in
             snapSelectedToPlayhead()

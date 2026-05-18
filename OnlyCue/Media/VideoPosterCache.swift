@@ -10,8 +10,10 @@ struct VideoPosterCache {
 
     static let shared: VideoPosterCache = {
         let base = (try? FileManager.default.url(
-            for: .cachesDirectory, in: .userDomainMask,
-            appropriateFor: nil, create: true
+            for: .cachesDirectory,
+            in: .userDomainMask,
+            appropriateFor: nil,
+            create: true
         )) ?? FileManager.default.temporaryDirectory
         return Self(directory: base.appendingPathComponent("OnlyCue/posters", isDirectory: true))
     }()

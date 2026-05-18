@@ -50,8 +50,8 @@ enum VideoFixture {
                 // 32ARGB solid red: A=255, R=255, G=0, B=0
                 let bytes = base.assumingMemoryBound(to: UInt8.self)
                 let count = CVPixelBufferGetBytesPerRow(buffer) * CVPixelBufferGetHeight(buffer)
-                for i in stride(from: 0, to: count, by: 4) {
-                    bytes[i] = 255; bytes[i + 1] = 255; bytes[i + 2] = 0; bytes[i + 3] = 0
+                for idx in stride(from: 0, to: count, by: 4) {
+                    bytes[idx] = 255; bytes[idx + 1] = 255; bytes[idx + 2] = 0; bytes[idx + 3] = 0
                 }
             }
             CVPixelBufferUnlockBaseAddress(buffer, [])

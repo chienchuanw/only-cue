@@ -4,16 +4,21 @@ import XCTest
 
 final class VideoPosterCacheTests: XCTestCase {
 
-    private func makeImage(width: Int, height: Int) -> CGImage {
-        let space = CGColorSpaceCreateDeviceRGB()
-        let ctx = CGContext(
-            data: nil, width: width, height: height,
-            bitsPerComponent: 8, bytesPerRow: 0, space: space,
-            bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue
-        )!
+    private func makeImage(width: Int, height: Int) throws -> CGImage {
+        let ctx = try XCTUnwrap(
+            CGContext(
+                data: nil,
+                width: width,
+                height: height,
+                bitsPerComponent: 8,
+                bytesPerRow: 0,
+                space: CGColorSpaceCreateDeviceRGB(),
+                bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue
+            )
+        )
         ctx.setFillColor(CGColor(red: 1, green: 0, blue: 0, alpha: 1))
         ctx.fill(CGRect(x: 0, y: 0, width: width, height: height))
-        return ctx.makeImage()!
+        return try XCTUnwrap(ctx.makeImage())
     }
 
     private func makeIsolatedCache() -> VideoPosterCache {
@@ -25,7 +30,8 @@ final class VideoPosterCacheTests: XCTestCase {
 
     func test_writeThenRead_roundTripsImageDimensions() throws {
         let cache = makeIsolatedCache()
-        try cache.write(makeImage(width: 64, height: 48), assetHash: "abc", maxPixelSize: 512)
+        let image = try makeImage(width: 64, height: 48)
+        try cache.write(image, assetHash: "abc", maxPixelSize: 512)
 
         let recovered = cache.read(assetHash: "abc", maxPixelSize: 512)
 
@@ -39,7 +45,8 @@ final class VideoPosterCacheTests: XCTestCase {
 
     func test_read_sizeMismatch_returnsNil() throws {
         let cache = makeIsolatedCache()
-        try cache.write(makeImage(width: 10, height: 10), assetHash: "h1", maxPixelSize: 256)
+        let image = try makeImage(width: 10, height: 10)
+        try cache.write(image, assetHash: "h1", maxPixelSize: 256)
 
         XCTAssertNil(cache.read(assetHash: "h1", maxPixelSize: 512))
     }

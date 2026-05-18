@@ -102,7 +102,7 @@ These are the stable names to use in specs, issues, PRs, design docs, and verifi
 
 The top-level per-`.cuelist` window. A three-pane `NavigationSplitView` with a stacked center column.
 
-- **Media Library Sidebar** (`ItemListPane`) — left column. The list of `MediaItem`s in the project, with drag-reorder, multi-file picker entry, the per-item TC editor row (`MediaTimecodeRow`), and drop targets for new media. Row view: `ItemRowView`.
+- **Media Library Sidebar** (`ItemListPane`) — left column. The list of `MediaItem`s in the project, with drag-reorder, multi-file picker entry, the per-item TC editor row (`MediaTimecodeRow`), and drop targets for new media. Row view: `ItemRowView`. Right-click → "Edit Media…" opens the **Edit Media sheet** (`MediaEditSheet`): a hero preview strip (`MediaPreviewStrip`, ID `mediaEditPreviewStrip` — audio waveform or video poster frame via `VideoPosterGenerator`) above a read-only file-identity row (`mediaEditIdentity`), then the alternate-name, start-timecode, and per-clip LTC-mute fields.
 - **Main Pane** (`DocumentView.mainPane`) — center column. Stacks the following from top to bottom:
   - **Preview Pane** (`PreviewPane`, ID `previewPane`) — video surface or audio waveform display.
     - **Video Surface** (`AVPlayerLayerView`, ID `videoPreview`) — present only when the active item is a video.

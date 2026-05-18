@@ -4,6 +4,17 @@ Append-only session log. Newer entries on top.
 
 ---
 
+## 2026-05-18 — Bypass-mode session: issue #295 Edit Media modal redesign (PR #296, merged to `dev`) + discovered crash #297
+
+**Shipped (PR [#296](https://github.com/chienchuanw/only-cue/pull/296), merged to `dev` as `f36b7bd`, closes [#295](https://github.com/chienchuanw/only-cue/issues/295)):**
+- Brainstormed → spec (`docs/superpowers/specs/2026-05-17-edit-media-modal-design.md`) → plan (`docs/superpowers/plans/2026-05-18-edit-media-modal.md`) → strict-TDD execution in an isolated `issues/295` worktree.
+- New video poster-frame subsystem mirroring the waveform stack: `VideoPosterGenerator` (capture at 10% of duration, clamped ≥ 0, deterministic frame; `VideoPosterError.generationFailed`), `VideoPosterCache` (PNG, keyed by file SHA256 + max pixel size, `~/Library/Caches/OnlyCue/posters/`).
+- `MediaPreviewPlan` — pure waveform/poster/unavailable decision (the unit-testable seam; stale/missing bookmark → fallback).
+- `MediaPreviewStrip` — async-loading waveform/poster hero strip with placeholder + kind-icon fallback. `MediaEditSheet` restructured to stacked layout (title → preview → identity row → unchanged Form → footer, width 460); initializer unchanged so `ItemListPane` untouched.
+- No change to `CueCommands.updateMediaItem`, `MediaItemEdit`, undo, `ProjectModel`, or `schemaVersion`. New tests: `VideoFixture`, `VideoPosterGeneratorTests`, `VideoPosterCacheTests`, `MediaPreviewPlanTests`, extended `MediaEditSheetUITests`. Full suite 731/731 green; CI green; review round 1 = approve (nits only).
+
+**Discovered, tracked separately — NOT shipped:** issue [#297](https://github.com/chienchuanw/only-cue/issues/297) (p1) — `NSSplitView` constraint-loop crash when dragging the main/cue-list divider. Investigation proved it is **pre-existing on `dev`** (regression of the `#269`/`#271` family from `b8dfae0` removing the inner `VSplitView` isolation) and **unrelated to PR #296** (`git diff origin/dev..issues/295` touches no split-layout files). Per maintainer decision PR #296 was merged first; the crash fix proceeds next on the `issues/297` branch (root-cause repro instrumentation in progress).
+
 ## 2026-05-15 — Bypass-mode session: issue #289 — framerate-based SMPTE time display across the UI (PR #290, merged to `dev`)
 
 **Shipped (1 PR, 12 commits):** #290 (closes #289), rebase-merged to `dev` as `f62c518`. CI green on the fourth run after three UI-test iterations to find the SwiftUI-on-macOS accessibility convention. Subagent review verdict: approve (one non-blocking nit — production view could set `.accessibilityValue` explicitly so tests don't need a label-OR-value fallback).

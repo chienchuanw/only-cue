@@ -102,41 +102,40 @@ struct AppCommands: Commands {
 
             Toggle("Show Tempo Grid", isOn: $showTempoGrid)
                 .keyboardShortcut(shortcut(.toggleTempoGrid))
+        }
 
-            Toggle("Pause at Each Cue", isOn: $pauseAtEachCue)
-                .keyboardShortcut(shortcut(.togglePauseAtEachCue))
-
-            Divider()
-
-            Button("Snap Selected Cue to Playhead") {
-                NotificationCenter.default.post(name: .snapSelectedCueToPlayhead, object: nil)
-            }
-            .keyboardShortcut(shortcut(.snapSelectedCueToPlayhead))
-
-            Button("Snap Selected Cues to Nearest Beat") {
-                NotificationCenter.default.post(name: .snapSelectedCuesToBeat, object: nil)
-            }
-            .keyboardShortcut(shortcut(.snapSelectedCuesToBeat))
-
-            Button("Snap Selected Cues to Nearest Bar") {
-                NotificationCenter.default.post(name: .snapSelectedCuesToBar, object: nil)
-            }
-            .keyboardShortcut(shortcut(.snapSelectedCuesToBar))
-
-            Button("Duplicate Cue at Playhead") {
+        CommandMenu("Cue") {
+            Button("Duplicate at Playhead") {
                 NotificationCenter.default.post(name: .duplicateSelectedCueAtPlayhead, object: nil)
             }
             .keyboardShortcut(shortcut(.duplicateCueAtPlayhead))
 
-            Button("Nudge Selected Cue Back") {
+            Button("Nudge Back") {
                 NotificationCenter.default.post(name: .nudgeSelectedCueBack, object: nil)
             }
             .keyboardShortcut(shortcut(.nudgeSelectedCueBack))
 
-            Button("Nudge Selected Cue Forward") {
+            Button("Nudge Forward") {
                 NotificationCenter.default.post(name: .nudgeSelectedCueForward, object: nil)
             }
             .keyboardShortcut(shortcut(.nudgeSelectedCueForward))
+
+            Divider()
+
+            Button("Snap to Playhead") {
+                NotificationCenter.default.post(name: .snapSelectedCueToPlayhead, object: nil)
+            }
+            .keyboardShortcut(shortcut(.snapSelectedCueToPlayhead))
+
+            Button("Snap to Nearest Beat") {
+                NotificationCenter.default.post(name: .snapSelectedCuesToBeat, object: nil)
+            }
+            .keyboardShortcut(shortcut(.snapSelectedCuesToBeat))
+
+            Button("Snap to Nearest Bar") {
+                NotificationCenter.default.post(name: .snapSelectedCuesToBar, object: nil)
+            }
+            .keyboardShortcut(shortcut(.snapSelectedCuesToBar))
         }
 
         CommandMenu("Playback") {
@@ -166,6 +165,11 @@ struct AppCommands: Commands {
             .keyboardShortcut(shortcut(.playbackRateReset))
             .accessibilityIdentifier("playbackRateResetMenuItem")
             .disabled(ltcOn)
+
+            Divider()
+
+            Toggle("Pause at Each Cue", isOn: $pauseAtEachCue)
+                .keyboardShortcut(shortcut(.togglePauseAtEachCue))
         }
 
         CommandMenu("Tools") {

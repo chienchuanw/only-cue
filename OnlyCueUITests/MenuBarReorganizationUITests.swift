@@ -46,7 +46,9 @@ final class MenuBarReorganizationUITests: XCTestCase {
         // also match the Cue/Playback menus, which legitimately host these now.
         let viewMenu = viewBarItem.menus.firstMatch
         XCTAssertTrue(viewMenu.waitForExistence(timeout: 3))
-        XCTAssertTrue(viewMenu.menuItems["Zoom In"].exists)
+        XCTAssertTrue(viewMenu.menuItems["Zoom In Horizontally"].exists)
+        XCTAssertTrue(viewMenu.menuItems["Zoom In Vertically"].exists)
+        XCTAssertFalse(viewMenu.menuItems["Zoom In"].exists)
         XCTAssertFalse(viewMenu.menuItems["Snap to Playhead"].exists)
         XCTAssertFalse(viewMenu.menuItems["Snap Selected Cue to Playhead"].exists)
         XCTAssertFalse(viewMenu.menuItems["Pause at Each Cue"].exists)

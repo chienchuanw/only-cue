@@ -66,6 +66,27 @@ final class MediaEditSheetUITests: XCTestCase {
         )
     }
 
+    func test_editSheet_showsIdentityAndPreviewStrip() throws {
+        let app = launchWithSeed(.threeCuesAt1And3And6)
+        defer { app.terminate() }
+
+        try openEditSheet(in: app)
+
+        let nameField = app.textFields["mediaEditNameField"]
+        XCTAssertTrue(nameField.waitForExistence(timeout: 3), "Sheet should open.")
+
+        XCTAssertTrue(
+            app.descendants(matching: .any)
+                .matching(identifier: "mediaEditPreviewStrip").firstMatch.exists,
+            "Hero preview strip should be present in the Edit Media sheet."
+        )
+        XCTAssertTrue(
+            app.descendants(matching: .any)
+                .matching(identifier: "mediaEditIdentity").firstMatch.exists,
+            "File-identity row should be present in the Edit Media sheet."
+        )
+    }
+
     /// Opens the per-media edit sheet by right-clicking the sidebar row and
     /// activating the "Edit Media…" menu item. Tolerant of CI right-click
     /// hit-test flakiness — falls back to coordinate-based right-click before

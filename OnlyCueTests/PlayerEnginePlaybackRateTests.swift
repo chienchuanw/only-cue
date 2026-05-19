@@ -69,7 +69,10 @@ final class PlayerEnginePlaybackRateTests: XCTestCase {
         await engine.load(asset: AVURLAsset(url: url))
         engine.setPlaybackRate(0.5)
         engine.play()
-        try await Task.sleep(nanoseconds: 80_000_000)
+        // AVPlayer.rate propagation is non-deterministic and slower on the
+        // GitHub runner than locally; poll up to 1 s instead of a fixed
+        // sleep (see `test_setPlaybackRate_whilePlaying_updatesAVPlayerRateLive`).
+        try await waitForPlayerRate(engine: engine, expected: 0.5)
         XCTAssertEqual(engine.player.rate, 0.5, accuracy: 0.01)
         engine.pause()
     }

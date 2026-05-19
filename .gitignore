@@ -58,3 +58,6 @@ screenshots/
 
 # Superpower tmp
 .superpowers/
+
+# Logs
+logs/

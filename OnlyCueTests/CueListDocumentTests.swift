@@ -35,4 +35,16 @@ final class CueListDocumentTests: XCTestCase {
         let decoded = try CueListDocument.decodeModel(from: legacyPlaintext)
         XCTAssertEqual(decoded.id, original.id, "pre-encryption .cuelist files must still open")
     }
+
+    func test_decodeModel_tamperedEnvelope_throwsCryptoError() throws {
+        // Issue #304 AC: a tampered file must surface as a corrupt-file error.
+        // init(configuration:) maps CuelistCrypto.CryptoError → CocoaError(.fileReadCorruptFile);
+        // this asserts the seam delivers that error domain (not a leaked CryptoKitError)
+        // for a failed auth tag, which is the contract init relies on.
+        var sealed = try CueListDocument.encodeModel(CueListDocument().model)
+        sealed[sealed.count - 1] ^= 0xFF
+        XCTAssertThrowsError(try CueListDocument.decodeModel(from: sealed)) { error in
+            XCTAssertTrue(error is CuelistCrypto.CryptoError, "got \(type(of: error)): \(error)")
+        }
+    }
 }

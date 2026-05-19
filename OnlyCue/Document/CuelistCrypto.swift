@@ -9,11 +9,15 @@ import CryptoKit
 /// the threat model recorded in ADR-021.
 enum CuelistCrypto {
 
-    enum CryptoError: Error { case malformedEnvelope, unsupportedVersion }
+    enum CryptoError: Error { case malformedEnvelope, unsupportedVersion, decryptionFailed }
 
-    private static let magic = Data("OCUE".utf8) // 4 bytes
+    private static let magic = Data("OCUE".utf8) // ASCII "OCUE"
     private static let version: UInt8 = 0x01
-    private static let headerLength = 17         // 4 magic + 1 version + 12 nonce
+    private static let nonceLength = 12          // AES-GCM nonce
+    private static let tagLength = 16            // AES-GCM auth tag
+    private static var versionOffset: Int { magic.count }
+    private static var nonceOffset: Int { magic.count + 1 }
+    private static var headerLength: Int { magic.count + 1 + nonceLength }
 
     /// 32-byte fixed app key. Intentionally extractable (see ADR-021).
     private static let key = SymmetricKey(data: Data([
@@ -39,18 +43,24 @@ enum CuelistCrypto {
         guard file.count >= magic.count, file.prefix(magic.count) == magic else {
             return fileData // legacy plaintext: return bytes unchanged
         }
-        guard file.count > headerLength else { throw CryptoError.malformedEnvelope }
-        guard file[magic.count] == version else { throw CryptoError.unsupportedVersion }
-        let nonceData = file.subdata(in: 5 ..< 17)
-        let rest = file.subdata(in: 17 ..< file.count)
-        guard rest.count >= 16 else { throw CryptoError.malformedEnvelope }
-        let ciphertext = rest.prefix(rest.count - 16)
-        let tag = rest.suffix(16)
-        let box = try AES.GCM.SealedBox(
-            nonce: AES.GCM.Nonce(data: nonceData),
-            ciphertext: ciphertext,
-            tag: tag
-        )
-        return try AES.GCM.open(box, using: key)
+        guard file.count >= headerLength + tagLength else { throw CryptoError.malformedEnvelope }
+        guard file[versionOffset] == version else { throw CryptoError.unsupportedVersion }
+        let nonceData = file.subdata(in: nonceOffset ..< nonceOffset + nonceLength)
+        let rest = file.subdata(in: headerLength ..< file.count)
+        let ciphertext = rest.prefix(rest.count - tagLength)
+        let tag = rest.suffix(tagLength)
+        do {
+            let box = try AES.GCM.SealedBox(
+                nonce: AES.GCM.Nonce(data: nonceData),
+                ciphertext: ciphertext,
+                tag: tag
+            )
+            return try AES.GCM.open(box, using: key)
+        } catch {
+            // Wrap CryptoKit failures (failed auth tag on a tampered file, bad
+            // nonce) into this seam's own error domain so callers map every
+            // crypto failure to a corrupt-file error in one place.
+            throw CryptoError.decryptionFailed
+        }
     }
 }

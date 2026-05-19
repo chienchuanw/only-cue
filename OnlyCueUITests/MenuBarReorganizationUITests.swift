@@ -34,6 +34,31 @@ final class MenuBarReorganizationUITests: XCTestCase {
         app.typeKey(.escape, modifierFlags: [])
     }
 
+    func test_viewMenuToggles_useShowHideVerb_andFlipOnClick() throws {
+        let app = launchSeeded()
+        _ = try waitForSeedWindow(in: app)
+
+        let viewBarItem = app.menuBars.menuBarItems["View"]
+        XCTAssertTrue(viewBarItem.waitForExistence(timeout: 5))
+        viewBarItem.click()
+
+        let viewMenu = viewBarItem.menus.firstMatch
+        XCTAssertTrue(viewMenu.waitForExistence(timeout: 3))
+        // Default seeded state: all flags off -> "Show ..." titles.
+        XCTAssertTrue(viewMenu.menuItems["Show Notes Overlay"].exists)
+        XCTAssertTrue(viewMenu.menuItems["Show Timeline Breakdown"].exists)
+        XCTAssertTrue(viewMenu.menuItems["Show Tempo Grid"].exists)
+
+        // Click Show Tempo Grid; it must flip to the Hide verb.
+        viewMenu.menuItems["Show Tempo Grid"].click()
+        viewBarItem.click()
+        let viewMenu2 = viewBarItem.menus.firstMatch
+        XCTAssertTrue(viewMenu2.waitForExistence(timeout: 3))
+        XCTAssertTrue(viewMenu2.menuItems["Hide Tempo Grid"].exists)
+        XCTAssertFalse(viewMenu2.menuItems["Show Tempo Grid"].exists)
+        app.typeKey(.escape, modifierFlags: [])
+    }
+
     func test_viewMenu_noLongerContainsCueEditingItems() throws {
         let app = launchSeeded()
         _ = try waitForSeedWindow(in: app)

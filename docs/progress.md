@@ -4,6 +4,16 @@ Append-only session log. Newer entries on top.
 
 ---
 
+## 2026-05-19 — Bypass-mode session: issue #302 — menu toggles use Show/Hide verb (PR #303, merged to `dev`); crash #297 reopened
+
+**Shipped (PR [#303](https://github.com/chienchuanw/only-cue/pull/303), merged to `dev` as `55ba45c`, closes [#302](https://github.com/chienchuanw/only-cue/issues/302)):**
+- User reported the View-menu `Show …` toggles looked tab-indented. Cause: a SwiftUI `Toggle` in `Commands` renders as a native *checkable* `NSMenuItem`, so AppKit reserves a leading checkmark state-column, indenting toggles relative to plain `Button` items. Brainstormed → spec (`docs/superpowers/specs/2026-05-19-menu-toggle-showhide-design.md`) → plan (`docs/superpowers/plans/2026-05-19-menu-toggle-showhide.md`) → strict-TDD in an isolated `issues/302` worktree.
+- Converted four `Toggle`s in `OnlyCue/App/AppCommands.swift` to state-flipping `Button`s: `Show/Hide Notes Overlay`, `Show/Hide Timeline Breakdown`, `Show/Hide Tempo Grid` (View), and `Pause at Each Cue` ⇄ `Don't Pause at Each Cue` (Playback). `@AppStorage` keys, keyboard shortcuts, and behavior unchanged — only menu-item kind (checkable→plain, removes indent) and the state-dependent title. User chose the Show/Hide verb over inline/trailing checkmark glyphs.
+- New `MenuBarReorganizationUITests.test_viewMenuToggles_useShowHideVerb_andFlipOnClick` (TDD red→green: `e027954` → `1c6a3f4`, rebased to `d17cf68`/`55ba45c`). No frozen-label breakage (`TempoGridOverlayScreenshotTests` uses ⇧⌘G; the `Pause at Each Cue` assertions hold in the default-off state). CI green first run; autonomous review round 1 = approve (one non-blocking nit: new test doesn't reset `showTempoGrid` at teardown).
+- Local UITests still TCC-blocked on this machine; local gate was build + SwiftLint + `OnlyCueTests` unit suite; UITests gated on CI.
+
+**Reopened, investigated, NOT shipped:** issue [#297](https://github.com/chienchuanw/only-cue/issues/297) (p1) — the `NSSplitView` constraint-loop crash (`NSGenericException: more Update Constraints in Window passes than there are views`) was reproduced manually by the user, so #297 was reopened. Investigation confirmed the deferred candidate fix on `origin/issues/297` (`e82c421`: `CueListInspectorMetrics` SSOT + drop the duplicate `.frame(minWidth:240)` + bound the clock header + `CueListInspectorMetricsTests`) is logically sound and directly targets the documented root cause; `minPaneWidth` is the testable seam, not dead code. Conclusion: the right validation bar is the deterministic invariant test, not a flaky synthesized 1px divider drag, and `SplitDividerCrashUITests` (self-described known-bad) should be dropped. No PR opened per the user's "investigate first" decision; awaiting an explicit go to run it through the normal flow (needs rebase onto current `dev`).
+
 ## 2026-05-18 — Bypass-mode session: issue #300 — View menu zoom-label disambiguation (PR #301, merged to `dev`)
 
 **Shipped (PR [#301](https://github.com/chienchuanw/only-cue/pull/301), merged to `dev` as `34cc23f`, closes [#300](https://github.com/chienchuanw/only-cue/issues/300)):**

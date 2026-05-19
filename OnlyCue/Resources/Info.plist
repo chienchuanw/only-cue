@@ -28,7 +28,7 @@
     <array>
         <dict>
             <key>CFBundleTypeName</key>
-            <string>OnlyCue Cue List</string>
+            <string>OnlyCue Document</string>
             <key>CFBundleTypeRole</key>
             <string>Editor</string>
             <key>LSHandlerRank</key>
@@ -46,10 +46,10 @@
         <dict>
             <key>UTTypeConformsTo</key>
             <array>
-                <string>public.json</string>
+                <string>public.data</string>
             </array>
             <key>UTTypeDescription</key>
-            <string>OnlyCue Cue List</string>
+            <string>OnlyCue Document</string>
             <key>UTTypeIdentifier</key>
             <string>com.onlycue.cuelist</string>
             <key>UTTypeTagSpecification</key>
@@ -57,10 +57,6 @@
                 <key>public.filename-extension</key>
                 <array>
                     <string>cuelist</string>
-                </array>
-                <key>public.mime-type</key>
-                <array>
-                    <string>application/json</string>
                 </array>
             </dict>
         </dict>

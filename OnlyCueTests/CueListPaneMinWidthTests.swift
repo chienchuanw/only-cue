@@ -26,10 +26,10 @@ final class CueListPaneMinWidthTests: XCTestCase {
 
     func test_headerMinimumWidth_doesNotExceedInspectorColumnMinimum() {
         XCTAssertLessThanOrEqual(
-            CueListPane.headerMinimumWidth,
+            CueListLayout.headerMinimumWidth,
             CueListInspectorMetrics.minWidth,
             """
-            Cue-list header floor (\(CueListPane.headerMinimumWidth)) exceeds the \
+            Cue-list header floor (\(CueListLayout.headerMinimumWidth)) exceeds the \
             inspector column minimum (\(CueListInspectorMetrics.minWidth)). The \
             outer NSSplitView cannot drive the pane to its 240 minimum without the \
             content demanding more — the issue #297 constraint loop.
@@ -56,7 +56,7 @@ final class CueListPaneMinWidthTests: XCTestCase {
             "range minimums must be strictly narrower than defaults for compression to buy headroom"
         )
         XCTAssertLessThanOrEqual(
-            compressibleFloor + CueListPane.headerHorizontalChrome,
+            compressibleFloor + CueListLayout.headerHorizontalChrome,
             CueListInspectorMetrics.minWidth,
             "fully-compressed header must fit within the inspector column minimum"
         )

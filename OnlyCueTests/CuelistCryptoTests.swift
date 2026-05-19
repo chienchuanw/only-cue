@@ -22,10 +22,23 @@ final class CuelistCryptoTests: XCTestCase {
         XCTAssertEqual(try CuelistCrypto.open(legacy), legacy, "no OCUE magic ⇒ return bytes unchanged")
     }
 
-    func test_open_tamperedCiphertext_throws() throws {
-        var sealed = try CuelistCrypto.seal(Data("hello world".utf8))
-        sealed[sealed.count - 1] ^= 0xFF // flip a tag byte
-        XCTAssertThrowsError(try CuelistCrypto.open(sealed))
+    func test_open_tamperedTagOrCiphertext_throwsCryptoErrorNotCryptoKitError() throws {
+        // The seam must own its error domain: a failed auth tag (tampered file)
+        // must surface as CuelistCrypto.CryptoError, not a leaked CryptoKitError,
+        // so CueListDocument can map every crypto failure to a corrupt-file error.
+        let plaintext = Data("hello world payload to make a ciphertext".utf8)
+
+        var tamperedTag = try CuelistCrypto.seal(plaintext)
+        tamperedTag[tamperedTag.count - 1] ^= 0xFF // flip a tag byte
+        XCTAssertThrowsError(try CuelistCrypto.open(tamperedTag)) { error in
+            XCTAssertEqual(error as? CuelistCrypto.CryptoError, .decryptionFailed)
+        }
+
+        var tamperedCipher = try CuelistCrypto.seal(plaintext)
+        tamperedCipher[20] ^= 0xFF // flip a ciphertext byte (past the 17-byte header)
+        XCTAssertThrowsError(try CuelistCrypto.open(tamperedCipher)) { error in
+            XCTAssertEqual(error as? CuelistCrypto.CryptoError, .decryptionFailed)
+        }
     }
 
     func test_open_truncatedEnvelope_throws() {

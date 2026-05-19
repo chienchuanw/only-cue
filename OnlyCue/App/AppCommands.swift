@@ -94,14 +94,20 @@ struct AppCommands: Commands {
 
             Divider()
 
-            Toggle("Show Notes Overlay", isOn: $showNotesOverlay)
-                .keyboardShortcut(shortcut(.toggleNotesOverlay))
+            Button(showNotesOverlay ? "Hide Notes Overlay" : "Show Notes Overlay") {
+                showNotesOverlay.toggle()
+            }
+            .keyboardShortcut(shortcut(.toggleNotesOverlay))
 
-            Toggle("Show Timeline Breakdown", isOn: $showTimelineBreakdown)
-                .keyboardShortcut(shortcut(.toggleTimelineBreakdown))
+            Button(showTimelineBreakdown ? "Hide Timeline Breakdown" : "Show Timeline Breakdown") {
+                showTimelineBreakdown.toggle()
+            }
+            .keyboardShortcut(shortcut(.toggleTimelineBreakdown))
 
-            Toggle("Show Tempo Grid", isOn: $showTempoGrid)
-                .keyboardShortcut(shortcut(.toggleTempoGrid))
+            Button(showTempoGrid ? "Hide Tempo Grid" : "Show Tempo Grid") {
+                showTempoGrid.toggle()
+            }
+            .keyboardShortcut(shortcut(.toggleTempoGrid))
         }
 
         CommandMenu("Cue") {
@@ -168,8 +174,10 @@ struct AppCommands: Commands {
 
             Divider()
 
-            Toggle("Pause at Each Cue", isOn: $pauseAtEachCue)
-                .keyboardShortcut(shortcut(.togglePauseAtEachCue))
+            Button(pauseAtEachCue ? "Don't Pause at Each Cue" : "Pause at Each Cue") {
+                pauseAtEachCue.toggle()
+            }
+            .keyboardShortcut(shortcut(.togglePauseAtEachCue))
         }
 
         CommandMenu("Tools") {

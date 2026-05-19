@@ -184,7 +184,7 @@ Read in this order:
 | UI | SwiftUI (`@Observable`, `DocumentGroup`) |
 | Media | AVFoundation (`AVPlayer`, `AVAssetReader`) |
 | Min OS | macOS 14 (Sonoma) |
-| Project file | `.cuelist` (JSON, schema v12) |
+| Project file | `.cuelist` (AES-256-GCM encrypted container; JSON payload, schema v12) |
 | Distribution | Ad-hoc signed DMG (Developer ID + notarization opt-in) |
 
 ## Reference

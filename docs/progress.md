@@ -4,6 +4,15 @@ Append-only session log. Newer entries on top.
 
 ---
 
+## 2026-05-19 — Bypass-mode session: issue #304 — `.cuelist` encryption + "OnlyCue Document" kind (PR #305, merged to `dev`)
+
+**Shipped (PR [#305](https://github.com/chienchuanw/only-cue/pull/305), merged to `dev` as `5b39745`, closes [#304](https://github.com/chienchuanw/only-cue/issues/304)):**
+- `.cuelist` files were plaintext JSON (ADR-006). Owner wanted casual-snoop protection + tamper-evidence, with files staying portable and opening transparently (no password, no per-machine key). Brainstormed → spec (`docs/superpowers/specs/2026-05-19-cuelist-encryption-design.md`) → plan (`docs/superpowers/plans/2026-05-19-cuelist-encryption.md`) → strict-TDD in an isolated `issues/304` worktree.
+- New pure `CuelistCrypto` (CryptoKit `AES.GCM`): binary envelope `OCUE` magic + 1-byte version + 12-byte nonce + AES-256-GCM ciphertext + 16-byte tag, wrapping the unchanged pretty-printed sorted-keys JSON. `open` returns bytes unchanged when the magic is absent (legacy plaintext passthrough → re-encrypted on next save). 256-bit key compiled into the binary — extractable by reverse-engineering, explicitly accepted in ADR-021 (amends ADR-006).
+- `CueListDocument` gained thin static `decodeModel`/`encodeModel` helpers (testable without the non-constructible `ReadConfiguration`/`WriteConfiguration`); `ProjectModel` schema/migration untouched (still v12). `Info.plist`: `CFBundleTypeName`/`UTTypeDescription` → "OnlyCue Document", `UTTypeConformsTo` `public.json` → `public.data`, dropped the `application/json` mime tag.
+- Autonomous review round 1 = request-changes: `AES.GCM.open` throws `CryptoKit.CryptoKitError` on a tampered file, which escaped the `catch is CuelistCrypto.CryptoError` in `init(configuration:)` — tampered files did not surface as `CocoaError(.fileReadCorruptFile)` (issue #304 AC). Fix `9b02541`: `CuelistCrypto.open` now wraps all CryptoKit failures into `CryptoError.decryptionFailed` (unify the seam's error domain rather than widen the catch); offset literals → derived constants; guard tightened to `headerLength + tagLength`; tamper test strengthened (tag + ciphertext byte) + new document-level corrupt-file-mapping test. Review round 2 = approve.
+- TDD red→green per task (`2ed6c21`, `de98296`, `f090927`, `aea5314`, fix `9b02541`; rebase-merged). 741 `OnlyCueTests` pass; SwiftLint clean; Release build (warnings-as-errors) green; CI "Build & test (macOS)" green both rounds. Manual Finder Kind check left as a PR caveat (LaunchServices caches Kind; cannot drive GUI in an automated session).
+
 ## 2026-05-19 — Bypass-mode session: issue #302 — menu toggles use Show/Hide verb (PR #303, merged to `dev`); crash #297 reopened
 
 **Shipped (PR [#303](https://github.com/chienchuanw/only-cue/pull/303), merged to `dev` as `55ba45c`, closes [#302](https://github.com/chienchuanw/only-cue/issues/302)):**

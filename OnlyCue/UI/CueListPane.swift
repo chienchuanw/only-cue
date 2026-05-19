@@ -3,28 +3,17 @@ import SwiftUI
 enum CueListLayout {
     static let rowHorizontalSpacing: CGFloat = 8
     /// Horizontal edge padding on the header row. Shared with
-    /// `CueListPane.headerHorizontalChrome` so the #297 width floor can
-    /// never silently diverge from the padding actually rendered.
+    /// `headerHorizontalChrome` so the #297 width floor can never silently
+    /// diverge from the padding actually rendered.
     static let rowHorizontalPadding: CGFloat = 8
     static let rowTintOpacity: Double = 0.18
-}
-
-// swiftlint:disable:next type_body_length
-struct CueListPane: View {
-
-    static let headerAccessibilityIdentifier = "cueListHeader"
-
-    /// The pane's minimum width. Defers to the shared inspector-column
-    /// metric so it can never diverge from `.inspectorColumnWidth` and
-    /// reintroduce the issue #297 constraint loop.
-    static let minPaneWidth: CGFloat = CueListInspectorMetrics.minWidth
 
     /// Non-column horizontal cost of the header row: the 3 inter-column gaps
     /// (`rowHorizontalSpacing` each) plus `rowHorizontalPadding` on both
     /// edges. The Name column is flexible with no enforced intrinsic
     /// minimum, so it compresses to ~0 and contributes nothing to the floor.
     static let headerHorizontalChrome: CGFloat =
-        3 * CueListLayout.rowHorizontalSpacing + 2 * CueListLayout.rowHorizontalPadding
+        3 * rowHorizontalSpacing + 2 * rowHorizontalPadding
 
     /// The cue-list header's guaranteed-compressible minimum width — the
     /// value the outer `NSSplitView` sees as the pane's hard floor. Issue
@@ -39,6 +28,17 @@ struct CueListPane: View {
             + CueListColumnWidths.fadeRange.lowerBound
             + headerHorizontalChrome
     }
+}
+
+// swiftlint:disable:next type_body_length
+struct CueListPane: View {
+
+    static let headerAccessibilityIdentifier = "cueListHeader"
+
+    /// The pane's minimum width. Defers to the shared inspector-column
+    /// metric so it can never diverge from `.inspectorColumnWidth` and
+    /// reintroduce the issue #297 constraint loop.
+    static let minPaneWidth: CGFloat = CueListInspectorMetrics.minWidth
 
     @ObservedObject var document: CueListDocument
     let engine: PlayerEngine

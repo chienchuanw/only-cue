@@ -2,9 +2,15 @@
 
 ## `.cuelist` file
 
-A `.cuelist` is a UTF-8 JSON document. Pretty-printed, keys sorted, so files diff cleanly under git.
+A `.cuelist` is an encrypted binary container (see ADR-021): ASCII magic `OCUE`, a
+1-byte format version, a 12-byte AES-GCM nonce, then AES-256-GCM ciphertext + tag.
+The **decrypted payload** is a UTF-8 JSON document, pretty-printed with sorted keys.
+Saved files are therefore *not* git-diffable or text-inspectable; the JSON shape
+documented below is what you get after decryption. Pre-encryption plaintext
+`.cuelist` files still open (detected by the absent `OCUE` magic) and are
+re-written encrypted on the next save.
 
-UTType: `com.onlycue.cuelist`, conforms to `public.json`.
+UTType: `com.onlycue.cuelist`, conforms to `public.data`. Finder Kind: "OnlyCue Document".
 
 ### Example
 

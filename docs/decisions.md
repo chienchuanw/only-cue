@@ -15,6 +15,16 @@ ADR template:
 
 ---
 
+## ADR-021 — Encrypted `.cuelist` container with a fixed app key (obfuscation + tamper-evidence, not vendor-proof confidentiality)
+**Date**: 2026-05-19
+**Status**: Accepted
+**Amends**: ADR-006
+**Decision**: A `.cuelist` is written as a binary envelope — ASCII magic `OCUE`, a 1-byte format version (`0x01`), a 12-byte AES-GCM nonce, then AES-256-GCM ciphertext + 16-byte tag — wrapping the same pretty-printed, sorted-keys JSON encoding of `ProjectModel` used before. Encryption uses CryptoKit `AES.GCM` with a single 256-bit key compiled into the app binary. Reading detects the absence of the `OCUE` magic and passes pre-encryption plaintext files through to the existing JSON/migration path unchanged; the next save re-writes them encrypted. The crypto lives in one pure value type (`CuelistCrypto`) consumed only by `CueListDocument`'s `decodeModel`/`encodeModel` seam; `ProjectModel` schema migration is untouched.
+**Why**: The owner wants show IP protected from casual snooping (no opening a `.cuelist` in a text editor) and wants tamper-evidence, but explicitly does *not* want per-document passwords or per-machine key isolation — files must stay portable and open transparently under `DocumentGroup` (no prompt, recents/autosave intact). AES-GCM gives confidentiality plus an authentication tag (tampering ⇒ decryption throws) in one primitive. A fixed in-binary key is the only key strategy that satisfies "portable + transparent open" without a password UX; it is honestly limited — anyone who reverse-engineers the app can extract the key — but that attacker is outside the stated threat model. Keeping the plaintext-inside identical to the old format means the v1→v12 migration chain and all model code are unaffected, and legacy files keep opening.
+**Reversal cost**: Low. `CuelistCrypto` is one self-contained file; `decodeModel`/`encodeModel` are two thin helpers. Removing encryption is deleting the seal call (saved files would revert to plaintext on next save) — legacy passthrough already reads both. The one load-bearing commitment is the `OCUE`/version envelope shape once files exist in the wild; the version byte exists precisely so a future format (key rotation, a different cipher) is an additive `open` branch, not a breaking change.
+
+---
+
 ## ADR-020 — Tempo map is per-item project data and a visual/snap aid (not musical-time cue binding); the tempo analyzer is on-device DSP behind a protocol
 **Date**: 2026-05-13
 **Status**: Accepted (superseded in part by v11 — see "v11 update" below)
@@ -120,7 +130,7 @@ ADR template:
 
 ## ADR-006 — JSON `.cuelist` document with referenced media
 **Date**: 2026-05-07
-**Status**: Accepted
+**Status**: Accepted (amended by ADR-021 — the on-disk file is now an encrypted envelope around this JSON; the "diffs cleanly under git / inspectable" benefit no longer applies to saved files)
 **Decision**: Project files are pretty-printed JSON. Media is referenced via security-scoped bookmarks, not embedded.
 **Why**: JSON diffs cleanly, is inspectable, and trivial to migrate. Embedding media would bloat files and complicate templates. Bookmarks survive moves within a volume and get a clean error path when they don't.
 **Reversal cost**: Low for JSON-internal changes (versioned migrations). Medium if we ever want a self-contained bundle — we'd add a `.cuelistx` package format alongside, not replace the JSON.

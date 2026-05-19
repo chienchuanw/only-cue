@@ -44,7 +44,11 @@ final class CueListDocument: ReferenceFileDocument {
         guard let data = configuration.file.regularFileContents else {
             throw CocoaError(.fileReadCorruptFile)
         }
-        self.model = try ProjectModel.decode(from: data)
+        do {
+            self.model = try Self.decodeModel(from: data)
+        } catch is CuelistCrypto.CryptoError {
+            throw CocoaError(.fileReadCorruptFile)
+        }
     }
 
     func snapshot(contentType: UTType) throws -> ProjectModel {
@@ -52,9 +56,18 @@ final class CueListDocument: ReferenceFileDocument {
     }
 
     func fileWrapper(snapshot: ProjectModel, configuration: WriteConfiguration) throws -> FileWrapper {
+        FileWrapper(regularFileWithContents: try Self.encodeModel(snapshot))
+    }
+
+    /// Decrypt (or pass through a legacy plaintext file) then run schema migration.
+    static func decodeModel(from fileData: Data) throws -> ProjectModel {
+        try ProjectModel.decode(from: CuelistCrypto.open(fileData))
+    }
+
+    /// Encode to pretty JSON, then seal in the encrypted envelope.
+    static func encodeModel(_ model: ProjectModel) throws -> Data {
         let encoder = JSONEncoder()
         encoder.outputFormatting = [.prettyPrinted, .sortedKeys]
-        let data = try encoder.encode(snapshot)
-        return FileWrapper(regularFileWithContents: data)
+        return try CuelistCrypto.seal(try encoder.encode(model))
     }
 }

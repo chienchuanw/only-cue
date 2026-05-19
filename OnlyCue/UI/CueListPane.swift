@@ -2,6 +2,10 @@ import SwiftUI
 
 enum CueListLayout {
     static let rowHorizontalSpacing: CGFloat = 8
+    /// Horizontal edge padding on the header row. Shared with
+    /// `CueListPane.headerHorizontalChrome` so the #297 width floor can
+    /// never silently diverge from the padding actually rendered.
+    static let rowHorizontalPadding: CGFloat = 8
     static let rowTintOpacity: Double = 0.18
 }
 
@@ -14,6 +18,27 @@ struct CueListPane: View {
     /// metric so it can never diverge from `.inspectorColumnWidth` and
     /// reintroduce the issue #297 constraint loop.
     static let minPaneWidth: CGFloat = CueListInspectorMetrics.minWidth
+
+    /// Non-column horizontal cost of the header row: the 3 inter-column gaps
+    /// (`rowHorizontalSpacing` each) plus `rowHorizontalPadding` on both
+    /// edges. The Name column is flexible with no enforced intrinsic
+    /// minimum, so it compresses to ~0 and contributes nothing to the floor.
+    static let headerHorizontalChrome: CGFloat =
+        3 * CueListLayout.rowHorizontalSpacing + 2 * CueListLayout.rowHorizontalPadding
+
+    /// The cue-list header's guaranteed-compressible minimum width — the
+    /// value the outer `NSSplitView` sees as the pane's hard floor. Issue
+    /// #297: this must never exceed `CueListInspectorMetrics.minWidth`, or
+    /// the splitter cannot reach the 240 column minimum without the content
+    /// demanding more and feeding the constraint-update loop. `CueRowView`
+    /// rows add a 3pt stripe + 6pt leading pad (~9pt wider) but stay well
+    /// inside the same 40pt slack, so the header is the binding floor.
+    static var headerMinimumWidth: CGFloat {
+        CueListColumnWidths.timeRange.lowerBound
+            + CueListColumnWidths.numberRange.lowerBound
+            + CueListColumnWidths.fadeRange.lowerBound
+            + headerHorizontalChrome
+    }
 
     @ObservedObject var document: CueListDocument
     let engine: PlayerEngine
@@ -193,7 +218,7 @@ struct CueListPane: View {
         // during outer-divider tracking (#271).
         HStack(spacing: CueListLayout.rowHorizontalSpacing) {
             Text("Time")
-                .frame(width: timeColumnWidth, alignment: .leading)
+                .cueColumnFrame(width: timeColumnWidth, range: CueListColumnWidths.timeRange)
                 .overlay(alignment: .trailing) {
                     ColumnResizeHandle(
                         width: timeColumnWidthBinding,
@@ -202,7 +227,7 @@ struct CueListPane: View {
                     .accessibilityIdentifier("cueListTimeColumnResizeHandle")
                 }
             Text("Cue #")
-                .frame(width: numberColumnWidth, alignment: .leading)
+                .cueColumnFrame(width: numberColumnWidth, range: CueListColumnWidths.numberRange)
                 .overlay(alignment: .trailing) {
                     ColumnResizeHandle(
                         width: numberColumnWidthBinding,
@@ -213,7 +238,7 @@ struct CueListPane: View {
             Text("Name")
                 .frame(maxWidth: .infinity, alignment: .leading)
             Text("Fade")
-                .frame(width: fadeColumnWidth, alignment: .leading)
+                .cueColumnFrame(width: fadeColumnWidth, range: CueListColumnWidths.fadeRange)
                 .overlay(alignment: .trailing) {
                     ColumnResizeHandle(
                         width: fadeColumnWidthBinding,
@@ -224,7 +249,7 @@ struct CueListPane: View {
         }
         .font(.caption)
         .foregroundStyle(.secondary)
-        .padding(.horizontal, 8)
+        .padding(.horizontal, CueListLayout.rowHorizontalPadding)
         .padding(.vertical, 6)
         .accessibilityIdentifier(Self.headerAccessibilityIdentifier)
     }

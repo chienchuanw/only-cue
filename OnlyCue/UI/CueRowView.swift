@@ -36,11 +36,11 @@ struct CueRowView: View {
                     Text(TimeFormat.smpte(cue.time, rate: framerate))
                         .font(.system(.body, design: .monospaced))
                         .foregroundStyle(.secondary)
-                        .frame(width: timeColumnWidth, alignment: .leading)
+                        .cueColumnFrame(width: timeColumnWidth, range: CueListColumnWidths.timeRange)
                         .accessibilityIdentifier("cueTime-\(cue.id)")
 
                     numberCell
-                        .frame(width: numberColumnWidth, alignment: .leading)
+                        .cueColumnFrame(width: numberColumnWidth, range: CueListColumnWidths.numberRange)
                         .accessibilityIdentifier("cueNumber-\(cue.id)")
 
                     nameField
@@ -48,7 +48,7 @@ struct CueRowView: View {
                         .accessibilityIdentifier("cueName-\(cue.id)")
 
                     fadeCell
-                        .frame(width: fadeColumnWidth, alignment: .leading)
+                        .cueColumnFrame(width: fadeColumnWidth, range: CueListColumnWidths.fadeRange)
                         .accessibilityIdentifier("cueRowFade-\(cue.id)")
                 }
                 if let numberError {

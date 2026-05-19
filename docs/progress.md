@@ -4,6 +4,17 @@ Append-only session log. Newer entries on top.
 
 ---
 
+## 2026-05-19 — Bypass-mode session: issue #297 — `NSSplitView` constraint-loop crash on the cue-list divider (PR #306, merged to `dev`)
+
+**Shipped (PR [#306](https://github.com/chienchuanw/only-cue/pull/306), merged to `dev` as `c7566c5`…`9e69e3c`, closes [#297](https://github.com/chienchuanw/only-cue/issues/297)):**
+- Started from a `logs/error.log` analysis: it was the disassembly of `+[NSApplication _crashOnException:]` (uncaught AppKit `NSException`), no stack. Investigation also found two stale `~/Library/Logs/DiagnosticReports` `.ips` files — an unrelated `DerivedTempoGridTests` array-OOB crash already fixed by `8d4f4e7` (crash 12:29, fix commit 12:57); confirmed by git timeline + a live passing test run. No action needed there.
+- Real bug = open p1 #297. Root cause (systematic-debugging): after `b8dfae0` removed the isolating inner `VSplitView`, the cue-list content's min width reports straight to the hosting view the outer `NSSplitView` measures. The Time/Cue#/Fade columns used rigid `.frame(width:)` in both `CueListPane.headerRow` and `CueRowView`; default floor ≈ 264pt > the 240pt inspector column min, so the splitter could never reach 240 without the content demanding more → bistable 400↔240 snap → constraint-update recursion → `NSGenericException`.
+- User chose to validate the parked candidate `issues/297` branch (`e82c421`: `CueListInspectorMetrics` SSOT, drop `CueListPane`'s standalone `.frame(minWidth:240)`, bound the 30pt clock, plus `SplitDividerCrashUITests`/`CueListInspectorMetricsTests`). TDD red→green completion commit `d136135`: new shared `cueColumnFrame(width:range:)` modifier makes the 3 fixed columns compressible to their range lower bounds under width pressure (header + rows in lockstep), `CueListLayout.headerHorizontalChrome`/`headerMinimumWidth`, and a deterministic regression test `CueListPaneMinWidthTests` (failed 264>240 → green 200≤240).
+- CI (SwiftLint `--strict`, repo-wide) caught two issues local non-strict pre-flight missed: `type_body_length` on `DocumentView` (the parked candidate's multi-line `.inspectorColumnWidth` call) — fixed `90e1135` by adding a `cueListInspectorColumnWidth()` SSOT modifier (one-line call site, no divergent literals possible) and moving the floor constants onto `CueListLayout`; and a pre-existing, unrelated `PlayerEnginePlaybackRateTests.test_play_appliesCustomPlaybackRate` flake (fixed-80ms-sleep vs slow GitHub runner) — per maintainer scope decision, fixed in-PR `e6a3dd3` using the existing `waitForPlayerRate` poll helper (the sibling test already documented this).
+- Autonomous review round 1 = approve. 725 `OnlyCueTests` pass; SwiftLint `--strict` clean repo-wide; macOS build green; CI "Build & test (macOS)" green. Rebase-merged 4 commits; `issues/297` deleted; #297 closed.
+
+---
+
 ## 2026-05-19 — Bypass-mode session: issue #304 — `.cuelist` encryption + "OnlyCue Document" kind (PR #305, merged to `dev`)
 
 **Shipped (PR [#305](https://github.com/chienchuanw/only-cue/pull/305), merged to `dev` as `5b39745`, closes [#304](https://github.com/chienchuanw/only-cue/issues/304)):**

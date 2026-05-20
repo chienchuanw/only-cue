@@ -134,6 +134,11 @@ private struct LyricsInspectorRow: View {
                 .onChange(of: focused) { _, isFocused in if !isFocused { onCommitText(text) } }
         }
         .onAppear { text = line.text }
+        .onChange(of: line.text) { _, newText in
+            // Resync when the model changes underneath us (undo/redo) while the
+            // field is not being edited — mirrors LyricsOffsetControl.
+            if !focused { text = newText }
+        }
         .accessibilityIdentifier("lyricsPlacedRow-\(line.id.uuidString)")
     }
 }

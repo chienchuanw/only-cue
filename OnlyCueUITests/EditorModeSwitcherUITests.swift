@@ -30,7 +30,7 @@ final class EditorModeSwitcherUITests: XCTestCase {
     func test_modeSwitcher_selectsLyricMode() throws {
         let app = launchSeeded()
         defer { app.terminate() }
-        let lyricSegment = app.buttons["editorModeSegment-lyric"]
+        let lyricSegment = app.descendants(matching: .any).matching(identifier: "editorModeSegment-lyric").firstMatch
         XCTAssertTrue(lyricSegment.waitForExistence(timeout: 15))
         lyricSegment.click()
         let selected = expectation(for: NSPredicate(format: "isSelected == true"), evaluatedWith: lyricSegment)

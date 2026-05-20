@@ -15,6 +15,18 @@ ADR template:
 
 ---
 
+## ADR-023 — Editing is gated by a per-window editor mode (Cue / Lyric / Show); lyrics are authored on the waveform (schema v14)
+
+**Date**: 2026-05-21
+**Status**: Accepted
+**Amends**: ADR-022
+**Decision**: The document window has one of three editor modes — **Cue**, **Lyric**, **Show** — held per-window in `@SceneStorage` (not document data). The mode gates the waveform editing surface: Cue mode edits cue markers; Lyric mode makes the lyric lane the editing surface; Show mode is read-only. A plain waveform click always seeks, in every mode. Lyrics are authored directly on the waveform — the next unplaced line is placed by tap-along (the `T` key) or click-to-drop over the lyric lane and then drag-corrected — so `LyricLine.time` becomes optional (`nil` = unplaced) and the schema bumps v13 → v14. The modal `Tools → Lyrics Editor…` sheet and the `View → Show Lyrics Lane` toggle are retired; lyric text now lives in a mode-aware inspector.
+**Why**: Typing each lyric timestamp into the modal sheet was tedious, and the sheet hid the waveform — the timeline is the natural place to position a line. A mode keeps cue editing, lyric editing, and a safe read-only performance state from competing for the same clicks. The mode is per-window working state, not show data, so it is not stored in `.cuelist`. Optional `LyricLine.time` lets a partly-timed song persist across save/reopen.
+**Reversal cost**: Low–moderate. `EditorMode` is per-window UI state; the v13 → v14 migration is a no-op on data (a v13 line always wrote a concrete `time`, which decodes straight into the optional). Reverting on-waveform authoring would mean restoring the retired sheet — but the command seam (`CueCommands+Lyrics`) and the model shape are otherwise unchanged.
+**Deferred**: a full front-of-house performance view (Show mode is lock + light polish only), a macOS window toolbar, modes driving other overlays' visibility. The ADR-022 deferrals (`.lrc` import/export, word-level karaoke, multiple lyric sets, lyric→cue conversion) still stand.
+
+---
+
 ## ADR-022 — Lyrics are a per-`MediaItem` annotation layer, decoupled from cues (schema v13)
 
 **Date**: 2026-05-20

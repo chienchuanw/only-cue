@@ -62,6 +62,7 @@ struct DocumentView: View {
         }
         .manageTypesSheet(document: document)
         .timecodeSettingsSheet(document: document)
+        .lyricsEditorSheet(engine: engine, document: document)
         .exportSheet(model: document.model, pendingErrorMessage: pendingAlertMessageBinding)
         .oscServerHost(engine: engine, document: document, undoManager: undoManager)
         .ltcOutput(engine: engine, document: document)
@@ -289,6 +290,7 @@ extension Notification.Name {
     static let snapSelectedCuesToBeat = Notification.Name("OnlyCue.snapSelectedCuesToBeat")
     static let snapSelectedCuesToBar = Notification.Name("OnlyCue.snapSelectedCuesToBar")
     static let manageTypesRequested = Notification.Name("OnlyCue.manageTypesRequested")
+    static let lyricsEditorRequested = Notification.Name("OnlyCue.lyricsEditorRequested")
     static let playbackRateUp = Notification.Name("OnlyCue.playbackRateUp")
     static let playbackRateDown = Notification.Name("OnlyCue.playbackRateDown")
     static let playbackRateReset = Notification.Name("OnlyCue.playbackRateReset")

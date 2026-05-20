@@ -15,6 +15,8 @@ struct WaveformContainer: View {
     var onRetime: (Cue.ID, TimeInterval) -> Void = { _, _ in }
     var onNudge: (Set<Cue.ID>, TimeInterval) -> Void = { _, _ in }
     var engine: PlayerEngine?
+    var lyrics: Lyrics = .empty
+    var onSeekToLyric: (TimeInterval) -> Void = { _ in }
 
     @State private var peaks: [Float]?
     @State private var failed = false
@@ -25,6 +27,7 @@ struct WaveformContainer: View {
     @State var verticalZoom = WaveformVerticalZoomController()
     @State private var leadingAnchor: Int? = 0
     @AppStorage("showTempoGrid") var showTempoGrid = false
+    @AppStorage("showLyricsLane") var showLyricsLane = false
 
     // scrollOffset and viewportWidth are stored on the `zoom` controller (an
     // @Observable reference type) so they survive SwiftUI struct copies and are
@@ -109,6 +112,7 @@ struct WaveformContainer: View {
                         )
                     }
                     markersOverlay()
+                    lyricsLaneOverlay()
                     if let engine, loadedDuration > 0 {
                         // Playhead line + time-label badge ABOVE the markers
                         // so a selected (wider) cap never visually occludes

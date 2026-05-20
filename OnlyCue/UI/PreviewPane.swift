@@ -13,6 +13,7 @@ struct PreviewPane: View {
     @State private var waveformURL: URL?
     @AppStorage("showNotesOverlay") private var showNotesOverlay = false
     @AppStorage("showLyricsOverlay") private var showLyricsOverlay = false
+    @AppStorage("showLyricsLane") private var showLyricsLane = false
     @AppStorage("showTimelineBreakdown") private var showTimelineBreakdown = false
     @AppStorage(NotesOverlayPreferences.storageKey) private var overlayPrefsData = NotesOverlayPreferences.defaultEncoded
 
@@ -146,7 +147,31 @@ struct PreviewPane: View {
         }
     }
 
+    @ViewBuilder
     private func waveform(for url: URL, item: MediaItem, withPlayhead: Bool = false) -> some View {
+        VStack(spacing: 4) {
+            if showLyricsLane {
+                LyricsOffsetControl(
+                    offsetSeconds: item.lyrics.offsetSeconds,
+                    playhead: { engine.currentTime },
+                    onCommit: { newOffset in
+                        CueCommands.setLyricsOffset(
+                            newOffset,
+                            itemID: item.id,
+                            document: document,
+                            undoManager: undoManager
+                        )
+                    }
+                )
+                .font(.caption)
+                .padding(.horizontal, 8)
+            }
+            waveformContainer(for: url, item: item, withPlayhead: withPlayhead)
+        }
+        .id(url)
+    }
+
+    private func waveformContainer(for url: URL, item: MediaItem, withPlayhead: Bool) -> some View {
         WaveformContainer(
             asset: AVURLAsset(url: url),
             cues: item.cues,
@@ -167,9 +192,10 @@ struct PreviewPane: View {
             onNudge: { ids, delta in
                 CueCommands.nudgeCues(ids, by: delta, document: document, undoManager: undoManager)
             },
-            engine: withPlayhead ? engine : nil
+            engine: withPlayhead ? engine : nil,
+            lyrics: item.lyrics,
+            onSeekToLyric: { time in Task { await engine.seek(to: time) } }
         )
-        .id(url)
     }
 
     private func placeholder(_ message: String) -> some View {

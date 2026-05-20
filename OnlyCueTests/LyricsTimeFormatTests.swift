@@ -51,4 +51,12 @@ final class LyricsTimeFormatTests: XCTestCase {
         let value = LyricsTimeFormat.parse(LyricsTimeFormat.string(137.5))
         XCTAssertEqual(try XCTUnwrap(value), 137.5, accuracy: 0.0001)
     }
+
+    func test_string_nearIntegerSecond_carriesIntoSecondsField() {
+        // A near-integer time must not produce a malformed ".1000" fraction —
+        // it carries into the seconds (and minutes) field instead.
+        XCTAssertEqual(LyricsTimeFormat.string(59.9996), "1:00.000")
+        XCTAssertEqual(LyricsTimeFormat.string(2.9999), "0:03.000")
+        XCTAssertEqual(LyricsTimeFormat.string(3599.9999), "1:00:00.000")
+    }
 }

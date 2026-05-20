@@ -17,6 +17,9 @@ struct CueMarkersOverlay: View {
     /// Rigid shift of every cue in the set by the same Δt (clamped at 0 per cue),
     /// committed as a single undo entry. Used by group drag.
     var onNudge: (Set<Cue.ID>, TimeInterval) -> Void = { _, _ in }
+    /// When false (Lyric / Show mode) the overlay renders dimmed and stops
+    /// hit-testing, so clicks fall through to the seek surface below.
+    var isEditable: Bool = true
 
     @State private var activeDrag: ActiveDrag?
 
@@ -60,6 +63,8 @@ struct CueMarkersOverlay: View {
         // accessibility container collapses children into the overlay.
         .accessibilityElement(children: .contain)
         .accessibilityIdentifier("cueMarkersOverlay")
+        .opacity(isEditable ? 1 : 0.35)
+        .allowsHitTesting(isEditable)
     }
 
     private func visualOffset(for id: Cue.ID) -> CGFloat {

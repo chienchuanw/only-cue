@@ -17,6 +17,7 @@ struct WaveformContainer: View {
     var engine: PlayerEngine?
     var lyrics: Lyrics = .empty
     var onSeekToLyric: (TimeInterval) -> Void = { _ in }
+    var editorMode: EditorMode = .cue
 
     @State private var peaks: [Float]?
     @State private var failed = false
@@ -164,11 +165,6 @@ struct WaveformContainer: View {
         .allowsHitTesting(false)
     }
 
-    private func anchorCount() -> Int {
-        let raw = max(Int(loadedDuration.rounded(.up)), 1)
-        return min(raw, Self.maxAnchorCount)
-    }
-
     private func magnifyGesture(viewportWidth: CGFloat) -> some Gesture {
         MagnifyGesture()
             .onChanged { value in
@@ -286,6 +282,15 @@ struct WaveformContainer: View {
         } catch {
             failed = true
         }
+    }
+}
+
+extension WaveformContainer {
+    /// The number of anchor segments for the scroll-position rail. Split into an
+    /// extension so the main struct body stays under the `type_body_length` cap.
+    fileprivate func anchorCount() -> Int {
+        let raw = max(Int(loadedDuration.rounded(.up)), 1)
+        return min(raw, Self.maxAnchorCount)
     }
 }
 

@@ -199,7 +199,8 @@ struct PreviewPane: View {
             },
             engine: withPlayhead ? engine : nil,
             lyrics: item.lyrics,
-            onSeekToLyric: { time in Task { await engine.seek(to: time) } }
+            onSeekToLyric: { time in Task { await engine.seek(to: time) } },
+            editorMode: editorMode
         )
     }
 

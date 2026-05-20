@@ -27,6 +27,7 @@ struct LyricsEditorSheet: View {
                     .foregroundStyle(.secondary)
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
             } else {
+                offsetControl
                 table
                 controls
             }
@@ -42,6 +43,22 @@ struct LyricsEditorSheet: View {
         .frame(width: 520, height: 460)
         .accessibilityIdentifier("lyricsEditorSheet")
         .onAppear { lines = document.model.activeItem?.lyrics.lines ?? [] }
+    }
+
+    private var offsetControl: some View {
+        LyricsOffsetControl(
+            offsetSeconds: document.model.activeItem?.lyrics.offsetSeconds ?? 0,
+            playhead: { engine.currentTime },
+            onCommit: { newOffset in
+                guard let itemID = document.model.activeItemID else { return }
+                CueCommands.setLyricsOffset(
+                    newOffset,
+                    itemID: itemID,
+                    document: document,
+                    undoManager: undoManager
+                )
+            }
+        )
     }
 
     private var table: some View {

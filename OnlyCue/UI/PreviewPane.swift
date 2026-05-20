@@ -8,6 +8,8 @@ struct PreviewPane: View {
     var selectedCueIDs: Set<Cue.ID> = []
     var onSelectCue: (Cue.ID) -> Void = { _ in }
     var onToggleCue: (Cue.ID) -> Void = { _ in }
+    var editorMode: EditorMode = .cue
+    var setEditorMode: (EditorMode) -> Void = { _ in }
 
     @Environment(\.undoManager) private var undoManager
     @State private var waveformURL: URL?
@@ -18,32 +20,35 @@ struct PreviewPane: View {
     @AppStorage(NotesOverlayPreferences.storageKey) private var overlayPrefsData = NotesOverlayPreferences.defaultEncoded
 
     var body: some View {
-        ZStack {
-            Color.black.opacity(0.05)
-            content
-        }
-        .frame(minHeight: 180)
-        .clipShape(RoundedRectangle(cornerRadius: 6))
-        .accessibilityIdentifier("previewPane")
-        .task(id: document.model.activeItemID) { await resolveWaveformURL() }
-        // Bottom stack — the Notes Overlay (when its position is bottom) above
-        // the Lyrics HUD. The spec stacks notes above lyrics; non-bottom Notes
-        // Overlay positions keep their own positioned overlay below.
-        .overlay(alignment: .bottom) {
-            VStack(spacing: 8) {
-                if showNotesOverlay, overlayPrefs.position == .bottom {
-                    notesOverlayCard
-                }
-                if showLyricsOverlay, let item = document.model.activeItem {
-                    LyricsOverlayView(lyrics: item.lyrics, mediaSeconds: engine.currentTime)
-                }
+        VStack(spacing: 8) {
+            EditorModeSwitcher(mode: editorMode, setMode: setEditorMode)
+            ZStack {
+                Color.black.opacity(0.05)
+                content
             }
-            .padding(.bottom, 12)
-        }
-        .overlay(alignment: overlayAlignment) {
-            if showNotesOverlay, overlayPrefs.position != .bottom {
-                notesOverlayCard
-                    .padding(overlayPadding, 12)
+            .frame(minHeight: 180)
+            .clipShape(RoundedRectangle(cornerRadius: 6))
+            .accessibilityIdentifier("previewPane")
+            .task(id: document.model.activeItemID) { await resolveWaveformURL() }
+            // Bottom stack — the Notes Overlay (when its position is bottom)
+            // above the Lyrics HUD. The spec stacks notes above lyrics;
+            // non-bottom Notes Overlay positions keep their own overlay below.
+            .overlay(alignment: .bottom) {
+                VStack(spacing: 8) {
+                    if showNotesOverlay, overlayPrefs.position == .bottom {
+                        notesOverlayCard
+                    }
+                    if showLyricsOverlay, let item = document.model.activeItem {
+                        LyricsOverlayView(lyrics: item.lyrics, mediaSeconds: engine.currentTime)
+                    }
+                }
+                .padding(.bottom, 12)
+            }
+            .overlay(alignment: overlayAlignment) {
+                if showNotesOverlay, overlayPrefs.position != .bottom {
+                    notesOverlayCard
+                        .padding(overlayPadding, 12)
+                }
             }
         }
     }

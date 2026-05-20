@@ -14,6 +14,8 @@ struct DocumentView: View {
     @AppStorage(FirstLaunchFlag.key) var didShowFirstLaunch = false
     @AppStorage(NotesOverlayPreferences.storageKey) var overlayPrefsData = NotesOverlayPreferences.defaultEncoded
     @AppStorage("pauseAtEachCue") var pauseAtEachCue = false
+    /// The editor mode — per-window working state, restored across relaunch.
+    @SceneStorage("onlycue.editorMode") private var editorModeRaw = EditorMode.cue.rawValue
     @ObservedObject private var keymapStore = KeymapStore.shared
     /// Drives the main-view LTC strip's visibility — it appears whenever LTC
     /// routing is enabled. Observing the singleton here means flipping the
@@ -26,6 +28,8 @@ struct DocumentView: View {
             ?? Keymap.default.chord(for: action).keyboardShortcut
             ?? KeyboardShortcut(KeyEquivalent("/"), modifiers: .command)
     }
+
+    private var editorMode: EditorMode { EditorMode(rawValue: editorModeRaw) ?? .cue }
 
     var body: some View {
         NavigationSplitView {
@@ -63,6 +67,9 @@ struct DocumentView: View {
         .manageTypesSheet(document: document)
         .timecodeSettingsSheet(document: document)
         .lyricsEditorSheet(engine: engine, document: document)
+        .onReceive(NotificationCenter.default.publisher(for: .editorModeChangeRequested)) { note in
+            if let mode = note.object as? EditorMode { editorModeRaw = mode.rawValue }
+        }
         .exportSheet(model: document.model, pendingErrorMessage: pendingAlertMessageBinding)
         .oscServerHost(engine: engine, document: document, undoManager: undoManager)
         .ltcOutput(engine: engine, document: document)
@@ -80,7 +87,9 @@ struct DocumentView: View {
                     engine: engine,
                     selectedCueIDs: cueSelection,
                     onSelectCue: { cueSelection = [$0] },
-                    onToggleCue: { cueSelection.formSymmetricDifference([$0]) }
+                    onToggleCue: { cueSelection.formSymmetricDifference([$0]) },
+                    editorMode: editorMode,
+                    setEditorMode: { editorModeRaw = $0.rawValue }
                 )
             }
 
@@ -247,7 +256,13 @@ struct DocumentView: View {
         .disabled(document.model.activeItem == nil)
     }
 
-    private func triggerHotkey(_ digit: Int) {
+}
+
+/// Playhead / cue-creation actions. Split into an extension so the main
+/// `DocumentView` body stays under the SwiftLint `type_body_length` cap.
+extension DocumentView {
+
+    fileprivate func triggerHotkey(_ digit: Int) {
         guard let type = document.model.cuePointType(forHotkey: digit) else { return }
         CueCommands.addCueAtPlayhead(
             time: engine.currentTime,
@@ -257,7 +272,7 @@ struct DocumentView: View {
         )
     }
 
-    private func stepPlayhead(_ direction: MediaItem.PlayheadStep) {
+    fileprivate func stepPlayhead(_ direction: MediaItem.PlayheadStep) {
         guard let item = document.model.activeItem,
               let target = item.cue(steppingFrom: engine.currentTime, direction: direction)
         else { return }
@@ -265,13 +280,13 @@ struct DocumentView: View {
         seekTask = Task { await engine.seek(to: target.time) }
     }
 
-    private func jump(by seconds: TimeInterval) {
+    fileprivate func jump(by seconds: TimeInterval) {
         let target = max(0, engine.currentTime + seconds)
         seekTask?.cancel()
         seekTask = Task { await engine.seek(to: target) }
     }
 
-    private func addCueAtPlayhead() {
+    fileprivate func addCueAtPlayhead() {
         CueCommands.addCueAtPlayhead(
             time: engine.currentTime,
             document: document,
@@ -290,6 +305,7 @@ extension Notification.Name {
     static let snapSelectedCuesToBeat = Notification.Name("OnlyCue.snapSelectedCuesToBeat")
     static let snapSelectedCuesToBar = Notification.Name("OnlyCue.snapSelectedCuesToBar")
     static let manageTypesRequested = Notification.Name("OnlyCue.manageTypesRequested")
+    static let editorModeChangeRequested = Notification.Name("OnlyCue.editorModeChangeRequested")
     static let lyricsEditorRequested = Notification.Name("OnlyCue.lyricsEditorRequested")
     static let playbackRateUp = Notification.Name("OnlyCue.playbackRateUp")
     static let playbackRateDown = Notification.Name("OnlyCue.playbackRateDown")

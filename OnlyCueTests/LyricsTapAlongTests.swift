@@ -7,9 +7,9 @@ final class LyricsTapAlongTests: XCTestCase {
         texts.map { LyricLine(time: 0, text: $0) }
     }
 
-    /// Mirrors `Lyrics.init`'s normalization — sort by `time` ascending.
+    /// Mirrors the draft re-sort by `time` ascending (unplaced/nil sorts first).
     private func resorted(_ lines: [LyricLine]) -> [LyricLine] {
-        lines.sorted { $0.time < $1.time }
+        lines.sorted { ($0.time ?? 0) < ($1.time ?? 0) }
     }
 
     func test_stamping_setsSongRelativeTime_andAdvancesCursor() {

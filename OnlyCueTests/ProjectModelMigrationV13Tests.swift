@@ -43,8 +43,7 @@ final class ProjectModelMigrationV13Tests: XCTestCase {
 
     func test_v12ToV13_decodesAndBumpsSchemaVersion() throws {
         let migrated = try ProjectModel.decode(from: Data(wrap(items: v12Item(alternateName: "Act 1")).utf8))
-        XCTAssertEqual(migrated.schemaVersion, 13)
-        XCTAssertEqual(ProjectModel.currentSchemaVersion, 13)
+        XCTAssertEqual(migrated.schemaVersion, ProjectModel.currentSchemaVersion)
     }
 
     func test_v12ToV13_seedsEmptyLyricsOnEveryItem() throws {

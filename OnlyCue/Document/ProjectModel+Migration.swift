@@ -30,6 +30,7 @@ extension ProjectModel {
         case 10: return try migrateFromV10(data: data)
         case 11: return try migrateFromV11(data: data)
         case 12: return try migrateFromV12(data: data)
+        case 13: return try migrateFromV13(data: data)
         case currentSchemaVersion:
             return try JSONDecoder().decode(ProjectModel.self, from: data)
         default:

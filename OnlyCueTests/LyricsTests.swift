@@ -28,16 +28,11 @@ final class LyricsTests: XCTestCase {
 
     // MARK: - Lyrics normalization
 
-    func test_lyrics_sortsLinesByTimeOnInit() {
-        let lyrics = Lyrics(lines: [line(9, "c"), line(1, "a"), line(4, "b")], offsetSeconds: 0)
-        XCTAssertEqual(lyrics.lines.map(\.text), ["a", "b", "c"])
-    }
-
-    func test_lyrics_codableRoundTripPreservesSortAndOffset() throws {
+    func test_lyrics_codableRoundTripPreservesOrderAndOffset() throws {
         let lyrics = Lyrics(lines: [line(5, "b"), line(2, "a")], offsetSeconds: 60)
         let data = try JSONEncoder().encode(lyrics)
         let decoded = try JSONDecoder().decode(Lyrics.self, from: data)
-        XCTAssertEqual(decoded.lines.map(\.text), ["a", "b"])
+        XCTAssertEqual(decoded.lines.map(\.text), ["b", "a"], "authoring order is preserved")
         XCTAssertEqual(decoded.offsetSeconds, 60)
     }
 
@@ -99,10 +94,10 @@ final class LyricsTests: XCTestCase {
 
     // MARK: - untimedLines
 
-    func test_untimedLines_splitsOnNewlinesAllAtTimeZero() {
+    func test_untimedLines_splitsOnNewlinesAllUnplaced() {
         let lines = Lyrics.untimedLines(fromPlainText: "one\ntwo\nthree")
         XCTAssertEqual(lines.map(\.text), ["one", "two", "three"])
-        XCTAssertTrue(lines.allSatisfy { $0.time == 0 })
+        XCTAssertTrue(lines.allSatisfy { $0.time == nil })
     }
 
     func test_untimedLines_preservesBlankLines() {

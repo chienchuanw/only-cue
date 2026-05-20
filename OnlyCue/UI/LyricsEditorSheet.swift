@@ -181,7 +181,7 @@ private struct LyricsEditorRow: View {
             TextField("0:00.000", text: $timeText)
                 .frame(width: 96)
                 .focused($timeFieldFocused)
-                .onAppear { timeText = LyricsTimeFormat.string(line.time) }
+                .onAppear { timeText = LyricsTimeFormat.string(line.time ?? 0) }
                 .onSubmit(commitTime)
                 .onChange(of: timeFieldFocused) { _, focused in if !focused { commitTime() } }
                 .accessibilityIdentifier("lyricsEditorRowTime")
@@ -206,7 +206,7 @@ private struct LyricsEditorRow: View {
             line.time = parsed
             onCommit()
         }
-        timeText = LyricsTimeFormat.string(line.time)
+        timeText = LyricsTimeFormat.string(line.time ?? 0)
     }
 }
 

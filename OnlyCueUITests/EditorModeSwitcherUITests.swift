@@ -1,7 +1,7 @@
 import XCTest
 
-/// The editor-mode switcher is present in the main window and selecting Lyric
-/// mode sticks. Uses the existing three-cue seed (it carries a media item).
+/// The editor-mode switcher is present in the main window and its segments are
+/// clickable. Uses the existing three-cue seed (it carries a media item).
 final class EditorModeSwitcherUITests: XCTestCase {
 
     override func setUpWithError() throws { continueAfterFailure = false }
@@ -26,23 +26,14 @@ final class EditorModeSwitcherUITests: XCTestCase {
     /// Scenario: switching to Lyric mode
     /// Given the document window is open
     /// When the user clicks the Lyric segment
-    /// Then the click is accepted without error.
-    ///
-    /// Screenshot-smoke: a SwiftUI segmented `Picker` does not reliably report
-    /// `isSelected` on its segments under XCUITest on the CI runner, so this
-    /// exercises the click path and captures the result rather than asserting
-    /// the trait. Mode-switch *behavior* gets real assertion coverage in the
-    /// mode-gating leaf, and `EditorModeTests` covers the enum.
-    func test_modeSwitcher_selectsLyricMode_smoke() throws {
+    /// Then the Lyric segment reports the selected trait.
+    func test_modeSwitcher_selectsLyricMode() throws {
         let app = launchSeeded()
         defer { app.terminate() }
-        let lyricSegment = app.buttons["Lyric"]
+        let lyricSegment = app.buttons["editorModeSegment-lyric"]
         XCTAssertTrue(lyricSegment.waitForExistence(timeout: 15))
         lyricSegment.click()
-        let shot = app.windows.firstMatch.screenshot()
-        let attachment = XCTAttachment(screenshot: shot)
-        attachment.name = "lyric-mode-selected"
-        attachment.lifetime = .keepAlways
-        add(attachment)
+        let selected = expectation(for: NSPredicate(format: "isSelected == true"), evaluatedWith: lyricSegment)
+        wait(for: [selected], timeout: 5)
     }
 }

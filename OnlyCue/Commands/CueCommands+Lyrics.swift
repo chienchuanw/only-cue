@@ -65,4 +65,69 @@ extension CueCommands {
             .settingLines(Lyrics.untimedLines(fromPlainText: plainText))
         setLyrics(updated, itemID: itemID, actionName: "Paste Lyrics", document: document, undoManager: undoManager)
     }
+
+    /// Places (or retimes) one lyric line at a media playback time. Stores a
+    /// SONG-relative time — `mediaTime − offset`, clamped `>= 0` — so the line's
+    /// effective time lands exactly at `mediaTime`. Used by click-to-drop,
+    /// tap-along, and drag-to-retime.
+    static func placeLyricLine(
+        id: LyricLine.ID,
+        atMediaTime mediaTime: TimeInterval,
+        itemID: MediaItem.ID,
+        document: CueListDocument,
+        undoManager: UndoManager?
+    ) {
+        guard let index = document.model.items.firstIndex(where: { $0.id == itemID }) else { return }
+        let lyrics = document.model.items[index].lyrics
+        guard let lineIndex = lyrics.lines.firstIndex(where: { $0.id == id }) else { return }
+        var lines = lyrics.lines
+        lines[lineIndex].time = max(0, mediaTime - lyrics.offsetSeconds)
+        setLyrics(
+            lyrics.settingLines(lines),
+            itemID: itemID,
+            actionName: "Place Lyric Line",
+            document: document,
+            undoManager: undoManager
+        )
+    }
+
+    /// Returns a placed line to the unplaced queue (clears its `time`).
+    static func unplaceLyricLine(
+        id: LyricLine.ID,
+        itemID: MediaItem.ID,
+        document: CueListDocument,
+        undoManager: UndoManager?
+    ) {
+        guard let index = document.model.items.firstIndex(where: { $0.id == itemID }) else { return }
+        let lyrics = document.model.items[index].lyrics
+        guard let lineIndex = lyrics.lines.firstIndex(where: { $0.id == id }) else { return }
+        var lines = lyrics.lines
+        lines[lineIndex].time = nil
+        setLyrics(
+            lyrics.settingLines(lines),
+            itemID: itemID,
+            actionName: "Unplace Lyric Line",
+            document: document,
+            undoManager: undoManager
+        )
+    }
+
+    /// Removes a lyric line entirely.
+    static func deleteLyricLine(
+        id: LyricLine.ID,
+        itemID: MediaItem.ID,
+        document: CueListDocument,
+        undoManager: UndoManager?
+    ) {
+        guard let index = document.model.items.firstIndex(where: { $0.id == itemID }) else { return }
+        let lyrics = document.model.items[index].lyrics
+        guard lyrics.lines.contains(where: { $0.id == id }) else { return }
+        setLyrics(
+            lyrics.settingLines(lyrics.lines.filter { $0.id != id }),
+            itemID: itemID,
+            actionName: "Delete Lyric Line",
+            document: document,
+            undoManager: undoManager
+        )
+    }
 }

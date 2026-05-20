@@ -13,6 +13,9 @@ struct MediaItem: Codable, Identifiable, Equatable {
     /// Per-clip user-facing display override. nil/empty/whitespace falls back
     /// to `media.displayName` (the file basename). v12.
     var alternateName: String?
+    /// Timestamped lyrics for this clip — a per-`MediaItem` reference/HUD layer
+    /// decoupled from cues (ADR-022). Empty by default. Schema v13.
+    var lyrics: Lyrics = .empty
 }
 
 extension MediaItem {

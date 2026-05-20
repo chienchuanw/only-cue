@@ -1,26 +1,28 @@
 import Foundation
 
-/// A single timestamped lyric line. `time` is SONG-relative seconds — measured
-/// from where the song begins, not from the media file's start (see `Lyrics`).
-/// `text` may be empty; an empty line marks an instrumental gap in the HUD.
+/// A single lyric line. `time` is SONG-relative seconds (measured from where the
+/// song begins, not the media file's start — see `Lyrics`); `nil` means the line
+/// is *unplaced* — it has text but no timestamp yet and waits in the authoring
+/// queue. `text` may be empty; an empty placed line marks an instrumental gap.
 struct LyricLine: Codable, Identifiable, Equatable {
     var id: UUID
-    var time: TimeInterval
+    var time: TimeInterval?
     var text: String
 
-    init(id: UUID = UUID(), time: TimeInterval, text: String) {
+    init(id: UUID = UUID(), time: TimeInterval?, text: String) {
         self.id = id
-        self.time = max(0, time)
+        self.time = time.map { max(0, $0) }
         self.text = text
     }
 
-    /// Route decode through the clamping init so a hand-edited negative `time`
-    /// on disk is normalized rather than silently accepted (mirrors `Cue`).
+    /// Route decode through the clamping init. `time` is decoded leniently — a
+    /// v13 document always wrote a concrete value; a v14 unplaced line omits the
+    /// key entirely (synthesized `encode` uses `encodeIfPresent` for optionals).
     init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
         self.init(
             id: try container.decode(UUID.self, forKey: .id),
-            time: try container.decode(TimeInterval.self, forKey: .time),
+            time: try container.decodeIfPresent(TimeInterval.self, forKey: .time),
             text: try container.decode(String.self, forKey: .text)
         )
     }

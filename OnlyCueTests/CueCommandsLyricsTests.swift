@@ -68,12 +68,12 @@ final class CueCommandsLyricsTests: XCTestCase {
         XCTAssertEqual(lyrics(doc).offsetSeconds, 30, "editing lines preserves the offset")
     }
 
-    func test_pasteLyrics_replacesWithUntimedRows() {
+    func test_pasteLyrics_replacesWithUnplacedRows() {
         let doc = makeDocumentWithItem()
         let undo = makeUndoManager()
         CueCommands.pasteLyrics(plainText: "one\ntwo", itemID: itemID(doc), document: doc, undoManager: undo)
         XCTAssertEqual(lyrics(doc).lines.map(\.text), ["one", "two"])
-        XCTAssertTrue(lyrics(doc).lines.allSatisfy { $0.time == 0 })
+        XCTAssertTrue(lyrics(doc).lines.allSatisfy { $0.time == nil })
     }
 
     func test_unknownItemID_isNoOp() {

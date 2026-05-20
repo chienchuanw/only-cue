@@ -1,13 +1,16 @@
 import Foundation
 
-/// The timestamped lyrics attached to one `MediaItem`. A reference / HUD layer,
-/// decoupled from cues (ADR-022).
+/// The lyrics attached to one `MediaItem`. A reference / HUD layer, decoupled
+/// from cues (ADR-022).
 ///
-/// Two clocks: a `LyricLine.time` is SONG-relative, and `offsetSeconds` is the
-/// media playback time at which the song begins — an imported file with a
-/// one-minute redundant head gets `offsetSeconds = 60`. `effectiveTime` composes
-/// the two. The offset is a non-destructive display addend: it never mutates a
-/// line's stored `time`, so resetting it to 0 restores the original sync.
+/// Two clocks: `LyricLine.time` is SONG-relative, `offsetSeconds` is the media
+/// playback time at which the song begins. `effectiveTime` composes them. The
+/// offset is a non-destructive display addend.
+///
+/// `lines` is kept in **authoring order** (paste / song order). Placed lines
+/// (non-nil `time`) and unplaced lines (`nil`) are interleaved there; the
+/// `placedLines` / `unplacedLines` projections split them for the timeline and
+/// the queue respectively.
 struct Lyrics: Codable, Equatable {
     private(set) var lines: [LyricLine]
     var offsetSeconds: TimeInterval
@@ -15,11 +18,10 @@ struct Lyrics: Codable, Equatable {
     static let empty = Self(lines: [], offsetSeconds: 0)
 
     init(lines: [LyricLine], offsetSeconds: TimeInterval) {
-        self.lines = lines.sorted { $0.time < $1.time }
+        self.lines = lines
         self.offsetSeconds = offsetSeconds
     }
 
-    /// Route decode through the normalizing init so `lines` is always sorted.
     init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
         self.init(
@@ -30,33 +32,47 @@ struct Lyrics: Codable, Equatable {
 
     private enum CodingKeys: String, CodingKey { case lines, offsetSeconds }
 
+    // MARK: - Projections
+
+    /// Placed lines (non-nil `time`), sorted ascending by `time`. The timeline,
+    /// the HUD, and the lane all consume this.
+    var placedLines: [LyricLine] {
+        lines.filter { $0.time != nil }.sorted { ($0.time ?? 0) < ($1.time ?? 0) }
+    }
+
+    /// Unplaced lines (`nil` `time`), in authoring order. This is the queue.
+    var unplacedLines: [LyricLine] {
+        lines.filter { $0.time == nil }
+    }
+
     // MARK: - Queries
 
-    /// The media playback time of `line` — its song-relative `time` shifted by
-    /// the offset, clamped `>= 0` so a negative offset can't produce a negative
-    /// time.
-    func effectiveTime(of line: LyricLine) -> TimeInterval {
-        max(0, line.time + offsetSeconds)
+    /// The media playback time of a *placed* `line` — its song-relative `time`
+    /// shifted by the offset, clamped `>= 0`. `nil` for an unplaced line.
+    func effectiveTime(of line: LyricLine) -> TimeInterval? {
+        line.time.map { max(0, $0 + offsetSeconds) }
     }
 
-    /// The line "active" at `mediaSeconds` — the largest `effectiveTime <=
-    /// mediaSeconds`. `nil` before the first line; the last line persists once
-    /// the playhead is past it. Mirrors `MediaItem.activeCue(at:)`.
+    /// The placed line "active" at `mediaSeconds` — the latest whose
+    /// `effectiveTime <= mediaSeconds`. `nil` before the first placed line; the
+    /// last placed line persists once the playhead is past it.
     func activeLine(atMediaSeconds mediaSeconds: TimeInterval) -> LyricLine? {
-        lines.filter { effectiveTime(of: $0) <= mediaSeconds }
-            .max { effectiveTime(of: $0) < effectiveTime(of: $1) }
+        placedLines.last { line in
+            (effectiveTime(of: line) ?? .infinity) <= mediaSeconds
+        }
     }
 
-    /// The line immediately after the one active at `mediaSeconds`; `nil` once
-    /// the playhead is past the last line.
+    /// The placed line immediately after the one active at `mediaSeconds`; `nil`
+    /// once the playhead is past the last placed line.
     func nextLine(afterMediaSeconds mediaSeconds: TimeInterval) -> LyricLine? {
-        lines.filter { effectiveTime(of: $0) > mediaSeconds }
-            .min { effectiveTime(of: $0) < effectiveTime(of: $1) }
+        placedLines.first { line in
+            (effectiveTime(of: line) ?? -.infinity) > mediaSeconds
+        }
     }
 
     // MARK: - Transforms (return a copy)
 
-    /// A copy with `lines` replaced (re-sorted by the init).
+    /// A copy with `lines` replaced (authoring order preserved).
     func settingLines(_ newLines: [LyricLine]) -> Self {
         Self(lines: newLines, offsetSeconds: offsetSeconds)
     }
@@ -68,17 +84,16 @@ struct Lyrics: Codable, Equatable {
 
     // MARK: - Plain-text parsing
 
-    /// Splits pasted plain text into untimed lyric lines — one row per text
-    /// line, blank lines preserved as empty-`text` rows, every row stamped
-    /// `time = 0`. CRLF / lone-CR line endings are normalized to LF first
-    /// (Swift fuses `\r\n` into a single grapheme, so a bare `\n` split misses
-    /// it).
+    /// Splits pasted plain text into **unplaced** lyric lines — one row per text
+    /// line, blank lines preserved as empty-`text` rows, every row `time = nil`.
+    /// CRLF / lone-CR line endings are normalized to LF first (Swift fuses
+    /// `\r\n` into one grapheme, so a bare `\n` split misses it).
     static func untimedLines(fromPlainText text: String) -> [LyricLine] {
         let normalized = text
             .replacingOccurrences(of: "\r\n", with: "\n")
             .replacingOccurrences(of: "\r", with: "\n")
         return normalized.split(separator: "\n", omittingEmptySubsequences: false).map {
-            LyricLine(time: 0, text: String($0))
+            LyricLine(time: nil, text: String($0))
         }
     }
 }

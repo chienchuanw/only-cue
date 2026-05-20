@@ -16,11 +16,11 @@ struct LyricsLaneView: View {
         GeometryReader { proxy in
             let width = proxy.size.width
             let collapse = LyricsLaneLayout.shouldCollapseToTicks(
-                lineCount: lyrics.lines.count,
+                lineCount: lyrics.placedLines.count,
                 contentWidth: width
             )
             ZStack(alignment: .bottomLeading) {
-                ForEach(lyrics.lines) { line in
+                ForEach(lyrics.placedLines) { line in
                     marker(for: line, width: width, collapsed: collapse)
                 }
             }
@@ -33,8 +33,9 @@ struct LyricsLaneView: View {
 
     @ViewBuilder
     private func marker(for line: LyricLine, width: CGFloat, collapsed: Bool) -> some View {
+        let effective = lyrics.effectiveTime(of: line) ?? 0
         let position = CueMarkersGeometry.position(
-            forTime: lyrics.effectiveTime(of: line),
+            forTime: effective,
             width: width,
             duration: duration
         )
@@ -52,7 +53,7 @@ struct LyricsLaneView: View {
             }
         }
         .offset(x: position)
-        .onTapGesture { onSeek(lyrics.effectiveTime(of: line)) }
+        .onTapGesture { onSeek(effective) }
         .accessibilityIdentifier("lyricsLaneMarker-\(line.id.uuidString)")
     }
 }

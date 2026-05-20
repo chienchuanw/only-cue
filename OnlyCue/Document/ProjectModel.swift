@@ -2,7 +2,7 @@ import Foundation
 
 struct ProjectModel: Codable, Equatable {
 
-    static let currentSchemaVersion = 13
+    static let currentSchemaVersion = 14
 
     var schemaVersion: Int
     var id: UUID

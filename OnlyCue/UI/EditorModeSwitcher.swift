@@ -19,6 +19,9 @@ struct EditorModeSwitcher: View {
         .padding(2)
         .background(RoundedRectangle(cornerRadius: 7).fill(.quaternary))
         .fixedSize()
+        // `.contain` keeps the switcher itself queryable AND lets XCUITest walk
+        // to the individual segment buttons (same pattern as CueMarkersOverlay).
+        .accessibilityElement(children: .contain)
         .accessibilityIdentifier("editorModeSwitcher")
     }
 

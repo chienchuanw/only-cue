@@ -33,7 +33,6 @@ struct WaveformContainer: View {
     @State var verticalZoom = WaveformVerticalZoomController()
     @State private var leadingAnchor: Int? = 0
     @AppStorage("showTempoGrid") var showTempoGrid = false
-    @AppStorage("showLyricsLane") var showLyricsLane = false
 
     // scrollOffset and viewportWidth are stored on the `zoom` controller (an
     // @Observable reference type) so they survive SwiftUI struct copies and are

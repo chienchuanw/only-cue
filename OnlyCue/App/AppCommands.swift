@@ -7,7 +7,6 @@ struct AppCommands: Commands {
     @AppStorage("showTimelineBreakdown") private var showTimelineBreakdown = false
     @AppStorage("showTempoGrid") private var showTempoGrid = false
     @AppStorage("showLyricsOverlay") private var showLyricsOverlay = false
-    @AppStorage("showLyricsLane") private var showLyricsLane = false
     @AppStorage("pauseAtEachCue") private var pauseAtEachCue = false
     @ObservedObject private var keymapStore = KeymapStore.shared
     @ObservedObject private var ltcRoutingStore = LTCRoutingStore.shared
@@ -132,11 +131,6 @@ struct AppCommands: Commands {
                 showTempoGrid.toggle()
             }
             .keyboardShortcut(shortcut(.toggleTempoGrid))
-
-            Button(showLyricsLane ? "Hide Lyrics Lane" : "Show Lyrics Lane") {
-                showLyricsLane.toggle()
-            }
-            .accessibilityIdentifier("toggleLyricsLaneMenuItem")
         }
 
         CommandMenu("Cue") {
@@ -230,11 +224,6 @@ struct AppCommands: Commands {
             Button("Timecode Settings…") {
                 NotificationCenter.default.post(name: .timecodeSettingsRequested, object: nil)
             }
-
-            Button("Lyrics Editor…") {
-                NotificationCenter.default.post(name: .lyricsEditorRequested, object: nil)
-            }
-            .accessibilityIdentifier("lyricsEditorMenuItem")
 
             // Tempo Map / Split / Add-Cues-on-Beat-or-Bar menu items removed in v11
             // transition (#244). The Tempo Map sheet, its notifications, the related

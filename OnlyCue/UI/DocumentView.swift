@@ -11,6 +11,8 @@ struct DocumentView: View {
     @State private var seekTask: Task<Void, Never>?
     @State private var showOverlayAppearance = false
     @State var cueSelection: Set<Cue.ID> = []
+    /// The unplaced-lyric-queue cursor — UI working state for placement.
+    @State private var lyricsCursor = LyricsAuthoringCursor()
     @AppStorage(FirstLaunchFlag.key) var didShowFirstLaunch = false
     @AppStorage(NotesOverlayPreferences.storageKey) var overlayPrefsData = NotesOverlayPreferences.defaultEncoded
     @AppStorage("pauseAtEachCue") var pauseAtEachCue = false
@@ -89,7 +91,8 @@ struct DocumentView: View {
                     onSelectCue: { cueSelection = [$0] },
                     onToggleCue: { cueSelection.formSymmetricDifference([$0]) },
                     editorMode: editorMode,
-                    setEditorMode: { editorModeRaw = $0.rawValue }
+                    setEditorMode: { editorModeRaw = $0.rawValue },
+                    lyricsCursor: $lyricsCursor
                 )
             }
 
@@ -106,6 +109,7 @@ struct DocumentView: View {
 
             transportShortcuts
             digitShortcuts
+            lyricTapAlongShortcut
             PlayheadStepShortcuts(
                 onStepPrev: { stepPlayhead(.previous) },
                 onStepNext: { stepPlayhead(.next) },
@@ -261,6 +265,36 @@ struct DocumentView: View {
 /// Playhead / cue-creation actions. Split into an extension so the main
 /// `DocumentView` body stays under the SwiftLint `type_body_length` cap.
 extension DocumentView {
+
+    /// Hidden `T`-key shortcut that stamps the next queued lyric line at the
+    /// playhead — tap-along placement. Enabled only in Lyric mode.
+    fileprivate var lyricTapAlongShortcut: some View {
+        Button("Stamp Lyric Line") { stampLyricAtPlayhead() }
+            .keyboardShortcut("t", modifiers: [])
+            .frame(width: 0, height: 0)
+            .opacity(0)
+            .accessibilityHidden(true)
+            .disabled(editorMode != .lyric || document.model.activeItem == nil)
+    }
+
+    /// Places the resolved cursor line at the current playhead and advances the
+    /// cursor to the next unplaced line.
+    fileprivate func stampLyricAtPlayhead() {
+        guard let item = document.model.activeItem,
+              let targetID = lyricsCursor.resolvedCursorID(unplaced: item.lyrics.unplacedLines)
+        else { return }
+        CueCommands.placeLyricLine(
+            id: targetID,
+            atMediaTime: engine.currentTime,
+            itemID: item.id,
+            document: document,
+            undoManager: undoManager
+        )
+        lyricsCursor.advance(
+            afterPlacing: targetID,
+            remainingUnplaced: document.model.activeItem?.lyrics.unplacedLines ?? []
+        )
+    }
 
     fileprivate func triggerHotkey(_ digit: Int) {
         guard let type = document.model.cuePointType(forHotkey: digit) else { return }

@@ -12,6 +12,7 @@ struct PreviewPane: View {
     @Environment(\.undoManager) private var undoManager
     @State private var waveformURL: URL?
     @AppStorage("showNotesOverlay") private var showNotesOverlay = false
+    @AppStorage("showLyricsOverlay") private var showLyricsOverlay = false
     @AppStorage("showTimelineBreakdown") private var showTimelineBreakdown = false
     @AppStorage(NotesOverlayPreferences.storageKey) private var overlayPrefsData = NotesOverlayPreferences.defaultEncoded
 
@@ -24,20 +25,38 @@ struct PreviewPane: View {
         .clipShape(RoundedRectangle(cornerRadius: 6))
         .accessibilityIdentifier("previewPane")
         .task(id: document.model.activeItemID) { await resolveWaveformURL() }
+        // Bottom stack — the Notes Overlay (when its position is bottom) above
+        // the Lyrics HUD. The spec stacks notes above lyrics; non-bottom Notes
+        // Overlay positions keep their own positioned overlay below.
+        .overlay(alignment: .bottom) {
+            VStack(spacing: 8) {
+                if showNotesOverlay, overlayPrefs.position == .bottom {
+                    notesOverlayCard
+                }
+                if showLyricsOverlay, let item = document.model.activeItem {
+                    LyricsOverlayView(lyrics: item.lyrics, mediaSeconds: engine.currentTime)
+                }
+            }
+            .padding(.bottom, 12)
+        }
         .overlay(alignment: overlayAlignment) {
-            if showNotesOverlay {
-                NotesOverlayView(
-                    activeCue: activeCue,
-                    prefs: overlayPrefs,
-                    cueNumberLabel: activeCue.flatMap { $0.cueNumber.map(FadeTime.formatNumber) }
-                )
-                .padding(overlayPadding, 12)
+            if showNotesOverlay, overlayPrefs.position != .bottom {
+                notesOverlayCard
+                    .padding(overlayPadding, 12)
             }
         }
     }
 
     private var activeCue: Cue? {
         document.model.activeItem?.activeCue(at: engine.currentTime)
+    }
+
+    private var notesOverlayCard: some View {
+        NotesOverlayView(
+            activeCue: activeCue,
+            prefs: overlayPrefs,
+            cueNumberLabel: activeCue.flatMap { $0.cueNumber.map(FadeTime.formatNumber) }
+        )
     }
 
     private var overlayPrefs: NotesOverlayPreferences {

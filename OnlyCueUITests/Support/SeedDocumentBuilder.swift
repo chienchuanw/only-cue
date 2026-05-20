@@ -18,6 +18,7 @@ import Foundation
 enum SeedKey: String {
     case threeCuesAt1And3And6 = "three-cues-1-3-6"
     case threeCuesAt1And3And6With120BPM = "three-cues-1-3-6-with-120bpm-tempo"
+    case songWithLyrics = "song-with-lyrics"
 
     var launchArgument: String { "--ui-test-seed=\(rawValue)" }
 }

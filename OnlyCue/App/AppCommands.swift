@@ -6,6 +6,7 @@ struct AppCommands: Commands {
     @AppStorage("showNotesOverlay") private var showNotesOverlay = false
     @AppStorage("showTimelineBreakdown") private var showTimelineBreakdown = false
     @AppStorage("showTempoGrid") private var showTempoGrid = false
+    @AppStorage("showLyricsOverlay") private var showLyricsOverlay = false
     @AppStorage("pauseAtEachCue") private var pauseAtEachCue = false
     @ObservedObject private var keymapStore = KeymapStore.shared
     @ObservedObject private var ltcRoutingStore = LTCRoutingStore.shared
@@ -98,6 +99,11 @@ struct AppCommands: Commands {
                 showNotesOverlay.toggle()
             }
             .keyboardShortcut(shortcut(.toggleNotesOverlay))
+
+            Button(showLyricsOverlay ? "Hide Lyrics Overlay" : "Show Lyrics Overlay") {
+                showLyricsOverlay.toggle()
+            }
+            .accessibilityIdentifier("toggleLyricsOverlayMenuItem")
 
             Button(showTimelineBreakdown ? "Hide Timeline Breakdown" : "Show Timeline Breakdown") {
                 showTimelineBreakdown.toggle()

@@ -84,3 +84,17 @@ When capturing screenshots for README/docs, always use real screenshots via XCTe
 - Do not embed media in `.cuelist` files; reference via security-scoped bookmarks (ADR-006).
 - Do not change `ProjectModel` schema without bumping `schemaVersion` and adding a migration (`docs/data-model.md`).
 - Do not lower the macOS deployment target below 14.0 (ADR-001).
+
+## Agent skills
+
+### Issue tracker
+
+Issues are tracked as GitHub issues in `chienchuanw/only-cue` via the `gh` CLI. See `docs/agents/issue-tracker.md`.
+
+### Triage labels
+
+Canonical triage vocabulary — `needs-triage`, `needs-info`, `ready-for-agent`, `ready-for-human`, `wontfix`. See `docs/agents/triage-labels.md`.
+
+### Domain docs
+
+Single-context — one `CONTEXT.md` at the repo root; ADRs in `docs/decisions.md`. See `docs/agents/domain.md`.

@@ -1,0 +1,15 @@
+{
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Edit|Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "f=$(jq -r '.tool_response.filePath // .tool_input.file_path // empty'); case \"$f\" in *.swift) swiftlint --fix --quiet \"$f\" || true;; *.md) markdownlint --fix \"$f\" || true;; esac"
+          }
+        ]
+      }
+    ]
+  }
+}

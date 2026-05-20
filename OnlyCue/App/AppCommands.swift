@@ -7,6 +7,7 @@ struct AppCommands: Commands {
     @AppStorage("showTimelineBreakdown") private var showTimelineBreakdown = false
     @AppStorage("showTempoGrid") private var showTempoGrid = false
     @AppStorage("showLyricsOverlay") private var showLyricsOverlay = false
+    @AppStorage("showLyricsLane") private var showLyricsLane = false
     @AppStorage("pauseAtEachCue") private var pauseAtEachCue = false
     @ObservedObject private var keymapStore = KeymapStore.shared
     @ObservedObject private var ltcRoutingStore = LTCRoutingStore.shared
@@ -114,6 +115,11 @@ struct AppCommands: Commands {
                 showTempoGrid.toggle()
             }
             .keyboardShortcut(shortcut(.toggleTempoGrid))
+
+            Button(showLyricsLane ? "Hide Lyrics Lane" : "Show Lyrics Lane") {
+                showLyricsLane.toggle()
+            }
+            .accessibilityIdentifier("toggleLyricsLaneMenuItem")
         }
 
         CommandMenu("Cue") {

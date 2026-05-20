@@ -32,4 +32,18 @@ extension WaveformContainer {
             )
         }
     }
+
+    /// The lyric lane band pinned to the bottom of the waveform content — shown
+    /// only when `View → Show Lyrics Lane` is on, the duration is known, and the
+    /// active item has lyrics. Lives in the zoomable scroll content, so it
+    /// inherits horizontal zoom.
+    @ViewBuilder
+    func lyricsLaneOverlay() -> some View {
+        if showLyricsLane, loadedDuration > 0, !lyrics.lines.isEmpty {
+            VStack(spacing: 0) {
+                Spacer(minLength: 0)
+                LyricsLaneView(lyrics: lyrics, duration: loadedDuration, onSeek: onSeekToLyric)
+            }
+        }
+    }
 }

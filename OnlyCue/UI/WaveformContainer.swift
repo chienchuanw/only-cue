@@ -18,6 +18,9 @@ struct WaveformContainer: View {
     var lyrics: Lyrics = .empty
     var onSeekToLyric: (TimeInterval) -> Void = { _ in }
     var editorMode: EditorMode = .cue
+    var onRetimeLyric: (LyricLine.ID, TimeInterval) -> Void = { _, _ in }
+    var onUnplaceLyric: (LyricLine.ID) -> Void = { _ in }
+    var onDeleteLyric: (LyricLine.ID) -> Void = { _ in }
 
     @State private var peaks: [Float]?
     @State private var failed = false

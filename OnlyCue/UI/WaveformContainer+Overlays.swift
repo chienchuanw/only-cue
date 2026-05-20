@@ -34,16 +34,25 @@ extension WaveformContainer {
         }
     }
 
-    /// The lyric lane band pinned to the bottom of the waveform content — shown
-    /// only when `View → Show Lyrics Lane` is on, the duration is known, and the
-    /// active item has lyrics. Lives in the zoomable scroll content, so it
-    /// inherits horizontal zoom.
+    /// The lyric lane pinned to the bottom of the waveform content. Shown in
+    /// Lyric mode always (the editing surface), and in Cue / Show modes when the
+    /// item has at least one placed line. Lives in the zoomable scroll content,
+    /// so it inherits horizontal zoom.
     @ViewBuilder
     func lyricsLaneOverlay() -> some View {
-        if showLyricsLane, loadedDuration > 0, !lyrics.lines.isEmpty {
+        let hasPlaced = !lyrics.placedLines.isEmpty
+        if loadedDuration > 0, editorMode.lyricsEditable || hasPlaced {
             VStack(spacing: 0) {
                 Spacer(minLength: 0)
-                LyricsLaneView(lyrics: lyrics, duration: loadedDuration, onSeek: onSeekToLyric)
+                LyricsLaneView(
+                    lyrics: lyrics,
+                    duration: loadedDuration,
+                    editorMode: editorMode,
+                    onSeek: onSeekToLyric,
+                    onRetime: onRetimeLyric,
+                    onUnplace: onUnplaceLyric,
+                    onDelete: onDeleteLyric
+                )
             }
         }
     }

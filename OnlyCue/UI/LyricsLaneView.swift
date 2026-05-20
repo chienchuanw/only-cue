@@ -1,21 +1,33 @@
 import SwiftUI
 
-/// The lyric lane — a band at the bottom of the waveform's scrollable content
-/// showing each line positioned by its effective time. Because it lives inside
-/// `WaveformContainer`'s zoomable `ZStack`, it inherits horizontal zoom/scroll.
-/// Click-to-seek; collapses to ticks when lines pack too tightly.
+/// The lyric lane — a band inside `WaveformContainer`'s zoomable content showing
+/// each placed line positioned by its effective time. In Lyric mode it grows
+/// into a tall editing strip: chips show full text, drag to retime, right-click
+/// to unplace or delete. In Cue / Show modes it is the compact, read-only,
+/// click-to-seek strip that collapses to ticks when lines pack tightly.
 struct LyricsLaneView: View {
 
     let lyrics: Lyrics
     let duration: TimeInterval
+    let editorMode: EditorMode
     let onSeek: (TimeInterval) -> Void
+    var onRetime: (LyricLine.ID, TimeInterval) -> Void = { _, _ in }
+    var onUnplace: (LyricLine.ID) -> Void = { _ in }
+    var onDelete: (LyricLine.ID) -> Void = { _ in }
 
-    private static let laneHeight: CGFloat = 26
+    static let compactHeight: CGFloat = 26
+    static let tallHeight: CGFloat = 64
+
+    @State private var dragLineID: LyricLine.ID?
+    @State private var dragDX: CGFloat = 0
+
+    private var isEditing: Bool { editorMode.lyricsEditable }
+    private var laneHeight: CGFloat { isEditing ? Self.tallHeight : Self.compactHeight }
 
     var body: some View {
         GeometryReader { proxy in
             let width = proxy.size.width
-            let collapse = LyricsLaneLayout.shouldCollapseToTicks(
+            let collapse = !isEditing && LyricsLaneLayout.shouldCollapseToTicks(
                 lineCount: lyrics.placedLines.count,
                 contentWidth: width
             )
@@ -26,7 +38,7 @@ struct LyricsLaneView: View {
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottomLeading)
         }
-        .frame(height: Self.laneHeight)
+        .frame(height: laneHeight)
         .accessibilityElement(children: .contain)
         .accessibilityIdentifier("lyricsLane")
     }
@@ -34,26 +46,57 @@ struct LyricsLaneView: View {
     @ViewBuilder
     private func marker(for line: LyricLine, width: CGFloat, collapsed: Bool) -> some View {
         let effective = lyrics.effectiveTime(of: line) ?? 0
-        let position = CueMarkersGeometry.position(
-            forTime: effective,
-            width: width,
-            duration: duration
-        )
-        Group {
-            if collapsed {
-                Rectangle()
-                    .fill(.purple.opacity(0.7))
-                    .frame(width: 1.5, height: 12)
-            } else {
-                Text(line.text.isEmpty ? "\u{266A}" : line.text)
-                    .font(.system(size: 10))
-                    .lineLimit(1)
-                    .padding(.horizontal, 4)
-                    .background(RoundedRectangle(cornerRadius: 3).fill(.purple.opacity(0.18)))
-            }
+        let baseX = CueMarkersGeometry.position(forTime: effective, width: width, duration: duration)
+        let dx = dragLineID == line.id ? dragDX : 0
+        chip(for: line, collapsed: collapsed)
+            .offset(x: baseX + dx)
+            .gesture(dragGesture(line: line, effective: effective, width: width))
+            .onTapGesture { onSeek(effective) }
+            .contextMenu { contextMenu(for: line) }
+            .accessibilityIdentifier("lyricsLaneMarker-\(line.id.uuidString)")
+    }
+
+    @ViewBuilder
+    private func chip(for line: LyricLine, collapsed: Bool) -> some View {
+        if collapsed {
+            Rectangle().fill(.purple.opacity(0.7)).frame(width: 1.5, height: 12)
+        } else {
+            Text(line.text.isEmpty ? "\u{266A}" : line.text)
+                .font(.system(size: 11))
+                .lineLimit(1)
+                .padding(.horizontal, 6)
+                .padding(.vertical, isEditing ? 5 : 2)
+                .background(RoundedRectangle(cornerRadius: 4).fill(.purple.opacity(isEditing ? 0.85 : 0.18)))
+                .foregroundStyle(isEditing ? Color.white : Color.primary)
         }
-        .offset(x: position)
-        .onTapGesture { onSeek(effective) }
-        .accessibilityIdentifier("lyricsLaneMarker-\(line.id.uuidString)")
+    }
+
+    @ViewBuilder
+    private func contextMenu(for line: LyricLine) -> some View {
+        if isEditing {
+            Button("Send Back to Unplaced") { onUnplace(line.id) }
+            Button("Delete Line", role: .destructive) { onDelete(line.id) }
+        }
+    }
+
+    private func dragGesture(line: LyricLine, effective: TimeInterval, width: CGFloat) -> some Gesture {
+        DragGesture(minimumDistance: 4)
+            .onChanged { value in
+                guard isEditing else { return }
+                dragLineID = line.id
+                dragDX = value.translation.width
+            }
+            .onEnded { value in
+                guard isEditing else { return }
+                let newTime = LyricsLaneInteraction.draggedMediaTime(
+                    fromMediaTime: effective,
+                    dx: value.translation.width,
+                    width: width,
+                    duration: duration
+                )
+                dragLineID = nil
+                dragDX = 0
+                onRetime(line.id, newTime)
+            }
     }
 }

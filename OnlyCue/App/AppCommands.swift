@@ -202,6 +202,11 @@ struct AppCommands: Commands {
                 NotificationCenter.default.post(name: .timecodeSettingsRequested, object: nil)
             }
 
+            Button("Lyrics Editor…") {
+                NotificationCenter.default.post(name: .lyricsEditorRequested, object: nil)
+            }
+            .accessibilityIdentifier("lyricsEditorMenuItem")
+
             // Tempo Map / Split / Add-Cues-on-Beat-or-Bar menu items removed in v11
             // transition (#244). The Tempo Map sheet, its notifications, the related
             // KeymapAction cases, and the underlying commands get deleted in #248.

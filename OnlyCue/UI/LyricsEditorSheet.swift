@@ -3,8 +3,8 @@ import SwiftUI
 
 /// Self-contained editor for one `MediaItem`'s lyrics, reached via
 /// `Tools → Lyrics Editor…`. Holds a working draft of the lyric lines; commits
-/// flow through `CueCommands` so undo and document-edit tracking work. Tap-along
-/// and the offset control extend this view in later leaves.
+/// flow through `CueCommands` so undo and document-edit tracking work. The
+/// offset control extends this view in a later leaf.
 struct LyricsEditorSheet: View {
 
     @ObservedObject var document: CueListDocument
@@ -13,6 +13,8 @@ struct LyricsEditorSheet: View {
     @Environment(\.undoManager) private var undoManager
 
     @State private var lines: [LyricLine] = []
+    /// Non-nil while tap-along mode is active.
+    @State private var tapAlong: LyricsTapAlong?
 
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
@@ -45,20 +47,51 @@ struct LyricsEditorSheet: View {
     private var table: some View {
         List {
             ForEach($lines) { $line in
-                LyricsEditorRow(line: $line, onCommit: commit, onDelete: { delete(line.id) })
+                LyricsEditorRow(
+                    line: $line,
+                    isCursor: rowIsCursor(line),
+                    onCommit: commit,
+                    onDelete: { delete(line.id) }
+                )
             }
         }
         .accessibilityIdentifier("lyricsEditorTable")
     }
 
     private var controls: some View {
-        HStack {
-            Button("Add Line", action: addLine)
-                .accessibilityIdentifier("lyricsEditorAddLine")
-            Button("Paste Lyrics", action: pasteFromClipboard)
-                .accessibilityIdentifier("lyricsEditorPaste")
-            Spacer()
+        VStack(spacing: 8) {
+            HStack {
+                Button("Add Line", action: addLine)
+                    .accessibilityIdentifier("lyricsEditorAddLine")
+                Button("Paste Lyrics", action: pasteFromClipboard)
+                    .accessibilityIdentifier("lyricsEditorPaste")
+                Spacer()
+                Button(tapAlong == nil ? "Start Tap-Along" : "Stop Tap-Along", action: toggleTapAlong)
+                    .accessibilityIdentifier("lyricsEditorTapAlongToggle")
+            }
+            if tapAlong != nil {
+                tapAlongBar
+            }
         }
+    }
+
+    private var tapAlongBar: some View {
+        HStack(spacing: 12) {
+            Button(engine.isPlaying ? "Pause" : "Play") {
+                if engine.isPlaying { engine.pause() } else { engine.play() }
+            }
+            Text(LyricsTimeFormat.string(engine.currentTime))
+                .monospacedDigit()
+                .foregroundStyle(.secondary)
+            Spacer()
+            Button("Step Back", action: stepBack)
+                .accessibilityIdentifier("lyricsEditorStepBack")
+            Button("Tap", action: tap)
+                .keyboardShortcut(.return, modifiers: [])
+                .accessibilityIdentifier("lyricsEditorTap")
+        }
+        .padding(8)
+        .background(RoundedRectangle(cornerRadius: 8).fill(.quaternary))
     }
 
     // MARK: - Mutations
@@ -88,12 +121,39 @@ struct LyricsEditorSheet: View {
         // Re-read so the draft reflects `Lyrics`' normalization (sort).
         lines = document.model.activeItem?.lyrics.lines ?? []
     }
+
+    // MARK: - Tap-along
+
+    /// Whether `line` is the row the next tap will stamp.
+    private func rowIsCursor(_ line: LyricLine) -> Bool {
+        guard let cursor = tapAlong?.cursor else { return false }
+        return lines.firstIndex(where: { $0.id == line.id }) == cursor
+    }
+
+    private func toggleTapAlong() {
+        tapAlong = tapAlong == nil ? LyricsTapAlong() : nil
+    }
+
+    /// Stamps the cursor row with `playhead - offset` and advances. Bound to
+    /// Return; tap-along only times existing rows.
+    private func tap() {
+        guard var state = tapAlong else { return }
+        let offset = document.model.activeItem?.lyrics.offsetSeconds ?? 0
+        lines = state.stamping(lines, playhead: engine.currentTime, offsetSeconds: offset)
+        tapAlong = state
+        commit()
+    }
+
+    private func stepBack() {
+        tapAlong?.stepBack()
+    }
 }
 
 /// One editable `[time | text]` row.
 private struct LyricsEditorRow: View {
 
     @Binding var line: LyricLine
+    let isCursor: Bool
     let onCommit: () -> Void
     let onDelete: () -> Void
 
@@ -121,6 +181,7 @@ private struct LyricsEditorRow: View {
             .accessibilityIdentifier("lyricsEditorRowDelete")
         }
         .accessibilityIdentifier("lyricsEditorRow-\(line.id.uuidString)")
+        .listRowBackground(isCursor ? Color.accentColor.opacity(0.15) : Color.clear)
     }
 
     /// Parses the time field; reverts to the canonical string on bad input.

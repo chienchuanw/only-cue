@@ -174,6 +174,7 @@ struct CueListPane: View {
     }
 
     private func snapSelectedToGrid(_ resolution: CueCommands.GridResolution) {
+        guard !isReadOnly else { return }
         let grid = activeTempoGrid
         let duration = activeItemDuration
         switch resolution {
@@ -185,7 +186,7 @@ struct CueListPane: View {
     }
 
     private func duplicateSelectedAtPlayhead() {
-        guard let id = soleSelectedID else { return }
+        guard !isReadOnly, let id = soleSelectedID else { return }
         CueCommands.duplicateAtPlayhead(
             cueId: id,
             time: engine.currentTime,
@@ -195,10 +196,12 @@ struct CueListPane: View {
     }
 
     private func snapSelectedToPlayhead() {
+        guard !isReadOnly else { return }
         CueCommands.snapCues(selection, to: engine.currentTime, document: document, undoManager: undoManager)
     }
 
     private func nudgeSelected(by step: TimeInterval) {
+        guard !isReadOnly else { return }
         CueCommands.nudgeCues(selection, by: step, document: document, undoManager: undoManager)
     }
 

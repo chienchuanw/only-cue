@@ -2,6 +2,10 @@
 
 A native macOS app for lighting designers to plan cue lists against media. See `docs/` for the full picture; start with `README.md`.
 
+## Feature workflow
+
+Follow the standard feature lifecycle: brainstorm/design → spec → plan → GitHub issue(s) → TDD implementation → CI green → PR → review → merge.
+
 ## Pull requests
 
 This project forks the `gh-pr` skill's PR templates. When the `gh-pr` skill runs Step 9c ("Read the template"), it MUST read from `.github/PULL_REQUEST_TEMPLATE/{PR_TYPE}.md` in this repo, NOT from the skill's bundled `<skill-path>/templates/{PR_TYPE}.md`. The forked templates include the OnlyCue verification block which is mandatory on every PR.
@@ -29,6 +33,8 @@ Conventional Commits, lowercase after the prefix, imperative tense. Examples:
 - `docs: clarify .cuelist schema versioning`
 
 Do **not** append `Co-Authored-By` trailers, signatures, or other attribution. The `gh-dev` skill's templates already enforce this; keep it that way.
+
+Never bundle spec/design files into feature or bug-fix commits — commit specs separately and only onto the correct issue branch to avoid losing them from `dev`.
 
 ## Development discipline
 
@@ -63,6 +69,14 @@ If you add a new source folder under `OnlyCue/`, add it as a `sources` path in `
 - `docs/superpowers/plans/` — implementation plans + reusable artifacts (issue body markdown, setup scripts).
 - `OnlyCue/` — app source (created by issue #1).
 - `OnlyCueTests/`, `OnlyCueUITests/` — tests.
+
+## SwiftUI / UI conventions
+
+For SwiftUI gesture work: be cautious with `minimumDistance` and overlapping `.sheet(item:)` / context-menu / drag interactions — verify click-to-seek and accessibility hit-tests still pass before opening a PR.
+
+## Documentation / screenshots
+
+When capturing screenshots for README/docs, always use real screenshots via XCTest/XCUITest UI tests — never use placeholder images.
 
 ## Hard rules
 

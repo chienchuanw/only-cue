@@ -8,12 +8,15 @@ enum LyricsTimeFormat {
     /// Formats `seconds` as `M:SS.mmm`, or `H:MM:SS.mmm` once past an hour.
     /// Negative input clamps to zero.
     static func string(_ seconds: TimeInterval) -> String {
-        let total = max(0, seconds)
-        let whole = Int(total)
-        let millis = Int((total - Double(whole)) * 1000.0 + 0.5)
-        let hours = whole / 3600
-        let minutes = (whole % 3600) / 60
-        let secs = whole % 60
+        // Round to whole milliseconds FIRST, then derive components, so a
+        // near-integer input (e.g. 59.9996) carries into the seconds field
+        // rather than producing a malformed ".1000" fraction.
+        let totalMillis = Int((max(0, seconds) * 1000.0).rounded())
+        let millis = totalMillis % 1000
+        let totalSeconds = totalMillis / 1000
+        let hours = totalSeconds / 3600
+        let minutes = (totalSeconds % 3600) / 60
+        let secs = totalSeconds % 60
         if hours > 0 {
             return String(format: "%d:%02d:%02d.%03d", hours, minutes, secs, millis)
         }

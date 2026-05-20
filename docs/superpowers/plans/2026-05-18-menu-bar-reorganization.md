@@ -15,6 +15,7 @@ Spec: `docs/superpowers/specs/2026-05-18-menu-bar-reorganization-design.md`
 ### Task 1: Failing UITest for the new menu structure
 
 **Files:**
+
 - Create: `OnlyCueUITests/MenuBarReorganizationUITests.swift`
 
 - [ ] **Step 1: Write the failing test**
@@ -95,11 +96,13 @@ Expected: `OnlyCue.xcodeproj` regenerated, no errors. (Folder-rule based
 - [ ] **Step 3: Run the test to verify it fails**
 
 Run:
+
 ```bash
 xcodebuild test -project OnlyCue.xcodeproj -scheme OnlyCue \
   -destination 'platform=macOS' \
   -only-testing:OnlyCueUITests/MenuBarReorganizationUITests 2>&1 | tail -30
 ```
+
 Expected: FAIL — `test_cueMenu_existsWithRenamedCueCommands` and
 `test_pauseAtEachCue_isUnderPlaybackMenu` fail because there is no `Cue`
 menu and `Pause at Each Cue` is still under View;
@@ -118,6 +121,7 @@ git commit -m "test(ui): assert Cue menu and Playback-hosted pause toggle"
 ### Task 2: Reorganize AppCommands — add Cue menu, move pause toggle, trim View
 
 **Files:**
+
 - Modify: `OnlyCue/App/AppCommands.swift`
 
 - [ ] **Step 1: Remove the cue-editing block and pause toggle from the View `CommandGroup`**
@@ -230,20 +234,24 @@ property at the top of the struct is unchanged.
 - [ ] **Step 4: Build to confirm it compiles**
 
 Run:
+
 ```bash
 xcodebuild build -project OnlyCue.xcodeproj -scheme OnlyCue \
   -destination 'platform=macOS' 2>&1 | tail -15
 ```
+
 Expected: `BUILD SUCCEEDED`.
 
 - [ ] **Step 5: Run the new UITest suite to verify it passes**
 
 Run:
+
 ```bash
 xcodebuild test -project OnlyCue.xcodeproj -scheme OnlyCue \
   -destination 'platform=macOS' \
   -only-testing:OnlyCueUITests/MenuBarReorganizationUITests 2>&1 | tail -20
 ```
+
 Expected: PASS — all three tests green.
 
 - [ ] **Step 6: Commit**
@@ -262,12 +270,14 @@ git commit -m "feat(menu): add Cue menu, move Pause toggle to Playback, slim Vie
 - [ ] **Step 1: Run the menu-title-dependent UITests to confirm no regression**
 
 Run:
+
 ```bash
 xcodebuild test -project OnlyCue.xcodeproj -scheme OnlyCue \
   -destination 'platform=macOS' \
   -only-testing:OnlyCueUITests/PlaybackSpeedUITests \
   -only-testing:OnlyCueUITests/NewFromTemplateMenuTests 2>&1 | tail -20
 ```
+
 Expected: PASS — frozen labels (`Speed Up`/`Slow Down`/`Reset Speed`,
 `New from Template…`) untouched, so these stay green.
 
@@ -279,10 +289,12 @@ Expected: no violations.
 - [ ] **Step 3: Full test suite**
 
 Run:
+
 ```bash
 xcodebuild test -project OnlyCue.xcodeproj -scheme OnlyCue \
   -destination 'platform=macOS' 2>&1 | tail -15
 ```
+
 Expected: all tests pass.
 
 - [ ] **Step 4: Manual smoke check (cannot be automated for shortcuts)**
@@ -300,6 +312,7 @@ explicitly in the PR whether manual verification was performed.
 ## Self-Review
 
 **Spec coverage:**
+
 - New `Cue` menu with 6 items + divider → Task 2 Step 2. ✓
 - `Pause at Each Cue` → Playback → Task 2 Step 3. ✓
 - Cue-edit + pause removed from View → Task 2 Step 1. ✓

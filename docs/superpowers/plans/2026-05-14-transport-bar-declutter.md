@@ -15,6 +15,7 @@
 ## File Map
 
 **Modify:**
+
 - `OnlyCue/UI/TransportBar.swift` — primary view changes (remove Play button, gate SMPTE, drop `Last:`, drop `Pause: each cue` indicator + `@AppStorage`).
 - `OnlyCue/UI/DocumentView.swift` — remove the standalone `Button("Add Cue")` (lines 94-97); add a hidden Add Cue button inside `transportShortcuts` to preserve the keyboard shortcut.
 - `OnlyCueUITests/TransportBarScreenshotTests.swift` — rewrite assertions for the LTC-off default (no `smpteTimecode`, no `playPauseButton`) and re-baseline the screenshot.
@@ -22,9 +23,11 @@
   `MainViewDeclutterUITests.swift`, `AudioSettingsUITests.swift`, `AudioSettingsScreenshotTests.swift`, `TempoGridOverlayScreenshotTests.swift`, `DocumentLaunchTests.swift`, `KeyboardSettingsScreenshotTests.swift`, `ExportSheetScreenshotTests.swift`, `OSCMonitorScreenshotTests.swift`, `OSCSettingsScreenshotTests.swift`, `TimecodeSettingsSheetScreenshotTests.swift`.
 
 **Delete:**
+
 - `OnlyCueTests/LastCueElapsedTests.swift` — covers the `TransportBar.lastCueElapsed` helper being removed.
 
 **Untouched:**
+
 - `OnlyCue/App/Keymap.swift`, `OnlyCue/App/KeymapAction.swift` — bindings for `.addCue` and `.playPause` remain as-is.
 - `OnlyCue/LTC/LTCRoutingStore.swift`, `OnlyCue/LTC/LTCRoutingSettings.swift` — read-only consumer; no changes.
 - `OnlyCue/UI/DocumentShortcutHints.swift` — the hint text still references `.addCue`; remains valid.
@@ -36,6 +39,7 @@
 `playPauseButton` is removed in Task 3. Eleven UI tests rely on its existence as a check that the document window finished opening. We migrate them first so Task 3's removal does not cascade. `currentTimeReadout` is the always-on HMS `staticText` (already exists at TransportBar.swift:90) and survives every later change in this plan.
 
 **Files:**
+
 - Modify (replace `app.buttons["playPauseButton"]` with `app.staticTexts["currentTimeReadout"]` and adjust assertion messages):
   - `OnlyCueUITests/MainViewDeclutterUITests.swift:19`
   - `OnlyCueUITests/AudioSettingsUITests.swift:17`
@@ -52,9 +56,11 @@
 - [ ] **Step 1: Run the existing UI suite to confirm green starting state**
 
 Run:
+
 ```bash
 xcodebuild test -project OnlyCue.xcodeproj -scheme OnlyCue -only-testing:OnlyCueUITests -destination 'platform=macOS' | tail -40
 ```
+
 Expected: All UI tests pass. (If `OnlyCue.xcodeproj` is absent, run `xcodegen generate` first per `CLAUDE.md`.)
 
 - [ ] **Step 2: Replace the sentinel in `MainViewDeclutterUITests.swift`**
@@ -82,6 +88,7 @@ XCTAssertTrue(
 Apply the same swap (`app.buttons["playPauseButton"]` → `app.staticTexts["currentTimeReadout"]`) in each of these files. Where the file extracts a variable named `playPauseButton` (e.g. `ExportSheetScreenshotTests.swift:22`, `OSCMonitorScreenshotTests.swift:25`, `TransportBarScreenshotTests.swift:31`), rename the variable to `timeReadout`. Where the assertion message contains the literal string `"playPauseButton"`, replace with `"currentTimeReadout"`.
 
 Files to edit (left-as-found in the grep output):
+
 - `AudioSettingsUITests.swift`
 - `AudioSettingsScreenshotTests.swift`
 - `TempoGridOverlayScreenshotTests.swift`
@@ -96,9 +103,11 @@ Files to edit (left-as-found in the grep output):
 - [ ] **Step 4: Run the UI suite to confirm still green**
 
 Run:
+
 ```bash
 xcodebuild test -project OnlyCue.xcodeproj -scheme OnlyCue -only-testing:OnlyCueUITests -destination 'platform=macOS' | tail -40
 ```
+
 Expected: All UI tests still pass — the sentinel swap is behaviour-neutral because both elements appear at the same lifecycle point.
 
 - [ ] **Step 5: Commit**
@@ -112,9 +121,10 @@ git commit -m "refactor(uitests): use currentTimeReadout as document-loaded sent
 
 ## Task 2: TDD — gate the SMPTE readout on LTC output, and label it `SMPTE`
 
-The only piece of new behaviour in this plan. Drive it test-first: by default (fresh launch) `LTCRoutingStore.shared.settings.isEnabled == false`, so the `smpteTimecode` static text must not appear. Write that assertion as a failing UI test, watch it fail (the current code unconditionally renders SMPTE), then add the gate and the `SMPTE ` label prefix.
+The only piece of new behaviour in this plan. Drive it test-first: by default (fresh launch) `LTCRoutingStore.shared.settings.isEnabled == false`, so the `smpteTimecode` static text must not appear. Write that assertion as a failing UI test, watch it fail (the current code unconditionally renders SMPTE), then add the gate and the `SMPTE` label prefix.
 
 **Files:**
+
 - Create: `OnlyCueUITests/TransportBarSMPTEGatingUITests.swift`
 - Modify: `OnlyCue/UI/TransportBar.swift:1-124`
 
@@ -168,12 +178,14 @@ xcodegen generate
 - [ ] **Step 3: Run the new test and confirm it fails**
 
 Run:
+
 ```bash
 xcodebuild test -project OnlyCue.xcodeproj -scheme OnlyCue -only-testing:OnlyCueUITests/TransportBarSMPTEGatingUITests -destination 'platform=macOS' | tail -20
 ```
+
 Expected: FAIL with `smpteTimecode must be hidden when LTC output is disabled` — the SMPTE `Text` is currently unconditional in `TransportBar.swift:92-96`.
 
-- [ ] **Step 4: Add the LTC-routing gate and `SMPTE ` label to `TransportBar.swift`**
+- [ ] **Step 4: Add the LTC-routing gate and `SMPTE` label to `TransportBar.swift`**
 
 Open `OnlyCue/UI/TransportBar.swift`. Two changes:
 
@@ -208,9 +220,11 @@ with the gated, labeled version:
 - [ ] **Step 5: Run the new test and confirm it passes**
 
 Run:
+
 ```bash
 xcodebuild test -project OnlyCue.xcodeproj -scheme OnlyCue -only-testing:OnlyCueUITests/TransportBarSMPTEGatingUITests -destination 'platform=macOS' | tail -20
 ```
+
 Expected: PASS.
 
 - [ ] **Step 6: Commit**
@@ -229,6 +243,7 @@ git commit -m "feat(ui): gate SMPTE readout on LTC output and label it \"SMPTE\"
 The Space shortcut for play/pause is already wired through the hidden `transportShortcuts` block in `DocumentView.swift:212-213` (independent of the visible button), so deleting the visible button does not break the shortcut.
 
 **Files:**
+
 - Modify: `OnlyCue/UI/TransportBar.swift:75-86`
 
 - [ ] **Step 1: Delete the Play/Pause `Button` block**
@@ -252,17 +267,21 @@ After deletion, `body` starts directly with `HStack(spacing: 12) { Text(timeRead
 - [ ] **Step 2: Build and confirm the project compiles**
 
 Run:
+
 ```bash
 xcodebuild build -project OnlyCue.xcodeproj -scheme OnlyCue -destination 'platform=macOS' | tail -10
 ```
+
 Expected: BUILD SUCCEEDED.
 
 - [ ] **Step 3: Run the UI suite to verify Space still toggles playback and no test references the removed identifier**
 
 Run:
+
 ```bash
 xcodebuild test -project OnlyCue.xcodeproj -scheme OnlyCue -only-testing:OnlyCueUITests -destination 'platform=macOS' | tail -40
 ```
+
 Expected: All UI tests pass. (Task 7 rewrites `TransportBarScreenshotTests`; for now it still passes because Task 1 already swapped its sentinel away from `playPauseButton`.)
 
 - [ ] **Step 4: Commit**
@@ -279,6 +298,7 @@ git commit -m "refactor(ui): remove play/pause button from transport bar"
 The `A`-equivalent shortcut (currently bound to whichever key `Keymap.swift` assigns to `.addCue`) lives only on the visible Button. Add a hidden `Button` inside the existing `transportShortcuts` `ZStack` so SwiftUI still registers the shortcut after the visible button is gone.
 
 **Files:**
+
 - Modify: `OnlyCue/UI/DocumentView.swift:94-97` (remove the visible button)
 - Modify: `OnlyCue/UI/DocumentView.swift:210-222` (add hidden Add Cue Button to `transportShortcuts`)
 
@@ -341,17 +361,21 @@ In the same file, remove lines 94-97:
 - [ ] **Step 3: Build and confirm the project compiles**
 
 Run:
+
 ```bash
 xcodebuild build -project OnlyCue.xcodeproj -scheme OnlyCue -destination 'platform=macOS' | tail -10
 ```
+
 Expected: BUILD SUCCEEDED.
 
 - [ ] **Step 4: Run the full test suite to confirm Add Cue shortcut still works**
 
 Run:
+
 ```bash
 xcodebuild test -project OnlyCue.xcodeproj -scheme OnlyCue -destination 'platform=macOS' | tail -40
 ```
+
 Expected: All tests pass. If any UI test imports media and presses the Add Cue shortcut, it should still succeed; if any test queries `app.buttons["addCueButton"]` explicitly, expect a failure here — grep `OnlyCueUITests` for `addCueButton` and update those assertions to query state changes rather than the (now-hidden) button. (As of writing, no such reference exists — verified by grep in plan preparation.)
 
 - [ ] **Step 5: Commit**
@@ -366,15 +390,18 @@ git commit -m "refactor(ui): remove add-cue button, keep shortcut via hidden com
 ## Task 5: Remove the `Last:` readout, its helper, and its test file
 
 **Files:**
+
 - Modify: `OnlyCue/UI/TransportBar.swift` — remove `lastCueElapsed` static helper (currently lines 42-53) and its renderer (currently lines 98-103).
 - Delete: `OnlyCueTests/LastCueElapsedTests.swift`
 
 - [ ] **Step 1: Confirm there are no other callers of `lastCueElapsed`**
 
 Run:
+
 ```bash
 grep -rn "lastCueElapsed" OnlyCue OnlyCueTests OnlyCueUITests
 ```
+
 Expected: only matches are inside `TransportBar.swift` and `LastCueElapsedTests.swift`. If any other caller exists, stop and report — the spec assumes none.
 
 - [ ] **Step 2: Delete the renderer block from `TransportBar.swift`**
@@ -424,9 +451,11 @@ xcodegen generate
 - [ ] **Step 6: Run the unit suite to confirm it still compiles and passes**
 
 Run:
+
 ```bash
 xcodebuild test -project OnlyCue.xcodeproj -scheme OnlyCue -only-testing:OnlyCueTests -destination 'platform=macOS' | tail -20
 ```
+
 Expected: All unit tests pass; the deleted test no longer appears in the test list.
 
 - [ ] **Step 7: Commit**
@@ -443,6 +472,7 @@ git commit -m "refactor(ui): remove \"Last:\" elapsed readout and its helper"
 The `pauseAtEachCue` `@AppStorage` key continues to be written by the `⇧⌘P` toggle elsewhere; only the visual indicator in TransportBar is removed.
 
 **Files:**
+
 - Modify: `OnlyCue/UI/TransportBar.swift` — remove `@AppStorage("pauseAtEachCue")` (currently line 18) and the indicator block (currently lines 112-121).
 
 - [ ] **Step 1: Delete the indicator block from `TransportBar.swift`**
@@ -469,17 +499,21 @@ Remove line 18 (the property declaration `@AppStorage("pauseAtEachCue") private 
 - [ ] **Step 3: Confirm no other reference to `pauseAtEachCue` in `TransportBar.swift`**
 
 Run:
+
 ```bash
 grep -n "pauseAtEachCue" OnlyCue/UI/TransportBar.swift
 ```
+
 Expected: no matches. (Other files in the codebase that own the toggle remain untouched — verify with `grep -rn "pauseAtEachCue" OnlyCue` if curious, but do not modify them in this plan.)
 
 - [ ] **Step 4: Build**
 
 Run:
+
 ```bash
 xcodebuild build -project OnlyCue.xcodeproj -scheme OnlyCue -destination 'platform=macOS' | tail -10
 ```
+
 Expected: BUILD SUCCEEDED.
 
 - [ ] **Step 5: Commit**
@@ -496,6 +530,7 @@ git commit -m "refactor(ui): remove \"Pause: each cue\" indicator from transport
 The existing baseline test asserts the presence of `playPauseButton` (already swapped to `currentTimeReadout` in Task 1) and `smpteTimecode`. With the new gating, `smpteTimecode` must be *absent* on fresh launch. Update the assertions, re-run the test to refresh the screenshot artifact, and confirm the artifact reflects the new bar.
 
 **Files:**
+
 - Modify: `OnlyCueUITests/TransportBarScreenshotTests.swift` — adjust assertions for the LTC-off default; keep the screenshot capture.
 
 - [ ] **Step 1: Update the assertions in the baseline test**
@@ -523,10 +558,13 @@ Update the Gherkin comment immediately above the test method to match:
 - [ ] **Step 2: Run the baseline test to refresh the screenshot**
 
 Run:
+
 ```bash
 xcodebuild test -project OnlyCue.xcodeproj -scheme OnlyCue -only-testing:OnlyCueUITests/TransportBarScreenshotTests -destination 'platform=macOS' | tail -30
 ```
+
 Expected: PASS. The runner logs a temp path containing `transport-bar-baseline.png`; open it and confirm visually:
+
 - No Play/Pause button.
 - No `Add Cue` button.
 - No `Last:` readout.
@@ -535,6 +573,7 @@ Expected: PASS. The runner logs a temp path containing `transport-bar-baseline.p
 - HMS clock + (if any cues) `Next: …` visible.
 
 Run:
+
 ```bash
 open "$(find /var/folders -name 'transport-bar-baseline.png' 2>/dev/null | head -n 1)"
 ```
@@ -553,9 +592,11 @@ git commit -m "test(ui): rebaseline transport-bar screenshot for declutter"
 - [ ] **Step 1: Run the full test suite**
 
 Run:
+
 ```bash
 xcodebuild test -project OnlyCue.xcodeproj -scheme OnlyCue -destination 'platform=macOS' | tail -50
 ```
+
 Expected: All tests pass (units + UI + screenshot).
 
 - [ ] **Step 2: Manual: LTC-off path**
@@ -563,6 +604,7 @@ Expected: All tests pass (units + UI + screenshot).
 Launch the app, open a new document, import a short media file.
 
 Verify in the bottom of the Main Pane:
+
 - HMS readout shows `current / total`.
 - No Play/Pause button visible.
 - No standalone Add Cue button visible.
@@ -578,6 +620,7 @@ Verify in the bottom of the Main Pane:
 Open Settings → enable LTC output. Return to the document window.
 
 Verify:
+
 - `SMPTE …` readout appears between the HMS clock and `Next:`.
 - The SMPTE value updates frame-accurately as the playhead moves.
 - Disable LTC output again → the SMPTE readout disappears.
@@ -585,9 +628,11 @@ Verify:
 - [ ] **Step 4: Confirm git history is clean and on a feature branch**
 
 Run:
+
 ```bash
 git log --oneline dev..HEAD
 ```
+
 Expected output: 7 focused commits, one per task (Tasks 1–7). No `Co-Authored-By` trailers (per `CLAUDE.md`).
 
 - [ ] **Step 5: Open the PR**
@@ -607,7 +652,7 @@ Hand off to the `gh:gh-pr` skill. The PR type is `refactor`. Use the OnlyCue for
 | Remove `Last:` readout + helper | Task 5 |
 | Remove `Pause: each cue` indicator | Task 6 |
 | Gate SMPTE on `LTCRoutingStore.shared.settings.isEnabled` | Task 2 |
-| Prefix SMPTE readout with `SMPTE ` | Task 2 |
+| Prefix SMPTE readout with `SMPTE` | Task 2 |
 | Update unit + UI + snapshot tests | Tasks 1, 2, 5, 7 |
 | Drop `accessibilityIdentifier`s for removed elements | Tasks 3, 4, 5, 6 |
 | Verify Space + Add Cue shortcuts still work (manual) | Task 8 |

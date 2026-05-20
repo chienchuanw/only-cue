@@ -42,6 +42,7 @@
 ## Task 1: Add Fade column width constants
 
 **Files:**
+
 - Modify: `OnlyCue/UI/CueListColumnWidths.swift`
 - Test: `OnlyCueTests/CueListColumnWidthsTests.swift` (create if absent; otherwise append)
 
@@ -112,6 +113,7 @@ git commit -m "feat(cue-list): add fade column width constants"
 ## Task 2: Add leading color stripe to CueRowView
 
 **Files:**
+
 - Modify: `OnlyCue/UI/CueRowView.swift`
 - Test: `OnlyCueTests/CueRowViewStripeTests.swift` (create)
 
@@ -224,6 +226,7 @@ git commit -m "feat(cue-list): add leading color stripe to cue row"
 ## Task 3: Add Fade column to CueRowView (display + double-click edit)
 
 **Files:**
+
 - Modify: `OnlyCue/UI/CueRowView.swift`
 - Test: `OnlyCueTests/CueRowViewStripeTests.swift` (extend)
 
@@ -362,6 +365,7 @@ git commit -m "feat(cue-list): add fade column with inline edit to cue row"
 ## Task 4: Wire Fade column into CueListPane (header + row + AppStorage)
 
 **Files:**
+
 - Modify: `OnlyCue/UI/CueListPane.swift`
 
 This task has no new tests on its own (it's wiring); UI test in Task 11 covers it.
@@ -454,6 +458,7 @@ git commit -m "feat(cue-list): wire fade column into list pane header and rows"
 ## Task 5: Create CueNotesSheet (TDD)
 
 **Files:**
+
 - Create: `OnlyCue/UI/CueNotesSheet.swift`
 - Test: `OnlyCueTests/CueNotesSheetTests.swift` (create)
 
@@ -603,6 +608,7 @@ git commit -m "feat(cue-inspector): add CueNotesSheet modal"
 ## Task 6: Create CueTempoSheet (TDD)
 
 **Files:**
+
 - Create: `OnlyCue/UI/CueTempoSheet.swift`
 - Test: `OnlyCueTests/CueTempoSheetTests.swift` (create)
 
@@ -890,6 +896,7 @@ git commit -m "feat(cue-inspector): add CueTempoSheet modal with non-committing 
 ## Task 7: Move tempo-detect plumbing into CueTempoSheet host
 
 **Files:**
+
 - Modify: `OnlyCue/UI/CueListPane.swift`
 - Reference: `OnlyCue/UI/CueInspectorView+Tempo.swift` (will be deleted in Task 9; copy its `detect` static + `DetectOutcome` enum into a free function or new file first)
 
@@ -954,6 +961,7 @@ git commit -m "refactor(tempo): extract detect helper out of inspector extension
 ## Task 8: Wire context menu + sheet hosts into CueListPane
 
 **Files:**
+
 - Modify: `OnlyCue/UI/CueListPane.swift`
 
 - [ ] **Step 1: Add sheet state**
@@ -1153,6 +1161,7 @@ git commit -m "feat(cue-list): context menu opens notes & tempo sheets, change t
 ## Task 9: Trim CueInspectorView
 
 **Files:**
+
 - Modify: `OnlyCue/UI/CueInspectorView.swift`
 - Delete: `OnlyCue/UI/CueInspectorView+Tempo.swift`
 - Delete: `OnlyCueTests/CueInspectorTempoSnapshotTests.swift`
@@ -1378,6 +1387,7 @@ git commit -m "feat(cue-inspector): trim to clock + number/name/fade"
 ## Task 11: UI tests — shortcuts, context menu, stripe, fade column
 
 **Files:**
+
 - Create: `OnlyCueUITests/CueInspectorMinimalUITests.swift`
 
 - [ ] **Step 1: Write the failing UI test**

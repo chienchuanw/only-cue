@@ -72,12 +72,14 @@ A `CueListColumnWidthsStore` (`ObservableObject` backed by `@AppStorage`, or a s
 ### Changes
 
 1. **`OnlyCue/App/AppCommands.swift`** — in the `CommandMenu("Tools")` block, add at the top:
+
    ```swift
    Button("Manage Types…") {
        NotificationCenter.default.post(name: .manageTypesRequested, object: nil)
    }
    Divider()
    ```
+
 2. **`OnlyCue/UI/DocumentView.swift`** — add `@State private var showManageTypes = false`; observe `.manageTypesRequested` and toggle the state; attach `.sheet(isPresented: $showManageTypes) { TypeManagementSheet(document: document) }`.
 3. **`OnlyCue/UI/CueInspectorView.swift`** — delete:
    - the `Button("Manage Types…")` and its preceding `Divider()` (lines ~36–40),

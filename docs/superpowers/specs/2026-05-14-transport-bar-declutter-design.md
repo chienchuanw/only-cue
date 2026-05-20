@@ -46,7 +46,7 @@ The HMS readout (`timeReadout`) remains as the always-on primary playhead clock.
 The SMPTE readout becomes conditional and labeled:
 
 - **Visibility:** rendered only when `LTCRoutingStore.shared.settings.isEnabled == true`. When LTC output is disabled, the SMPTE readout is hidden entirely. This matches the existing gate that already controls the per-media `LTCStrip` visibility in `DocumentView.ltcStripIfEnabled`.
-- **Label:** prefixed with the literal string `SMPTE ` so the two clocks are distinguishable when both are visible. Example: `SMPTE 00:00:03:07`.
+- **Label:** prefixed with the literal string `SMPTE` so the two clocks are distinguishable when both are visible. Example: `SMPTE 00:00:03:07`.
 - **Source of truth:** unchanged — striped LTC if present, else `ProjectTimecodeSettings` + `activeItem.startTimecodeFrames`. The existing `.help(smpteReadoutHelp)` tooltip is preserved.
 
 #### Accepted trade-off
@@ -92,7 +92,7 @@ The Space shortcut for Play/Pause is already declared on the engine-level comman
 - **Unit:** update `TransportBarTests` (if present) to:
   - assert the Play/Pause button is gone
   - assert the SMPTE readout is hidden when `LTCRoutingStore.shared.settings.isEnabled == false`
-  - assert the SMPTE readout, when shown, is prefixed with `SMPTE `
+  - assert the SMPTE readout, when shown, is prefixed with `SMPTE`
   - assert `Last:` is never rendered
   - assert the `Pause: each cue` indicator is never rendered (regardless of `pauseAtEachCue` flag value)
 - **Snapshot:** regenerate the cue-inspector / tempo-group baselines from c58441b if they include the transport bar; otherwise add a new TransportBar snapshot covering the two states (LTC on / LTC off).

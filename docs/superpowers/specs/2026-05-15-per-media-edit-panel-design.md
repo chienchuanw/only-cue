@@ -24,6 +24,7 @@ Today the only way to edit per-media settings is the project-wide **Timecode Set
 ## Data model
 
 ### New field
+
 Add one field to `MediaItem`:
 
 ```swift
@@ -38,10 +39,12 @@ struct MediaItem: Codable, Identifiable, Equatable {
 ```
 
 Semantics:
+
 - `nil` or empty/whitespace-only string ⇒ fall back to `media.displayName` (the file basename).
 - Any non-empty string ⇒ used as the clip's displayed name everywhere user-facing.
 
 ### Schema bump
+
 Project schema version **v11 → v12**. Migration: when decoding a v11 document, set `alternateName = nil` on every `MediaItem`. The field is otherwise additive; no existing data is rewritten.
 
 ### Resolved name helper
@@ -59,17 +62,20 @@ extension MediaItem {
 ```
 
 Call sites that switch from `media.displayName` to `resolvedName`:
+
 - Media Library sidebar row label.
 - Main pane title (when a clip is active).
 - Cue list per-clip groupings (if labelled).
 - CSV/TSV export columns that emit the clip name.
 
 Call sites that **stay on** `media.displayName`:
+
 - File-lookup paths, bookmark resolution, logging, error messages — anywhere the original filename is the contract.
 
 ## UI
 
 ### Entry point
+
 In `ItemListPane` (or whichever view renders the sidebar media rows), attach a `.contextMenu` to each `MediaItem` row:
 
 ```
@@ -80,6 +86,7 @@ Remove          (existing)
 `Edit Media…` sets a `@State var editingItemID: MediaItem.ID?` on the host; the sheet is presented when non-nil.
 
 ### `MediaEditSheet`
+
 A new view file `OnlyCue/UI/MediaEditSheet.swift`. Modal sheet styled consistently with `TimecodeSettingsSheet`. Form layout:
 
 | Field | Control | Notes |
@@ -93,6 +100,7 @@ Buttons: **Cancel** (discards drafts) / **Save** (commits via `CueCommands`).
 Local `@State` drafts mirror the pattern in `MediaTimecodeRow` so in-progress typing isn't clobbered. Save is disabled while the TC field is invalid.
 
 ### Existing `MediaTimecodeRow`
+
 Stays. The per-clip TC rows inside `TimecodeSettingsSheet` remain a valid second entry point for editing `startTimecodeFrames` in bulk. They edit the same field; either surface produces the same result.
 
 ## Commands (undo seam)
@@ -115,15 +123,18 @@ func updateMediaItem(
 ## Tests (TDD)
 
 **Model**
+
 - `MediaItem.resolvedName` returns `media.displayName` when `alternateName` is nil, empty, or whitespace-only.
 - `MediaItem.resolvedName` returns the trimmed alternate when set.
 - v11 → v12 migration on a real fixture: `alternateName == nil` on every item; all other fields preserved.
 
 **Command**
+
 - `updateMediaItem` mutates only the targeted item (other items untouched).
 - Undo after `updateMediaItem` restores all three fields to prior values in one step.
 
 **UI smoke (`OnlyCueUITests`)**
+
 - Right-click a sidebar media row ⇒ `Edit Media…` menu item appears.
 - Activating it opens a sheet with the current Name / Start TC / Mute values pre-filled.
 - Save commits and sidebar label reflects the new name.

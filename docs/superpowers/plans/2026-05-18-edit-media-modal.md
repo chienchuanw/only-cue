@@ -11,12 +11,15 @@
 **Spec:** `docs/superpowers/specs/2026-05-17-edit-media-modal-design.md`
 
 **Conventions:**
+
 - Conventional Commits, lowercase after prefix, imperative. No `Co-Authored-By` trailers.
 - New source files under `OnlyCue/` and `OnlyCueTests/` are picked up by `project.yml` folder globbing — no `project.yml` edit needed, but `xcodegen generate` must be re-run before building (Task 6).
 - Test command (whole suite):
+
   ```bash
   xcodegen generate && xcodebuild test -scheme OnlyCue -destination 'platform=macOS' -only-testing:OnlyCueTests 2>&1 | tail -30
   ```
+
   Single test class: append `-only-testing:OnlyCueTests/ClassName`.
 
 ---
@@ -40,6 +43,7 @@
 A synthesized short H.264 `.mov` is needed by the poster-generator tests (there is no committed media fixture; `SilentAudioFixture` is the established pattern for audio).
 
 **Files:**
+
 - Create: `OnlyCueTests/VideoFixture.swift`
 
 - [ ] **Step 1: Write the helper**
@@ -131,6 +135,7 @@ git commit -m "test(media): add VideoFixture helper for poster-frame tests"
 ### Task 2: VideoPosterGenerator
 
 **Files:**
+
 - Create: `OnlyCue/Media/VideoPosterGenerator.swift`
 - Test: `OnlyCueTests/VideoPosterGeneratorTests.swift`
 
@@ -247,6 +252,7 @@ git commit -m "feat(media): add video poster-frame generator"
 ### Task 3: VideoPosterCache
 
 **Files:**
+
 - Create: `OnlyCue/Media/VideoPosterCache.swift`
 - Test: `OnlyCueTests/VideoPosterCacheTests.swift`
 
@@ -366,6 +372,7 @@ git commit -m "feat(media): add video poster PNG disk cache"
 ### Task 4: MediaPreviewPlan (pure decision)
 
 **Files:**
+
 - Create: `OnlyCue/UI/MediaPreviewPlan.swift`
 - Test: `OnlyCueTests/MediaPreviewPlanTests.swift`
 
@@ -452,6 +459,7 @@ git commit -m "feat(ui): add MediaPreviewPlan preview-source decision"
 SwiftUI views are exercised at the UI-test level (Task 7); their decision/IO seams are already unit-covered by Tasks 2–4. This task wires them into one host view.
 
 **Files:**
+
 - Create: `OnlyCue/UI/MediaPreviewStrip.swift`
 
 - [ ] **Step 1: Write the view**
@@ -608,6 +616,7 @@ git commit -m "feat(ui): add MediaPreviewStrip hero preview view"
 ### Task 6: Restructure MediaEditSheet + wire ItemListPane
 
 **Files:**
+
 - Modify: `OnlyCue/UI/MediaEditSheet.swift`
 - Modify: `OnlyCue/UI/ItemListPane.swift:26-45`
 
@@ -717,6 +726,7 @@ git commit -m "feat(ui): give Edit Media sheet a hero preview and identity row"
 ### Task 7: Extend MediaEditSheet UI test
 
 **Files:**
+
 - Modify: `OnlyCueUITests/MediaEditSheetUITests.swift`
 
 - [ ] **Step 1: Add a new UI test method**

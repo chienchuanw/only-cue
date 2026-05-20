@@ -17,6 +17,7 @@
 ## File-by-file plan
 
 **Created**
+
 - `OnlyCue/Tempo/DerivedTempoGrid.swift` — derived grid from cues; Leaf 2.
 - `OnlyCue/Document/ProjectModel+MigrationV10.swift` — v10 → v11 migration with private `LegacyTempoMap`/`LegacyTempoSection`/`LegacyV10Item` shapes; Leaf 1.
 - `OnlyCueTests/DerivedTempoGridTests.swift` — Leaf 2.
@@ -24,6 +25,7 @@
 - `OnlyCueTests/CueCommandsSetTempoTests.swift` — Leaf 3.
 
 **Modified**
+
 - `OnlyCue/Document/Cue.swift` — add `bpm`/`beatsPerBar`; Leaf 1.
 - `OnlyCue/Document/MediaItem.swift` — remove `tempoMap`; Leaf 1.
 - `OnlyCue/Document/ProjectModel.swift` — bump `currentSchemaVersion` to 11; Leaf 1.
@@ -39,6 +41,7 @@
 - `OnlyCue/App/Keymap.swift` + `KeymapAction.swift` — remove dead actions; Leaf 5.
 
 **Deleted (Leaf 5)**
+
 - `OnlyCue/UI/TempoMapSheet.swift`
 - `OnlyCue/UI/TempoMapSheet+Fields.swift`
 - `OnlyCue/Tempo/TempoMap.swift`
@@ -60,6 +63,7 @@
 ### Task 1.1: Add `bpm` and `beatsPerBar` to `Cue`
 
 **Files:**
+
 - Modify: `OnlyCue/Document/Cue.swift`
 
 - [ ] **Step 1: Write the failing test**
@@ -176,6 +180,7 @@ git commit -m "feat(document): add optional bpm and beatsPerBar to Cue"
 ### Task 1.2: Drop `tempoMap` from `MediaItem`
 
 **Files:**
+
 - Modify: `OnlyCue/Document/MediaItem.swift`
 
 - [ ] **Step 1: Write the failing test**
@@ -237,6 +242,7 @@ git commit -m "feat(document): drop tempoMap from MediaItem"
 ### Task 1.3: Bump `currentSchemaVersion` to 11
 
 **Files:**
+
 - Modify: `OnlyCue/Document/ProjectModel.swift:5`
 
 - [ ] **Step 1: Write the failing test**
@@ -288,6 +294,7 @@ git commit -m "feat(document): bump schema to v11"
 ### Task 1.4: Write the v10 → v11 migration
 
 **Files:**
+
 - Create: `OnlyCue/Document/ProjectModel+MigrationV10.swift`
 - Modify: `OnlyCue/Document/ProjectModel+Migration.swift` (wire dispatch)
 - Create: `OnlyCueTests/ProjectModelMigrationV10Tests.swift`
@@ -629,6 +636,7 @@ Use the `gh-pr` skill, which reads `.github/PULL_REQUEST_TEMPLATE/feat.md`. PR t
 ### Task 2.1: Create `DerivedTempoGrid`
 
 **Files:**
+
 - Create: `OnlyCue/Tempo/DerivedTempoGrid.swift`
 - Create: `OnlyCueTests/DerivedTempoGridTests.swift`
 
@@ -940,6 +948,7 @@ git commit -m "feat(tempo): add DerivedTempoGrid value type"
 ### Task 2.2: Swap `TempoGridOverlay` to consume `DerivedTempoGrid`
 
 **Files:**
+
 - Modify: `OnlyCue/UI/TempoGridOverlay.swift`
 - Modify: `OnlyCue/UI/WaveformContainer+Overlays.swift` (call site)
 
@@ -1004,6 +1013,7 @@ git commit -m "feat(tempo): render grid from DerivedTempoGrid"
 ### Task 2.3: Swap snap commands to `DerivedTempoGrid`
 
 **Files:**
+
 - Modify: `OnlyCue/Commands/CueCommands+Grid.swift`
 
 - [ ] **Step 1: Update the failing test first**
@@ -1067,6 +1077,7 @@ Use `gh-pr`. Title: `feat(tempo): derive grid from per-cue bpm`. Body links the 
 ### Task 3.1: Replace `CueCommands+Tempo.swift` with `setCueTempo`
 
 **Files:**
+
 - Modify: `OnlyCue/Commands/CueCommands+Tempo.swift` (delete-and-rewrite)
 - Create: `OnlyCueTests/CueCommandsSetTempoTests.swift`
 
@@ -1240,6 +1251,7 @@ git commit -m "feat(commands): add setCueTempo and deprecate section commands"
 ### Task 3.2: Add Tempo group to the cue inspector
 
 **Files:**
+
 - Modify: `OnlyCue/UI/CueInspectorView.swift`
 
 - [ ] **Step 1: Add state and a tempo row**
@@ -1355,6 +1367,7 @@ git commit -m "feat(ui): add per-cue bpm and beats/bar inspector fields"
 ### Task 3.3: Wire DSP detect into the inspector
 
 **Files:**
+
 - Modify: `OnlyCue/UI/CueInspectorView.swift`
 
 - [ ] **Step 1: Implement `detectTempo(for:)`**
@@ -1456,6 +1469,7 @@ This leaf reuses the `cueNumber` column infrastructure shipped in #229. Open `On
 ### Task 4.1: Add the column
 
 **Files:**
+
 - Modify: `OnlyCue/UI/CueListPane.swift`
 
 - [ ] **Step 1: Add the `@AppStorage` flag**
@@ -1511,6 +1525,7 @@ Search for `.tempoMapSheet(` and remove the call (likely in `DocumentView.swift`
 - [ ] **Step 1: Edit `OnlyCue/App/AppCommands.swift`**
 
 Remove these blocks (lines 158-173 in current file):
+
 - `Button("Tempo Map…") { … }`
 - `Button("Split Tempo Section at Playhead") { … }`
 - `Button("Add Cues on Every Beat") { … }`
@@ -1564,6 +1579,7 @@ git commit -m "refactor(tempo): remove TempoMap, sheet, and auto-cue menus"
 ### Task 5.4: Update ADR-020
 
 **Files:**
+
 - Modify: `docs/decisions.md` (find ADR-020)
 
 - [ ] **Step 1: Append a "v11 update" note**
@@ -1584,6 +1600,7 @@ Open the Leaf 5 PR with `gh-pr` using the **refactor** template.
 ## Self-Review
 
 **Spec coverage:**
+
 - Data model (Cue gains `bpm`/`beatsPerBar`; MediaItem loses `tempoMap`) — Leaf 1, Tasks 1.1, 1.2.
 - Schema bump v10 → v11 — Leaf 1, Task 1.3.
 - Migration v10 → v11 — Leaf 1, Task 1.4.

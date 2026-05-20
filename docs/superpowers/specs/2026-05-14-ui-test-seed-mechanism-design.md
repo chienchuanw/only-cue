@@ -52,6 +52,7 @@ Three named seeds, each a static factory on the builder:
 Selection is conveyed by an out-of-band file the UI test reads after launch — but simpler: the UI test selects cues via the UI itself after the document opens, so the seed catalog stores cue-time arrays only. The "select first two" variant is implemented by the test code calling out to ⌘-click the first two rows after launch, not by the seed.
 
 This simplifies to two distinct seed JSON shapes:
+
 - `threeCues_1_3_6` (no BPM)
 - `threeCues_1_3_6_with_120bpm_tempo` (BPM cue at 0)
 

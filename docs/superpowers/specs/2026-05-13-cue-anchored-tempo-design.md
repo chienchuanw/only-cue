@@ -78,6 +78,7 @@ The migration is **lossy in two ways** — sub-beat downbeat offsets are rounded
 **Waveform** keeps `View → Show Tempo Grid`. `TempoGridOverlay` is rewritten to consume `DerivedTempoGrid` instead of `TempoMap`. Same line styles for beat vs. downbeat.
 
 **Menus removed** (`OnlyCue/App/AppCommands.swift`):
+
 - `Tools → Tempo Map…`
 - `Tools → Split Tempo Section at Playhead` (+ its `KeymapAction.splitTempoSectionAtPlayhead`)
 - `Tools → Add Cues on Every Beat`
@@ -100,6 +101,7 @@ Modify in `CueCommands+Grid.swift`: `snapSelectedCuesToBeat`/`Bar` take a `Deriv
 **Delete:** `TempoMapTests.swift`, `CueCommandsTempoTests.swift`, `TempoMapSheetScreenshotTests.swift`.
 
 **Add:**
+
 - `DerivedTempoGridTests.swift` — beats/downbeats across a single segment, multi-segment transitions, empty cue list, single-BPM-cue (segment runs to media end), out-of-order cue input (function sorts), `beatsPerBar` inheritance, default fallback when no upstream meter.
 - `ProjectModelMigrationV11Tests.swift` — v10 doc with single-section `tempoMap` migrates losslessly when a cue is at `firstDownbeatSeconds`; multi-section map fans out; lossy fallback inserts synthetic "Tempo" cue; empty map drops cleanly; serialization round-trip.
 - `CueCommandsSetTempoTests.swift` — set BPM, clear BPM, undo round-trip, no cross-cue mutation, clamping on out-of-range input.

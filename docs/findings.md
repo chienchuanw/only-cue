@@ -181,6 +181,7 @@ The fix is to do both:
 In production, `mutate`'s explicit group nests inside the run-loop auto-group — but since each user event runs in its own turn, the auto-group ends up containing exactly one inner group. One undoable unit per user click. ✓
 
 Failure modes by combination:
+
 | `groupsByEvent` | in-`mutate` grouping | symptom |
 |---|---|---|
 | `true` | none | all sync mutations share one auto-group; `undo()` rolls back all |
@@ -330,13 +331,12 @@ Workarounds for actual debugging once the build is green: Product → Run Withou
 
 For E3 media import, the natural acceptance tests are "user picks file via ⌘O" and "user drops file on window". Both are out of XCUITest's reach: `NSOpenPanel` runs out-of-process (sandboxed `com.apple.appkit.xpc.openAndSavePanelService`) so the test app can't see its UI tree, and SwiftUI's `.dropDestination` listens for AppKit drag events that XCUITest can't synthesize. Recourse: cover the contract with unit tests on the import command, and rely on manual verification per `docs/build-sequence.md` detour rule #3.
 
-
-
 ## xcodegen `info:` directive overwrites custom Info.plist
 
 The `targets.<name>.info: { path: ... }` key in `project.yml` causes xcodegen to **generate** an `Info.plist` at the given path — overwriting any custom contents (including `UTExportedTypeDeclarations`).
 
 **Workaround:** don't use the `info:` key. Instead set in target settings:
+
 ```yaml
 GENERATE_INFOPLIST_FILE: NO
 INFOPLIST_FILE: OnlyCue/Resources/Info.plist

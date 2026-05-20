@@ -88,8 +88,8 @@ Pure unit tests on `CuelistCrypto` (no AVFoundation/UI dependency, fast suite):
 
 Document-level tests:
 
-5. Round-trip a populated `ProjectModel` through `fileWrapper` → `init(configuration:)`; assert equality.
-6. Load a committed **legacy plaintext fixture** `.cuelist`; assert it loads, then assert re-saving produces an `OCUE`-magic (encrypted) file.
+1. Round-trip a populated `ProjectModel` through `fileWrapper` → `init(configuration:)`; assert equality.
+2. Load a committed **legacy plaintext fixture** `.cuelist`; assert it loads, then assert re-saving produces an `OCUE`-magic (encrypted) file.
 
 ## 7. Documentation
 

@@ -44,6 +44,7 @@ git log --oneline dev..HEAD
 ```
 
 Expected: three commits already present —
+
 ```
 1212d64 docs(ui): clarify unused 0.5 anchor literal on vertical rail
 7d598b1 fix(ui): cancellable .task hint timer routed through FirstLaunchHintTracker
@@ -72,6 +73,7 @@ Expected: the body renders `ZStack { waveformBody; verticalRail; horizontalRail 
 ## Task 1: `MagnifierAxisLock` — pure helper, RED test first
 
 **Files:**
+
 - Create: `OnlyCueTests/MagnifierAxisLockTests.swift`
 - Create: `OnlyCue/UI/MagnifierAxisLock.swift`
 
@@ -287,6 +289,7 @@ git commit -m "feat(ui): add MagnifierAxisLock pure-helper with one-shot per-dra
 ## Task 2: `WaveformZoomMagnifier` view
 
 **Files:**
+
 - Create: `OnlyCue/UI/WaveformZoomMagnifier.swift`
 
 This task is pure SwiftUI rendering and gesture plumbing — no zoom math, no automated test coverage worth the maintenance cost (the only branching logic, axis-lock, is tested in Task 1; dispatch is tested in Task 4). Manually verify by building and visually checking in Task 6.
@@ -416,6 +419,7 @@ git commit -m "feat(ui): add WaveformZoomMagnifier view (axis-lock-aware two-axi
 ## Task 3: `WaveformContainer+Magnifier` extension and dispatch helpers
 
 **Files:**
+
 - Create: `OnlyCue/UI/WaveformContainer+Magnifier.swift`
 
 This task wires the magnifier to the two existing controllers. The dispatch logic is what Task 4 tests — write the helper now and the test next.
@@ -502,6 +506,7 @@ git commit -m "feat(ui): add WaveformContainer+Magnifier dispatch extension"
 ## Task 4: Dispatch tests through the two real controllers
 
 **Files:**
+
 - Create: `OnlyCueTests/WaveformZoomMagnifierTests.swift`
 
 These tests exercise `applyMagnifierDrag` / `applyMagnifierReset` against the real `WaveformZoomController` + `WaveformVerticalZoomController` instances inside a `WaveformContainer`. They are the regression net for "did we break the wiring through the controllers" — reproducing the coverage of the deleted `WaveformZoomRailHorizontalDragTests.swift`.
@@ -656,6 +661,7 @@ git commit -m "test(ui): add 4 dispatch tests for WaveformContainer+Magnifier"
 ## Task 5: Swap the rails for the magnifier in `WaveformContainer.body`
 
 **Files:**
+
 - Modify: `OnlyCue/UI/WaveformContainer.swift` (`loaded(peaks:)` body around line 67–85)
 
 - [ ] **Step 1: Read the current `loaded(peaks:)` shape**
@@ -714,6 +720,7 @@ private func loaded(peaks: [Float]) -> some View {
 ```
 
 Two things changed:
+
 - `ZStack(alignment: .bottomTrailing) { waveformBody; verticalRail; horizontalRail }` → `waveformBody(peaks:).padding(.horizontal, 8).overlay(alignment: .bottomTrailing) { magnifier.padding(8) }`.
 - `.padding(.horizontal, 8)` moves up to wrap `waveformBody` directly (was outside the `ZStack`); the `magnifier` gets its own `.padding(8)` inside the overlay so it sits ~8pt off both the right and bottom edges.
 
@@ -741,6 +748,7 @@ git commit -m "feat(ui): swap zoom rails for single magnifier overlay in Wavefor
 ## Task 6: Delete the rails
 
 **Files:**
+
 - Delete: `OnlyCue/UI/WaveformZoomRail.swift`
 - Delete: `OnlyCue/UI/WaveformContainer+ZoomRails.swift`
 - Delete: `OnlyCueTests/WaveformZoomRailHorizontalDragTests.swift`

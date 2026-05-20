@@ -1,11 +1,14 @@
 ## Spec source
+
 Build-sequence step 7 — `docs/build-sequence.md` ("Add / edit / delete cues")
 Architecture — `docs/architecture.md#layer-responsibilities` (Commands layer rule: UI never mutates ProjectModel directly)
 
 ## Done when
+
 `M` key adds at playhead. Inline rename, color picker, time edit, delete. All routed through `CueCommands` with `UndoManager`.
 
 ## Leaves
+
 - [ ] Leaf: `CueCommands.addCueAtPlayhead(player:document:)` with undo registration
 - [ ] Leaf: `CueCommands.delete(cueId:document:)` with undo
 - [ ] Leaf: `CueCommands.rename(cueId:to:document:)` with undo
@@ -18,6 +21,7 @@ Architecture — `docs/architecture.md#layer-responsibilities` (Commands layer r
 - [ ] Leaf: `CueCommandsTests` covers each command's add + undo + redo path
 
 ## Acceptance (epic-level Gherkin)
+
 ```gherkin
 Scenario: Drop a cue at the playhead
   Given a document with sample.mp3 loaded
@@ -46,6 +50,7 @@ Scenario: Delete
 ```
 
 ## Out of scope
+
 - Cue markers on waveform (E8)
 - Drag-to-reorder
 - Multi-select operations

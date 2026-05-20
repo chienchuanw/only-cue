@@ -15,11 +15,13 @@
 ## File Map
 
 **Create:**
+
 - `OnlyCue/UI/CueListColumnWidths.swift` — defaults, ranges, clamp helpers, storage keys
 - `OnlyCue/UI/ColumnResizeHandle.swift` — drag-handle view with `NSCursor.resizeLeftRight`
 - `OnlyCueTests/CueListColumnWidthsTests.swift` — unit tests for clamp helpers
 
 **Modify:**
+
 - `OnlyCue/UI/CueListPane.swift` — drop static widths, add `@AppStorage`, pass widths to rows, embed resize handles in header
 - `OnlyCue/UI/CueRowView.swift` — accept `timeWidth` / `numberWidth` parameters instead of reading static constants
 - `OnlyCue/UI/CueInspectorView.swift` — delete the `Manage Types…` button, the preceding `Divider`, the `showTypesSheet` state, the trailing `.sheet`
@@ -33,6 +35,7 @@
 ## Task 1: `CueListColumnWidths` helpers + tests
 
 **Files:**
+
 - Create: `OnlyCue/UI/CueListColumnWidths.swift`
 - Create: `OnlyCueTests/CueListColumnWidthsTests.swift`
 
@@ -144,6 +147,7 @@ git commit -m "feat(cue-list): add CueListColumnWidths helpers (defaults, ranges
 ## Task 2: Thread column widths through `CueRowView` and the header
 
 **Files:**
+
 - Modify: `OnlyCue/UI/CueRowView.swift`
 - Modify: `OnlyCue/UI/CueListPane.swift`
 - Modify: `OnlyCueTests/CueRowLayoutTests.swift`
@@ -325,6 +329,7 @@ git commit -m "refactor(cue-list): thread column widths through CueRowView and h
 ## Task 3: `ColumnResizeHandle` view + unit test
 
 **Files:**
+
 - Create: `OnlyCue/UI/ColumnResizeHandle.swift`
 - Create: `OnlyCueTests/ColumnResizeHandleTests.swift`
 
@@ -463,6 +468,7 @@ git commit -m "feat(cue-list): add ColumnResizeHandle drag view with clamp math"
 ## Task 4: Wire resize handles into the cue list header
 
 **Files:**
+
 - Modify: `OnlyCue/UI/CueListPane.swift`
 
 The header gets two handles: one at the right edge of the Time cell, one at the right edge of the Number cell. The handles operate on bindings that read/write the `@AppStorage` values added in Task 2.
@@ -528,6 +534,7 @@ Replace the `headerRow` computed property body added in Task 2 with this version
 ```
 
 Notes:
+
 - The outer `HStack` uses `spacing: 0` because spacing is now absorbed by the per-cell trailing padding (`rowHorizontalSpacing - 6`), which accounts for the 6pt handle so total visible gap matches the row's `rowHorizontalSpacing`.
 - The handle sits at the trailing edge of each cell, immediately adjacent to the text frame — this is what the user grabs.
 
@@ -536,6 +543,7 @@ Notes:
 Run: `xcodebuild -scheme OnlyCue build` (expected: succeeds).
 
 Manually open `OnlyCue.xcodeproj`, run the app, open or create a project with at least one cue, and:
+
 - Hover the right edge of the Time header → cursor flips to resize.
 - Drag left/right → Time column shrinks/grows, rows track the header.
 - Release, quit the app, relaunch → the new width persists.
@@ -556,6 +564,7 @@ git commit -m "feat(cue-list): drag-resizable Time and Number column headers"
 ## Task 5: Add `Manage Types…` to the Tools menu
 
 **Files:**
+
 - Modify: `OnlyCue/UI/DocumentView.swift` (notification declaration only)
 - Modify: `OnlyCue/App/AppCommands.swift`
 
@@ -604,6 +613,7 @@ git commit -m "feat(menu): add Manage Types... to Tools menu (notification wirin
 ## Task 6: Present `TypeManagementSheet` from `DocumentView` on notification
 
 **Files:**
+
 - Modify: `OnlyCue/UI/DocumentView.swift`
 
 - [ ] **Step 1: Add the state property**
@@ -653,6 +663,7 @@ git commit -m "feat(menu): present TypeManagementSheet on .manageTypesRequested"
 ## Task 7: Remove `Manage Types…` from `CueInspectorView`
 
 **Files:**
+
 - Modify: `OnlyCue/UI/CueInspectorView.swift`
 
 The inspector becomes purely cue-field editing: type picker + number + name + fade + notes + tempo.

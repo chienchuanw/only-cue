@@ -1,11 +1,14 @@
 ## Spec source
+
 Build-sequence step 8 — `docs/build-sequence.md` ("Cue markers on waveform")
 Architecture — `docs/architecture.md` (WaveformView)
 
 ## Done when
+
 Markers drawn at correct x-positions over the waveform. Drag retimes the cue. Click seeks the player.
 
 ## Leaves
+
 - [ ] Leaf: `WaveformView` overlay layer drawing one marker per cue
 - [ ] Leaf: Marker hit-testing for click/drag
 - [ ] Leaf: Drag gesture mutates time via `CueCommands.retime` (single undo step per drag)
@@ -14,6 +17,7 @@ Markers drawn at correct x-positions over the waveform. Drag retimes the cue. Cl
 - [ ] Leaf: Snap-to-frame behavior is OFF for v1 (free-form retime)
 
 ## Acceptance (epic-level Gherkin)
+
 ```gherkin
 Scenario: Markers render
   Given a document with 3 cues at 4.25, 12.0, 18.5 and a 30s waveform
@@ -33,6 +37,7 @@ Scenario: Click seeks
 ```
 
 ## Out of scope
+
 - Hover preview / tooltip (E9 polish)
 - Keyboard nudge ("←" / "→" to retime)
 - Snap to grid

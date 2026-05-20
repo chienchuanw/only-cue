@@ -1,10 +1,13 @@
 ## What
+
 Set up signing, notarization, and DMG packaging so MVP can ship.
 
 ## Spec source
+
 `docs/decisions.md` (ADR-007), `docs/verification.md` (Distribution sanity check)
 
 ## Tasks
+
 - [ ] Developer ID Application certificate imported into login keychain
 - [ ] App-specific password for notarization stored in keychain via `xcrun notarytool store-credentials`
 - [ ] Build script `scripts/build-release.sh` — archive, export with Developer ID, notarize, staple
@@ -12,6 +15,7 @@ Set up signing, notarization, and DMG packaging so MVP can ship.
 - [ ] Document the release flow in `docs/release.md` (new file)
 
 ## Done when
+
 - `bash scripts/build-release.sh` produces a notarized `OnlyCue.app`
 - `codesign --verify --deep --strict --verbose=2 OnlyCue.app` clean
 - `spctl --assess --type execute OnlyCue.app` accepts
@@ -23,6 +27,7 @@ Set up signing, notarization, and DMG packaging so MVP can ship.
 **Blocks:** #12
 
 ## Out of scope
+
 - Sparkle / auto-update
 - App Store distribution (ADR-007)
 - CI integration of release builds (a follow-up after C3 lands)

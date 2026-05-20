@@ -30,6 +30,7 @@
 ## Task 1: Pure `snapDeltaToBeat` helper
 
 **Files:**
+
 - Modify: `OnlyCue/UI/CueMarkersGeometry.swift`
 - Test: `OnlyCueTests/CueMarkersGeometryTests.swift`
 
@@ -152,6 +153,7 @@ git commit -m "feat(markers): add snapDeltaToBeat geometry helper"
 This task only restructures state. Solo-drag behavior must remain identical at the end of this task.
 
 **Files:**
+
 - Modify: `OnlyCue/UI/CueMarkersOverlay.swift`
 
 - [ ] **Step 1: Replace the overlay body with lifted drag state**
@@ -415,6 +417,7 @@ git commit -m "refactor(markers): lift drag state to overlay, add hover cursor"
 ## Task 3: Wire `onNudge` and `tempoGrid` through to the overlay
 
 **Files:**
+
 - Modify: `OnlyCue/UI/WaveformContainer.swift`
 - Modify: `OnlyCue/UI/WaveformContainer+Overlays.swift`
 - Modify: `OnlyCue/UI/DocumentView+Bindings.swift` (or wherever `WaveformContainer` is constructed)
@@ -484,6 +487,7 @@ git commit -m "feat(markers): wire onNudge and tempoGrid through to CueMarkersOv
 This task verifies the overlay's commit logic by exercising `CueCommands.nudgeCues` / `CueCommands.retime` semantics, plus the boundary clamp behavior agreed in the spec.
 
 **Files:**
+
 - Create: `OnlyCueTests/CueMarkersOverlayDispatchTests.swift`
 
 - [ ] **Step 1: Write the failing tests**
@@ -571,6 +575,7 @@ git commit -m "test(markers): pin nudgeCues group-shift and clamp contract"
 ## Task 5: UI tests for group drag, replace-on-grab, Shift-snap
 
 **Files:**
+
 - Create: `OnlyCueUITests/CueGroupDragUITests.swift`
 
 - [ ] **Step 1: Survey existing UI-test helpers**

@@ -53,6 +53,7 @@ That's it. No Apple Developer Program enrollment, no certificates, no notarizati
    - **First launch:** double-clicking will show "OnlyCue cannot be opened because the developer cannot be verified." That's expected for an unsigned build.
    - **Right-click → Open** on `/Applications/OnlyCue.app`, then click "Open" in the dialog. The app launches and the system remembers the override for future launches.
    - Alternatively, one-shot bypass via Terminal:
+
      ```bash
      xattr -dr com.apple.quarantine /Applications/OnlyCue.app
      ```
@@ -85,6 +86,7 @@ You need:
 2. Generate a CSR via Keychain Access → Certificate Assistant → "Request a Certificate from a Certificate Authority…" → save to disk.
 3. Upload the CSR, download the `.cer`, double-click to import into the **login** keychain.
 4. Verify:
+
    ```bash
    security find-identity -v -p codesigning login.keychain | grep "Developer ID Application"
    ```

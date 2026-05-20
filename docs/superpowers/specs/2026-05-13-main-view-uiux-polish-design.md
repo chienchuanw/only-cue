@@ -26,6 +26,7 @@ Six independent improvements to the main document view (`DocumentView` + the wav
 ## 1. Rename "OnlyCue" → "Only Cue" (display only)
 
 **Change:** user-facing strings only.
+
 - `Info.plist`: set `CFBundleDisplayName` to `Only Cue` (add it if absent).
 - `FirstLaunchSheet`: "Welcome to Only Cue".
 - Any other visible literal "OnlyCue" in views/alerts/menus → "Only Cue".
@@ -39,6 +40,7 @@ Six independent improvements to the main document view (`DocumentView` + the wav
 ## 2. Declutter the main pane (minimal)
 
 In `DocumentView.mainPane`, **loaded state**:
+
 - Remove `Text("OnlyCue")` title.
 - Remove the `mediaSummary` line ("name — duration"); the media name is already shown via `.navigationSubtitle`. If duration is wanted there, extend the subtitle string — optional, not required.
 - Remove the `cueCount` line entirely (not relocated — it isn't useful enough to keep).
@@ -55,14 +57,17 @@ In `DocumentView.mainPane`, **loaded state**:
 ## 3. High-resolution waveform + render-time bucketing + filled mirrored envelope
 
 ### Peak generation
+
 - `WaveformGenerator` produces a **high-resolution** peak array sized so that at maximum zoom (16×) there is roughly ≤ 1 peak per on-screen pixel. Express this as a fixed large column count (order 8k–16k) or "one peak per N audio frames", whichever the generator expresses more naturally. One `Float` magnitude per column.
 - The `resolution` parameter threaded through `WaveformContainer` is bumped accordingly.
 
 ### Cache
+
 - Same on-disk format (`[Float]`), just longer arrays (~tens to low-hundreds of KB per track).
 - `WaveformCache` keys already include `resolution`, so old 512-entry caches are simply not matched and regenerate on next open — **no migration**.
 
 ### Rendering (`WaveformView`)
+
 - Replace per-peak rounded bars with:
   1. Bucket the source peaks down to the current pixel width (`size.width`), taking the **max** within each bucket. If pixel width ≥ peak count, fall back to direct (or interpolated) sampling.
   2. Build a single closed `Path`: top contour left→right at `midY - peak·midY·verticalZoom`, then bottom contour right→left mirrored, close.
@@ -104,17 +109,20 @@ This makes zoom genuinely reveal detail: more source resolution + per-pixel buck
 ## Testing
 
 **Unit**
+
 - Peak bucketing: N source peaks + pixel width → correct max-per-bucket array; edge cases: width > peak count, width == 1, empty peaks.
 - `x ↔ time` mapping for click-to-seek (including at zoom > 1 with a scroll offset).
 - Interpolation math: `currentTime + rate·dt` clamped to `[0, duration]`; snap-back on observer tick.
 
 **UI tests** (`OnlyCueUITests/`)
+
 - Clicking the waveform moves the playhead to that position.
 - Dragging the playhead line still scrubs and resumes playback on release.
 - Loaded main pane no longer shows the app title, media-summary line, cue-count line, or shortcut hints.
 - Empty state still shows the "Import Media…" button and the shortcut hints.
 
 **Manual / BDD acceptance**
+
 - Given media is playing, the playhead glides smoothly (no 0.1s stepping).
 - Given the pointer is over the playhead line, the cursor is a hand; elsewhere on the waveform it is an arrow.
 - Given a zoomed-in waveform, more amplitude detail is visible than at 1× (not just magnified blocks).

@@ -103,6 +103,7 @@ AVPlayer.volume = 0                                       │
 ## Testing
 
 **Pure / unit (headless):**
+
 - `LTCRoutingSettings` — `isEnabled` default `false`; `isComplete` ⇔ enabled ∧ has `ltc` channel;
   JSON round-trip with and without the `isEnabled` key; `assigning` / `resized` / `withDefaultRoles`
   unchanged.

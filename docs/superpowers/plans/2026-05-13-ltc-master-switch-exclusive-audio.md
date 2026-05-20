@@ -36,6 +36,7 @@
 ## Task 1: `LTCRoutingSettings.isEnabled`
 
 **Files:**
+
 - Modify: `OnlyCue/LTC/LTCRoutingSettings.swift`
 - Test: `OnlyCueTests/LTCRoutingSettingsTests.swift`
 
@@ -199,6 +200,7 @@ git commit -m "feat(ltc): add isEnabled master switch to routing settings"
 ## Task 2: Audio settings — "Enable LTC output" toggle
 
 **Files:**
+
 - Modify: `OnlyCue/UI/AudioSettingsView.swift`
 - Test: `OnlyCueUITests/AudioSettingsUITests.swift` (new; or extend an existing settings UITest)
 
@@ -351,6 +353,7 @@ git commit -m "feat(ltc): enable-LTC toggle in audio settings, gate channel tabl
 ## Task 3: Generalize `LTCAudioOutput.makeBuffer` to multi-channel
 
 **Files:**
+
 - Modify: `OnlyCue/LTC/LTCAudioOutput.swift`
 - Test: `OnlyCueTests/LTCAudioOutputTests.swift`
 
@@ -453,6 +456,7 @@ git commit -m "refactor(ltc): generalize makeBuffer to multiple source channels"
 ## Task 4: `ProgramAudioRingBuffer` (pure)
 
 **Files:**
+
 - Create: `OnlyCue/LTC/ProgramAudioRingBuffer.swift`
 - Test: `OnlyCueTests/ProgramAudioRingBufferTests.swift`
 
@@ -627,6 +631,7 @@ git commit -m "feat(ltc): program-audio ring buffer for tapped media samples"
 ## Task 5: `ProgramAudioTap` — `MTAudioProcessingTap` wrapper
 
 **Files:**
+
 - Create: `OnlyCue/LTC/ProgramAudioTap.swift`
 
 Not headless-testable (needs a live `AVPlayerItem` rendering audio) — verified manually. Keep the type small and dependency-light so it's obviously correct by reading.
@@ -795,6 +800,7 @@ git commit -m "feat(ltc): MTAudioProcessingTap wrapper feeding the program ring 
 ## Task 6: `LTCAudioOutput` — second player node for program audio
 
 **Files:**
+
 - Modify: `OnlyCue/LTC/LTCAudioOutput.swift`
 
 No new unit tests (live-engine path — same testing posture as the existing class; the pure pieces are covered by Tasks 3–4). Verified manually in Task 9.
@@ -823,14 +829,14 @@ In `OnlyCue/LTC/LTCAudioOutput.swift`:
     private var programFramesPerBuffer = 0
 ```
 
-2. In `init()`, attach `programNode`:
+1. In `init()`, attach `programNode`:
 
 ```swift
         engine.attach(playerNode)
         engine.attach(programNode)
 ```
 
-3. Change `start` to accept an optional ring buffer:
+1. Change `start` to accept an optional ring buffer:
 
 ```swift
     /// Begin (or restart) LTC output at `timecode`, on the device + channel the
@@ -849,7 +855,7 @@ In `OnlyCue/LTC/LTCAudioOutput.swift`:
     }
 ```
 
-4. In `restartEngine()`, after connecting `playerNode`, also connect `programNode` with the same `renderFormat`, set the track channels, compute `programFramesPerBuffer`, and prime the program pump:
+1. In `restartEngine()`, after connecting `playerNode`, also connect `programNode` with the same `renderFormat`, set the track channels, compute `programFramesPerBuffer`, and prime the program pump:
 
 ```swift
             engine.connect(playerNode, to: engine.outputNode, format: renderFormat)
@@ -872,11 +878,11 @@ In `OnlyCue/LTC/LTCAudioOutput.swift`:
 
 (If `programRing == nil` or no track channels are assigned, `topUpProgramBuffers` is a no-op — the engine still emits silence on those channels because nothing is scheduled on `programNode`.)
 
-5. In `stop()`: also `programNode.stop()`, `programRing = nil`, `outstandingProgramBuffers = 0`, `trackLeftChannel = nil`, `trackRightChannel = nil`.
+1. In `stop()`: also `programNode.stop()`, `programRing = nil`, `outstandingProgramBuffers = 0`, `trackLeftChannel = nil`, `trackRightChannel = nil`.
 
-6. In `update(at:)`: also `programNode.stop()`, `outstandingProgramBuffers = 0`, `programRing?.flush()`, then after re-cueing the LTC schedule, `programNode.play()` and `topUpProgramBuffers()`.
+2. In `update(at:)`: also `programNode.stop()`, `outstandingProgramBuffers = 0`, `programRing?.flush()`, then after re-cueing the LTC schedule, `programNode.play()` and `topUpProgramBuffers()`.
 
-7. Add the program pump (mirror the LTC pump; reuse `buffersToSchedule`):
+3. Add the program pump (mirror the LTC pump; reuse `buffersToSchedule`):
 
 ```swift
     private func topUpProgramBuffers() {
@@ -915,7 +921,7 @@ In `OnlyCue/LTC/LTCAudioOutput.swift`:
     }
 ```
 
-8. In the refill timer's event handler, also call `topUpProgramBuffers()`:
+1. In the refill timer's event handler, also call `topUpProgramBuffers()`:
 
 ```swift
         timer.setEventHandler { [weak self] in
@@ -926,7 +932,7 @@ In `OnlyCue/LTC/LTCAudioOutput.swift`:
         }
 ```
 
-9. In `handleConfigurationChange()` → `restartEngine()` path — already covered, since `restartEngine` re-creates the `programNode` connection. Make sure `restartEngine` resets `outstandingProgramBuffers = 0` alongside `outstandingBuffers = 0`.
+1. In `handleConfigurationChange()` → `restartEngine()` path — already covered, since `restartEngine` re-creates the `programNode` connection. Make sure `restartEngine` resets `outstandingProgramBuffers = 0` alongside `outstandingBuffers = 0`.
 
 - [ ] **Step 2: Update the one existing caller**
 
@@ -949,6 +955,7 @@ git commit -m "feat(ltc): second player node streams program audio onto track ch
 ## Task 7: `PlayerEngine.setAudioMuted`
 
 **Files:**
+
 - Modify: `OnlyCue/Media/PlayerEngine.swift`
 
 - [ ] **Step 1: Implement (trivial — covered by Task 8's behavior; no separate unit test)**
@@ -981,6 +988,7 @@ git commit -m "feat(media): add setAudioMuted helper to PlayerEngine"
 ## Task 8: `LTCOutputHost` — gate on `isEnabled`, mute AVPlayer, manage the tap
 
 **Files:**
+
 - Modify: `OnlyCue/UI/LTCOutputHost.swift`
 
 - [ ] **Step 1: Implement**
@@ -1102,11 +1110,13 @@ git commit -m "feat(ltc): mute AVPlayer and route program audio through the LTC 
 ## Task 9: Manual verification + docs
 
 **Files:**
+
 - Modify: `docs/architecture.md`, `docs/verification.md`
 
 - [ ] **Step 1: Manual verification against a multichannel interface**
 
 With a multichannel audio interface connected:
+
 1. Fresh `UserDefaults` (or `LTCRoutingStore.shared.resetToDefault()`): confirm `Settings → Audio` shows only the "Enable LTC output" toggle, off; the channel table and warnings are hidden; media plays with audio normally.
 2. Toggle on: the device picker, channel table, and "No channel is assigned to LTC" warning appear.
 3. Assign ch 1 = LTC, ch 2 = Track L, ch 3 = Track R on the interface. Warning clears; no "no track channels" hint.

@@ -16,6 +16,7 @@ ADR template:
 ---
 
 ## ADR-021 — Encrypted `.cuelist` container with a fixed app key (obfuscation + tamper-evidence, not vendor-proof confidentiality)
+
 **Date**: 2026-05-19
 **Status**: Accepted
 **Amends**: ADR-006
@@ -26,6 +27,7 @@ ADR template:
 ---
 
 ## ADR-020 — Tempo map is per-item project data and a visual/snap aid (not musical-time cue binding); the tempo analyzer is on-device DSP behind a protocol
+
 **Date**: 2026-05-13
 **Status**: Accepted (superseded in part by v11 — see "v11 update" below)
 
@@ -36,6 +38,7 @@ ADR template:
 **Reversal cost**: Low–moderate. The `OnlyCue/Tempo/` types + analyzer + overlay + sheet + `CueCommands+Tempo` are a self-contained slice; deleting the feature removes that folder and the schema v8 field (an empty `tempoMap` round-trips harmlessly even if nothing reads it). The one load-bearing commitment is `TempoSection`'s on-disk shape once a `.cuelist` stores a tempo map — additive changes (a time-signature denominator, a per-section label) are fine; restructuring it would need a schema bump + migration. Switching the grid to musical-time cue binding later is a behaviour change but localised (a new `Cue` field + a retime path), not a rewrite. Replacing the DSP analyzer with Core ML / cloud is purely a new `TempoAnalyzer` conformer.
 
 ## ADR-019 — LTC support starts with a pure timecode value model; `fps30drop` is a 30 fps timeline with drop-frame labels (no 29.97)
+
 **Date**: 2026-05-12
 **Status**: Accepted
 **Decision**: Epic #33 (LTC generation + audio routing) is built bottom-up: the first leaf is a `docs/architecture.md#ltc-and-routing` spec + this ADR + a pure `SMPTEFramerate` enum (`fps24` / `fps25` / `fps30` / `fps30drop`, `Codable` with stable `"24"`/`"25"`/`"30"`/`"30df"` tokens) and a pure `Timecode` value type (`HH:MM:SS:FF` for a rate; `init?` validating ranges and drop-frame-skipped numbers; `frameCount` ⇄ components ⇄ `totalSeconds` with the standard drop-frame counting rule). The biphase-mark `LTCEncoder` (80-bit word + sync + parity), Core Audio output-device routing with per-channel LTC/Track assignment, the `.cuelist` framerate/start-offset persistence, striped-LTC playback, and the Audio & Timecode preferences pane are all later leaves that build on this model. Supported rates are 24 / 25 / 30 ND / 30 DF only; `fps30drop` is modelled as a **30 fps** timeline whose timecode *labels* follow the drop-frame rule (`totalSeconds` divides by 30.0), not a true 29.97 timeline. 23.976 / 29.97 / 59.94 / pulldown and LTC chase (slave-to-incoming) are out of scope; MIDI Timecode is delegated to an external app (as CuePoints does with Lockstep).
@@ -43,6 +46,7 @@ ADR template:
 **Reversal cost**: Low. `SMPTEFramerate` + `Timecode` are two self-contained files with no consumers yet; deleting epic #33 removes the `OnlyCue/LTC/` folder. The one load-bearing commitment is `SMPTEFramerate`'s raw-value tokens once a `.cuelist` stores a project framerate (leaf 4) — adding 29.97 etc. later is purely additive (new cases). Switching `fps30drop` to a true-29.97 model later would change `totalSeconds` (and so the LTC↔playback-time mapping) — a behaviour change, but localised to `Timecode` and gated by which framerates the project-settings UI offers.
 
 ## ADR-018 — Keymap is a sparse, forward-tolerant JSON object keyed by a stable `KeymapAction`; the data layer ships before the editor
+
 **Date**: 2026-05-12
 **Status**: Accepted
 **Decision**: Custom keyboard shortcuts (epic #40) are built on a pure `Keymap` value type — a *total* `KeymapAction → KeyChord` map with `Keymap.default` mirroring today's hardcoded `.keyboardShortcut(...)` calls and the number-key cue-creation bindings — persisted as a **sparse** JSON object `{ actionRawValue: { key, modifiers } }` under `keymap.v1` via `KeymapStore` (`@MainActor`, injectable `UserDefaults`). Decoding is lenient: nil/corrupt → `Keymap.default`; missing actions backfilled from defaults; unknown action keys dropped. `KeyChord` is the `Codable` stand-in for SwiftUI's non-`Codable` `KeyboardShortcut` (`key` is one printable character or a reserved special-key name; `.keyboardShortcut` / `.displayString` convert on demand). Conflict detection (`conflicts()`, `actionsConflicting(with:excluding:)`) is *advisory* in v1 — two actions may share a chord; nothing is auto-resolved. The data layer + tests land first (this leaf); the Settings → Keyboard editor UI, per-row conflict UI + reset-to-default, the editable number-key rows, and rewiring `AppCommands` (and the document window's number-key handling) to read the keymap are subsequent leaves.
@@ -50,6 +54,7 @@ ADR template:
 **Reversal cost**: Low. `Keymap` / `KeyChord` / `KeymapAction` / `KeymapStore` are four self-contained files with no consumers yet; deleting the feature removes them and the `keymap.v1` UserDefaults key (inert if unread). The `KeymapAction` raw values are the one thing that's load-bearing once keymaps exist on disk — renaming a case needs a migration shim in `Keymap.decode`. Wiring `AppCommands` to the keymap later is additive (read `KeymapStore.shared.keymap.chord(for:).keyboardShortcut` instead of a literal).
 
 ## ADR-017 — Timeline breakdown view is a per-CuePointType lane layout reusing `isVisible`; no new schema
+
 **Date**: 2026-05-12
 **Status**: Accepted
 **Decision**: The timeline breakdown view (epic #37) renders one lane per visible `CuePointType` via a pure `TimelineBreakdownLayout` (filter by `isVisible`, model order, partition cues by Type) and a `TimelineBreakdownView` shown in `PreviewPane` in place of the waveform when `View → Show Timeline Breakdown` (`⇧⌘B`) is on. Lane visibility is the existing `CuePointType.isVisible` field — toggled through `CueCommands` (undoable), persisted in `.cuelist` with no schema bump. Markers reuse `CueMarkersGeometry.position`. In v1 there is no horizontal zoom in the breakdown view and markers there only select + seek (drag-retime stays on the waveform view).
@@ -57,6 +62,7 @@ ADR template:
 **Reversal cost**: Low. `TimelineBreakdownLayout` + `TimelineBreakdownView` are self-contained; the `PreviewPane` change is one `@ViewBuilder` branch behind an `@AppStorage` flag. `CuePointType.isVisible` already existed, so removing the feature leaves the field inert (as it was before). Adding zoom / retiming / persisted lane order later are additive; persisted lane order would be the only one needing a schema touch.
 
 ## ADR-016 — OSC remote control is receive-only, hand-rolled parser, per-document server
+
 **Date**: 2026-05-10
 **Status**: Accepted
 **Decision**: Implement OSC remote control (epic #35) as a receive-only UDP server using `Network.framework` (`NWListener`), with a hand-rolled OSC 1.0 message parser (no third-party dependency). The pure parts — `OSCParser.parse` and `OSCCommand.from` — are separate testable units; `OSCServer` wraps the listener and hops to the main actor before invoking its command handler. The server is owned per document window (`.oscServerHost` view modifier), all sharing one listen port via `allowLocalEndpointReuse`. Port and an enable toggle live in `Settings → OSC` via `@AppStorage`.
@@ -64,6 +70,7 @@ ADR template:
 **Reversal cost**: Low–medium. The parser and command map are self-contained pure functions; swapping the hand-rolled parser for a library, or moving the server to an app-level singleton with a "target document" picker, are localised changes. Removing OSC entirely deletes the `OnlyCue/OSC/` folder + the host modifier + the Settings pane — no schema or persistence impact (the two `@AppStorage` keys are inert if unread).
 
 ## ADR-015 — Templates carry only CuePointTypes; load semantics are append-merge with fresh UUIDs
+
 **Date**: 2026-05-10
 **Status**: Accepted
 **Decision**: A template is a JSON file under `~/Documents/OnlyCue/Templates/<name>.cuelist-template` that carries only a `schemaVersion: Int`, a `name: String`, and a `[CuePointType]`. Loading a template into an existing project generates a FRESH UUID for each loaded type and appends them to `ProjectModel.cuePointTypes`; existing types keep their IDs. No name-collision detection — duplicates are appended verbatim.
@@ -73,6 +80,7 @@ ADR template:
 **Addendum (new-document-from-template, 2026-05-11).** `File → New from Template…` creates a new document pre-loaded with a template's Type set. SwiftUI's `DocumentGroup` gives no way to pass initial content into the `newDocument:` closure, so the command hands off via a static slot — `TemplateAction.newDocument` validates + parks the template in `TemplateStore.pendingNewDocumentTemplate`, then triggers `NSDocumentController.shared.newDocument(nil)`; `CueListDocument.init()` reads-and-clears the slot synchronously inside that call (single-threaded by construction — hence `nonisolated(unsafe)`). The new project's types get fresh UUIDs, consistent with the load path above. A dynamic `New from Template ▶` submenu listing template files inline was rejected: SwiftUI `Commands` menus don't re-read the disk when opened, so the list would be a stale launch-time snapshot — the `NSOpenPanel` path always reflects the current folder. A splash-screen picker remains a possible future addition; `⇧⌘N` is taken (Show Notes Overlay).
 
 ## ADR-014 — grandMA3 / grandMA2 export targets are best-effort CSV variants with renamed headers
+
 **Date**: 2026-05-10
 **Status**: Accepted
 **Decision**: `ExportTarget.ma3` and `ExportTarget.ma2` produce CSV with the same row shape as the generic CSV target but with grandMA-conventional column labels: `Cue,Name,Trig Time,Fade In,Fade Out,Type,Note`. Both share a single `CueCSVExporter.maCSV` formatter (MA3 and MA2 are identical at the format layer; the case distinction exists so the picker can label them separately and the file extension / content type stay consistent). The picker UI labels both options with "(best-effort)" so users know to validate against their console before relying on the format in production.
@@ -80,6 +88,7 @@ ADR template:
 **Reversal cost**: Low. Each target's format function is a single switch branch; renaming columns or splitting MA3 from MA2 are mechanical refactors. Removing the targets entirely is a single-row enum delete + a small picker re-render. No persistence consequences.
 
 ## ADR-013 — Export pipeline is two orthogonal pure functions plus an AppKit-side action
+
 **Date**: 2026-05-10
 **Status**: Accepted
 **Decision**: Console export (#34) is built as three discrete modules: a `CueExportFilter` (pure `(cues, onlyTypeIDs) -> [Cue]`), a `CueCSVExporter` with `csv(...)` and `tsv(...)` methods both delegating to a private `format(cues:typeNamesByID:delimiter:)` helper that threads the active delimiter into a single escape predicate, and a `CueCSVExportAction` that wraps the pure pair with `NSSavePanel` + disk write. The File menu posts `.exportCuesToCSVRequested`; `DocumentView` receives it and calls the action. Empty filter set is "no filter" passthrough.
@@ -87,6 +96,7 @@ ADR template:
 **Reversal cost**: Low. Each module is independent; collapsing them back into a single function (or splitting the exporter further per-format) is a mechanical refactor with no schema or persistence consequences. The notification name is a string constant; adding/removing entry points is local.
 
 ## ADR-012 — Color resolves from `CuePointType`; drop transitional `Cue.colorHex` (schema v6)
+
 **Date**: 2026-05-08
 **Status**: Accepted
 **Decision**: Remove `Cue.colorHex` from the model. Every UI site that paints a cue color (the row swatch, the waveform marker overlay) resolves color from the cue's `CuePointType` via a new `ProjectModel.colorHex(for cue: Cue) -> String?` helper. The per-row palette popover and `CueCommands.recolor` are deleted; users change a cue's color by picking a different Type from the inspector picker. Bump `schemaVersion` 5 → 6 with a deterministic `migrateFromV5` that decodes the v5 envelope and constructs v6 cues without the field. v1, v2, v3, v4 chains keep their legacy `colorHex` decode for backward-compat parsing but their `toCue()` methods drop it; every pre-v6 source lands on a v6 model.
@@ -94,6 +104,7 @@ ADR template:
 **Reversal cost**: Medium. The migration is one-way (pre-v6 readers cannot open v6 files). Reverting would require a v6 → v5 down-migration that synthesizes per-cue `colorHex` from the Type at decode — losslessly recoverable, but the popover and `recolor` would need to come back to give users editing power again.
 
 ## ADR-011 — `Cue.fadeTime` as a struct with synthesized Codable; symmetric vs split is derived (schema v5)
+
 **Date**: 2026-05-08
 **Status**: Accepted
 **Decision**: Add `Cue.fadeTime: FadeTime` as a required field. `FadeTime` is a value struct with two `TimeInterval` fields, `fadeIn` and `fadeOut`, and synthesized Codable. Symmetric vs split is a derived fact (`fadeIn == fadeOut`), implemented by a pure string parser (`"1"`/`"1.5"` → symmetric, `"1/2"` → split) and a canonical formatter that drops trailing `.0` on whole numbers. Bump `schemaVersion` 4 → 5 with a `migrateFromV4` that backfills `.symmetric(0)` (no fade) on every existing cue; v1, v2, and v3 chains backfill at the `LegacyCue.toCue` / `LegacyV3Cue.toCue` boundary so any pre-v5 source lands on a v5 model with valid fade data.
@@ -101,6 +112,7 @@ ADR template:
 **Reversal cost**: Medium. The migration is one-way (pre-v5 readers cannot open v5 files). Reverting would require a v5 → v4 down-migration that drops `fadeTime` — losing user fade data, but everything else survives.
 
 ## ADR-010 — `Cue.cueNumber` as a required model field with sort-order migration (schema v4)
+
 **Date**: 2026-05-08
 **Status**: Accepted
 **Decision**: Add `Cue.cueNumber: Double` as a required user-facing cue number distinct from `Cue.id: UUID`. `addCueAtPlayhead` assigns the number by an "insert without ripple" rule: empty list → 1.0; at-end → predecessor's number + 1; between two cues → mid-point; before all → successor's number − 1 (may go negative on repeated inserts before the minimum). Bump `schemaVersion` 3 → 4 with a v3 → v4 migration that assigns sequential `cueNumber`s by time order within each item; v1 and v2 migrations chain through the same `assignCueNumbersBySort` helper so any pre-v4 source lands with valid numbers. The migration sort tie-breaks equal `time`s on `id.uuidString` lexicographic order (Swift's `Array.sorted(by:)` is not spec-guaranteed stable, so without this rule the `cueNumber` for cues sharing a timestamp would be implementation-defined; with it, re-running the migration on the same JSON always produces the identical assignment).
@@ -108,6 +120,7 @@ ADR template:
 **Reversal cost**: Medium. The migration is one-way (pre-v4 readers cannot open v4 files). Reverting would require a v4 → v3 down-migration that drops `cueNumber` — losing user numbering, but everything else survives.
 
 ## ADR-009 — CuePoint Types as first-class entities (schema v3)
+
 **Date**: 2026-05-08
 **Status**: Accepted
 **Decision**: Introduce `CuePointType` as a first-class entity in `ProjectModel`. Every `Cue` references a Type by `typeID`. Bump `schemaVersion` to 3 with a v2 → v3 migration that seeds a default Type "General" (`#4ECDC4`) and assigns it to every existing cue. v1 → current chains through the same default-Type seeding.
@@ -115,6 +128,7 @@ ADR template:
 **Reversal cost**: Medium. The migration is one-way (v0.1.0 / multi-items v2 cannot open v3 files). Reverting would require a v3 → v2 down-migration that discards `cuePointTypes` and per-cue `typeID` — losing user organisation, but `colorHex` still survives on the cue.
 
 ## ADR-008 — Multi-media items live in one `.cuelist` (vs N documents)
+
 **Date**: 2026-05-08
 **Status**: Accepted
 **Decision**: A single `.cuelist` document holds an array of `MediaItem`s, each with its own media reference and its own cue list. Multi-file imports append items in selection order. The previous one-media-per-document model is migrated forward via schema v2.
@@ -122,6 +136,7 @@ ADR template:
 **Reversal cost**: Medium. Reverting to single-media documents would require splitting existing v2 documents on save and adding either workspace files or external item ordering — both larger than the original change.
 
 ## ADR-007 — Sandbox off for MVP, ship via Developer ID DMG
+
 **Date**: 2026-05-07
 **Status**: Accepted
 **Decision**: Distribute as a Developer ID-signed, notarized DMG. App Sandbox is **off**.
@@ -129,6 +144,7 @@ ADR template:
 **Reversal cost**: Medium. Adopting sandbox later requires auditing every file/network access and adding entitlements. No code rewrite, but a careful audit.
 
 ## ADR-006 — JSON `.cuelist` document with referenced media
+
 **Date**: 2026-05-07
 **Status**: Accepted (amended by ADR-021 — the on-disk file is now an encrypted envelope around this JSON; the "diffs cleanly under git / inspectable" benefit no longer applies to saved files)
 **Decision**: Project files are pretty-printed JSON. Media is referenced via security-scoped bookmarks, not embedded.
@@ -136,6 +152,7 @@ ADR template:
 **Reversal cost**: Low for JSON-internal changes (versioned migrations). Medium if we ever want a self-contained bundle — we'd add a `.cuelistx` package format alongside, not replace the JSON.
 
 ## ADR-005 — Both audio and video supported from day 1
+
 **Date**: 2026-05-07
 **Status**: Accepted
 **Decision**: MVP supports `.mp3 .wav .aac .m4a .aiff` and `.mp4 .mov`.
@@ -143,6 +160,7 @@ ADR template:
 **Reversal cost**: N/A — adding more types later is trivial.
 
 ## ADR-004 — Lighting designers as the primary audience for v1
+
 **Date**: 2026-05-07
 **Status**: Accepted
 **Decision**: Optimize the v1 workflow for lighting designers and show programmers, mirroring CuePoints.
@@ -150,6 +168,7 @@ ADR template:
 **Reversal cost**: Low if we keep the cue model generic (we do). High if we hard-code lighting-specific UI strings or workflows; we won't.
 
 ## ADR-003 — MVP is a thin slice; LTC and exports defer to phase 2
+
 **Date**: 2026-05-07
 **Status**: Accepted
 **Decision**: v1 ships the core loop only: import → mark → save → reopen.
@@ -157,6 +176,7 @@ ADR template:
 **Reversal cost**: Low — phase 2 features are designed as additive seams.
 
 ## ADR-002 — MVVM with `@Observable` view models, document-based app
+
 **Date**: 2026-05-07
 **Status**: Accepted
 **Decision**: One `CueListDocument` per file via `DocumentGroup` + `ReferenceFileDocument`. View models use Swift's `@Observable` macro. UI never mutates the model directly — all mutations go through `CueCommands`.
@@ -164,6 +184,7 @@ ADR template:
 **Reversal cost**: High once views are written. Worth getting right early.
 
 ## ADR-001 — Native Swift + SwiftUI + AVFoundation; macOS 14+
+
 **Date**: 2026-05-07
 **Status**: Accepted
 **Decision**: Build natively in Swift with SwiftUI for UI and AVFoundation for media. Minimum target is macOS 14 (Sonoma).

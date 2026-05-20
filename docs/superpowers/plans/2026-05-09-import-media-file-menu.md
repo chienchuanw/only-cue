@@ -15,6 +15,7 @@
 ### Task 1: Define notification name and unit test
 
 **Files:**
+
 - Modify: `OnlyCue/UI/DocumentView.swift` (add `extension Notification.Name` at file bottom)
 - Create: `OnlyCueTests/ImportMediaCommandTests.swift`
 
@@ -89,6 +90,7 @@ git commit -m "test(ui): add notification name for import-media menu request"
 ### Task 2: Wire DocumentView to observe the notification
 
 **Files:**
+
 - Modify: `OnlyCue/UI/DocumentView.swift` (add `.onReceive` on `mainPane`)
 - Modify: `OnlyCue/UI/DocumentView.swift:55-57` (remove `.keyboardShortcut("o", …)` from the in-app button)
 
@@ -139,6 +141,7 @@ git commit -m "feat(ui): observe importMediaRequested in DocumentView"
 ### Task 3: Add the File-menu entry in AppCommands
 
 **Files:**
+
 - Modify: `OnlyCue/App/AppCommands.swift`
 
 - [ ] **Step 1: Add `CommandGroup(after: .newItem)` with the menu button**
@@ -165,6 +168,7 @@ Expected: BUILD SUCCEEDED.
 - [ ] **Step 3: Manually verify the menu item exists (smoke test)**
 
 Open the built app, open the File menu, confirm:
+
 - "Import Media…" appears below "New" entries.
 - Shortcut shown is ⌘O.
 - Clicking it opens the system file picker.
@@ -184,6 +188,7 @@ git commit -m "feat(ui): add File > Import Media… menu entry"
 ### Task 4: UI test — File menu opens the import picker
 
 **Files:**
+
 - Create: `OnlyCueUITests/ImportMediaMenuTests.swift`
 
 - [ ] **Step 1: Write the failing UI test**

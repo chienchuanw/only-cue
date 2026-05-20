@@ -1,15 +1,19 @@
 ## Spec source
+
 Build-sequence step 10 — `docs/build-sequence.md` ("Distribution")
 Decisions — `docs/decisions.md` (ADR-007)
 Verification — `docs/verification.md` (Distribution sanity check)
 
 ## Blocked by
+
 Chore C3 (release pipeline must exist first).
 
 ## Done when
+
 A signed, notarized DMG built via the C3 pipeline installs cleanly on a Mac that has never seen the app, with no Gatekeeper warning, and the app launches and runs the manual end-to-end script in `docs/verification.md`.
 
 ## Leaves
+
 - [ ] Leaf: Tag `v0.1.0` on the merge commit that completes E9
 - [ ] Leaf: Run `bash scripts/build-release.sh` against the tag → notarized `OnlyCue.app`
 - [ ] Leaf: `codesign --verify --deep --strict --verbose=2 OnlyCue.app` clean
@@ -19,6 +23,7 @@ A signed, notarized DMG built via the C3 pipeline installs cleanly on a Mac that
 - [ ] Leaf: Create GitHub Release with the DMG attached
 
 ## Acceptance (epic-level Gherkin)
+
 ```gherkin
 Scenario: First-launch on a clean Mac
   Given OnlyCue-0.1.0.dmg downloaded on a Mac that has never seen the app
@@ -33,6 +38,7 @@ Scenario: End-to-end manual script passes
 ```
 
 ## Out of scope
+
 - Sparkle auto-update
 - Mac App Store
 - Crash reporting

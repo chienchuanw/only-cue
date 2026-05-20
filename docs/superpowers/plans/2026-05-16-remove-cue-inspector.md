@@ -42,6 +42,7 @@
 ## Task 1: Rename `InspectorClockHeader` → `PlayheadClockHeader`
 
 **Files:**
+
 - Rename: `OnlyCue/UI/InspectorClockHeader.swift` → `OnlyCue/UI/PlayheadClockHeader.swift`
 - Modify: the renamed file (struct name + accessibility identifier).
 
@@ -108,6 +109,7 @@ git commit -m "refactor(cue-list): rename InspectorClockHeader to PlayheadClockH
 ## Task 2: Delete `CueInspectorView` and its tests
 
 **Files:**
+
 - Delete: `OnlyCue/UI/CueInspectorView.swift`
 - Delete: `OnlyCueTests/CueInspectorMinimalTests.swift`
 - Delete: `OnlyCueUITests/CueInspectorMinimalUITests.swift`
@@ -148,6 +150,7 @@ The three deletions stay in the index until Task 3's commit, which lands them to
 ## Task 3: Pin `PlayheadClockHeader` at the top of `CueListPane`; drop the `VSplitView`
 
 **Files:**
+
 - Modify: `OnlyCue/UI/CueListPane.swift`
 
 The current `body` is a `VSplitView` containing the cue list and the now-deleted `CueInspectorView`. Collapse it to a `VStack` of the new clock view plus the existing cue-list/empty-state group. Drop the now-unused `selectedCue` computed property.
@@ -228,6 +231,7 @@ This commit also lands the three deletions staged in Task 2.
 ## Task 4: Update the `InspectorClockFramerateUITests` identifier
 
 **Files:**
+
 - Modify: `OnlyCueUITests/InspectorClockFramerateUITests.swift`
 
 The file's class name stays (renaming it would conflate scopes with the next task's rename), but the `inspectorClock` identifier inside is dead.
@@ -239,6 +243,7 @@ grep -n "inspectorClock" OnlyCueUITests/InspectorClockFramerateUITests.swift
 ```
 
 Expected output:
+
 ```
 28:            .matching(identifier: "inspectorClock").firstMatch
 29:        XCTAssertTrue(clock.waitForExistence(timeout: 15), "inspectorClock must exist")
@@ -274,6 +279,7 @@ git commit -m "test(cue-list): swap framerate test identifier from inspectorCloc
 ## Task 5: Rename `InspectorClockHeaderUITests` → `PlayheadClockHeaderUITests`
 
 **Files:**
+
 - Rename: `OnlyCueUITests/InspectorClockHeaderUITests.swift` → `OnlyCueUITests/PlayheadClockHeaderUITests.swift`
 - Modify: class name + accessibility identifier swaps + the third test's now-irrelevant `cueInspectorName` lookup.
 
@@ -390,9 +396,11 @@ git commit -m "test(cue-list): rename inspector clock UI tests to playhead clock
 ## Task 6: New layout tests in `CueListPaneLayoutUITests`
 
 **Files:**
+
 - Create: `OnlyCueUITests/CueListPaneLayoutUITests.swift`
 
 Three tests:
+
 1. Clock identifier is present.
 2. No `cueInspector` container exists anywhere in the window.
 3. The clock renders **above** the first cue row (frame check).
@@ -520,6 +528,7 @@ git commit -m "test(cue-list): layout tests for pinned clock and absent inspecto
 ## Task 7: Update stale doc references
 
 **Files:**
+
 - Modify: `OnlyCue/UI/CueTempoDetect.swift`
 - Modify: `OnlyCue/UI/FirstResponderResign.swift`
 
@@ -679,6 +688,7 @@ UI tests are reframed: the old `CueInspectorMinimalUITests` is replaced by `CueL
 ## Screenshots / Demo
 
 ```
+
 Before                                       After
 ┌─────────────────────────┐                 ┌─────────────────────────┐
 │  cue list               │                 │   01:23:45:18           │
@@ -691,6 +701,7 @@ Before                                       After
 │  Name    [Blackout]     │                 │                         │
 │  Fade    [3.0]          │                 │                         │
 └─────────────────────────┘                 └─────────────────────────┘
+
 ```
 
 ## Test Plan
@@ -714,8 +725,10 @@ Before                                       After
 `OnlyCueUITests/InspectorClockFramerateUITests/testClockRerendersWhenFramerateChanges` still fails on this branch **and on `dev`** — same flake documented in PR #292. The full suite passes when this single test is skipped:
 
 ```
+
 xcodebuild ... -skip-testing:OnlyCueUITests/InspectorClockFramerateUITests/testClockRerendersWhenFramerateChanges test
-** TEST SUCCEEDED **
+**TEST SUCCEEDED**
+
 ```
 
 A follow-up issue tracks stabilizing that test.

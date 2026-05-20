@@ -30,7 +30,6 @@ Document window (fresh, untitled) — media library sidebar, preview / waveform 
 ![OnlyCue document window](static/document-window.png)
 <!-- Regenerate: xcodebuild test -project OnlyCue.xcodeproj -scheme OnlyCue -destination 'platform=macOS' -only-testing:OnlyCueUITests/TransportBarScreenshotTests, then copy transport-bar-baseline.png from the runner tmp dir (~/Library/Containers/com.chienchuanw.OnlyCueUITests.xctrunner/Data/tmp/screenshots/) into static/document-window.png. TODO: a media-loaded variant needs a new UI test + media fixture. -->
 
-
 Export Cues sheet (`⇧⌘E`) — format picker and per-cue-type filter:
 
 ![Export Cues sheet](static/export-sheet.png)
@@ -189,4 +188,4 @@ Read in this order:
 
 ## Reference
 
-- CuePoints (the inspiration): https://cuepoints.com/
+- CuePoints (the inspiration): <https://cuepoints.com/>

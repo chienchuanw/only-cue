@@ -7,6 +7,7 @@ Append-only session log. Newer entries on top.
 ## 2026-05-19 — Bypass-mode session: issue #297 — `NSSplitView` constraint-loop crash on the cue-list divider (PR #306, merged to `dev`)
 
 **Shipped (PR [#306](https://github.com/chienchuanw/only-cue/pull/306), merged to `dev` as `c7566c5`…`9e69e3c`, closes [#297](https://github.com/chienchuanw/only-cue/issues/297)):**
+
 - Started from a `logs/error.log` analysis: it was the disassembly of `+[NSApplication _crashOnException:]` (uncaught AppKit `NSException`), no stack. Investigation also found two stale `~/Library/Logs/DiagnosticReports` `.ips` files — an unrelated `DerivedTempoGridTests` array-OOB crash already fixed by `8d4f4e7` (crash 12:29, fix commit 12:57); confirmed by git timeline + a live passing test run. No action needed there.
 - Real bug = open p1 #297. Root cause (systematic-debugging): after `b8dfae0` removed the isolating inner `VSplitView`, the cue-list content's min width reports straight to the hosting view the outer `NSSplitView` measures. The Time/Cue#/Fade columns used rigid `.frame(width:)` in both `CueListPane.headerRow` and `CueRowView`; default floor ≈ 264pt > the 240pt inspector column min, so the splitter could never reach 240 without the content demanding more → bistable 400↔240 snap → constraint-update recursion → `NSGenericException`.
 - User chose to validate the parked candidate `issues/297` branch (`e82c421`: `CueListInspectorMetrics` SSOT, drop `CueListPane`'s standalone `.frame(minWidth:240)`, bound the 30pt clock, plus `SplitDividerCrashUITests`/`CueListInspectorMetricsTests`). TDD red→green completion commit `d136135`: new shared `cueColumnFrame(width:range:)` modifier makes the 3 fixed columns compressible to their range lower bounds under width pressure (header + rows in lockstep), `CueListLayout.headerHorizontalChrome`/`headerMinimumWidth`, and a deterministic regression test `CueListPaneMinWidthTests` (failed 264>240 → green 200≤240).
@@ -18,6 +19,7 @@ Append-only session log. Newer entries on top.
 ## 2026-05-19 — Bypass-mode session: issue #304 — `.cuelist` encryption + "OnlyCue Document" kind (PR #305, merged to `dev`)
 
 **Shipped (PR [#305](https://github.com/chienchuanw/only-cue/pull/305), merged to `dev` as `5b39745`, closes [#304](https://github.com/chienchuanw/only-cue/issues/304)):**
+
 - `.cuelist` files were plaintext JSON (ADR-006). Owner wanted casual-snoop protection + tamper-evidence, with files staying portable and opening transparently (no password, no per-machine key). Brainstormed → spec (`docs/superpowers/specs/2026-05-19-cuelist-encryption-design.md`) → plan (`docs/superpowers/plans/2026-05-19-cuelist-encryption.md`) → strict-TDD in an isolated `issues/304` worktree.
 - New pure `CuelistCrypto` (CryptoKit `AES.GCM`): binary envelope `OCUE` magic + 1-byte version + 12-byte nonce + AES-256-GCM ciphertext + 16-byte tag, wrapping the unchanged pretty-printed sorted-keys JSON. `open` returns bytes unchanged when the magic is absent (legacy plaintext passthrough → re-encrypted on next save). 256-bit key compiled into the binary — extractable by reverse-engineering, explicitly accepted in ADR-021 (amends ADR-006).
 - `CueListDocument` gained thin static `decodeModel`/`encodeModel` helpers (testable without the non-constructible `ReadConfiguration`/`WriteConfiguration`); `ProjectModel` schema/migration untouched (still v12). `Info.plist`: `CFBundleTypeName`/`UTTypeDescription` → "OnlyCue Document", `UTTypeConformsTo` `public.json` → `public.data`, dropped the `application/json` mime tag.
@@ -27,6 +29,7 @@ Append-only session log. Newer entries on top.
 ## 2026-05-19 — Bypass-mode session: issue #302 — menu toggles use Show/Hide verb (PR #303, merged to `dev`); crash #297 reopened
 
 **Shipped (PR [#303](https://github.com/chienchuanw/only-cue/pull/303), merged to `dev` as `55ba45c`, closes [#302](https://github.com/chienchuanw/only-cue/issues/302)):**
+
 - User reported the View-menu `Show …` toggles looked tab-indented. Cause: a SwiftUI `Toggle` in `Commands` renders as a native *checkable* `NSMenuItem`, so AppKit reserves a leading checkmark state-column, indenting toggles relative to plain `Button` items. Brainstormed → spec (`docs/superpowers/specs/2026-05-19-menu-toggle-showhide-design.md`) → plan (`docs/superpowers/plans/2026-05-19-menu-toggle-showhide.md`) → strict-TDD in an isolated `issues/302` worktree.
 - Converted four `Toggle`s in `OnlyCue/App/AppCommands.swift` to state-flipping `Button`s: `Show/Hide Notes Overlay`, `Show/Hide Timeline Breakdown`, `Show/Hide Tempo Grid` (View), and `Pause at Each Cue` ⇄ `Don't Pause at Each Cue` (Playback). `@AppStorage` keys, keyboard shortcuts, and behavior unchanged — only menu-item kind (checkable→plain, removes indent) and the state-dependent title. User chose the Show/Hide verb over inline/trailing checkmark glyphs.
 - New `MenuBarReorganizationUITests.test_viewMenuToggles_useShowHideVerb_andFlipOnClick` (TDD red→green: `e027954` → `1c6a3f4`, rebased to `d17cf68`/`55ba45c`). No frozen-label breakage (`TempoGridOverlayScreenshotTests` uses ⇧⌘G; the `Pause at Each Cue` assertions hold in the default-off state). CI green first run; autonomous review round 1 = approve (one non-blocking nit: new test doesn't reset `showTempoGrid` at teardown).
@@ -37,6 +40,7 @@ Append-only session log. Newer entries on top.
 ## 2026-05-18 — Bypass-mode session: issue #300 — View menu zoom-label disambiguation (PR #301, merged to `dev`)
 
 **Shipped (PR [#301](https://github.com/chienchuanw/only-cue/pull/301), merged to `dev` as `34cc23f`, closes [#300](https://github.com/chienchuanw/only-cue/issues/300)):**
+
 - Follow-up to the menu reorganization (#298): the View menu's horizontal-zoom block gave no axis hint while the vertical block was self-describing. Brainstormed → spec (`docs/superpowers/specs/2026-05-18-view-menu-zoom-labels-design.md`) → plan (`docs/superpowers/plans/2026-05-18-view-menu-zoom-labels.md`) → strict-TDD in an isolated `issues/300` worktree.
 - Renamed three `Button` labels in `OnlyCue/App/AppCommands.swift` `CommandGroup(after: .sidebar)`: `Zoom In` → `Zoom In Horizontally`, `Zoom Out` → `Zoom Out Horizontally`, `Actual Size` → `Actual Horizontal Size` (mirrors existing `Actual Vertical Size` word order). User chose flat relabeling over submenus/Section headers. Zero behavior change — keyboard shortcuts, `NotificationCenter` names, vertical group, display toggles, dividers, structure all unchanged.
 - Updated the sole zoom-label test reference (`MenuBarReorganizationUITests`, line 49) to assert `Zoom In Horizontally` + `Zoom In Vertically` present and bare `Zoom In` absent. TDD red→green (`47e5235` → `9eaa245`, rebased to `6f13915`/`34cc23f`). CI green first run; autonomous review round 1 = approve (nit only).
@@ -45,6 +49,7 @@ Append-only session log. Newer entries on top.
 ## 2026-05-18 — Bypass-mode session: issue #298 — menu bar reorganization (PR #299, merged to `dev`)
 
 **Shipped (PR [#299](https://github.com/chienchuanw/only-cue/pull/299), merged to `dev` as `9fd13da`, closes [#298](https://github.com/chienchuanw/only-cue/issues/298)):**
+
 - Brainstormed → spec (`docs/superpowers/specs/2026-05-18-menu-bar-reorganization-design.md`) → plan (`docs/superpowers/plans/2026-05-18-menu-bar-reorganization.md`) → strict-TDD execution in an isolated `issues/298` worktree.
 - New top-level **Cue** menu (between View and Playback) holding the cue-editing commands; the View menu (`CommandGroup(after: .sidebar)`) slimmed to zoom + display toggles only; **Pause at Each Cue** moved into the **Playback** menu after the speed controls. Single source file `OnlyCue/App/AppCommands.swift`.
 - Six cue commands relabeled (dropped redundant "Selected Cue(s)"): Duplicate at Playhead / Nudge Back / Nudge Forward / Snap to Playhead / Snap to Nearest Beat / Snap to Nearest Bar. Zero behavior change — every keyboard shortcut, `NotificationCenter` name, `.accessibilityIdentifier`, and the `@AppStorage("pauseAtEachCue")` binding preserved; UITest-frozen labels (Speed Up/Slow Down/Reset Speed, New from Template…, etc.) untouched.
@@ -54,6 +59,7 @@ Append-only session log. Newer entries on top.
 ## 2026-05-18 — Bypass-mode session: issue #295 Edit Media modal redesign (PR #296, merged to `dev`) + discovered crash #297
 
 **Shipped (PR [#296](https://github.com/chienchuanw/only-cue/pull/296), merged to `dev` as `f36b7bd`, closes [#295](https://github.com/chienchuanw/only-cue/issues/295)):**
+
 - Brainstormed → spec (`docs/superpowers/specs/2026-05-17-edit-media-modal-design.md`) → plan (`docs/superpowers/plans/2026-05-18-edit-media-modal.md`) → strict-TDD execution in an isolated `issues/295` worktree.
 - New video poster-frame subsystem mirroring the waveform stack: `VideoPosterGenerator` (capture at 10% of duration, clamped ≥ 0, deterministic frame; `VideoPosterError.generationFailed`), `VideoPosterCache` (PNG, keyed by file SHA256 + max pixel size, `~/Library/Caches/OnlyCue/posters/`).
 - `MediaPreviewPlan` — pure waveform/poster/unavailable decision (the unit-testable seam; stale/missing bookmark → fallback).
@@ -507,6 +513,7 @@ extension Sequence where Element == Cue {
 - **Inclusive `<=` on `newTime`** — ensures a cue exactly at the new playhead position triggers. The auto-pause should fire *at* the cue, not after it. Matches the strict-greater convention in `TransportBar.nextCueInterval` (PR [#110](https://github.com/chienchuanw/only-cue/pull/110)) where a cue exactly at currentTime is \"now\" — and pausing on \"now\" is the whole point of this feature.
 
 Both invariants pinned by their own tests in `PauseAtEachCueTests` so a future reader can't soften either bound without breaking a test:
+
 - `test_strictGreaterOnPreviousTime_resumeDoesNotRePause`
 - `test_inclusiveLessThanEqualOnNewTime_cueExactlyAtPlayheadTriggers`
 
@@ -537,6 +544,7 @@ The `engine.rate > 0` guard skips scrubs during pause (rate = 0 throughout). The
 **RED-first TDD discipline:** wrote `OnlyCueTests/PauseAtEachCueTests.swift` (8 tests) first. Forward crossing finds cue / backward motion returns nil / no cues returns nil / no cue in range returns nil / strict-`>` on previousTime / inclusive-`<=` on newTime / multiple cues in range returns first / zero-tick (previousTime == newTime) doesn't trigger. Confirmed RED — `cues.cueCrossed(movingFrom:to:)` doesn't exist. Implemented. 251/251 passing.
 
 **What landed in PR #114 (1 commit, 4 files modified or created):**
+
 - `cfdfdc8 feat(playback): pause-at-each-cue mode for live show calling` —
   - `OnlyCue/Document/Cue+CrossingDetection.swift` (new, 19 lines) — `Sequence where Element == Cue` extension with `cueCrossed(movingFrom:to:)` and explanatory doc comment covering the strict-`>` / inclusive-`<=` invariants.
   - `OnlyCue/UI/DocumentView.swift` — added `@AppStorage(\"pauseAtEachCue\")` storage; added `.onChange(of: engine.currentTime)` modifier on body that calls `cues.cueCrossed(movingFrom:to:)` and pauses when non-nil. Inline comment documenting the `engine.rate > 0` guard and the strict-`>` resume invariant.
@@ -562,6 +570,7 @@ The `engine.rate > 0` guard skips scrubs during pause (rate = 0 throughout). The
 **Why no new test:** the change is a 1-line conditional (`guard mediaDuration > 0`) and a string interpolation. The format itself comes from `TimeFormat.hms`, which has its own unit tests. Adding a sentinel test that re-asserts the format would be redundant. Continuing the precedent established across PR #96 / PR #100 / PR #102 / PR #104 / PR #110 reviews.
 
 **What landed in PR #112 (1 commit, 2 files modified):**
+
 - `db12fc9 feat(ui): show media total duration in the transport bar` —
   - `OnlyCue/UI/TransportBar.swift` — added `var mediaDuration: TimeInterval = 0` parameter; added private `timeReadout` computed prop; the existing `Text(TimeFormat.hms(engine.currentTime))` now reads `Text(timeReadout)`.
   - `OnlyCue/UI/DocumentView.swift` — `TransportBar(engine:cues:)` → multi-line literal initializer also passing `mediaDuration: activeItem?.media.duration ?? 0`.
@@ -629,6 +638,7 @@ static func compactCountdown(_ seconds: TimeInterval) -> String {
 **RED-first TDD discipline:** wrote `OnlyCueTests/NextCueCountdownTests.swift` (11 tests) first. 6 for `nextCueInterval` (no cues, all passed, picks nearest, before-first, exactly-on-cue picks next, unsorted input still picks nearest). 5 for `compactCountdown` (sub-second, sub-minute, sub-hour, hour-or-more, negative clamps). Confirmed RED — `TransportBar.nextCueInterval` doesn't exist; `TimeFormat.compactCountdown` doesn't exist. Implemented both helpers, the view body branch, and the `DocumentView.mainPane` parameter forwarding. Re-ran — 243/243 passing.
 
 **What landed in PR #110 (1 commit, 4 files modified or created):**
+
 - `22df90c feat(ui): show time-until-next-cue countdown in transport bar` —
   - `OnlyCue/UI/TransportBar.swift` — added `var cues: [Cue] = []` parameter; added static `nextCueInterval(currentTime:cues:)` helper with explanatory doc comment; added `if let interval = ...` branch rendering the `\"Next: ...\"` Text in the existing HStack.
   - `OnlyCue/Utilities/Time+Format.swift` — added `TimeFormat.compactCountdown(_:)` static method alongside the existing `hms`, with explanatory doc comment.
@@ -673,6 +683,7 @@ static func filtered(_ cues: [Cue], by query: String) -> [Cue] {
 **RED-first TDD discipline:** wrote `OnlyCueTests/CueListFilterTests.swift` (7 tests) first. Each test exercises `CueListPane.filtered(_:by:)` directly with constructed `Cue` values. Confirmed RED — `CueListPane.filtered` doesn't exist yet. Implemented the helper, the layout refactor, the `visibleCues` plumbing, and the `deleteAtOffsets` fix. Re-ran — 232/232 passing.
 
 **What landed in PR #108 (1 commit, 2 files modified or created):**
+
 - `ba20f2c feat(ui): filter cue list by name or notes` —
   - `OnlyCue/UI/CueListPane.swift` — added `@State private var searchQuery: String = \"\"`; `visibleCues: [Cue]` computed prop reading from `Self.filtered(cues, by: searchQuery)`; static `filtered(_:by:)` helper with explanatory doc comment; `searchField` private view with manual `TextField`, `.roundedBorder` style, padding, and `accessibilityIdentifier(\"cueListSearchField\")` for UI-test reachability; refactored `cueList` into a `VStack(searchField, Divider, scrollableList)` with the existing `ScrollViewReader` + `List` extracted into `scrollableList`; `ForEach` now iterates `visibleCues`; fixed `deleteAtOffsets` to resolve via `visibleCues` (was `cues`).
   - `OnlyCueTests/CueListFilterTests.swift` (new, 73 lines) — 7 tests: empty query, whitespace-only query, name match, notes match, case-insensitivity, no-match, matches-either-name-or-notes.
@@ -737,6 +748,7 @@ static func duplicateAtPlayhead(
 **RED-first TDD discipline:** wrote `CueCommandsDuplicateTests` (3 tests) and `DuplicateCueCommandTests` (1 notification-name pin) first. Confirmed RED — `CueCommands.duplicateAtPlayhead` doesn't exist; `Notification.Name.duplicateSelectedCueAtPlayhead` doesn't exist. Both tests fail to compile. Then implemented the method, the menu item, the `.onReceive` handler, and the notification name extension. Re-ran — 225/225 passing.
 
 **What landed in PR #106 (1 commit, 5 files modified or created):**
+
 - `3b31762 feat(commands): duplicate selected cue at playhead with cmd+d` —
   - `OnlyCue/Commands/CueCommands.swift` — added `duplicateAtPlayhead(cueId:time:document:undoManager:)` static method (28 lines including doc comment) between the `setNotes` and `retime` methods. Pure addition; no changes to existing methods.
   - `OnlyCue/App/AppCommands.swift` — added `Button(\"Duplicate Cue at Playhead\")` with `.keyboardShortcut(\"d\", modifiers: .command)` posting `.duplicateSelectedCueAtPlayhead`. Placed between Snap and Nudge entries (cue commands grouped) under the View menu.
@@ -762,6 +774,7 @@ static func duplicateAtPlayhead(
 **Why no new test (continuing the precedent from PR #96 / PR #100 / PR #102):** single-line state mutation in a `.onChange(of:)` handler — no decision logic, no new types. The compile-time-checked binding (`@State private var selectedCueID: Cue.ID?` on `DocumentView`) already guarantees the assignment compiles. Failure modes: typo on the activeItemID keypath would error at compile; modifier placed on the wrong view would surface during manual verification. SwiftUI `.onChange` itself is a primitive; pinning it would be a sentinel re-asserting a framework guarantee.
 
 **What landed in PR #104 (1 commit, 1 file modified):**
+
 - `30ef9ba fix(ui): clear cue selection when switching active media item` — `OnlyCue/UI/DocumentView.swift` added `.onChange(of: document.model.activeItemID) { _, _ in selectedCueID = nil }` modifier on the `body`, immediately after the existing `.task(id: document.model.activeItemID) { await reloadActive() }`. 6-line addition (modifier + 4 lines of explanatory comment + closing brace). Pairing the two `activeItemID`-keyed modifiers in the same place keeps the \"on item change\" lifecycle hooks together for future readers.
 
 **No follow-up issue from PR #104 review** — merged clean with no comments, no review threads.
@@ -802,6 +815,7 @@ static func duplicateAtPlayhead(
 **Why animate the scroll (200 ms ease-out):** instant scroll \"teleports\" the list and is disorienting at high cue density. 200 ms is short enough not to feel sluggish during rapid arrow-key navigation. ease-out matches the natural deceleration of a tracked scroll gesture.
 
 **Why scroll on every selection change (not just \"external\" ones):** the `.onChange` handler can't easily distinguish \"user clicked row\" from \"external trigger\" without adding a source-of-change flag. In practice:
+
 - Click an offscreen row → row scrolls into view. Desired.
 - Click a marker → row scrolls into view. Desired.
 - Snap / nudge → row stays selected; scroll re-centers if it's drifted, no-op if already centered.
@@ -812,6 +826,7 @@ DAWs / NLEs all do unconditional scroll-to-selection. Tracking source-of-change 
 **Why no new test (continuing the sentinel-test discipline from PR #96 / PR #100):** `ScrollViewReader` and `proxy.scrollTo(_:anchor:)` are SwiftUI primitives. Unit-testing the actual scroll behavior requires ViewInspector / snapshot infrastructure not in the project. The handler is a 3-line addition (`guard`, `withAnimation`, `proxy.scrollTo`); failure modes would surface as compile errors (wrong API) or visible misbehavior (manually verifiable). The sentinel-test precedent established in earlier PR reviews holds: when the type system already guarantees the wiring and a real behavior test would need infra not in the project, skip the test rather than write a sentinel that re-asserts what the compiler already enforces.
 
 **What landed in PR #102 (1 commit, 1 file modified):**
+
 - `363edea feat(ui): auto-scroll cue list to selected row when selection changes` — `OnlyCue/UI/CueListPane.swift::cueList` wrapped existing `List` in `ScrollViewReader { proxy in ... }`. Extended the existing `.onChange(of: selection)` with `withAnimation(.easeOut(duration: 0.2)) { proxy.scrollTo(id, anchor: .center) }`. Added inline comment explaining the unconditional-scroll trade-off so a future reader doesn't try to optimize it away.
 
 **No follow-up issue from PR #102 review** — merged clean with no comments, no review threads.
@@ -849,6 +864,7 @@ if abs(dx) < Self.dragThreshold {
 **Why no new test (a deliberate departure from the project's TDD-strict rule, with precedent):** the change is a 1-line addition to the existing `dragOrTapGesture.onEnded` handler — no decision logic, no new types, no new code paths. The closure plumbing is compile-time-checked across 4 layers (each adds a parameter and forwards it). A unit test pinning the wiring would either be a sentinel that re-asserts what the type system already guarantees, or a SwiftUI gesture-test that needs ViewInspector / snapshot infrastructure not currently in the project. The precedent for skipping sentinel tests was established in PR #96's review thread: *"strong typing prevents accidental divergence; if a future change reintroduces a private formatter / gesture path, it'll fail to compile or surface in the canonical tests."* Existing `CueMarkerStyleTests` (PR #98) pin the rendering contract; existing `CueCommandsTests` cover the seek/retime path. Manual verification documented in the PR test plan. *Lesson:* TDD-strict is the project rule, but TDD-thoughtful means recognizing when the test would have negative information value (sentinel that re-asserts type-system guarantees).
 
 **What landed in PR #100 (1 commit, 4 files modified):**
+
 - `c6a23ed feat(ui): click waveform marker to select its cue in the cue list` —
   - `OnlyCue/UI/CueMarkersOverlay.swift` — added `var onSelectCue: (Cue.ID) -> Void = { _ in }` to `CueMarkersOverlay`; passed `onSelect: { onSelectCue(cue.id) }` to each `CueMarkerView`. Added `var onSelect: () -> Void = {}` on `CueMarkerView`. Tap branch of `dragOrTapGesture.onEnded` now calls `onSelect()` then `onSeek()` with explanatory inline comment.
   - `OnlyCue/UI/WaveformContainer.swift` — added `var onSelectCue: (Cue.ID) -> Void = { _ in }`; forwarded to overlay.
@@ -895,6 +911,7 @@ The view body resolves `private var style: MarkerStyle { MarkerStyle.style(isSel
 **Recurring `prefer_self_in_static_references` lint trip during impl:** SwiftLint flagged 3 violations on `MarkerStyle`'s static instance initializers — `static let normal = MarkerStyle(...)` should be `static let normal = Self(...)` because the type name is the surrounding scope. Same rule that bit `NotesOverlayPreferences` in PR #83. Fixed before push. **Pattern to remember:** inside a type body, use `Self` for its own static-instance / static-method references — `MyType` is correct outside the body, `Self` is correct inside.
 
 **What landed in PR #98 (1 commit, 6 files modified or created):**
+
 - `b060ccf feat(ui): highlight selected cue's waveform marker` —
   - `OnlyCue/UI/CueMarkersOverlay.swift` — added `var selectedCueID: Cue.ID?` to `CueMarkersOverlay`; passed `isSelected: cue.id == selectedCueID` to each `CueMarkerView`. Added nested `MarkerStyle` struct on `CueMarkerView` with `.normal` / `.selected` static instances and `style(isSelected:)` dispatch. Removed the static `lineWidth` / `capHeight` / `capWidth` constants (moved to `MarkerStyle`). Body reads `style.lineWidth` / `style.capWidth` / `style.capHeight`.
   - `OnlyCue/UI/WaveformContainer.swift` — added `var selectedCueID: Cue.ID?` parameter; forwarded to the `CueMarkersOverlay` call site.
@@ -932,6 +949,7 @@ The view body resolves `private var style: MarkerStyle { MarkerStyle.style(isSel
 **RED-first TDD discipline (initial commit `7b5cc09`):** wrote `CueMarkerLabelTests` first pinning `FadeTime.formatNumber(_:)` output for whole and fractional cueNumbers (matching the `SnapCueCommandTests` / `NudgeCueCommandTests` precedent). Confirmed RED (compile error: `CueMarkerView` doesn't exist with the label structure yet). Then added the VStack wrapper, Text, and FadeTime.formatNumber call site. Re-ran — 220/220 passing. Subsequently deleted on review (see above) — but the RED-first discipline still applied during initial development. The retrospective lesson: pinning a formatter that's already pinned elsewhere is value-redundant; future tests should target view-level contract assertions when the underlying formatter is already well-tested.
 
 **What landed in PR #96 (2 commits, 2 files modified):**
+
 - `7b5cc09 feat(ui): show cue number label above each waveform marker` — `OnlyCue/UI/CueMarkersOverlay.swift::CueMarkerView` (+12 lines: VStack wrapper, Text with `.caption2` / `.secondary` / `.fixedSize()`, accessibility identifier, `Self.labelGap = 1` private constant), `OnlyCueTests/CueMarkerLabelTests.swift` (new, 25 lines).
 - `0705db7 fix(ui): pin cue marker layout column to hitwidth for wide labels` — `OnlyCue/UI/CueMarkersOverlay.swift` (+3/-1 lines: `.frame(width: Self.hitWidth)` on the VStack with explanatory comment + comment at `.gesture` site), `OnlyCueTests/CueMarkerLabelTests.swift` (deleted, -25 lines). Net diff for this commit: 2 files changed, +7/-22.
 
@@ -964,6 +982,7 @@ The view body resolves `private var style: MarkerStyle { MarkerStyle.style(isSel
 **RED-first TDD discipline (Task 1 of the nudge feature):** wrote `OnlyCueTests/NudgeCueCommandTests.swift` (2 tests pinning `nudgeSelectedCueBack`/`nudgeSelectedCueForward` raw values to `"OnlyCue.nudgeSelectedCueBack"`/`"OnlyCue.nudgeSelectedCueForward"`) first. Confirmed RED (compile error: `Type 'Notification.Name' has no member 'nudgeSelectedCueBack'`). Then added the extension entries to `CueListPane.swift`'s receiver-owns-the-name block, the `.onReceive` handlers, and the menu Buttons in `AppCommands.swift`. Re-ran — 2/2 passing. The handler logic is a single-line delegation through the already-tested `CueCommands.retime` seam (full coverage in `CueCommandsTests`), so the new test pins the wiring (notification name) and the existing tests cover the mutation semantics.
 
 **What landed in PR #93 (3 commits, 4 files modified or created):**
+
 - `0cd36d1 feat(ui): nudge selected cue with option+arrow keys` — `OnlyCueTests/NudgeCueCommandTests.swift` (new, 19 lines), `OnlyCue/UI/CueListPane.swift` (+22 lines: two `.onReceive` blocks, `nudgeSelected(by:)` private handler, `Self.nudgeStep = 1.0 / 30.0` private constant, two `extension Notification.Name` entries appended at file tail), `OnlyCue/App/AppCommands.swift` (+11 lines: two new `Button`s for back/forward nudge under the View menu).
 - `301fb7c fix(ui): merge custom view items into system view menu` — single-line wrapper change in `AppCommands.swift`: `CommandMenu("View")` → `CommandGroup(after: .sidebar)` with a leading `Divider()`. Closes #94.
 - `05a8978 chore(tests): use let for waveform-magnifier test containers` — `var container` → `let container` in 5 places in `WaveformZoomMagnifierTests.swift`.
@@ -989,6 +1008,7 @@ The view body resolves `private var style: MarkerStyle { MarkerStyle.style(isSel
 **RED-first TDD discipline:** wrote `OnlyCueTests/SnapCueCommandTests.swift` (1 test pinning `Notification.Name.snapSelectedCueToPlayhead.rawValue` to `"OnlyCue.snapSelectedCueToPlayhead"`) first. Confirmed RED (compile error: `Type 'Notification.Name' has no member 'snapSelectedCueToPlayhead'`). Then added the `extension Notification.Name { static let snapSelectedCueToPlayhead = ... }` at the bottom of `CueListPane.swift`, the `.onReceive` and handler in the body, and the menu `Button` in `AppCommands.swift`. Re-ran — 1/1 passing, all 216 unit tests green. The handler logic is a single-line delegation to the already-tested `CueCommands.retime` seam, which has full coverage in `CueCommandsTests` (retime + undo round-trips already verified there) — so the new test pins the wiring (notification name) and the existing tests cover the mutation semantics.
 
 **What landed in PR #91 (1 commit, 3 files modified or created):**
+
 - `69ff8c5 feat(ui): press S to snap selected cue to playhead` — `OnlyCueTests/SnapCueCommandTests.swift` (new, 13 lines), `OnlyCue/UI/CueListPane.swift` (+10 lines: `.onReceive` + `snapSelectedToPlayhead()` handler + `extension Notification.Name` at file tail per receiver-owns-the-name convention), `OnlyCue/App/AppCommands.swift` (+8 lines: new `Divider()` + `Button("Snap Selected Cue to Playhead")` with `.keyboardShortcut("s", modifiers: [])` after the notes-overlay toggle in the View menu).
 
 **No follow-up issue from PR #91 review** — merged with self-LGTM, no review threads.
@@ -1024,6 +1044,7 @@ The view body resolves `private var style: MarkerStyle { MarkerStyle.style(isSel
 **RED-first TDD discipline (Task 1 only — Tasks 2–3 are SwiftUI menu plumbing manually verified):** wrote `OnlyCueTests/ImportMediaCommandTests.swift` (1 test pinning `Notification.Name.importMediaRequested.rawValue` to `"OnlyCue.importMediaRequested"`) first. Ran `xcodebuild test -only-testing:OnlyCueTests/ImportMediaCommandTests` after `xcodegen generate` — failed to compile with `Type 'Notification.Name' (aka 'NSNotification.Name') has no member 'importMediaRequested'`. Confirmed RED. Then added the `extension Notification.Name { static let importMediaRequested = ... }` at the bottom of `DocumentView.swift`; re-ran — 1/1 passing. Confirmed GREEN. The RED→GREEN cycle is captured in commit `6001dd1` (the test + the name extension are inseparable once both exist; either alone would either be dead code or fail to build).
 
 **What landed in PR #80 (4 commits, 3 files modified or created):**
+
 - `6001dd1 test(ui): add notification name for import-media menu request` (Task 1) — `OnlyCueTests/ImportMediaCommandTests.swift` (new, 11 lines) + `extension Notification.Name { static let importMediaRequested = Notification.Name("OnlyCue.importMediaRequested") }` appended to bottom of `DocumentView.swift`. RED→GREEN cycle.
 - `fc57231 feat(ui): observe importMediaRequested in DocumentView` (Task 2) — `.onReceive(NotificationCenter.default.publisher(for: .importMediaRequested)) { _ in showImporter = true }` appended after `.alert(...)` on `mainPane`; removed `.keyboardShortcut("o", modifiers: .command)` from the in-app `Import Media…` button.
 - `f136328 feat(ui): add File > Import Media… menu entry` (Task 3) — `CommandGroup(after: .newItem) { Button("Import Media…") { NotificationCenter.default.post(name: .importMediaRequested, object: nil) }.keyboardShortcut("o", modifiers: .command) }` inserted between the existing `CommandGroup(replacing: .appInfo)` and `CommandMenu("View")` blocks in `AppCommands.swift`.
@@ -1052,6 +1073,7 @@ The view body resolves `private var style: MarkerStyle { MarkerStyle.style(isSel
 **Behavioral impact (one latent inconsistency fixed):** when `showCueIDPrefix` is enabled AND a cue has a non-half-step decimal number (e.g. `1.25`), overlay now renders `[1.25]` instead of the rounded `[1.3]`. Matches the cue inspector exactly. Default state unchanged (prefix off, fontScale 1.0).
 
 **What landed in PR #87 (1 commit, 2 files modified):**
+
 - `c1e9a76 fix(ui): use FadeTime.formatNumber for cue-id prefix; doc Dynamic Type trade-off` — replaced 5-line private `formattedCueNumber` helper with single-line `FadeTime.formatNumber($0.cueNumber)` call at the only call site (`PreviewPane.swift`), and added a "Note on Dynamic Type" paragraph to `NotesOverlayView`'s doc comment.
 
 **No new tests** — `FadeTime.formatNumber`'s rounding contract is already covered by existing `FadeTimeTests`.
@@ -1075,15 +1097,18 @@ The view body resolves `private var style: MarkerStyle { MarkerStyle.style(isSel
 **Why kept macOS keyboard symbols (⌘ ⌥ ⇧ ↑ ↓) but removed decorative emojis (✅ 🟡):** Unicode-wise they overlap (both non-ASCII), but functionally they serve different purposes. ⌘ ⌥ ⇧ are typography for keyboard shortcuts (the ⌘ symbol is on every Mac keyboard); ✅ 🟡 are decorative status badges. The `/readme` skill's "no emojis" hard rule applies to decorative emojis; keyboard symbols are technical typography.
 
 **Skills used (5th bypass-mode sub-pattern):**
+
 - `/readme` skill — followed the template structure (Title → TOC → Status → Build → Documents → Stack → Reference). Hard rule "no emojis" enforced after distinguishing keyboard symbols from decorative emojis.
 - `/planning-with-files` skill — the framing insight: confirmed the repo already implements the pattern (`docs/task_plan.md` + `docs/progress.md` are the equivalents), so the cleanup explicitly delegates to those files instead of duplicating their content.
 
 **Other README structural improvements:**
+
 - `## Table of Contents` added (README now long enough to warrant one).
 - `### Run tests and lint locally` subsection added under `## Build` (canonical xcodebuild + swiftlint commands new contributors need).
 - `## Documents` list extended with `docs/task_plan.md` (entry 9) and `docs/progress.md` (entry 10) so readers know where to find live status.
 
 **What landed in PR #86 (1 commit, 1 file modified):**
+
 - `e7939de docs(readme): split status into release/shipped/up-next; delegate detail to docs/` — single-commit pure-docs PR. No tests, no lint impact, no build impact.
 
 **Manual verification:** read the rewritten README end-to-end in under 2 minutes; every link resolves (issue links, doc links, releases link); every still-relevant claim from the previous status section is preserved (delegated to `docs/`, not lost).
@@ -1111,6 +1136,7 @@ The view body resolves `private var style: MarkerStyle { MarkerStyle.style(isSel
 **Gotcha — Swift raw strings rejected:** the test file initially used `#"...JSON..."#` raw string literals to embed JSON without escaping. Swift 5.0+ supports them but the project's xcodebuild test compile rejected the syntax with "consecutive statements on a line must be separated by ';'" errors. Switched to multi-line `"""..."""` strings with `\` continuation. Project-level Swift parser config or SourceKit version skew suspected; not investigated further.
 
 **What landed in PR #83 (3 commits, 5 files modified or created):**
+
 - `4ba63cc feat(document): add NotesOverlayPreferences with codable round-trip + clamp` (Task 1) — new value type + 5 RED-first tests + `Notification.Name.editNotesOverlayAppearance` extension at the bottom of the file.
 - `a10904c feat(ui): wire NotesOverlayView to prefs and add appearance sheet` (Task 2 + 3) — `NotesOverlayView` now reads `prefs: NotesOverlayPreferences = .default` and a `cueNumberLabel: String?`; defaults match the PR #72 visual exactly. New `NotesOverlayPreferencesSheet.swift` with `Form { Section { Picker(position); Slider(fontScale 0.75...3.0); ColorPicker(textColor); Toggle(solidBg) + ColorPicker(bg); Toggle(showCueIDPrefix); Button("Restore Defaults", role: .destructive) } }`.
 - `c7b0762 feat(ui): wire notes overlay appearance sheet via Tools menu` (Task 4) — `AppCommands` adds a `CommandMenu("Tools")` with "Edit Note Overlay Appearance…"; `DocumentView` observes `editNotesOverlayAppearance` and presents the sheet via `@State showOverlayAppearance` plus an `overlayPrefsBinding: Binding<NotesOverlayPreferences>` that decodes/encodes through `@AppStorage` on every set; `PreviewPane` switches overlay alignment + padding edge based on `prefs.position`.
@@ -1154,11 +1180,13 @@ The view body resolves `private var style: MarkerStyle { MarkerStyle.style(isSel
 **What landed in PR #81 (15 commits, ~10 files modified or created/deleted):**
 
 Polish-survivors (rebased; from PR #81's original narrow scope):
+
 - `013c358 feat(ui): add session-scoped FirstLaunchHintTracker` — singleton `@MainActor` class + 3 RED-first tests + `resetForTesting()` hook.
 - `ea58d3f fix(ui): cancellable .task hint timer routed through FirstLaunchHintTracker` — replaced `DispatchQueue.main.asyncAfter` with `.task { try? await Task.sleep(for: .seconds(1.5)) }`; introduced `hintShowing: Bool` `@State` flag separate from `isHoveringWaveform` so the rails' visibility is `isHoveringWaveform || hintShowing` (no flicker if user is genuinely hovering when the timer fires).
 - `ec0a0bb docs(ui): clarify unused 0.5 anchor literal on vertical rail` — moot when the rail file got deleted in Task 6 but harmless.
 
 Magnifier work:
+
 - `f19814e + 27d9e25` — `MagnifierAxisLock` pure-helper + 8 RED-first tests covering all decision branches.
 - `3037cdb + b77741e` — `WaveformZoomMagnifier` view + `MagnifierDrag` payload struct + post-review fixes (NSCursor leak guard via `.onDisappear`, dropped redundant `.imageScale(.medium)`).
 - `41354b3` — `WaveformContainer+Magnifier` extension wiring the magnifier to the two zoom controllers via `applyMagnifierDrag(_:)` and `applyMagnifierReset()`.
@@ -1167,9 +1195,11 @@ Magnifier work:
 - `8d0b865` — delete the 3 rail files (`WaveformZoomRail.swift`, `WaveformContainer+ZoomRails.swift`, `WaveformZoomRailHorizontalDragTests.swift`).
 
 Post-merge user-driven UI tweak:
+
 - `c1eba70 feat(ui): drop H/V badge and move magnifier to right-edge center` — collapsed the magnifier body from `HStack { glyph; VStack { H badge; V badge } }` to `Image(systemName: "magnifyingglass")` with `.padding(6)` and `Circle()` background. Container's `.overlay(alignment: .bottomTrailing) { magnifier.padding(8) }` → `.overlay(alignment: .trailing) { magnifier.padding(.trailing, 8) }`.
 
 Post-merge correctness fix (gh-fix on self-authored review comment):
+
 - `6351ea9 fix(ui): keep MagnifierAxisLock unresolved sub-threshold regardless of Shift` — reordered threshold check before shift guard + new regression test `test_noShift_belowThreshold_staysUnresolved`.
 
 **Test count:** 9 axis-lock pure tests + 4 dispatch tests + 3 first-launch tracker tests = 16 new tests on this PR. Full unit-test suite green throughout. SwiftLint --strict 0 violations across 84 files. Release build with warnings-as-errors clean.
@@ -1199,6 +1229,7 @@ Post-merge correctness fix (gh-fix on self-authored review comment):
 **RED-first TDD discipline (Task 1 only — Tasks 2 and 3 are AppKit/SwiftUI plumbing manually verified):** wrote `OnlyCueTests/FirstResponderResignTests.swift` (4 tests) first. Ran `xcodebuild test -only-testing:OnlyCueTests/FirstResponderResignTests` after `make generate` — failed to compile with `cannot find 'FirstResponderResign' in scope`. Confirmed RED. Added the pure helper enum; re-ran — 4/4 passing. Confirmed GREEN.
 
 **What landed in PR #79 (3 commits, 3 files created/modified):**
+
 - `6d1435c feat(ui): add FirstResponderResign pure-logic predicate` (Task 1) — 4 RED tests + 25-line `enum FirstResponderResign` with single static `shouldResign(...)` method.
 - `48f62a5 feat(ui): add FirstResponderResignOnOutsideClick ViewModifier with NSEvent monitor` (Task 2) — `ViewModifier` + private file-scope `FirstResponderResignMonitor` `NSViewRepresentable` + `View.resignFirstResponderOnOutsideClick()` extension. SwiftLint nesting violation caught and fixed by lifting `MonitorInstaller` to file scope, then folded into the same commit via `git commit --amend --no-edit` before push.
 - `7d324ff feat(ui): apply resignFirstResponderOnOutsideClick at DocumentView root` (Task 3) — single-line addition to `DocumentView.body` after `.task(id:)`.
@@ -1236,6 +1267,7 @@ Post-merge correctness fix (gh-fix on self-authored review comment):
 **RED-first TDD discipline (Task 1 only — Tasks 2 and 3 are pure SwiftUI rendering, manually verified):** wrote `OnlyCueTests/WaveformZoomRailHorizontalDragTests.swift` (120 lines, 6 tests) first. Ran `xcodebuild test -only-testing:OnlyCueTests/WaveformZoomRailHorizontalDragTests` after `make generate` — failed to compile with `value of type 'WaveformZoomController' has no member 'applyDrag'` and `type 'WaveformZoomController' has no member 'dragPixelsPerStep'`. Confirmed RED. Then added `dragPixelsPerStep: CGFloat = 60` constant + `applyDrag(translation:baseline:anchorFraction:viewportWidth:scrollOffset:)` method to `WaveformZoomController`; re-ran — 6/6 passing. Existing controller tests (15) + vertical-controller tests (10) all still pass. Confirmed GREEN.
 
 **What landed in PR #74 (5 commits, 5 files modified or created):**
+
 - `2245661 feat(ui): add WaveformZoomController.applyDrag for horizontal drag-to-zoom` (Task 1) — `dragPixelsPerStep` constant + `applyDrag(...)` method with multiplicative math `baseline * pow(zoomStep, translation/dragPixelsPerStep)` routing through `setZoom(...)` for scroll-offset anchoring.
 - `4d372c3 feat(ui): add WaveformZoomRail view (axis-parameterized hover rail)` (Task 2) — 126-line view with `enum Axis { .vertical, .horizontal }`, `onDrag` / `onResetRequested` closures, hover-aware fill + cursor push/pop, drag gesture with baseline capture, magnifier-glyph badge.
 - `57c01bf docs: spec for File > Import Media menu item` (user-bundled) — bundles in-scope deletion of `OnlyCue/UI/VerticalZoomDragHandle.swift` (superseded) with a 70-line out-of-scope spec doc for an unrelated File > Import Media feature. Per CLAUDE.md "no mixed-scope PR" rule, paused before opening PR; user explicitly chose to ship as-is via AskUserQuestion.
@@ -1243,6 +1275,7 @@ Post-merge correctness fix (gh-fix on self-authored review comment):
 - `2010fcf docs(plan): cue inspector commit drafts on outside-click implementation plan` (user-bundled) — fully out-of-scope: 461-line implementation plan for cue inspector outside-click commit behavior. User authored mid-PR-work. Per CLAUDE.md rule, also called out in PR body.
 
 **Senior review left three non-blocking soft observations** (all filed as follow-up issue [#77](https://github.com/chienchuanw/only-cue/issues/77)):
+
 1. **First-launch hint timer is non-cancellable and races with hover** — `DispatchQueue.main.asyncAfter(deadline: .now() + 1.5)` fires unconditionally even after view teardown or during real hover. Fix: switch to `.task { try? await Task.sleep(...) }` which auto-cancels on teardown.
 2. **`hasShownFirstLaunchHint` is `@State`, not session-scoped** — may re-fire on every media-item switch. Fix: move to a session-scoped `FirstLaunchHintTracker` singleton.
 3. **`WaveformZoomRail.verticalRail` passes `0.5` as `anchorFraction`** — currently ignored by vertical path. Fix: inline `// unused for vertical axis` comment to prevent reader confusion.
@@ -1252,6 +1285,7 @@ Post-merge correctness fix (gh-fix on self-authored review comment):
 **Two user-authored bundled commits appeared during PR work** (`57c01bf` and `2010fcf`) — both unrelated to PR #74's scope. Per CLAUDE.md "verify which commits belong to the current PR before pushing" rule, paused before opening PR via AskUserQuestion. User chose "Open PR as-is and note the bundle in the body". Both bundled commits explicitly called out in the PR description with timestamps and authorship. New observation: the user is starting to commit specs/plans for upcoming leaves directly onto the in-progress feature branch rather than dev — likely a parallel-work pattern; will continue to surface bundled commits in future PRs.
 
 **Simplify pass — skipped (full 3-agent dispatch).** ~358 lines of new production code (controller + view + extension + test file) but all closely matching the user's verbatim implementation plan. Self-review:
+
 - Reuse: `WaveformZoomRail` is the right abstraction (single view, two rails); `applyDrag` mirrors PR #69's vertical version through `setZoom` which is the cleanest reuse.
 - Quality: extension extraction is the right call for the 250-line cap; baseline-captured drag math avoids accumulating clamping artifacts (locked by tests).
 - Efficiency: O(1) per drag tick; `pow` call is cheap on CGFloat; SwiftUI invalidation is bounded by the controller's `@Observable` properties.
@@ -1295,6 +1329,7 @@ Nothing to simplify.
 **RED-first TDD discipline:** wrote 5 new tests in `OnlyCueTests/MediaItemTests.swift` (12 total, up from 7 in PR #65) covering returns-latest-at-or-before-playhead, returns-nil-before-first-cue, returns-cue-at-exact-playhead-time (boundary case — locks the inclusive `<=`), returns-last-cue-when-playhead-after-all (notes persist past last marker), returns-nil-on-empty-cues. Ran `xcodebuild test -only-testing:OnlyCueTests/MediaItemTests` — failed to compile with `value of type 'MediaItem' has no member 'activeCue'`. Confirmed RED. Then added the `activeCue(at:)` extension to `MediaItem.swift`; re-ran — 12/12 passing in 0.007s. Confirmed GREEN.
 
 **What landed in PR #72 (2 commits, 5 files):**
+
 - `OnlyCue/Document/MediaItem.swift` (+10 lines): `func activeCue(at currentTime: TimeInterval) -> Cue?` extension with `cues.filter { $0.time <= currentTime }.max(by: { $0.time < $1.time })`. Doc comment captures the inclusive-vs-exclusive distinction from `cue(steppingFrom:direction:)`.
 - `OnlyCue/UI/NotesOverlayView.swift` (new, 23 lines): the overlay view — `Text(cue.notes)` with `.font(.title)`, `.foregroundStyle(.primary)`, `.multilineTextAlignment(.center)`, `.padding(.horizontal, 16).padding(.vertical, 12)`, `.frame(maxWidth: 600)`, `.background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 12))`, `.accessibilityIdentifier("notesOverlay")`, gated on `if let cue = activeCue, !cue.notes.isEmpty`.
 - `OnlyCue/UI/PreviewPane.swift` (+10 lines): `@AppStorage("showNotesOverlay")` toggle, `.overlay(alignment: .bottom)` modifier on the `ZStack` with `if showNotesOverlay { NotesOverlayView(activeCue: document.model.activeItem?.activeCue(at: engine.currentTime)).padding(.bottom, 12) }`.
@@ -1303,6 +1338,7 @@ Nothing to simplify.
 - `docs/architecture.md` (+13 lines): new `## Notes overlay` section above `## Phase-2 seams` documenting active-cue resolution rule, toggle persistence, render contract, default visual choices, and the deferral of customisation + ADR to follow-up leaves.
 
 **Simplify pass — skipped (full 3-agent dispatch).** ~52 lines of new production code, all closely matching established patterns:
+
 - Reuse: `activeCue(at:)` is a clean sibling of `cue(steppingFrom:direction:)` — same shape (`cues.filter { ... }.max(by: ...)`), different semantic.
 - Quality: the `if let cue = activeCue, !cue.notes.isEmpty` short-circuit cleanly handles all three null cases (no active item, no cues, empty notes) at the view layer.
 - Efficiency: O(n) per render, where n is cues-per-item — bounded at typical cue counts (tens to maybe a hundred). Same complexity as the existing `cue(steppingFrom:direction:)`.
@@ -1340,6 +1376,7 @@ Nothing to simplify.
 **RED-first TDD discipline:** wrote 5 new tests in `OnlyCueTests/WaveformVerticalZoomControllerTests.swift` (10 total, up from 5 in PR #67) covering zero-translation-keeps-baseline, drag-up-one-step-zooms-in, drag-down-one-step-zooms-out, clamp-at-max-on-extreme-up, clamp-at-min-on-extreme-down. Ran `xcodebuild test -only-testing:OnlyCueTests/WaveformVerticalZoomControllerTests` — failed to compile with `value of type 'WaveformVerticalZoomController' has no member 'applyDrag'`. Confirmed RED. Then added `dragPixelsPerStep` constant and `applyDrag(translation:baseline:)` method on the controller; re-ran — 10/10 passing. Confirmed GREEN.
 
 **What landed in PR #69 (3 commits, 3 files modified, 1 file added):**
+
 - `OnlyCue/UI/WaveformVerticalZoomController.swift` (+10 lines): `dragPixelsPerStep: CGFloat = 60` constant + `applyDrag(translation:baseline:)` method with the multiplicative math.
 - `OnlyCue/UI/VerticalZoomDragHandle.swift` (new, 45 lines): drag handle view — `Rectangle().fill(Color.secondary.opacity(isHovering ? 0.5 : 0.2))`, 10pt fixed height, `accessibilityIdentifier("waveformVerticalZoomDragHandle")`, `.onHover` block toggles hover state and pushes/pops `NSCursor.resizeUpDown`, `DragGesture(minimumDistance: 0)` captures `dragBaseline = controller.zoom` on first `.onChanged` then forwards each translation to `controller.applyDrag(translation:baseline:)`, releases baseline on `.onEnded`.
 - `OnlyCue/UI/WaveformContainer.swift` (~10 lines): extracted existing `loaded(peaks:)` body into a private `waveformBody(peaks:)` method, `loaded(peaks:)` now wraps both `waveformBody(peaks: peaks)` and `VerticalZoomDragHandle(controller: verticalZoom)` in a `VStack(spacing: 0)`. Initial commit `eadee4e` left `.padding(.horizontal, 8)` inside `waveformBody` which made the handle 8pt wider than the waveform on each side; post-merge code review caught the misalignment and `b59c87d` lifted the padding up to the `VStack` so the two children share the same inset and align flush.
@@ -1350,6 +1387,7 @@ Nothing to simplify.
 **gh-fix workflow gotcha re-confirmed (2nd consecutive PR with this pattern):** the gh-fix skill's Step 4 GraphQL query (`reviewThreads.nodes[] | select(.isResolved == false)`) returned EMPTY for PR #69, just as it did for PR #67. Both reviews were posted as PR-level issue comments, not as code-review thread comments — the auto code-review tool's consistent pattern. Workaround: also run `gh pr view N --json comments` alongside the GraphQL query. The skill's Step 4 should probably be updated upstream to fetch BOTH `reviewThreads` AND issue-level `comments` to be complete; captured in MemPalace KG for future reference.
 
 **Simplify pass — skipped (full 3-agent dispatch).** ~95 lines of new production code, all closely matching the established WaveformZoomController + WaveformContainer patterns. Self-review:
+
 - Reuse: `WaveformVerticalZoomController` already shipped from PR #67; the new `applyDrag` method is a natural extension. The drag handle view is genuinely new but the pattern (Rectangle + hover + DragGesture) is canonical SwiftUI.
 - Quality: baseline-captured drag math avoids accumulating clamping artifacts; doc comments capture the rationale on the controller method; the cursor push/pop is the established AppKit-flavored fallback (SwiftUI macOS 14 doesn't have `.cursor()`).
 - Efficiency: per-frame drag updates trigger one `setZoom` call → one assignment to `@Observable` `zoom` property → SwiftUI invalidates the WaveformView. Standard pattern, no new cost.
@@ -1381,6 +1419,7 @@ Nothing to simplify.
 **RED-first TDD discipline:** wrote `OnlyCueTests/WaveformVerticalZoomControllerTests.swift` (50 lines, 5 tests) first. Ran `xcodebuild test -only-testing:OnlyCueTests/WaveformVerticalZoomControllerTests` after `make generate` (xcodegen regen needed because the new controller file wasn't in the project yet) — failed to compile with `cannot find 'WaveformVerticalZoomController' in scope`. Confirmed RED for exactly the expected reason. Then added the controller (`OnlyCue/UI/WaveformVerticalZoomController.swift`, 25 lines) — re-ran the same target — 5/5 passing in 0.003s. Confirmed GREEN. Same TDD pattern as PR #65 (`MediaItem.cue(steppingFrom:direction:)`).
 
 **What landed in PR #67 (3 commits, 4 files):**
+
 - `OnlyCue/UI/WaveformVerticalZoomController.swift` (new, 25 lines) — controller with `setZoom` / `zoomIn` / `zoomOut` / `reset`, `minZoom=1`, `maxZoom=8`, `zoomStep=1.5`. Mirrors `WaveformZoomController.swift:1-95` but without the scroll/anchor math.
 - `OnlyCue/UI/WaveformView.swift` (~2 lines) — `verticalZoom: CGFloat = 1` parameter; `halfHeight` calc gains scale + clip.
 - `OnlyCue/UI/WaveformContainer.swift` (+13 lines) — `@State` controller, pass zoom to `WaveformView`, three `.onReceive` blocks calling the controller's three methods, three new `Notification.Name` entries appended to the existing extension.
@@ -1392,6 +1431,7 @@ Nothing to simplify.
 **gh-fix workflow gotcha discovered:** the skill's Step 4 GraphQL query (`reviewThreads.nodes[] | select(.isResolved == false)`) returned EMPTY for PR #67 even though the reviewer's feedback was real. Cause: the feedback was posted as a PR-level comment (issue comment on the PR), not as a code review thread (which would have come from "Add review" → "Review changes"). GraphQL `reviewThreads` only captures comments attached to a specific code-review thread; PR-level comments live on the issue's `comments` connection. Workaround for this session: also ran `gh pr view N --json comments,reviews` to catch the PR-level comment. This should probably be captured back into the gh-fix skill's Step 4 — the query needs to fetch BOTH `reviewThreads` AND issue-level `comments` to be complete.
 
 **Simplify pass — skipped (full 3-agent dispatch).** ~57 lines of new production code (controller + WaveformView change + WaveformContainer plumbing + AppCommands menu items), all closely matching the established horizontal-zoom pattern. Self-review:
+
 - Reuse: the controller is genuinely new but mirrors the horizontal one's shape; all the plumbing patterns are direct dups of horizontal zoom plumbing — that's intentional consistency, not accidental.
 - Quality: clip-at-midline rule is documented in the WaveformView line; the `Divider()` in the View menu visually separates the two zoom groups.
 - Efficiency: vertical zoom is a single multiply per peak in the rendering loop — already O(n_peaks) per frame for the existing rendering, no change in complexity.
@@ -1403,6 +1443,7 @@ Nothing to simplify.
 **XCUITest deferred** per `OnlyCueUITests` harness flakiness on this machine. The pure-logic part (the controller) is fully covered by 5 unit tests; the UI integration is one-line plumbing.
 
 **Bypass-mode pattern observation (4th consecutive use):** PR-62→63 → PR-64→65 → PR-66→67. The pattern is converging on sub-100-line leaves shipped through:
+
 - skip CHECKPOINT 1 design pause but document the design calls in the PR body
 - honor CHECKPOINT 2 (merge) — PR sits open until user explicitly merges
 - bypass scope ends precisely at PR creation, resumes when user signals "merged, next leaf"
@@ -1430,6 +1471,7 @@ For the first time, this PR (PR #67) intentionally **split an issue-body bullet 
 **RED-first TDD discipline:** wrote `OnlyCueTests/MediaItemTests.swift` (new file, 85 lines, 7 tests) first. Ran `xcodebuild test -only-testing:OnlyCueTests/MediaItemTests` — failed to compile with `Value of type 'MediaItem' has no member 'cue'` and `Cannot infer contextual base in reference to member 'previous'`/`'next'`. Confirmed RED for exactly the expected reason. Then added the helper extension and the enum to `MediaItem.swift`; re-ran the same target — 7/7 passing in 0.006s. Confirmed GREEN.
 
 **What landed in PR #65 (2 commits, 3 files):**
+
 - `OnlyCue/Document/MediaItem.swift` (+22 lines): extension with `enum PlayheadStep { case previous, next }` and `func cue(steppingFrom currentTime: TimeInterval, direction: PlayheadStep) -> Cue?`. Doc comment captures the strict-comparison and no-wrap rules.
 - `OnlyCue/UI/DocumentView.swift` (+22 lines): new `playheadStepShortcuts` ZStack view (two hidden zero-frame Buttons, `.upArrow` / `.downArrow` no modifiers); new `stepPlayhead(_ direction:)` private handler that pulls the active item, calls the helper, and routes the seek through the existing `seekTask`-cancellation pattern shared with `jump(by:)`; mounted in `mainPane` next to `transportShortcuts` and `digitShortcuts`.
 - `OnlyCueTests/MediaItemTests.swift` (new file, 85 lines): 7 tests — `test_cueSteppingPrevious_returnsLastCueStrictlyBeforeCurrentTime`, `test_cueSteppingPrevious_returnsNilWhenPlayheadBeforeFirstCue`, `test_cueSteppingPrevious_skipsCueAtExactPlayheadTime`, `test_cueSteppingNext_returnsFirstCueStrictlyAfterCurrentTime`, `test_cueSteppingNext_returnsNilWhenPlayheadAtOrAfterLastCue`, `test_cueSteppingNext_skipsCueAtExactPlayheadTime`, `test_cueStepping_emptyCues_returnsNilForBothDirections`. Private `makeCue` / `makeItem` factory helpers keep each test under three lines of setup.
@@ -1437,6 +1479,7 @@ For the first time, this PR (PR #67) intentionally **split an issue-body bullet 
 **Two SwiftLint catches before push (multiline_arguments):** the original test file had two `XCTAssertEqual` calls with three arguments split across lines such that the first two arguments shared a line and the third (the failure-message string) was on its own. SwiftLint's `multiline_arguments` rule wants either everything on one line or each argument on its own line. Fix: hoisted `let target = item.cue(...)` to its own statement, then put `target?.time` and `5` (or `15`) and the message string each on their own line, with the `+` operator at line-start for the multi-string concatenation. Folded into the helper commit via `git commit --amend --no-edit` (still local, not yet pushed) — keeps "test introduces lint-clean code" as the helper commit's promise.
 
 **Simplify pass — skipped (full 3-agent dispatch).** ~26 lines of production code (helper extension + ZStack view + handler), all closely matching established patterns from existing code. Self-review:
+
 - Reuse: `cue(steppingFrom:direction:)` is genuinely new; the ZStack pattern dup with `transportShortcuts` / `digitShortcuts` is intentional consistency, not accidental copy-paste.
 - Quality: the strict-comparison rule is documented in the helper's doc comment; the `.disabled(activeItem == nil)` matches `digitShortcuts`' guard.
 - Efficiency: O(n) per step on bounded n is the right complexity; no allocation or pre-computation worth introducing.
@@ -1468,6 +1511,7 @@ Nothing to simplify.
 **Why a new test file rather than appending to `ProjectModelMigrationTests.swift`:** SwiftLint's `file_length` cap is 400 lines; `ProjectModelMigrationTests.swift` was at 380 (20 lines headroom). Appending a 60-line fixture + test would have pushed it to ~440, blocking the lint gate. Resolved up front by hoisting the test into its own file in the same module, mirroring the precedent set on PR #61 (which also split `ProjectModelMigrationTieBreakTests.swift` out for the same reason). Two separate test files for two separate concerns (sort tie-break vs lenient decode) is also semantically clearer.
 
 **What landed in PR #63 (1 commit, 2 files):**
+
 - `OnlyCue/Document/ProjectModel.swift` (−4): dropped `let colorHex: String` from `LegacyCue` (line 134), `LegacyV3Cue` (line 226), `LegacyV4Cue` (line 281), `LegacyV5Cue` (line 336). No other changes — the `toCue()` / `toPendingCue()` methods on each struct already constructed `Cue` without referencing `colorHex`, so the deletions don't ripple anywhere.
 - `OnlyCueTests/ProjectModelMigrationLegacyDecodeTests.swift` (new, 62 lines): one fixture (v3 envelope; cue is missing `colorHex`), one test (`test_v3_decodesEvenWhenCuesAreMissingColorHex`).
 
@@ -1496,6 +1540,7 @@ Nothing to simplify.
 **RED-first TDD discipline (genuine red-green, not cosmetic):** the new test fixture lists cue B (UUID `BBBB...`) BEFORE cue A (UUID `1111...`) at the same `time: 5.0`. On the unmodified code, Swift's incidentally-stable sort preserved input order so cue B got `cueNumber: 1` (RED — assertion failed expecting A=1.0 / B=2.0, got A=2.0 / B=1.0). After the tie-break, cue A always wins the equal-time comparison regardless of JSON order so A gets `cueNumber: 1` (GREEN). The idempotency test (same JSON decoded twice produces identical mappings) was authored alongside as a belt-and-braces lock on the deterministic property.
 
 **What landed in PR #61 (1 commit, 3 files):**
+
 - `OnlyCue/Document/ProjectModel.swift` (+10 / −2): sort closure now tie-breaks on `id.uuidString`; doc comment expanded with the rationale.
 - `OnlyCueTests/ProjectModelMigrationTieBreakTests.swift` (new file, 95 lines, separate XCTestCase class): two tests — `test_v3_equalTimeCues_assignCueNumbersDeterministically` and `test_v3_equalTimeCues_migrationIsIdempotent`.
 - `docs/decisions.md`: ADR-010 amended with one sentence about the tie-break rule.
@@ -1525,11 +1570,13 @@ A small pre-existing finding still open: dead `colorHex` decode-only properties 
 **Scope correction vs the issue body:** issue #49 cited "`LegacyCue.toCue` and `LegacyV3Cue.toCue`" — still accurate. The repo now has four `toCue()` sites total (PRs #51 and #45 added `LegacyV5Cue` and `LegacyV4Cue` respectively), but only `LegacyCue` and `LegacyV3Cue` had the placeholder problem. `LegacyV4Cue` and `LegacyV5Cue` carry real `cueNumber` values from the legacy field — they're untouched by this PR.
 
 **What landed in PR #60 (1 commit, single file):**
+
 - `OnlyCue/Document/ProjectModel.swift` (+48 / −31): added `private struct PendingCue` with structural-invariant doc comment; renamed `LegacyCue.toCue(typeID:) -> Cue` → `toPendingCue(typeID:) -> PendingCue` (dropped placeholder + `// overwritten` comment); renamed `LegacyV3Cue.toCue() -> Cue` → `toPendingCue() -> PendingCue` (same drop); changed `assignCueNumbersBySort(_ ProjectModel) -> ProjectModel` to `assignCueNumbersBySort(_ [PendingCue]) -> [Cue]`; restructured `migrateFromV1` / `migrateFromV2` / `migrateFromV3` to call the per-item helper inline; deleted the post-construction model-level renumber pass.
 
 **Test strategy — refactor under existing test cover:** no new runtime tests added. The contract is structural — enforced by the type system, not by a runtime assertion. The issue body explicitly says: *"existing migration tests continue to pass"*. The Gherkin scenario "a future migration that forgets to seed cueNumbers fails to compile" is a structural property; Swift has no negative-compile-test framework. Existing migration tests served as the regression net (`test_v1_withMedia_migratesToSingleItem`, `test_v2_seedsDefaultType_andAssignsToExistingCues`, `test_v1_chainsThroughV2_seedsDefaultType_andAssignsToCue`, `test_v3_assignsCueNumbersBySortOrder` all continued to pass without modification).
 
 **Simplify pass — 3 parallel agents (reuse / quality / efficiency), 0 high-confidence findings:**
+
 - **Reuse**: clean. Specifically considered whether `LegacyV4Cue.toCue()` / `LegacyV5Cue.toCue()` should also route through `PendingCue` for uniformity — answered no, they don't have the placeholder problem and `PendingCue` is the wrong indirection for cues that already have real cueNumbers.
 - **Quality**: clean. Specifically considered whether the two `toPendingCue` variants (with vs. without `typeID` parameter) should be unified — answered no, the asymmetry is inherent (V3 cues carry `typeID` on the struct; V1/V2 cues don't); unification would add indirection without removing duplication.
 - **Efficiency**: clean. Confirmed the duplicate-pass cost actually dropped (model-level second pass eliminated). The `[PendingCue]` then `[Cue]` two-array pattern is acceptable (intermediate goes out of scope before `MediaItem` construction). The `.sorted.enumerated().map` chain is the idiomatic Swift expression.
@@ -1555,6 +1602,7 @@ A small pre-existing finding still open: dead `colorHex` decode-only properties 
 **Why an `assertionFailure` guard on the explicit-typeID overload:** caught by the simplify pass. The new overload was accepting any `UUID` without checking it actually existed in `cuePointTypes` — a stale id (e.g. from a deleted Type that was never garbage-collected from a dispatcher's snapshot) would silently produce a cue that resolves to `.accentColor` forever, with no UI affordance to tell the user why. Symmetric to the default-Type form's "no Types in project" guard.
 
 **What landed in PR #59 (5 commits):**
+
 - `OnlyCue/Document/ProjectModel.swift` — added `func cuePointType(forHotkey digit: Int) -> CuePointType?` (commit `2e04ec5`)
 - `OnlyCue/Commands/CueCommands.swift` — extracted private `appendCue` helper, added explicit-typeID overload of `addCueAtPlayhead` (commit `71187b4`); guarded the overload against dangling typeIDs (commit `f524b31`)
 - `OnlyCue/UI/DocumentView.swift` — added `digitShortcuts` view (10 hidden zero-frame Buttons in a `ZStack`) + `triggerHotkey(_:)` handler; mounted in `mainPane` `VStack` alongside `transportShortcuts`; disabled when `activeItem == nil` (commit `e4767e0`)
@@ -1565,14 +1613,17 @@ A small pre-existing finding still open: dead `colorHex` decode-only properties 
 **Simplify pass — 1 fix applied (commit `f524b31`), 3 deferred:**
 
 Applied:
+
 1. **CORRECTNESS**: explicit-typeID overload accepted any UUID without verification — a stale id could silently produce a cue with no resolvable color and no UI signal explaining why. Added `assertionFailure` guard symmetric to the default-Type form's "no Types in project" guard.
 
 Deferred:
+
 - Generic mutate-seam helper across `mutateCues` / `mutateTypes` / `mutateProject` — same reasoning as PR #57 (defer until the 4th seam appears).
 - Hoisting the `0...9` digit range into a constant — over-abstraction at one call site.
 - Splitting `digitShortcuts` into a separate file — mirrors the existing `transportShortcuts` pattern at `DocumentView.swift:165`, fine in place.
 
 **TDD discipline — 5 separate cycles:**
+
 1. `ProjectModel.cuePointType(forHotkey:)` — RED on missing helper, GREEN with one-liner
 2. `CueCommands.addCueAtPlayhead(time:typeID:...)` overload — RED on undeclared identifier, GREEN by extracting `appendCue` and adding the overload
 3. `DocumentView.digitShortcuts` — manual verification (XCUITest deferred per harness flakiness)
@@ -1600,6 +1651,7 @@ Phase 2 candidates remaining: [#33](https://github.com/chienchuanw/only-cue/issu
 **Why this leaf was the natural follow-up to PR #55:** PR #55 made color a Type-derived fact and removed the per-row palette popover, leaving the default project with one Type ("General" `#4ECDC4`) and no UI to add more — only JSON hand-edits. ADR-012 captured this as the accepted transitional cost. The user verified the gap was real on the merged `dev` branch within minutes of PR #55 landing, and this leaf closes it. It also unblocks the only remaining leaf under #32 (number-key cue creation), which depends on `Type.hotkey` being settable.
 
 **Why two new undo seams:**
+
 - `mutateTypes(_:undoManager:actionName:_:)` — narrow seam. Snapshots only `cuePointTypes`. Used by `addCuePointType`, `setCuePointTypeName`, `setCuePointTypeColor`, and `setCuePointTypeHotkey`.
 - `mutateProject(_:undoManager:actionName:_:)` — wide seam. Snapshots `(cuePointTypes, items)` via a fileprivate `ProjectSnapshot` value type. Used only by `removeCuePointType`, which mutates both the Type catalog *and* per-cue `typeID`s in the same undo group.
 
@@ -1610,6 +1662,7 @@ Phase 2 candidates remaining: [#33](https://github.com/chienchuanw/only-cue/issu
 **Why a pure `TypeDeletionPlan` helper:** the delete-confirm dialog needs (typeID, typeName, referencedCueCount, reassignTargetID, reassignTargetName) — all derivable from `(ProjectModel, CuePointType.ID)`. Centralizing the math in a value type lets us TDD the edge cases (returns nil when only one Type remains; reassign target = `cuePointTypes[1]` when deleting the default; correct count across all items × cues) without spinning up a SwiftUI host. The view consumes the plan and feeds it to `.confirmationDialog(presenting:)`.
 
 **What landed in PR #57 (9 commits):**
+
 - `OnlyCue/Commands/CueCommands+Types.swift` (new) — five public mutations + private `updateType` helper + `mutateTypes`/`restoreTypes` (narrow recursive seam) + `mutateProject`/`restoreProject` (wide recursive seam) + `ProjectSnapshot` fileprivate struct
 - `OnlyCue/UI/TypeManagementSheet.swift` (new) — sheet view + `TypeManagementRow` + `.confirmationDialog(presenting:)` for delete
 - `OnlyCue/UI/TypeDeletionPlan.swift` (new) — pure helper for the dialog math
@@ -1623,6 +1676,7 @@ Phase 2 candidates remaining: [#33](https://github.com/chienchuanw/only-cue/issu
 **Simplify pass — 5 fixes applied (commit `70411c7`), 6 deferred:**
 
 Applied:
+
 1. **BUG**: dead `@State private var colorBinding` in `TypeManagementRow` — declared but never read or written. Deleted.
 2. **EDGE CASE**: `Color.toHex()` could produce out-of-range values for wide-gamut colors. Fix: clamp components to `0...1` before `* 255` scaling.
 3. **CORRECTNESS**: `ProjectSnapshot.activeItemID` was a latent undo bug (would silently revert post-delete item selection on undo). Dropped from the snapshot.
@@ -1630,6 +1684,7 @@ Applied:
 5. **NIT**: `TypeDeletionPlan.make` allocated intermediate arrays via `filter.count` — switched to `reduce(0) { $0 + ($1.typeID == id ? 1 : 0) }` for clarity + zero-alloc.
 
 Deferred:
+
 - Collapsing `CueCommands+Items.swift`'s `restoreItems` into the new `mutateProject` seam — bigger refactor, only theoretical risk today.
 - Generic mutate-seam helper across `mutateCues` / `mutateTypes` / `mutateProject` — defer until 4th seam appears.
 - `updateCue` / `updateType` generic — cosmetic at two callsites.
@@ -1638,11 +1693,13 @@ Deferred:
 - `updateType` full-array map perf — bounded at M=1–10 Types.
 
 **SwiftLint hits caught locally before commit:**
+
 1. `Prefer Self in Static References` on `TypeDeletionPlan.make` — return type `TypeDeletionPlan?` → `Self?`; `return TypeDeletionPlan(...)` → `return Self(...)`.
 2. `function_parameter_count` on `restoreProject` (6 params, cap 5) — bundled (types, items, activeItemID) into `ProjectSnapshot` fileprivate struct (which simultaneously enabled the correctness fix above).
 3. `multiline_arguments` in `TypeManagementSheet`'s `ForEach` callbacks — extracted helper methods (`rename`, `recolor`, `setHotkey`) to keep call sites short.
 
 **TDD discipline — 9 separate cycles:**
+
 1. `addCuePointType` + `mutateTypes` recursive seam
 2. `setCuePointTypeName` + `updateType` private helper
 3. `setCuePointTypeColor`
@@ -1680,6 +1737,7 @@ Carry-overs from PR #47 review still open: [#48](https://github.com/chienchuanw/
 **Why `LegacyV5*` mirrors `LegacyV4*` plus `fadeTime`:** same frozen-snapshot pattern as the prior chains. Each `LegacyVN` is a frozen JSON envelope; generalizing them would couple frozen formats and create regression risk on every future schema bump. Pattern is intentional, kept across all four migration chains.
 
 **What landed in PR #55 (7 commits):**
+
 - `OnlyCue/Document/Cue.swift` — drop `var colorHex: String`.
 - `OnlyCue/Document/ProjectModel.swift` — bump `currentSchemaVersion` 5 → 6; add `case 5: migrateFromV5` to the decode switch; new private `LegacyV5` / `LegacyV5Item` / `LegacyV5Cue` (the v5 envelope mirrors v4 plus `fadeTime`); `migrateFromV5(_:)` constructs v6 cues without colorHex; existing `LegacyCue.toCue` / `LegacyV3Cue.toCue` / `LegacyV4Cue.toCue` updated to drop the `colorHex:` arg from their `Cue(...)` constructors. New instance helper `func colorHex(for cue: Cue) -> String?` resolves via `cuePointTypes.first(where: { $0.id == cue.typeID })?.colorHex`.
 - `OnlyCue/Commands/CueCommands.swift` — drop `colorHex:` from `addCueAtPlayhead`'s `Cue(...)`; delete `recolor(cueId:to:)`.
@@ -1698,17 +1756,20 @@ Carry-overs from PR #47 review still open: [#48](https://github.com/chienchuanw/
 **Simplify pass — 3 fixes applied (commit `39a30e8`), 4 deferred:**
 
 Applied:
+
 1. **Reuse + Quality + Taste:** `CueColorSwatch` was inconsistent. Its fallback was `.gray`; `CueMarkerView`'s fallback was `.accentColor`; the prior row swatch used `.accentColor`. Refactored `CueColorSwatch` to take `let hex: String?` (instead of `String` with `?? ""` workaround) and added `var fallback: Color = .accentColor`. Now `CueRowView` passes `hex: resolvedColorHex` directly with `.accentColor` restored as the row fallback. Inspector Type picker still works (passes non-optional String which coerces to String?).
 2. Stale doc comment on `CueColorSwatch` referenced the now-deleted "color popover" — rewrote to mention "row swatch" instead.
 3. Drop the `?? ""` escape hatch at the `CueRowView` call site once `CueColorSwatch.hex` was `String?`.
 
 Deferred (with reasoning per finding):
+
 - `cuePointType(for:) -> CuePointType?` companion helper alongside `colorHex(for:)` — no current caller, YAGNI per CLAUDE.md "Don't add features beyond what the task requires". The Type management leaf can add it then.
 - `resolveColorHex` default closure `{ _ in nil }` swallowing future caller omissions — theoretical; currently one caller threading correctly.
 - Non-Equatable closure on `WaveformContainer` prevents SwiftUI short-circuit — theoretical; only matters if `PreviewPane` re-renders frequently (it doesn't; the engine timer doesn't pass through it).
 - Precomputed `[UUID: String]` map for color resolution — bounded-OK at M=1–10 Types and N=tens of cues per render.
 
 **TDD discipline — 7 separate cycles:**
+
 1. `ProjectModel.colorHex(for:)` helper + pair of tests (matching Type / dangling typeID)
 2. `CueRowView.resolvedColorHex` prop + `CueListPane` resolves from `document.model`
 3. `CueMarkersOverlay` resolver closure + `WaveformContainer`/`PreviewPane` plumbing
@@ -1742,6 +1803,7 @@ Each cycle: red (verified failure), green (minimum impl), commit.
 **Why focused-aware `syncDrafts`:** found by the simplify pass (HOT-PATH). The inspector's `.onChange(of: cue)` resyncs all four drafts whenever the cue object updates — but if the user is mid-typing in `fadeDraft` when an external mutation lands (marker drag retime, undo from elsewhere), their input would be clobbered. Two-line fix: skip the field whose `@FocusState` matches `focused`. The `.id(cue.id)` modifier on the body still resets all drafts cleanly when the *selection* changes (different cue), so the focused-aware skip only applies to same-cue external mutations.
 
 **What landed in PR #53 (10 commits):**
+
 - `OnlyCue/Commands/CueCommands.swift` — gains `setType` / `setCueNumber` / `setFadeTime` / `setNotes`. All four routed through new private `updateCue(cueId:document:undoManager:actionName:update:)` taking an `(inout Cue) -> Void` closure. `rename` and `recolor` refactored to use the same helper while green; reads uniformly across the cue setters now.
 - `OnlyCue/Commands/CueCommands+Items.swift` (new) — item-level mutations (`addItem`, `addItems`, `removeItem`, `renameItem`, `reorderItems`, `setActiveItem`, `refreshBookmark`) plus their undo helpers (`registerItemUndo`, `restoreItems`, `nextActiveID`) split into a `extension CueCommands` so the main type body stays under SwiftLint's 250-line `type_body_length` cap after the four new setters.
 - `OnlyCue/UI/CueInspectorView.swift` (new) — the inspector itself. `@FocusState`-driven; `@State` drafts for name/cueNumber/fade/notes; Type picker bound directly to `CueCommands.setType` via custom `Binding` setter. Empty state when `cue == nil` shows "Select a cue" with id `cueInspectorEmptyState`. `.id(cue.id)` resets drafts on selection change; `.onChange(of: cue)` syncs them on same-cue external mutation but skips the focused field. `.onChange(of: focused)` commits whichever field just lost focus.
@@ -1757,11 +1819,13 @@ Each cycle: red (verified failure), green (minimum impl), commit.
 **Simplify pass — 3 fixes applied (commit `d88ed52`), 3 deferred:**
 
 Applied:
+
 1. **Reuse:** `formatNumber` was duplicated between `FadeTime.formatNumber` (private) and `CueInspectorCommit.formatNumber`. Promoted FadeTime's to internal; deleted the duplicate; `commitCueNumber` reuses `FadeTime.formatNumber`.
 2. **Reuse:** color swatch was inlined as `Circle().fill(Color(hex:) ?? .gray).frame(width:height:)` in two views with only the diameter differing (10pt vs 12pt). Extracted `CueColorSwatch(hex:diameter:)` and replaced both call sites.
 3. **HOT-PATH:** `syncDrafts` was clobbering whichever field the user was typing into when any external mutation hit the cue. Two-line fix to skip the focused field. Without this, marker drag retiming or any concurrent undo would erase in-progress input mid-typing.
 
 Deferred:
+
 - Double-commit on Return-then-Tab — quality reviewer flagged it, but the existing `.noChange` branch already short-circuits without producing a redundant write.
 - Empty-name silent revert — consistent with `commitNumber` and `commitFade`'s revert paths within the inspector, and with `CueRowView.commitRename`'s same silent-revert pattern. Not a bug; could be a UX polish follow-up.
 - Negative `cueNumber` acceptance — intentional, matches ADR-010 auto-assignment that can also go negative. If lighting consoles reject negatives at export time, the boundary is the right place to enforce that, not the inspector parser.
@@ -1769,9 +1833,11 @@ Deferred:
 **Post-push linter cleanup (commit `091ce02`):** `commitNumber` was canonicalizing `numberDraft` only on `.revert`; `.parsed` and `.noChange` left the draft as the user's literal typing (`"1.50"` would stay as `"1.50"` even after committing as `1.5`). Linter pushed a small follow-up that snaps the draft to `FadeTime.formatNumber(value)` on `.parsed` and `FadeTime.formatNumber(cue.cueNumber)` on `.noChange`. Mirrors the fade field's existing canonicalize-on-commit shape. Same patch was already in `commitFade` for the same reason.
 
 **SwiftLint hits — caught locally before push:**
+
 1. **`type_body_length`** — `CueCommands` enum body grew to 276 lines after the four new setters (cap 250). First refactor (extracting `updateCue` and dropping the per-method `cues.map` boilerplate) brought it to 262 — still over. Second fix: split item-level mutations into `CueCommands+Items.swift` as a separate extension file. Main body now well under 250.
 
 **TDD discipline — 9 separate cycles, each a coherent unit:**
+
 1. `setType` (RED → GREEN → commit)
 2. `setCueNumber`
 3. `setFadeTime`
@@ -1799,6 +1865,7 @@ Deferred:
 **Why parser is the gate (not the struct):** the model layer trusts its inputs — `FadeTime(fadeIn: -1, fadeOut: 0)` is permitted, the struct doesn't trap. Validation lives in `FadeTime.parse(_:)`, which is the single entry point from user/UI/migration. Same trust-the-seam design we used for `Cue.cueNumber` going negative on edge cases. Construction sites (CueCommands, all four legacy migrations, test fixtures) all use `FadeTime.zero` rather than `FadeTime(fadeIn: 0, fadeOut: 0)` or `.symmetric(0)` — the constant reads as "no fade default" intent rather than asking the reader to know that 0 = no fade.
 
 **What landed in PR #51 (8 commits):**
+
 - `OnlyCue/Document/FadeTime.swift` (new) — `struct FadeTime: Codable, Equatable, Hashable`, plus an extension carrying `static let zero`, `static func symmetric(_ seconds:)`, `static func parse(_ text:) -> FadeTime?`, and instance `func format() -> String`. Parser accepts `"1"`/`"1.5"` (symmetric) and `"1/2"` (split), trims surrounding whitespace, rejects 18 malformed inputs (empty, blank, non-numeric, negative, multi-slash, half-empty, internal whitespace, non-finite `inf`/`infinity`/`Inf`, leading-`+`). Formatter emits `"1.5"` when `fadeIn == fadeOut` else `"1/2"`, drops trailing `.0` on whole numbers (`"1"` not `"1.0"`).
 - `OnlyCue/Document/Cue.swift` — gains required `var fadeTime: FadeTime`.
 - `OnlyCue/Document/ProjectModel.swift` — `currentSchemaVersion` 4 → 5; `case 4: migrateFromV4` added to the decode switch; new private `LegacyV4` / `LegacyV4Item` / `LegacyV4Cue` shapes (the v4 envelope minus `fadeTime`); `migrateFromV4(_:)` constructs cues with `fadeTime: .zero`; existing `LegacyCue.toCue` (v1/v2 path) and `LegacyV3Cue.toCue` extend their `Cue(...)` initializers with `fadeTime: .zero`.
@@ -1811,21 +1878,25 @@ Deferred:
 - **133/133 unit tests green; 0 SwiftLint violations; Release build clean (warnings-as-errors).**
 
 **Simplify pass — 3 fixes (commit `99aeda8`):**
+
 1. Quality reviewer caught a real bug: the parser docstring promised "rejects non-numeric" but `Double("inf")` returns infinity (and `Double("+1")` returns 1.0). Added `value.isFinite` and `!hasPrefix("+")` guards. Confirmed via 6 new rejection inputs (`"inf"`, `"infinity"`, `"Inf"`, `"+1"`, `"+1/2"`, `"1/+2"`).
 2. The `.symmetric(0)` literal appeared at 8+ sites. Quality reviewer flagged it as "no-fade intent that should be grep-able". Extracted `static let zero: FadeTime = .symmetric(0)` and replaced every production and test call site. Reads as `fadeTime: .zero` instead of `fadeTime: .symmetric(0)`.
 3. Trimmed `parse(_:)` docstring from a 2-line listing of the rejection set to a one-line pointer at `FadeTimeTests` for the full grammar — the test names are the canonical spec; duplicating them in a docstring just creates drift.
 
 **Skipped from simplify:**
+
 - "`String(t)` for non-whole doubles produces `0.30000000000000004` for arithmetic-derived values" — theoretical concern (no current call path produces such values; parser produces clean doubles, no `FadeTime` arithmetic exists). Defer to whichever future leaf adds fade-time arithmetic.
 - Reuse reviewer's "`LegacyV4*` boilerplate is structurally identical to `LegacyV3*`" — kept the duplication on purpose. Each `LegacyVN` is a frozen snapshot; generalising would couple frozen formats and create regression risk on every future schema bump. Pattern is intentional.
 
 **SwiftLint hits — same playbook as PR #47, caught earlier this time:**
+
 1. **`type_body_length`** — `ProjectModelMigrationTests` swelled to 282 lines after adding `test_v4_assignsZeroFadeToExistingCues` + the new `v4FixtureWithoutFadeTime` static let (cap is 250). Hoisted both `v3FixtureWithUnsortedCues` and `v4FixtureWithoutFadeTime` from `private static let` (in-class) to file-scope `private let` constants between the imports and the class declaration. Class body dropped to ~125 lines.
 2. **`identifier_name`** — single-letter parameter names `t: TimeInterval` and `s: Substring` violated min-2 (one of the leftover footguns from #46's similar fix on `var c`). Renamed to `seconds` and `text`.
 
 Both blockers caught by `swiftlint --strict` locally before pushing — same pattern as PR #47 fix #4 (re-running lint between fix commits catches self-inflicted regressions). No CI surprises.
 
 **TDD discipline — 8 separate commits, each a coherent unit:**
+
 1. FadeTime struct with synthesized Codable + symmetric round-trip test
 2. Parser (happy + rejection)
 3. Canonical formatter + parse/format round-trip
@@ -1850,6 +1921,7 @@ Each cycle: red (verified failure), green (minimum impl), commit. Cycle 2 (split
 **Why mid-point insertion, not renumber-on-insert:** existing cue numbers are stable. A console operator who wrote down "GO 4" doesn't see it become "GO 5" because someone added a cue earlier in the timeline. The future cue inspector will provide a "renumber from 1" command to normalize the negatives that accumulate from repeated before-all inserts.
 
 **What landed (5 TDD commits + 1 simplify + 4 review-fix commits = 10 commits):**
+
 - `OnlyCue/Document/Cue.swift` — gains required `cueNumber: Double`.
 - `OnlyCue/Document/ProjectModel.swift` — `currentSchemaVersion` 3 → 4. New private `LegacyV3` / `LegacyV3Item` / `LegacyV3Cue` decoder shapes. New `migrateFromV3`. New private `assignCueNumbersBySort(_:)` that every migrate function (v1/v2/v3) calls on its return value — v1/v2/v3 cues all land sorted by time with sequential `cueNumber`s `1.0, 2.0, ...`.
 - `OnlyCue/Commands/CueNumberAssignment.swift` (new file, landed during review-fix cycle) — `enum CueNumberAssignment { static func next(forInsertionAt:in:) -> Double }`. Pure function, naturally reusable from a future "Renumber from 1" command. Extracted from `CueCommands` to keep that enum body under SwiftLint's `type_body_length` cap.
@@ -1859,21 +1931,25 @@ Each cycle: red (verified failure), green (minimum impl), commit. Cycle 2 (split
 - `docs/decisions.md` — **ADR-010** (after ADR-009 CuePoint Types).
 
 **Simplify pass — 3 fixes (commit `e9c9d09`, before review):**
+
 1. Unreachable `(nil, nil)` case in `nextCueNumber` → `preconditionFailure` with a descriptive message. Quality reviewer's call: silent-return-1.0 was masking an invariant break.
 2. Trim `assignCueNumbersBySort` doc comment from three lines to one. Restating the body was noise; only the "predates the field" why-context was load-bearing.
 3. Add `// overwritten by assignCueNumbersBySort` comments at each `cueNumber: 0` placeholder in `LegacyCue.toCue` and `LegacyV3Cue.toCue`. After this leaf, `0` is a legitimate value (`addCueAtPlayhead` produces it for "before all when min was 1"), so the sentinel had become indistinguishable from data.
 
 **Skipped from simplify:**
+
 - "Drop the redundant `.sorted` in `CueNumberAssignment.next`" — efficiency reviewer wanted it gone (caller's input is invariant-sorted), quality reviewer wanted it kept (helper self-containment). Kept for safety; cost is trivial at OnlyCue's scales.
 - "Drop `cuePointTypes: [CuePointType] = []` default" — quality reviewer claimed all callers pass it explicitly; verified false (3 tests rely on it for empty-project fixtures).
 
 **Review cycle — 4 SwiftLint blockers + 3 substantive notes** (one round, all blockers resolved in 4 fix commits + 1 piggybacked tweak):
+
 1. **`identifier_name`** (`var c` in `assignCueNumbersBySort`) → renamed to `var updated`. Commit `a3827c4`.
 2. **`type_body_length`** (`CueCommands` enum body 251/250) → reviewer's structural suggestion: extract `nextCueNumber` to its own file rather than nudge the cap. Created `OnlyCue/Commands/CueNumberAssignment.swift`. Commit `b304eb6`.
 3. **`line_length`** 144 chars at `ProjectModelTests:27` → broke the `Cue(...)` initializer across lines. Commit `830a629`.
 4. **`function_body_length`** 66/50 at `test_v3_assignsCueNumbersBySortOrder` → hoisted the v3 JSON literal to a private static `let v3FixtureWithUnsortedCues` above the test. Same commit also trimmed a 143-char `preconditionFailure` message in the new `CueNumberAssignment.swift` that the extract had introduced. Commit `21e6767` (rebase-mapped to `19713f9`).
 
 **Substantive notes deferred:**
+
 - Issue [#48](https://github.com/chienchuanw/only-cue/issues/48) — stable-sort tie-breaker on equal `cue.time` in `assignCueNumbersBySort`.
 - Issue [#49](https://github.com/chienchuanw/only-cue/issues/49) — drop the `cueNumber: 0` placeholder in `LegacyCue.toCue` / `LegacyV3Cue.toCue` via a `PendingCue` tuple or struct so the type system enforces "every Cue gets a real cueNumber".
 
@@ -1892,6 +1968,7 @@ Each cycle: red (verified failure), green (minimum impl), commit. Cycle 2 (split
 **Why now (brainstorm session):** competitive analysis of CuePoints (the reference product) surfaced 9 gaps that block a programmer from leaving CuePoints — `CuePoint Types` as shared organising primitive (this leaf), editable `Cue.id` with ripple-down, `Cue.fadeTime` with split syntax, LTC + audio routing, console export (CSV/MA2/MA3), OSC remote control (Companion / MA3 / StreamDeck), timeline UX polish, breakdown view, notes overlay, plus the already-roadmap'd templates and custom shortcuts editor. User picked **pro-handoff parity** as the positioning (vs. full-clone or differentiate-first); Tier-C differentiator (AI cueing / collaboration / console round-trip) deferred to Phase 3. Filed 9 epics + 4 new area labels (`area:types`, `area:ltc`, `area:export`, `area:osc`) in one batch; all assigned to the **Phase 2 — Pro handoff** milestone.
 
 **What landed in PR #45 (8 commits):**
+
 - `OnlyCue/Document/CuePointType.swift` (new) — `{id, name, colorHex, defaultFadeTime, defaultNamePattern, hotkey, isVisible, isExportEnabled}` with property-level defaults so callers normally only pass `(id, name, colorHex)`. Reserved fields (`hotkey`, `isVisible`, `isExportEnabled`) anchor the future leaves (number-key creation, breakdown view, export filter) so each one adds behavior, not schema.
 - `OnlyCue/Document/Cue.swift` — gains required `typeID: UUID`. Initially had a `UUID()` default; the simplify pass dropped it after agents flagged it as both an orphan-id hazard *and* a per-decode UUID-allocation cost (Swift `Decodable` synthesis still computes default expressions on present-key decode for missing-key fallback).
 - `OnlyCue/Document/ProjectModel.swift` — `cuePointTypes: [CuePointType]` (invariant: ≥ 1; index `[0]` is the default), computed `defaultCuePointTypeID`, `currentSchemaVersion = 3`, `LegacyV2`/`LegacyCue` shapes, both migrations, public `makeDefaultCuePointType()` factory.
@@ -1902,6 +1979,7 @@ Each cycle: red (verified failure), green (minimum impl), commit. Cycle 2 (split
 - `docs/data-model.md` rewritten for schema v3 (example JSON, Swift types, field rules, versioning policy with both migration paths). New ADR-009 in `docs/decisions.md`. Removed the "all cues are generic" line from "deliberately NOT in the model".
 
 **Simplify pass — 5 fixes (commit `6e5aae0`):**
+
 1. Dropped the unsafe `Cue.typeID = UUID()` default. Three reviewers converged: orphan-id hazard (a Cue could silently reference no Type) + per-decode UUID cost. Now required at construction.
 2. Collapsed byte-identical `LegacyV1Cue` / `LegacyV2Cue` into a single shared `LegacyCue` struct used by both migration paths.
 3. Replaced `?? UUID()` fallback in `addCueAtPlayhead` with `assertionFailure` + no-op (matches the pre-existing `mutateCues` no-op pattern when `activeItemID == nil`). The fallback was masking a real invariant violation with a dangling id that no Type could resolve.
@@ -1923,6 +2001,7 @@ Each cycle: red (verified failure), green (minimum impl), commit. Cycle 2 (split
 **Shipped:** issue #31 (post-MVP enhancement). PR #41 merged into `dev`. A `.cuelist` document now represents an entire show: it holds a list of `MediaItem`s, each with its own media reference and its own cue list. Multi-file imports append items in selection/drop order. A left sidebar lets the user switch the active item, drag-reorder, and ⌫-delete with undo.
 
 **What landed (8 commits + 1 user `.gitignore`):**
+
 - Schema bumped to **v2**. `ProjectModel` now exposes `items: [MediaItem]` and `activeItemID: UUID?`. New `MediaItem` wraps a non-optional `MediaReference` plus its own `cues: [Cue]`. `ProjectModel.decode(from:)` probes the version and migrates v1 forward — v1+media wraps into one `MediaItem`; v1+nil yields empty items. One-way upgrade (v0.1.0 readers cannot open v2). Captured as **ADR-008**.
 - `OnlyCue/Document/{ProjectModel,MediaItem,CueListDocument}.swift` carry the new types and the migration entry point.
 - `OnlyCue/Commands/CueCommands.swift` — existing cue mutations now scope to the active item via `mutateCues` (no-op when `activeItemID == nil`). New item-level commands: `addItem`, `addItems` (one undo group per batch), `removeItem` (advance active to next or previous if last), `renameItem`, `reorderItems`. `setActiveItem` and `refreshBookmark` are intentionally NOT undoable — selection is view state; stale-bookmark refresh is OS-driven.
@@ -1937,12 +2016,14 @@ Each cycle: red (verified failure), green (minimum impl), commit. Cycle 2 (split
 - `docs/data-model.md` rewritten for v2; `docs/architecture.md` three-pane diagram + new component map; `docs/decisions.md` ADR-008; `docs/verification.md` step 14 covers multi-import + per-item cue isolation + drag-reorder persistence; `docs/build-sequence.md` post-MVP row #13.
 
 **Simplify pass — 4 fixes (commit `aed3e5d`):**
+
 1. Parallelized `MediaImporter.makeItem` via `withTaskGroup` (HIGH-priority efficiency win flagged in review).
 2. Routed stale-bookmark refresh through new `CueCommands.refreshBookmark` seam (was directly mutating `document.model.items[index].media.bookmarkData`, violating CLAUDE.md hard rule "No direct mutations of `ProjectModel`").
 3. Dropped `loadedItemID` belt-and-suspenders cache and the `onActiveItemChange` callback. SwiftUI's `task(id:)` is already idempotent — the `@State` cache and the parent-callback ping were duplicating its own dedup.
 4. Stopped rewriting `schemaVersion` in `snapshot(contentType:)`; it is set at decode/init time.
 
 **Two real bugs caught in user testing, fixed in-PR:**
+
 1. **Wrong waveform on item switch.** Even with `.id(asset.url)` on `WaveformContainer`, the waveform briefly painted the previous item's peaks against the new item's cue markers and playhead. Root cause: `PreviewPane` was reading the asset from `engine.player.currentItem?.asset`, which lags through `MediaImporter.loadActive`. Fix (commit `a16b179`): `PreviewPane` resolves the active item's bookmark on `task(id: activeItemID)` and feeds the URL to the waveform — model-sourced, not engine-sourced. Captured in `findings.md` as a SwiftUI invalidation pattern: when a leaf view's identity is conceptually tied to one of its inputs, `.id` that input — but make sure the input itself isn't sourced from a stale-by-design dependency.
 2. **Slow first render of each item's waveform.** Cache miss path was paid on every first click. Fix (commit `a60e697`): `WaveformPrewarmer` warms the cache in the background right after import. Subsequent clicks are cache hits.
 
@@ -1957,6 +2038,7 @@ Each cycle: red (verified failure), green (minimum impl), commit. Cycle 2 (split
 **Shipped:** issue #29 (post-MVP enhancement). PR #30 merged into `dev`. The waveform now shows the play position as a draggable vertical line with a floating HH:MM:SS label, on both the audio-only waveform and the audio strip beneath the video preview.
 
 **What landed:**
+
 - `OnlyCue/UI/PlayheadOverlay.swift` (new) — pure SwiftUI view: vertical line at `CueMarkersGeometry.position(...)` plus a frosted-material HH:MM:SS pill via `TimeFormat.hms`, label x clamped to waveform bounds. Hit-test free.
 - `OnlyCue/UI/ScrubController.swift` (new) — value-type state machine with `begin(originalTime:isPlaying:)`, `update(dx:width:duration:)`, `end()`. Reuses `CueMarkersGeometry.time(...)` for clamped time math. Unit-tested without SwiftUI.
 - `OnlyCue/UI/WaveformPlayheadLayer.swift` (new) — owns the `engine.currentTime` read, the `PlayheadOverlay`, and a 12pt-wide `Color.clear` drag grabber. Hoisted into its own subview so 10 Hz ticks don't re-evaluate `CueMarkersOverlay` (see findings).
@@ -1970,6 +2052,7 @@ Each cycle: red (verified failure), green (minimum impl), commit. Cycle 2 (split
 **TDD discipline:** red commit (`82e95b1` — failing playhead + scrub tests with build error proving they ran) → green commit (`4f62750` — implementations land, tests pass) committed separately, per project convention.
 
 **Simplify pass — 4 fixes (commit `ea8bfc6`):**
+
 1. Hoisted playhead + grabber into `WaveformPlayheadLayer` so `engine.currentTime` ticks no longer re-evaluate `CueMarkersOverlay`. Single biggest perf win in the diff.
 2. Dropped the redundant `showsPlayhead: Bool` flag on `WaveformContainer`. Engine presence (`engine != nil`) now implies the playhead — one fewer parameter to keep in sync between caller and callee.
 3. Added `PlayerEngine.isPlaying` and used it in the scrub gesture. Also useful for `TransportBar`'s `rate > 0` check next time we touch it.
@@ -1986,6 +2069,7 @@ Each cycle: red (verified failure), green (minimum impl), commit. Cycle 2 (split
 **Shipped:** issue #27 (post-MVP enhancement). PR #28 merged into `dev`. First post-MVP feature — corrects an asymmetry the MVP shipped with: cue-marker drag-to-retime and click-to-seek lived only on the audio waveform, so video imports had no timeline editing affordance. Now video imports show the picture stacked above a 100pt waveform strip; cue markers, drag, and seek work identically to the audio path.
 
 **What landed:**
+
 - `OnlyCue/UI/PreviewPane.swift` — `videoContent` becomes `VStack { videoPlayer; waveform.frame(height: 100) }`. Extracted `videoPlayer` and `waveform(for:)` as shared helpers so audio and video paths route through one cue-marker wiring (`onSeek`, `onRetime → CueCommands.retime`).
 - `OnlyCue/Media/WaveformGenerator.swift` — when an asset has no audio track, `peaks(for:resolution:)` now returns `[Float](repeating: 0, count: resolution)` instead of throwing. `WaveformError.noAudioTrack` removed (only caller was `WaveformContainer`, which treated all throws uniformly). Silent videos render a flat baseline; markers stay draggable.
 - `OnlyCueTests/WaveformGeneratorTests.swift` — new `test_peaks_assetWithNoAudioTrack_returnsFlatPeaks` using `AVMutableComposition()` (no fixture file needed).
@@ -1995,10 +2079,12 @@ Each cycle: red (verified failure), green (minimum impl), commit. Cycle 2 (split
 **TDD discipline:** red commit (`ba49bcc` — failing test for no-audio-track asset) → green commit (`76340f1` — flat-peaks early return) committed separately, per project convention.
 
 **Simplify pass — 1 fix (commit `679b9d9`):**
+
 - `videoContent` had two branches each constructing `AVPlayerLayerView(player: engine.player).accessibilityIdentifier("videoPreview")`. Hoisted into a `videoPlayer` computed property.
 - Other simplify findings (cache-flicker on cached read, fileHash cost on every `.task` fire, `loadedDuration` ordering before cache check) were pre-existing in `WaveformContainer` and out of scope for this change — file separately if revisiting waveform performance.
 
 **Review cycle:**
+
 - Auto-review flagged `docs/verification.md` step 11 still said the video preview "shows picture instead of waveform" — accurate; missed in initial docs sweep that updated `mvp-scope`/`architecture`/`build-sequence`. Fixed in `3f997ab` and posted status comment on PR #28.
 - Lesson: when sweeping `docs/` for behavior changes affecting the preview pane, include `verification.md` alongside the architecture/scope/build-sequence trio. The verification MVP checklist contains user-visible behavior assertions that go stale with UX changes.
 
@@ -2011,16 +2097,19 @@ Each cycle: red (verified failure), green (minimum impl), commit. Cycle 2 (split
 **Shipped:** issue #12 (E10 distribution). PR #26 merged into `dev` (rebase, head `008cf03`). Then ran the post-merge release sequence in this session: tagged `v0.1.0` on `008cf03`, built and DMG'd via the C3 scripts, published the [v0.1.0 GitHub Release](https://github.com/chienchuanw/only-cue/releases/tag/v0.1.0) with `OnlyCue-0.1.0.dmg` attached. **MVP is live.**
 
 **What landed (docs in PR #26):**
+
 - `README.md` — new `## Install` section above `## Status` with the right-click → Open Gatekeeper bypass walkthrough; mentions Control-click for trackpad users; system-requirements line (macOS 14+, both architectures); "build from source" escape hatch link. Distribution row in the stack table tightened to "Ad-hoc signed DMG (Developer ID + notarization opt-in)".
 - `docs/release-notes/0.1.0.md` (new file) — the literal body for `gh release create --notes-file`. Lists shipped features (document workflow, media import, preview, transport, cue list, cue editing, cue markers, polish), install steps, known limitations (Gatekeeper prompt on free tier, sandbox off, no Sparkle, cue list ←/→ contention with global shortcuts when inspector is focused), pointer at `docs/verification.md` for the full manual end-to-end script.
 - `docs/verification.md` — "Distribution sanity check" rewritten with mode-aware expectations: unsigned `spctl` rejects (expected; right-click → Open clears the prompt), signed `spctl` accepts (silent first launch). "OnlyCue is damaged" flagged as the regression signal that ad-hoc signing didn't take.
 
 **Iteration via simplify pass — 3 fixes (commit `008cf03`):**
+
 1. Release notes overstated supported audio/video formats by listing 7 closed extensions when `MediaImporter.allowedContentTypes` is `[.audio, .movie]` (anything AVFoundation accepts). Broadened to "any AVFoundation-supported audio or video file (`.mp3`, `.wav`, ..., and friends)".
 2. Release notes had an internal ADR-007 reference in user-facing copy. Trimmed to "App Sandbox is off." — internal pointers don't belong in release notes.
 3. Right-click instructions in both README and release notes lacked a Control-click alternative for trackpad users without secondary-click configured.
 
 **Post-merge release sequence (this session, on user's machine):**
+
 - `git tag -a v0.1.0 -m "OnlyCue 0.1.0"` on `008cf03`; `git push origin v0.1.0`.
 - `bash scripts/build-release.sh` → `build/export/OnlyCue.app` (ad-hoc signed; `codesign --verify --deep --strict --verbose=2` clean: "valid on disk", "satisfies its Designated Requirement").
 - `bash scripts/make-dmg.sh` → `build/OnlyCue-0.1.0.dmg` (~907 KB, compressed HFS+ disk image).
@@ -2035,25 +2124,30 @@ Each cycle: red (verified failure), green (minimum impl), commit. Cycle 2 (split
 **Shipped:** issue #13 (C3 release pipeline). PR #25 merged into `dev` (rebase, head `6128837`). Bag of scripts + docs that turn `dev` into a drag-installable DMG.
 
 **What landed:**
+
 - `scripts/build-release.sh` — archive → (signed mode) export Developer ID → notarize → staple → verify, OR (unsigned mode) `cp -R` the ad-hoc-signed `.app` straight out of the archive. `RELEASE_MODE` env var (`unsigned` default, `signed` opt-in) gates which branch runs. Pre-flight checks for `xcodebuild` / `xcodegen` / `xcrun`; signed mode also probes `security find-generic-password -s "com.apple.gke.notary.tool" -a "$NOTARY_PROFILE"` (deterministic, offline) for the notary keychain profile and `security find-identity -v -p codesigning login.keychain` for the Developer ID identity. `[[ "${PIPESTATUS[0]}" -eq 0 ]]` guard around `xcodebuild | xcbeautify` so a failed archive can't be masked by xcbeautify's exit status.
 - `scripts/make-dmg.sh` — `create-dmg` wrapper with sensible window/icon geometry (540×380, 96pt icons, 140/400 layout). In signed mode, also `codesign`s the DMG, submits it to notarytool as a separate submission, staples the ticket, and runs `spctl --assess --type open --context context:primary-signature`. Apple's recommended distribution path: both the .app and the DMG carry independent stapled tickets so first-mount works offline.
 - `scripts/export-options.plist` — referenced only by signed mode's `xcodebuild -exportArchive` (`method: developer-id`, `signingStyle: automatic`).
 - `docs/release.md` — leads with the free-tier path (`brew install xcodegen create-dmg xcbeautify`, then `bash scripts/build-release.sh && bash scripts/make-dmg.sh`); signed/notarized procedure stays as a "when we upgrade" section. Includes a copy-paste install blurb for end users walking through the right-click → Open Gatekeeper bypass, troubleshooting (Account Holder role for cert generation, "is damaged" failure mode, notary `Invalid` log fetch), and an ADR-007 sandbox note.
 
 **Iteration via simplify pass — 4 fixes from 1 reviewer agent (commit `ba742d3`):**
+
 1. `notarytool history` as a profile probe → network round-trip per build that flakes on transient 5xx. Replaced with the keychain probe above.
 2. `xcodebuild ... | xcbeautify ... || true` masked archive failures because `pipefail` made xcbeautify's exit status the pipeline's. Switched to `PIPESTATUS[0]` guard.
 3. `spctl --assess` on an unsigned DMG was a meaningless no-op logged as "non-fatal" — misleading. Fixed by signing, notarizing, and stapling the DMG itself in signed mode.
 4. The "Publishing the release" section in `docs/release.md` had migrated into E10 territory (`gh release create`, README updates). Trimmed to a one-line pointer at #12 to keep C3 focused.
 
 **Iteration mid-session — free-tier pivot (commit `6128837`):**
+
 - User flagged that on the free Apple Developer tier, you can't generate a Developer ID Application certificate (those require the $99/yr paid program). Rather than block MVP shipping, refactored both scripts to accept `RELEASE_MODE=unsigned|signed` (default unsigned). The .app is ad-hoc signed (`CODE_SIGN_IDENTITY=-`) — critical because *truly* unsigned binaries trigger Gatekeeper's misleading "OnlyCue is damaged and can't be opened" error that even right-click → Open won't bypass. Ad-hoc signing produces the standard "developer cannot be verified" prompt, which right-click → Open or `xattr -dr com.apple.quarantine /Applications/OnlyCue.app` clears.
 - `docs/release.md` rewritten to lead with the free-tier path, with a copy-paste install blurb users can paste into release notes.
 
 **Iteration during user smoke-test:**
+
 - `xcode-select` pointing at `/Library/Developer/CommandLineTools` instead of the full Xcode.app caused `xcodebuild` to error. Fix: `sudo xcode-select -s /Applications/Xcode.app/Contents/Developer`. Worth adding to `docs/release.md` prerequisites in a follow-up.
 
 **Verification (manual, by user):**
+
 - `bash scripts/build-release.sh` produces `build/export/OnlyCue.app`; `codesign --verify --deep --strict --verbose=2` passes.
 - `bash scripts/make-dmg.sh` produces `build/OnlyCue-0.1.0.dmg`; mounts cleanly.
 - DMG contents: app icon visible, drag-to-Applications layout works.
@@ -2066,6 +2160,7 @@ Each cycle: red (verified failure), green (minimum impl), commit. Cycle 2 (split
 **Shipped:** issue #11 (E9 polish, all 7 leaves). PR #24 merged into `dev` (rebase, head `e60ddd6`). With this, every MVP **feature** epic is done; the remaining MVP work is the C3 release pipeline (#13) and E10 distribution (#12).
 
 **What landed:**
+
 - `OnlyCue/Commands/MediaImporter.swift` — `static func reload(into:engine:) async throws`. Resolves `media.bookmarkData`, surfaces a missing file via `try await asset.load(.duration)`, and on `resolution.isStale == true` rewrites `document.model.media?.bookmarkData` with a freshly-created bookmark. Then calls `engine.load(asset:)`.
 - `OnlyCue/UI/DocumentView.swift` — overhauled: collapsed two stacked `.alert(item:)` modifiers into one driven by a private `DocumentAlert` enum (`.unsupported(String)` / `.relink(String)`), added a `reloadedFor: Data?` sentinel + `.task(id: media?.bookmarkData)` to call `reloadIfNeeded` on first appear, added `.navigationSubtitle(media?.displayName ?? "")`, added a hidden `transportShortcuts` ZStack of zero-size buttons binding `.space` (`engine.toggle()`) / `.leftArrow` / `.rightArrow` to a `jump(by:)` helper that cancels the previous in-flight `seekTask`, switched the first-launch flag from `UserDefaults` (per-document race) to `@AppStorage` (app-level).
 - `OnlyCue/Media/PlayerEngine.swift` — `func toggle()`. Reused by `TransportBar` (-7 LOC of inline conditionals).
@@ -2076,6 +2171,7 @@ Each cycle: red (verified failure), green (minimum impl), commit. Cycle 2 (split
 - `OnlyCueTests/MediaImporterTests.swift` — 3 reload tests (resolves bookmark + loads asset, missing file throws + preserves model.media for relink, no-media is a no-op).
 
 **Iteration via simplify pass — 4 real fixes from 3 parallel reviewers (commit `aeefc06`):**
+
 1. Two `.alert(item:)` modifiers on the same view → second silently dropped on macOS. Collapsed to one + enum.
 2. `.task(id: bookmarkData)` re-fired when `reload` itself rewrote the bookmark on stale. Added `reloadedFor: Data?` sentinel.
 3. `jump(by:)` spawned an unstructured `Task` per arrow keypress → at ~30Hz keyrepeat, dozens queued and `engine.currentTime` was sampled at dispatch time. Switched to `seekTask?.cancel(); seekTask = Task { ... }`.
@@ -2084,9 +2180,11 @@ Each cycle: red (verified failure), green (minimum impl), commit. Cycle 2 (split
 Plus: dropped the redundant `applicationName: "OnlyCue"` override on the About panel (read automatically from `CFBundleName`); added `PlayerEngine.toggle()` to remove the play/pause duplication between `DocumentView` and `TransportBar`.
 
 **Iteration via PR review — one cycle (commit `e60ddd6`):**
+
 - Reviewer flagged the benign-but-wasteful second `reload` pass on the stale-refresh path: the sentinel still held the *pre-refresh* bookmark, so when `.task(id:)` re-fired with the new bookmark, the guard missed and `reload` ran a second time (terminated immediately because not stale, but incurred an extra `asset.load(.duration)` round trip). Fix: after a successful `MediaImporter.reload`, set `reloadedFor = document.model.media?.bookmarkData` so the second fire hits the guard.
 
 **Manual verification (per issue #11 epic-level Gherkin):**
+
 - Open a saved `.cuelist` whose `.mp3` was moved → "Missing media" alert with "Relink media…" / "Continue without media".
 - Click "Relink media…" → `.fileImporter` → pick the new path → media loads, bookmark silently refreshed via `importMedia`.
 - Click "Continue without media" → cues remain editable; preview pane shows the placeholder.
@@ -2103,6 +2201,7 @@ Plus: dropped the redundant `applicationName: "OnlyCue"` override on the About p
 **Shipped:** issue #10 (E8 cue markers on waveform). PR #23 merged into `dev` (rebase, head `716a710`). The waveform is now a real cue-editing surface, not just a static peak chart.
 
 **What landed:**
+
 - `OnlyCue/UI/CueMarkersGeometry.swift` — pure functions: `position(forTime:width:duration:)` (linear projection, zero-duration → 0) and `time(originalTime:dx:width:duration:)` (clamps to `0…duration`). Kept side-effect-free so geometry is unit-testable without SwiftUI.
 - `OnlyCue/UI/CueMarkersOverlay.swift` — `GeometryReader` + `ForEach(cues)` driving `CueMarkerView` (vertical `Rectangle` + `Capsule` cap, both colored from `cue.colorHex`). A clear hit-area `Capsule` (14pt) widens the touch target. A single `DragGesture(minimumDistance: 0)` decides drag-vs-tap on `.onEnded` via a 4pt magnitude threshold — single ended call → exactly one `retime` undo step. Live `dragOffset` `@State` follows the finger; reset on end.
 - `OnlyCue/UI/WaveformContainer.swift` — `.overlay(alignment: .topLeading) { CueMarkersOverlay(...) }` mounted on `WaveformView` **before** `.padding(.horizontal, 8)` so the overlay shares the waveform's pre-padded frame (markers align with peaks). Loads `asset.duration` during peak load so the overlay can project times.
@@ -2110,12 +2209,14 @@ Plus: dropped the redundant `applicationName: "OnlyCue"` override on the About p
 - `OnlyCueTests/CueMarkersGeometryTests.swift` — 7 tests covering position at zero / full / mid / zero-duration, plus drag-time math with both clamps.
 
 **Iteration via PR review — one cycle, four cleanups (`716a710`):**
+
 1. **Blocker — overlay/peak misalignment** — original modifier order was `.padding` then `.overlay`, which sized the overlay to the *padded* frame. Markers drifted 8pt left of peaks. Fix: swap order so the overlay sizes to the waveform's intrinsic frame, then pad both as one unit.
 2. Moved `dragThreshold` to sit with the other static layout constants for discoverability.
 3. Dropped redundant `.contentShape(Rectangle())` on the clear `Capsule` hit-area (a filled shape already participates in hit-testing).
 4. Dropped default `.allowsHitTesting(true)` on the overlay (it's the SwiftUI default).
 
 **Manual verification (per issue #10 Gherkin):**
+
 - Import `.mp3` → 3 cues at 4.25s / 12.0s / 18.5s (DEBUG seed) → 3 colored markers appear at correct x-positions.
 - Tap marker #2 → playhead seeks to 12.0s.
 - Drag marker #2 right → time updates live; release → one ⌘Z step restores original time.
@@ -2127,6 +2228,7 @@ Plus: dropped the redundant `applicationName: "OnlyCue"` override on the About p
 **Shipped:** issue #9 (E7 add/edit/delete cues). PR #22 merged into `dev` (rebase, head `5c5645a`). Documents are now live editors with proper undo.
 
 **What landed:**
+
 - `OnlyCue/Commands/CueCommands.swift` — 5 `@MainActor` static mutations (`addCueAtPlayhead`, `delete`, `rename`, `recolor`, `retime`) + private `mutate(_:undoManager:actionName:_:)` snapshot-and-replace helper. The helper opens its own undo group (`beginUndoGrouping` + `defer { endUndoGrouping() }`) so each command is one undoable unit regardless of host. Recursive `Self.mutate` inside the undo callback establishes the redo path. Edit-menu action names ("Undo Add Cue", "Redo Rename Cue", etc.) via `setActionName`.
 - `OnlyCue/UI/CueRowView.swift` — `Button` swatch (14pt `Circle`, `.buttonStyle(.plain)`) opens a `.popover` listing 8 predefined cue colors. `TextField`-with-`@FocusState` handles inline rename on double-click; commits on Enter, cancels on Esc.
 - `OnlyCue/UI/CueListPane.swift` — `.onDeleteCommand { deleteSelected() }` deletes the selected row via AppKit's responder chain. `.onDelete(perform:)` mirrors via swipe. `@Environment(\.undoManager)` flows through to all commands.
@@ -2134,16 +2236,19 @@ Plus: dropped the redundant `applicationName: "OnlyCue"` override on the About p
 - `OnlyCueTests/CueCommandsTests.swift` — 8 tests: add at time, add+undo+redo, delete+undo, rename+undo, recolor+undo, retime+undo, multi-add stays sorted by time. Test helper sets `groupsByEvent = false` so each `mutate` group lands at top level (one mutation = one undo).
 
 **Iteration mid-session — three live-smoke fixes:**
+
 1. **`ColorPicker` rendered as a chunky pill** — wraps `NSColorWell` with minimum chrome size; `.frame(width:height:)` is silently ignored. Swapped to a palette `Menu`.
 2. **Mac delete key didn't fire** with `.onKeyPress(.delete)` + `@FocusState` on a `List`. Swapped to `.onDeleteCommand`, which routes through AppKit's responder chain.
 3. **`Menu { ... }.menuStyle(.borderlessButton)` collapsed the trigger**, hiding the swatch label entirely. Final form: `Button` + `.popover` with `.buttonStyle(.plain)` for full custom rendering.
 
 **Iteration via PR review — three undo-grouping cycles** (captured in `docs/findings.md`):
+
 1. Initial `groupsByEvent = false` in tests broke `registerUndo` (must begin a group first).
 2. Removing the override let `groupsByEvent = true` swallow every test mutation into one auto-group → `undo()` rolled back the whole test.
 3. Final fix: `mutate` opens its own group (host-independent), test helper sets `groupsByEvent = false` so that group lands at top level. Production keeps `groupsByEvent = true` from `DocumentGroup` and our group nests cleanly inside the run-loop auto-group (one user click = one undoable unit).
 
 **Manual verification (per issue #9 Gherkin):**
+
 - Drop `.mp3` → press `M` at various playhead positions → cues appear sorted by time with default name "Cue" and teal swatch.
 - ⌘Z empties; ⌘⇧Z restores.
 - Double-click name → TextField focused → type → Enter → name updates; ⌘Z restores.
@@ -2157,6 +2262,7 @@ Plus: dropped the redundant `applicationName: "OnlyCue"` override on the About p
 **Shipped:** issue #8 (E6 cue list pane). PR #21 merged into `dev` (rebase, head `0009f35`). The cue list — the thing this app exists to plan — finally has a UI.
 
 **What landed:**
+
 - `OnlyCue/UI/CueListPane.swift` — `if cues.isEmpty { emptyState } else { List(selection: $selection) }`. Empty state has SF Symbol + "No cues yet" + "Press M to add one at the playhead". Selection is `Cue.ID?`; `.onChange(of: selection)` looks up the cue and calls `engine.seek(to: cue.time)` in a `Task`.
 - `OnlyCue/UI/CueRowView.swift` — `HStack` with zero-padded `#`, `Circle` color swatch, name (or "Untitled"), `TimeFormat.hms(cue.time)` in monospaced caption.
 - `OnlyCue/Utilities/Color+Hex.swift` — `Color.init?(hex: String)` parsing `#RRGGBB`. Defensive `allSatisfy(\.isHexDigit)` guard since `Scanner.scanHexInt64` accepts some non-hex strings.
@@ -2166,6 +2272,7 @@ Plus: dropped the redundant `applicationName: "OnlyCue"` override on the About p
 - `OnlyCueTests/ColorHexTests.swift` — valid hex → expected RGB; lowercase OK; missing `#` OK; wrong length → nil; non-hex chars → nil.
 
 **Manual verification (per issue #8 Gherkin):**
+
 - New document → cue list shows empty state with the M-key hint.
 - Click "+ Sample cues" (DEBUG) → 3 rows render in order with correct colors and HH:MM:SS.mmm times.
 - Click row 2 → playhead seeks to ~12.0s.
@@ -2177,6 +2284,7 @@ Plus: dropped the redundant `applicationName: "OnlyCue"` override on the About p
 **Shipped:** issue #7 (E5 waveform). PR #20 merged into `dev` (rebase, head `d962d96`). Audio documents now have a real waveform.
 
 **What landed:**
+
 - `OnlyCue/Media/WaveformGenerator.swift` — `static peaks(for: AVAsset, resolution: Int) async throws -> [Float]`. Forces output to mono Int16 LinearPCM @ 44.1kHz via `AVAssetReaderTrackOutput`, streams sample buffers, peak-reduces into N buckets via a `private struct PeakAccumulator`, normalizes to `0…1`. `Task.checkCancellation()` between buffers; `CMSampleBufferInvalidate` to free the reader's pool. Top-level function split into `makeReader` / `estimatedSampleCount` helpers to fit SwiftLint's complexity (10) and length (50) budgets.
 - `OnlyCue/Media/WaveformCache.swift` — `WaveformCache(directory:)` for tests + `WaveformCache.shared` rooted at `~/Library/Caches/OnlyCue/peaks/`. Binary `Float32` blob keyed by `<sha>-<resolution>.peaks`. `static fileHash(_:)` streams the file in 1 MB chunks via `CryptoKit.SHA256`.
 - `OnlyCue/UI/WaveformView.swift` — Canvas of rounded vertical bars centered on midline; resolves shading once, fills with `context.fill(path, with: shading)`.
@@ -2185,12 +2293,14 @@ Plus: dropped the redundant `applicationName: "OnlyCue"` override on the About p
 - `OnlyCueTests/{WaveformGenerator,WaveformCache}Tests.swift` — generator (count, silent → zero, sine → non-zero, normalized) + cache (round-trip, miss, resolution mismatch, hash stability + uniqueness). `SilentAudioFixture.makeSineWAV(duration:frequency:)` added.
 
 **Iteration mid-session — five SwiftLint/API errors caught at build time:**
+
 1. `GraphicsContext.fill(_:with:)` takes `Shading` directly, not `Shading.color(...)`. The resolved shading **is** the value to pass.
 2. `unneeded_synthesized_initializer` on `WaveformCache(directory:)` — dropped the explicit init, kept memberwise.
 3. `prefer_self_in_static_references` inside `WaveformCache.shared` factory — `Self(directory:)` not `WaveformCache(directory:)`.
 4. & 5. `cyclomatic_complexity 11` and `function_body_length 66` on `peaks(for:resolution:)` — extracted `PeakAccumulator` struct and split helpers; top-level function dropped to ~30 lines.
 
 **Manual verification:**
+
 - 5-min `.mp3` first import: spinner appears, waveform renders within ~1s.
 - Re-import same `.mp3`: cache hit, instant render.
 - Video import: unchanged (video preview pane).
@@ -2204,18 +2314,21 @@ Plus: dropped the redundant `applicationName: "OnlyCue"` override on the About p
 **Shipped:** issue #6 (E4 video preview pane). PR #19 merged into `dev` (rebase, head `be72182`). Documents now show their picture.
 
 **What landed:**
+
 - `OnlyCue/UI/AVPlayerLayerView.swift` — `NSViewRepresentable` over `PlayerHostingView: NSView`. Host view sets `wantsLayer = true`, gets a plain `CALayer`, then `addSublayer(playerLayer)` with `videoGravity = .resizeAspect`. `override func layout()` keeps `playerLayer.frame = bounds` on every resize.
 - `OnlyCue/UI/PreviewPane.swift` — `if let media; switch media.kind` dispatches to `AVPlayerLayerView`, an audio placeholder ("Audio loaded — waveform arrives in E5"), or an empty placeholder. `minHeight: 180`, rounded corners, accessibility identifiers per state.
 - `OnlyCue/UI/DocumentView.swift` — pane slotted between media summary and cue count; window minimum bumped to 560×480.
 - `project.yml` — pre-build SwiftLint script now `export PATH="/opt/homebrew/bin:/usr/local/bin:$PATH"` before `which swiftlint`. Xcode runs build scripts in a sandboxed shell with restricted PATH; without the export, a Homebrew-installed swiftlint reported "not installed".
 
 **Build/render iteration mid-session:**
+
 - First pass used `override func makeBackingLayer() -> CALayer { playerLayer }` to make the AVPlayerLayer the view's own backing layer. Compiles, looks elegant; rendered no picture in practice on macOS 15. Audio played, video stayed empty. Switched to the `addSublayer + override layout()` canonical pattern (commit `9fcc9cc` / `be72182`); video now renders.
 - Stale Swift 6 `@MainActor` build error appeared once — DerivedData cache from before the E3 fix. `⌘⇧K` clean build folder cleared it.
 
 **Simplify drop:** first pass added `PreviewPane.Kind { empty/audio/video }` + a static `previewKind(for:)` function + a unit test. The function just unwrapped `media?.kind`, the test was tautological. All three deleted (commit `b2091ed`); inline switch on `media?.kind` in the body. -32 LOC.
 
 **Manual verification (per Gherkin in issue #6):**
+
 - `.mp4` drag-drop → first frame visible immediately, transport drives video + audio in sync.
 - `.mp3` drag-drop → audio placeholder.
 - Empty document → empty placeholder.
@@ -2227,6 +2340,7 @@ Plus: dropped the redundant `applicationName: "OnlyCue"` override on the About p
 **Shipped:** issue #5 (E3 media import). PR #18 merged into `dev` (rebase, head `ce3e0ca`). The app can now actually open user-supplied media.
 
 **What landed:**
+
 - `OnlyCue/Utilities/Bookmarks.swift` — `Bookmarks.create(for:) -> Data` and `Bookmarks.resolve(_:) -> Resolution` over `URL.bookmarkData(options: .withSecurityScope)` and `URL(resolvingBookmarkData:bookmarkDataIsStale:)`. `Resolution { url, isStale }` keeps the staleness signal explicit for E9.
 - `OnlyCue/Commands/MediaImporter.swift` (new directory) — `@MainActor importMedia(from:into:engine:)`. Validates the URL via `UTType` (`.audio` / `.movie`), creates the bookmark, loads `AVAsset` duration off-main, mutates `document.model.media`, and calls `engine.load(asset:)`. `MediaImportError.unsupportedType(filename:)` for the alert path.
 - `OnlyCue/UI/DocumentView.swift` — `Import Media…` button bound to `⌘O`, `.fileImporter(allowedContentTypes: MediaImporter.allowedContentTypes)`, `.dropDestination(for: URL.self)`, `.alert(item:)` driven by an internal `ImportAlert: Identifiable`. Added `mediaSummary` line that shows the imported file name + HH:MM:SS.mmm duration.
@@ -2235,10 +2349,12 @@ Plus: dropped the redundant `applicationName: "OnlyCue"` override on the About p
 - `OnlyCue/Media/PlayerEngine.swift` — `@MainActor` on the class; periodic-time-observer closure hops via `MainActor.assumeIsolated { ... }` (queue is already `.main`).
 
 **Build fixes applied mid-session (Swift 6 / macOS 15 SDK):**
+
 - "Main actor-isolated initializer 'init(asset:)' cannot be called from outside of the actor" — fixed by adding `@MainActor` to `PlayerEngine` (commit `12a5015`). This applies the suggestion deferred from PR #17 review; it became load-bearing for the build, so the deferral resolved itself organically.
 - "Main actor-isolated property 'currentTime' / 'rate' can not be mutated from a Sendable closure" inside `addPeriodicTimeObserver` — fixed by wrapping the body in `MainActor.assumeIsolated { ... }` (commit `ce3e0ca`). The observer queue is `.main`, so the assumption is sound and avoids per-tick `Task` allocation at 10Hz.
 
 **Manual verification (per `docs/build-sequence.md` detour rule #3, since XCUITest can't drive `NSOpenPanel`/`.dropDestination`):**
+
 - Drag `.mp3` onto window → `mediaSummary` updates with name + duration, transport plays audio.
 - ⌘O → file picker filtered to audio + video.
 - Drag `.pdf` → "Unsupported file" alert; `ProjectModel.media` stays nil.
@@ -2253,15 +2369,18 @@ Plus: dropped the redundant `applicationName: "OnlyCue"` override on the About p
 **Shipped:** issue #4 (E2 player core). PR #17 merged into `dev` (rebase, head `2240f5c`). First media-handling code.
 
 **What landed:**
+
 - `OnlyCue/Utilities/Time+Format.swift` — `TimeFormat.hms(_:)` returns `HH:MM:SS.mmm`, clamps negatives to zero, half-away-from-zero millisecond rounding. 7 unit tests covering zero, sub-second, minute/hour rollover, complex case, negatives, and sub-ms rounding.
 - `OnlyCue/Media/PlayerEngine.swift` — `@Observable final class` wrapping `AVPlayer`. Exposes `currentTime`, `rate`, `duration` as observable state via the `Observation` framework; player and `timeObserver` use `@ObservationIgnored`. API: `play()`, `pause()`, `seek(to:)`, `load(asset:)`. Periodic time observer fires every 0.1s on the main queue. 4 unit tests using a programmatically-generated silent WAV (`AVAudioFile`) — no fixture media in the repo.
 - `OnlyCue/UI/TransportBar.swift` — minimal SwiftUI transport: play/pause `Image` button toggling on `engine.rate > 0`, monospaced time readout via `TimeFormat.hms(engine.currentTime)`. `accessibilityIdentifier`s on both elements.
 - `OnlyCue/UI/DocumentView.swift` — wired `@State private var engine = PlayerEngine()` per document and embedded `TransportBar(engine:)`.
 
 **Review cycle (1 commit beyond initial 4):**
+
 - Cycle 1: 3 optional suggestions on PR #17. Applied #3 (`load(asset:)` now resets `rate = 0` immediately, closing a ~100ms stale-rate window between `replaceCurrentItem(with:)` and the next periodic observer tick — commit `2240f5c`). Deferred #1 (`@MainActor`) and #2 (`rate != 0` vs `> 0`) per YAGNI: the reviewer's own framing was conditional ("once we cross threading boundaries", "if/when we support reverse playback"). Posted gh-comment explaining the deferral with reasoning.
 
 **Key learnings:**
+
 - `@Observable` + `@ObservationIgnored` is the right shape for engine-style classes that own non-observable resources (an `AVPlayer`, a periodic-time-observer token).
 - Real assets (not mocks) for `seek`/`load` tests via `AVAudioFile.write(from:)` to a temp WAV. Keeps tests fast, hermetic, and realistic without committing binary fixtures.
 - Establish convention for review feedback: apply unconditional correctness fixes; defer suggestions whose own framing is conditional on future events.
@@ -2273,6 +2392,7 @@ Plus: dropped the redundant `applicationName: "OnlyCue"` override on the About p
 **Shipped:** issue #3 (E1 skeleton). PR #16 merged into `dev`. First feature epic — first real Swift code.
 
 **What landed:**
+
 - Data model under `OnlyCue/Document/`: `ProjectModel`, `Cue`, `MediaReference`, `MediaKind`. All `Codable`/`Equatable`; `Cue` is also `Identifiable`.
 - `CueListDocument` (`final class : ReferenceFileDocument`) with JSON encode/decode using `[.prettyPrinted, .sortedKeys]`.
 - `Info.plist` adds `UTExportedTypeDeclarations` (declares `com.onlycue.cuelist`) and `CFBundleDocumentTypes` (binds it to `CueListDocument` via `NSDocumentClass`).
@@ -2281,11 +2401,13 @@ Plus: dropped the redundant `applicationName: "OnlyCue"` override on the About p
 - Replaced C1 placeholder tests with real ones.
 
 **Review cycles applied (3 commits beyond initial 6):**
+
 - Cycle 1: SwiftLint `--strict` failed on test code — replaced 6 force-unwraps with `try XCTUnwrap`, fixed `String(decoding:)` per `optional_data_string_conversion`, fixed `multiline_arguments` on `XCTAssert*` calls. Hoisted fixed UUIDs into `static let` constants.
 - Cycle 2: macOS `DocumentGroup` shows the launcher window on cold launch (not auto untitled doc), so the UI test never reached `DocumentView`. Drove the test through `app.typeKey("n", modifierFlags: .command)` to mirror the Gherkin "When the user creates a new document". Added `.accessibilityIdentifier("documentTitle")` and `.accessibilityIdentifier("cueCount")` to query by stable identifier.
 - Cycle 3: `XCUIElement.label` returns empty string when querying SwiftUI `Text` by `accessibilityIdentifier`. Dropped both `.label` equality assertions; element existence under the identifier is sufficient evidence of the rendered content.
 
 **Key learnings (captured in `docs/findings.md`-worthy items):**
+
 - SwiftLint `--strict` applies to test code too. Use `try XCTUnwrap` over force-unwrap in tests.
 - macOS `DocumentGroup` cold-launch shows launcher, not untitled document. UI tests must drive ⌘N first.
 - XCUITest `.label` is unreliable when an element carries `accessibilityIdentifier` from a SwiftUI `Text`; rely on identifier resolution + `exists`/`waitForExistence` instead.
@@ -2297,6 +2419,7 @@ Plus: dropped the redundant `applicationName: "OnlyCue"` override on the About p
 **Shipped:** issue #2 (C2 CI). PR #15 merged into `dev`. First PR using the new dev-as-default flow.
 
 **What landed:**
+
 - `.github/workflows/ci.yml` — single `build-test` job on `macos-latest`, ~25 min timeout.
 - Pipeline: checkout → `maxim-lobanov/setup-xcode@v1` (latest stable Xcode) → `brew install xcodegen swiftlint xcbeautify` → `swiftlint lint --strict --reporter github-actions-logging` → `xcodegen generate` → `actions/cache@v4` (DerivedData + SPM) → `xcodebuild build` Debug → `xcodebuild test`. Build/test piped through `xcbeautify --renderer github-actions` for proper annotations.
 - Triggers: `pull_request` (any branch) and `push` to `main` or `dev`.
@@ -2304,9 +2427,11 @@ Plus: dropped the redundant `applicationName: "OnlyCue"` override on the About p
 - Code signing disabled (signing is C3's job).
 
 **Coverage of reviewer feedback from PR #14:**
+
 - SwiftLint must fail CI on absent or violating — `--strict` mode + natural `brew install` failure mode covers both.
 
 **Out of scope (deferred):**
+
 - Code signing in CI → C3 (#13).
 - Release builds in CI → C3.
 - Branch protection (require CI green + 1 review) → repo Settings UI, not committable.
@@ -2320,6 +2445,7 @@ Plus: dropped the redundant `applicationName: "OnlyCue"` override on the About p
 **Shipped:** issue #1 (C1 bootstrap). PR #14 merged via rebase into `main`.
 
 **What landed:**
+
 - Repo metadata (linked the GitHub remote, 23 labels, 3 milestones, 13 issues — 10 epics + 3 chores).
 - All planning docs under `docs/` (vision, mvp-scope, architecture, data-model, build-sequence, verification, roadmap, decisions).
 - Approved spec: `docs/superpowers/specs/2026-05-07-repo-issues-design.md`.
@@ -2333,6 +2459,7 @@ Plus: dropped the redundant `applicationName: "OnlyCue"` override on the About p
 - `CLAUDE.md` with PR template override rule, commit conventions, branching rules, and hard rules.
 
 **Review feedback applied (commit `4bac6bf` after rebase):**
+
 - Bundle ID changed to `com.chienchuanw.OnlyCue` (reverse-DNS must be a domain we control).
 - `SWIFT_TREAT_WARNINGS_AS_ERRORS: YES` for Release config (Debug stays NO).
 - Dropped duplicate `DEVELOPMENT_LANGUAGE: en` from target settings.
@@ -2343,4 +2470,5 @@ Plus: dropped the redundant `applicationName: "OnlyCue"` override on the About p
 **Branching change:** `dev` is now the default branch on the remote. Issue branches base off `dev`. Production code is on `main`. CLAUDE.md updated to reflect this.
 
 **Tooling installed this session:**
+
 - `xcodegen` (2.45.4) via Homebrew — generates `OnlyCue.xcodeproj` from `project.yml`.

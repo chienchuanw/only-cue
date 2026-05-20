@@ -15,6 +15,7 @@
 ## File Structure
 
 **Modify:**
+
 - `OnlyCue/Media/PlayerEngine.swift` — add `playbackRate` state + `setPlaybackRate(_:)` / `nudgePlaybackRate(by:)` / `resetPlaybackRate()` / `applyAudioTimePitchAlgorithm()`; thread `playbackRate` through `play()` and `load(asset:)`.
 - `OnlyCue/App/KeymapAction.swift` — three new cases + display names.
 - `OnlyCue/App/Keymap.swift` — default bindings for the three new cases.
@@ -24,6 +25,7 @@
 - `OnlyCue/LTC/LTCRoutingStore.swift` — emit a notification on enable (so the engine can hear it) **only if** the existing API doesn't already publish a usable signal; verify first.
 
 **Create:**
+
 - `OnlyCue/UI/PlaybackRateBadge.swift` — the small badge + popover view.
 - `OnlyCueTests/PlayerEnginePlaybackRateTests.swift` — unit tests for the new engine API.
 - `OnlyCueUITests/PlaybackSpeedUITests.swift` — UI smoke for menu items + badge.
@@ -33,6 +35,7 @@
 ## Task 1: Add `playbackRate` state and pitch algorithm to PlayerEngine
 
 **Files:**
+
 - Modify: `OnlyCue/Media/PlayerEngine.swift`
 - Test: `OnlyCueTests/PlayerEnginePlaybackRateTests.swift` (new)
 
@@ -198,6 +201,7 @@ git commit -m "feat(media): add playback rate state to PlayerEngine"
 ## Task 2: Apply playback rate on play(), preserve pitch on load
 
 **Files:**
+
 - Modify: `OnlyCue/Media/PlayerEngine.swift`
 - Test: `OnlyCueTests/PlayerEnginePlaybackRateTests.swift`
 
@@ -309,6 +313,7 @@ git commit -m "feat(media): apply playback rate on play and preserve pitch"
 ## Task 3: Add KeymapAction cases and default bindings
 
 **Files:**
+
 - Modify: `OnlyCue/App/KeymapAction.swift`
 - Modify: `OnlyCue/App/Keymap.swift`
 - Test: `OnlyCueTests/PlayerEnginePlaybackRateTests.swift` (no new test — covered by existing keymap-coverage tests in `OnlyCueTests/`, see Step 4)
@@ -365,9 +370,11 @@ git commit -m "feat(app): add playback rate keymap actions"
 ## Task 4: Wire shortcuts in DocumentView + LTC interlock
 
 **Files:**
+
 - Modify: `OnlyCue/UI/DocumentView.swift`
 
 This task adds:
+
 - A hidden-button group binding the three shortcuts (same pattern as `transportShortcuts`).
 - Notification observers so the new `Playback` menu (Task 5) can drive the engine.
 - The LTC interlock: rate-change attempts are blocked when LTC is enabled; enabling LTC resets the rate.
@@ -494,6 +501,7 @@ git commit -m "feat(app): wire playback rate shortcuts and LTC interlock"
 ## Task 5: Add the Playback menu
 
 **Files:**
+
 - Modify: `OnlyCue/App/AppCommands.swift`
 
 - [ ] **Step 1: Add `CommandMenu("Playback")`**
@@ -550,6 +558,7 @@ git commit -m "feat(app): add Playback menu with speed controls"
 ## Task 6: Add the transport-bar rate badge
 
 **Files:**
+
 - Create: `OnlyCue/UI/PlaybackRateBadge.swift`
 - Modify: `OnlyCue/UI/TransportBar.swift`
 
@@ -669,6 +678,7 @@ xcodebuild build -project OnlyCue.xcodeproj -scheme OnlyCue -destination 'platfo
 ```
 
 Open the app, load a media file, and:
+
 - Press `]` three times → badge reads `1.3×`.
 - Press `\` → badge briefly shows `1.0×` then disappears after ~1.2s.
 - Click the badge while rate ≠ 1.0× → popover opens with slider + reset.
@@ -689,6 +699,7 @@ If `project.yml` uses an explicit `sources` list (rather than auto-discovery), a
 ## Task 7: UI smoke tests
 
 **Files:**
+
 - Create: `OnlyCueUITests/PlaybackSpeedUITests.swift`
 
 - [ ] **Step 1: Write the UI tests**

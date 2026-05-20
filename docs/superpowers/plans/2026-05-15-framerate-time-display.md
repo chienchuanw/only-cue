@@ -15,6 +15,7 @@
 ### Task 1: Add `TimeFormat.smpte` (TDD)
 
 **Files:**
+
 - Modify: `OnlyCue/Utilities/Time+Format.swift`
 - Test: `OnlyCueTests/TimeFormatTests.swift`
 
@@ -95,6 +96,7 @@ git commit -m "feat(time-format): add smpte formatter"
 ### Task 2: Add `TimeFormat.smpteCountdown` (TDD)
 
 **Files:**
+
 - Modify: `OnlyCue/Utilities/Time+Format.swift`
 - Test: `OnlyCueTests/TimeFormatTests.swift`
 
@@ -189,6 +191,7 @@ git commit -m "feat(time-format): add smpteCountdown formatter"
 ### Task 3: Add `EnvironmentValues.projectFramerate` and seed it from `DocumentView`
 
 **Files:**
+
 - Create: `OnlyCue/UI/Environment+Framerate.swift`
 - Modify: `OnlyCue/UI/DocumentView.swift:30-68` (body)
 - Test: `OnlyCueTests/EnvironmentFramerateTests.swift` (new)
@@ -260,10 +263,12 @@ In `OnlyCue/UI/DocumentView.swift`, modify the body to add the environment modif
 - [ ] **Step 5: Regenerate Xcode project and run tests**
 
 Run:
+
 ```
 xcodegen generate
 xcodebuild test -scheme OnlyCue -only-testing OnlyCueTests/EnvironmentFramerateTests
 ```
+
 Expected: PASS.
 
 - [ ] **Step 6: Commit**
@@ -278,6 +283,7 @@ git commit -m "feat(ui): add projectFramerate environment value seeded at Docume
 ### Task 4: Migrate `InspectorClockHeader` to `smpte`
 
 **Files:**
+
 - Modify: `OnlyCue/UI/InspectorClockHeader.swift`
 - Test: `OnlyCueUITests/InspectorClockHeaderUITests.swift` (extend, or create if missing — search first)
 
@@ -354,6 +360,7 @@ git commit -m "feat(inspector): render clock as SMPTE timecode"
 ### Task 5: Migrate cue/media row + playhead/timeline views
 
 **Files:**
+
 - Modify: `OnlyCue/UI/ItemRowView.swift:17`
 - Modify: `OnlyCue/UI/CueRowView.swift:24`
 - Modify: `OnlyCue/UI/PlayheadOverlay.swift:32`
@@ -420,6 +427,7 @@ with:
 - [ ] **Step 5: Build to verify no remaining references**
 
 Run:
+
 ```
 grep -n "TimeFormat\.hms" OnlyCue/UI
 xcodebuild build -scheme OnlyCue
@@ -439,6 +447,7 @@ git commit -m "feat(ui): render cue/media row, playhead, timeline times as SMPTE
 ### Task 6: Migrate `TransportBar` (current/duration + next-cue countdown)
 
 **Files:**
+
 - Modify: `OnlyCue/UI/TransportBar.swift:34-36` (current/duration), `:102` (countdown)
 
 `TransportBar` already receives `timecodeSettings: ProjectTimecodeSettings` as a property — use `timecodeSettings.framerate` directly rather than the environment. The per-media SMPTE field at line 133 stays unchanged (it's the LTC-aligned readout).
@@ -478,6 +487,7 @@ let timeBody = TimeFormat.smpteCountdown(interval, rate: timecodeSettings.framer
 - [ ] **Step 3: Build to verify the file is clean of `hms`/`compactCountdown`**
 
 Run:
+
 ```
 grep -n "TimeFormat\.hms\|TimeFormat\.compactCountdown" OnlyCue/UI/TransportBar.swift
 xcodebuild build -scheme OnlyCue
@@ -497,6 +507,7 @@ git commit -m "feat(transport): render current/duration and countdown as SMPTE"
 ### Task 7: Update countdown unit tests for the new SMPTE shape
 
 **Files:**
+
 - Modify: `OnlyCueTests/NextCueCountdownTests.swift` (replace decisecond assertions)
 
 The existing `NextCueCountdownTests` pins decisecond literals (`"5.2"`, `"1:00.0"`) against `TimeFormat.compactCountdown`. Since the countdown view now calls `smpteCountdown`, these tests must be rewritten — and they MUST be rewritten in this task because Task 8 deletes `compactCountdown` entirely.
@@ -551,12 +562,14 @@ git commit -m "test(transport): assert SMPTE-shape next-cue countdown"
 ### Task 8: Delete `TimeFormat.hms` and `TimeFormat.compactCountdown` + their tests
 
 **Files:**
+
 - Modify: `OnlyCue/Utilities/Time+Format.swift` (remove old functions)
 - Modify: `OnlyCueTests/TimeFormatTests.swift` (remove old assertions)
 
 - [ ] **Step 1: Verify no remaining call sites**
 
 Run:
+
 ```
 grep -rn "TimeFormat\.hms\|TimeFormat\.compactCountdown" OnlyCue OnlyCueTests OnlyCueUITests --include="*.swift"
 ```
@@ -605,6 +618,7 @@ In `OnlyCueTests/TimeFormatTests.swift`, remove every method that asserts on `Ti
 - [ ] **Step 4: Build and run the full suites**
 
 Run:
+
 ```
 xcodebuild test -scheme OnlyCue -only-testing OnlyCueTests
 xcodebuild test -scheme OnlyCue -only-testing OnlyCueUITests
@@ -629,6 +643,7 @@ git commit -m "refactor(time-format): remove obsolete millisecond formatters"
 ### Task 9: End-to-end verification — flip framerate live
 
 **Files:**
+
 - Modify or extend: an existing UI test file under `OnlyCueUITests/` (e.g., `TimecodeSettingsUITests.swift` if present, otherwise the most appropriate inspector-clock test file)
 
 This is a regression test that proves the new environment value reaches the clock when the user changes the framerate at runtime.
@@ -636,6 +651,7 @@ This is a regression test that proves the new environment value reaches the cloc
 - [ ] **Step 1: Locate or create a framerate-change UI test**
 
 Run:
+
 ```
 grep -rln "TimecodeSettingsSheet\|setProjectTimecodeSettings\|framerate" OnlyCueUITests
 ```

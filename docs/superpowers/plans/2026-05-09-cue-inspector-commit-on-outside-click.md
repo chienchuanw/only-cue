@@ -25,6 +25,7 @@ The pure helper and the SwiftUI/AppKit plumbing live in the same file because th
 ### Task 1: Add the pure-logic helper with TDD
 
 **Files:**
+
 - Create: `OnlyCue/UI/FirstResponderResign.swift`
 - Test: `OnlyCueTests/FirstResponderResignTests.swift`
 
@@ -102,6 +103,7 @@ If `make` is unavailable, run `xcodegen generate` directly.
 - [ ] **Step 1.3: Run the test class to confirm RED**
 
 Run:
+
 ```bash
 xcodebuild test \
   -project OnlyCue.xcodeproj \
@@ -149,6 +151,7 @@ enum FirstResponderResign {
 - [ ] **Step 1.5: Run the test class to confirm GREEN**
 
 Run:
+
 ```bash
 xcodebuild test \
   -project OnlyCue.xcodeproj \
@@ -174,6 +177,7 @@ git commit -m "feat(ui): add FirstResponderResign predicate for outside-click co
 ### Task 2: Add the SwiftUI view modifier and AppKit monitor installer
 
 **Files:**
+
 - Modify: `OnlyCue/UI/FirstResponderResign.swift` (append the view modifier and `View` extension)
 
 This task adds the SwiftUI plumbing on top of the green pure helper. The `MonitorInstaller` lifecycle (install / remove) is not unit-testable without a real `NSWindow`; manual verification in Task 4 covers it.
@@ -249,6 +253,7 @@ extension View {
 - [ ] **Step 2.2: Build to confirm the file compiles**
 
 Run:
+
 ```bash
 xcodebuild build \
   -project OnlyCue.xcodeproj \
@@ -262,6 +267,7 @@ Expected: `** BUILD SUCCEEDED **`. Ignore SourceKit-LSP "Cannot find type X in s
 - [ ] **Step 2.3: Re-run the existing test class to confirm the predicate tests still pass**
 
 Run:
+
 ```bash
 xcodebuild test \
   -project OnlyCue.xcodeproj \
@@ -285,6 +291,7 @@ git commit -m "feat(ui): add FirstResponderResignOnOutsideClick view modifier"
 ### Task 3: Apply the modifier at `DocumentView`'s body root
 
 **Files:**
+
 - Modify: `OnlyCue/UI/DocumentView.swift` (append `.resignFirstResponderOnOutsideClick()` after `.task(id:)`)
 
 - [ ] **Step 3.1: Read the current `DocumentView.body` to find the correct anchor**
@@ -316,6 +323,7 @@ If `DocumentView` already has additional trailing modifiers (e.g., the `.sheet` 
 - [ ] **Step 3.3: Build to confirm DocumentView still compiles**
 
 Run:
+
 ```bash
 xcodebuild build \
   -project OnlyCue.xcodeproj \
@@ -342,6 +350,7 @@ git commit -m "feat(ui): apply outside-click first-responder resign at document 
 - [ ] **Step 4.1: Run the full unit test suite**
 
 Run:
+
 ```bash
 xcodebuild test \
   -project OnlyCue.xcodeproj \
@@ -363,6 +372,7 @@ If a `multiline_arguments` or other violation surfaces in the new files, fix it 
 - [ ] **Step 4.3: Release build with warnings as errors**
 
 Run:
+
 ```bash
 xcodebuild build \
   -project OnlyCue.xcodeproj \
@@ -378,6 +388,7 @@ Expected: `** BUILD SUCCEEDED **` with no `warning:` lines (other than the harml
 - [ ] **Step 4.4: Manual verification — end-to-end UI test**
 
 Launch the app:
+
 ```bash
 open -a OnlyCue.app
 # or if running from Xcode build dir:
@@ -423,6 +434,7 @@ Run through every check below. Each check matches a Manual verification bullet i
    - Verify the Notes field reverts to the prior value — confirms the commit went through `CueCommands.setNotes` and registered an undo entry.
 
 If any check fails, stop and diagnose. Most likely failure modes:
+
 - `@FocusState` doesn't update after `makeFirstResponder(nil)` → SwiftUI version skew; verify `OnlyCue/UI/CueInspectorView.swift` has the existing `.onChange(of: focused)` block (line 91 in the spec snapshot).
 - Click on waveform commits but click on sidebar doesn't → the modifier may not be at the outermost `body` modifier position; re-check Task 3 placement.
 

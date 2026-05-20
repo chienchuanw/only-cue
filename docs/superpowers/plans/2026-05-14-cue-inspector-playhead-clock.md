@@ -26,6 +26,7 @@
 ### Task 1: Create `InspectorClockHeader` with a failing logic test
 
 **Files:**
+
 - Create: `OnlyCue/UI/InspectorClockHeader.swift`
 - Create: `OnlyCueTests/InspectorClockHeaderTests.swift`
 
@@ -59,10 +60,12 @@ Note: `debugSetCurrentTime` does not yet exist on `PlayerEngine`. Because `curre
 - [ ] **Step 2: Run test to verify it fails**
 
 Run:
+
 ```bash
 xcodegen generate
 xcodebuild test -scheme OnlyCue -destination 'platform=macOS' -only-testing:OnlyCueTests/InspectorClockHeaderTests
 ```
+
 Expected: FAIL with "Cannot find 'InspectorClockHeader' in scope" and "Value of type 'PlayerEngine' has no member 'debugSetCurrentTime'".
 
 - [ ] **Step 3: Add the `PlayerEngine` test seam**
@@ -120,10 +123,12 @@ struct InspectorClockHeader: View {
 - [ ] **Step 5: Run test to verify it passes**
 
 Run:
+
 ```bash
 xcodegen generate
 xcodebuild test -scheme OnlyCue -destination 'platform=macOS' -only-testing:OnlyCueTests/InspectorClockHeaderTests
 ```
+
 Expected: PASS (2 tests).
 
 - [ ] **Step 6: Commit**
@@ -138,6 +143,7 @@ git commit -m "feat(inspector): add InspectorClockHeader playhead readout view"
 ### Task 2: Wire `InspectorClockHeader` into `CueInspectorView`
 
 **Files:**
+
 - Modify: `OnlyCue/UI/CueInspectorView.swift:3-45`
 - Modify: `OnlyCue/UI/CueListPane.swift:77`
 
@@ -207,18 +213,22 @@ to:
 - [ ] **Step 4: Build to verify the wiring compiles**
 
 Run:
+
 ```bash
 xcodegen generate
 xcodebuild build -scheme OnlyCue -destination 'platform=macOS'
 ```
+
 Expected: BUILD SUCCEEDED. No errors in `CueInspectorView+Tempo.swift` (the extension does not reference the initializer).
 
 - [ ] **Step 5: Run all existing unit tests to verify no regression**
 
 Run:
+
 ```bash
 xcodebuild test -scheme OnlyCue -destination 'platform=macOS' -only-testing:OnlyCueTests
 ```
+
 Expected: PASS for all existing tests plus the two new `InspectorClockHeaderTests`.
 
 - [ ] **Step 6: Commit**
@@ -233,6 +243,7 @@ git commit -m "feat(inspector): show playhead clock above cue fields and empty s
 ### Task 3: UI test — clock is visible in both inspector states
 
 **Files:**
+
 - Create: `OnlyCueUITests/InspectorClockHeaderUITests.swift`
 
 - [ ] **Step 1: Write the failing UI test**
@@ -292,33 +303,41 @@ Note: the `-uiTestSeed` argument and `empty` / `singleCue` fixture names follow 
 - [ ] **Step 2: Verify available UI-test seed fixtures**
 
 Run:
+
 ```bash
 grep -n "case \|fixture\|seed" OnlyCue/App/UITestSeedHandler.swift
 ```
+
 Expected: a list of fixture names. Confirm `empty` and `singleCue` (or equivalent) exist. If they differ, update the `launchArguments` strings in the test above before continuing.
 
 - [ ] **Step 3: Run the UI tests to verify they pass**
 
 Run:
+
 ```bash
 xcodebuild test -scheme OnlyCue -destination 'platform=macOS' -only-testing:OnlyCueUITests/InspectorClockHeaderUITests
 ```
+
 Expected: PASS (2 tests).
 
 - [ ] **Step 4: Run full UI test suite to check for regressions**
 
 Run:
+
 ```bash
 xcodebuild test -scheme OnlyCue -destination 'platform=macOS' -only-testing:OnlyCueUITests
 ```
+
 Expected: PASS for all existing UI tests (no regressions from the inspector layout change). If the added header pushed any field out of an existing test's hit area, file it and fix in the same task — do not commit a green build that masks a regression.
 
 - [ ] **Step 5: Lint**
 
 Run:
+
 ```bash
 swiftlint --strict
 ```
+
 Expected: 0 violations.
 
 - [ ] **Step 6: Commit**
@@ -333,6 +352,7 @@ git commit -m "test(inspector): assert playhead clock visible in both inspector 
 ## Self-review
 
 **Spec coverage:**
+
 - "Always visible header" → Task 2 Step 2 puts `InspectorClockHeader` outside the if-cue/else block.
 - "HH:MM:SS.mmm format, live" → Task 1 Step 4 (uses `TimeFormat.hms` over `@Observable engine.currentTime`).
 - "Display-only" → no gesture or button modifier added; covered.

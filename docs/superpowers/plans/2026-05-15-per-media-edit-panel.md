@@ -15,6 +15,7 @@
 ## File Structure
 
 **Create:**
+
 - `OnlyCue/Document/ProjectModel+MigrationV11.swift` — v11→v12 migration; `LegacyV11` decode shapes.
 - `OnlyCue/Commands/CueCommands+Media.swift` — `updateMediaItem(id:alternateName:startTimecodeFrames:ltcMuted:)`.
 - `OnlyCue/UI/MediaEditSheet.swift` — modal sheet view.
@@ -24,6 +25,7 @@
 - `OnlyCueUITests/MediaEditSheetUITests.swift`
 
 **Modify:**
+
 - `OnlyCue/Document/MediaItem.swift` — add `alternateName`, add `resolvedName` computed property.
 - `OnlyCue/Document/ProjectModel.swift` — bump `currentSchemaVersion` from 11 to 12.
 - `OnlyCue/Document/ProjectModel+Migration.swift` — add `case 11:` dispatch to `migrateFromV11`.
@@ -35,6 +37,7 @@
 ## Task 1: `MediaItem.alternateName` field + `resolvedName` helper
 
 **Files:**
+
 - Modify: `OnlyCue/Document/MediaItem.swift`
 - Test: `OnlyCueTests/MediaItemResolvedNameTests.swift`
 
@@ -138,6 +141,7 @@ git commit -m "test(media-item): resolvedName + alternateName field"
 ## Task 2: Schema bump v11 → v12 with additive migration
 
 **Files:**
+
 - Modify: `OnlyCue/Document/ProjectModel.swift`
 - Modify: `OnlyCue/Document/ProjectModel+Migration.swift`
 - Create: `OnlyCue/Document/ProjectModel+MigrationV11.swift`
@@ -323,6 +327,7 @@ git commit -m "feat(schema): v11→v12 adds MediaItem.alternateName"
 ## Task 3: `CueCommands.updateMediaItem` atomic command
 
 **Files:**
+
 - Create: `OnlyCue/Commands/CueCommands+Media.swift`
 - Test: `OnlyCueTests/CueCommandsUpdateMediaItemTests.swift`
 
@@ -543,6 +548,7 @@ git commit -m "feat(commands): atomic updateMediaItem for edit-media sheet"
 ## Task 4: `MediaEditSheet` view
 
 **Files:**
+
 - Create: `OnlyCue/UI/MediaEditSheet.swift`
 
 This task is UI-only with no headless logic to unit-test cleanly; the UI smoke test in Task 6 exercises it end-to-end.
@@ -654,6 +660,7 @@ git commit -m "feat(ui): MediaEditSheet for per-clip name/TC/mute editing"
 ## Task 5: Wire context menu + sheet presentation in the sidebar
 
 **Files:**
+
 - Modify: `OnlyCue/UI/ItemListPane.swift`
 
 - [ ] **Step 1: Add state, context menu, and `.sheet` modifier**
@@ -764,6 +771,7 @@ git commit -m "feat(sidebar): right-click → Edit Media… opens MediaEditSheet
 ## Task 6: Switch user-facing labels to `resolvedName`
 
 **Files:**
+
 - Modify: `OnlyCue/UI/ItemRowView.swift`
 - Modify: `OnlyCue/UI/MediaTimecodeRow.swift`
 - Modify: any export/title surface that prints `media.displayName` to a user (confirm by grep).
@@ -773,10 +781,12 @@ git commit -m "feat(sidebar): right-click → Edit Media… opens MediaEditSheet
 Run: `grep -rn "media\.displayName\|item\.media\.displayName" OnlyCue --include="*.swift"`
 
 Classify each hit:
+
 - **User-facing** (sidebar row, main-pane title, cue list grouping label, export columns) → switch to `resolvedName`.
 - **Internal** (logging, error messages, bookmark/file-lookup, debug prints, audio engine wiring) → leave on `media.displayName`.
 
 Known user-facing sites to update:
+
 - `OnlyCue/UI/ItemRowView.swift` — the sidebar row label.
 - `OnlyCue/UI/MediaTimecodeRow.swift` — the per-item label inside `TimecodeSettingsSheet`.
 
@@ -814,6 +824,7 @@ git commit -m "refactor(ui): user-facing surfaces use MediaItem.resolvedName"
 ## Task 7: UI smoke test for the edit sheet
 
 **Files:**
+
 - Create: `OnlyCueUITests/MediaEditSheetUITests.swift`
 
 - [ ] **Step 1: Write the UI test**
@@ -921,6 +932,7 @@ Expected: all unit tests and UI tests pass.
 - [ ] **Step 3: Manual smoke (golden path)**
 
 `xcodegen generate && open OnlyCue.xcodeproj`, run the app, drop a media file in, right-click the sidebar row, choose "Edit Media…", type a name and a non-zero start timecode, toggle Mute, click Save. Confirm:
+
 - Sidebar row label updates to the new name.
 - Cmd-Z reverts all three fields in one undo.
 - Reopening the same document round-trips the new fields.

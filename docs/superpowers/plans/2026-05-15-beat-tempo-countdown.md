@@ -23,6 +23,7 @@
 ## Task 1: `activeBPM` helper
 
 **Files:**
+
 - Modify: `OnlyCue/UI/TransportBar.swift` (add static method next to `nextCueInterval` at `:34-40`)
 - Modify: `OnlyCueTests/NextCueCountdownTests.swift` (extend `makeCue`, add tests)
 
@@ -148,6 +149,7 @@ git commit -m "feat(transport): add activeBPM helper for beat countdown"
 ## Task 2: `BeatCountdown` formatter
 
 **Files:**
+
 - Modify: `OnlyCue/UI/TransportBar.swift` (add nested enum + static formatter)
 - Modify: `OnlyCueTests/NextCueCountdownTests.swift` (add tests)
 
@@ -246,6 +248,7 @@ git commit -m "feat(transport): add beatCountdown formatter"
 ## Task 3: `CountdownMode` + `countdownLabel`
 
 **Files:**
+
 - Modify: `OnlyCue/UI/TransportBar.swift` (add enum, AppStorage, label builder)
 - Modify: `OnlyCueTests/NextCueCountdownTests.swift` (add label-string tests)
 
@@ -377,6 +380,7 @@ git commit -m "feat(transport): add CountdownMode and countdownLabel builder"
 ## Task 4: Wire toggle into the view
 
 **Files:**
+
 - Modify: `OnlyCue/UI/TransportBar.swift` (replace the `Text("Next: …")` block at `:77-82` with a `Button { Text(...) }` driven by `@AppStorage`)
 
 - [ ] **Step 1: Add the AppStorage property**
@@ -459,6 +463,7 @@ git commit -m "feat(transport): make Next readout click-to-toggle time/beat mode
 ## Task 5: UI test for click-to-toggle and persistence
 
 **Files:**
+
 - Create: `OnlyCueUITests/BeatCountdownToggleUITests.swift`
 
 - [ ] **Step 1: Inspect the existing UI-test seed mechanism**

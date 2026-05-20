@@ -17,14 +17,17 @@
 ## File Structure
 
 **Modify:**
+
 - `OnlyCue/UI/WaveformContainer.swift` (lines ~96–116, the inner `ZStack` in `waveformBody`) — replace single `WaveformPlayheadLayer` use with `WaveformSeekSurface` (below `markersOverlay()`) and `WaveformPlayheadVisual` (above `markersOverlay()`).
 
 **Create:**
+
 - `OnlyCue/UI/WaveformSeekSurface.swift` — full-bleed `Color.clear` with `contentShape(Rectangle())`, the `DragGesture(minimumDistance: 0)` that drives `ScrubController` + `seekTask` + `engine.seek`, `.onContinuousHover` cursor, `accessibilityIdentifier("waveformSeekSurface")`. ~70 lines.
 - `OnlyCue/UI/WaveformPlayheadVisual.swift` — `TimelineView(.animation)` driving `renderedTime()` + `maybeAutoFollow()`, hosting `PlayheadOverlay`. `.allowsHitTesting(false)` on the root. ~55 lines.
 - `OnlyCueUITests/CueMarkerHitTestUITests.swift` — UI smoke proving the bug-fix: clicking a marker selects the underlying cue and seeks the playhead to the cue's time (i.e. the click is no longer absorbed by the seek surface).
 
 **Delete:**
+
 - `OnlyCue/UI/WaveformPlayheadLayer.swift` — superseded by the two new files.
 
 **Regenerate Xcode project:** `OnlyCue.xcodeproj/` is generated from `project.yml` via XcodeGen and is not committed; the existing `sources` rule for `OnlyCue/UI/` picks up the new files automatically. Run `xcodegen generate` after the create/delete to refresh the local project.
@@ -34,6 +37,7 @@
 ## Task 1: Add a failing UI test that proves the bug
 
 **Files:**
+
 - Create: `OnlyCueUITests/CueMarkerHitTestUITests.swift`
 
 This test asserts the user-visible bug from the spec: clicking a marker should select that cue and seek the playhead to the cue's time. Today the click hits the seek surface instead, so the cue is never selected and the playhead seeks to the click x (which differs from the cue time by the cap's pixel width — and would only coincide by accident).
@@ -111,6 +115,7 @@ Expected: `OnlyCue.xcodeproj` regenerated; no errors.
 - [ ] **Step 3: Run the new test and verify it fails for the right reason**
 
 Run:
+
 ```bash
 xcodebuild -project OnlyCue.xcodeproj \
   -scheme OnlyCue \
@@ -118,6 +123,7 @@ xcodebuild -project OnlyCue.xcodeproj \
   -only-testing:OnlyCueUITests/CueMarkerHitTestUITests/test_clickOnMarker_selectsTheUnderlyingCue \
   test
 ```
+
 Expected: FAIL — `selected.count` is `0`, not `1`. (The click was absorbed by the seek surface; the marker never received it.) If it fails for any other reason — seed didn't launch, markers never appeared, identifier query empty — fix the test before proceeding; do not start the implementation against a test that's broken for the wrong reason.
 
 - [ ] **Step 4: Commit the failing test**
@@ -132,6 +138,7 @@ git commit -m "test(ui): assert marker click selects underlying cue (currently r
 ## Task 2: Extract `WaveformSeekSurface`
 
 **Files:**
+
 - Create: `OnlyCue/UI/WaveformSeekSurface.swift`
 - Reference (do not modify yet): `OnlyCue/UI/WaveformPlayheadLayer.swift`
 
@@ -230,10 +237,12 @@ Expected: success.
 - [ ] **Step 3: Build to confirm the new file compiles**
 
 Run:
+
 ```bash
 xcodebuild -project OnlyCue.xcodeproj -scheme OnlyCue \
   -destination 'platform=macOS' build
 ```
+
 Expected: BUILD SUCCEEDED. (The file isn't yet referenced by anything; we're just verifying it compiles in isolation. The old `WaveformPlayheadLayer` is still in place and still in use.)
 
 - [ ] **Step 4: Commit**
@@ -248,6 +257,7 @@ git commit -m "refactor(waveform): extract WaveformSeekSurface from playhead lay
 ## Task 3: Extract `WaveformPlayheadVisual`
 
 **Files:**
+
 - Create: `OnlyCue/UI/WaveformPlayheadVisual.swift`
 - Reference: `OnlyCue/UI/WaveformPlayheadLayer.swift`, `OnlyCue/UI/PlayheadOverlay.swift`, `OnlyCue/UI/PlayheadInterpolator.swift`
 
@@ -328,10 +338,12 @@ Expected: success.
 - [ ] **Step 3: Build to confirm compilation**
 
 Run:
+
 ```bash
 xcodebuild -project OnlyCue.xcodeproj -scheme OnlyCue \
   -destination 'platform=macOS' build
 ```
+
 Expected: BUILD SUCCEEDED. (Still not wired; `WaveformPlayheadLayer` is still the live one.)
 
 - [ ] **Step 4: Commit**
@@ -346,6 +358,7 @@ git commit -m "refactor(waveform): extract WaveformPlayheadVisual from playhead 
 ## Task 4: Wire the new layers into `WaveformContainer`, delete the old layer
 
 **Files:**
+
 - Modify: `OnlyCue/UI/WaveformContainer.swift` (the `ZStack` inside `waveformBody`, lines ~96–116)
 - Delete: `OnlyCue/UI/WaveformPlayheadLayer.swift`
 
@@ -433,10 +446,12 @@ Expected: success.
 - [ ] **Step 4: Build**
 
 Run:
+
 ```bash
 xcodebuild -project OnlyCue.xcodeproj -scheme OnlyCue \
   -destination 'platform=macOS' build
 ```
+
 Expected: BUILD SUCCEEDED. If the build fails because something else still imported `WaveformPlayheadLayer`, grep the workspace and fix the holdout — there should be exactly one user inside `WaveformContainer.swift` and zero elsewhere:
 
 ```bash
@@ -448,12 +463,14 @@ Expected output after the fix: no matches.
 - [ ] **Step 5: Run the formerly-failing UI test and verify it now passes**
 
 Run:
+
 ```bash
 xcodebuild -project OnlyCue.xcodeproj -scheme OnlyCue \
   -destination 'platform=macOS' \
   -only-testing:OnlyCueUITests/CueMarkerHitTestUITests/test_clickOnMarker_selectsTheUnderlyingCue \
   test
 ```
+
 Expected: PASS. If it still fails (`selected.count == 0`), the most likely cause is that SwiftUI is still delivering the press to the seek surface because both siblings carry `DragGesture(minimumDistance: 0)` — see Task 4a.
 
 - [ ] **Step 6: Commit**
@@ -470,6 +487,7 @@ git commit -m "fix(waveform): split playhead layer so cue markers receive clicks
 **Skip this task entirely if Task 4 Step 5 passed.** The spec flagged this as a possible mitigation; only apply it if hit-test ordering alone wasn't enough.
 
 **Files:**
+
 - Modify: `OnlyCue/UI/WaveformSeekSurface.swift`
 
 - [ ] **Step 1: Bump `minimumDistance` from `0` to `1` in the seek surface**
@@ -493,23 +511,27 @@ DragGesture(minimumDistance: 1)
 - [ ] **Step 2: Re-run the marker click test**
 
 Run:
+
 ```bash
 xcodebuild -project OnlyCue.xcodeproj -scheme OnlyCue \
   -destination 'platform=macOS' \
   -only-testing:OnlyCueUITests/CueMarkerHitTestUITests/test_clickOnMarker_selectsTheUnderlyingCue \
   test
 ```
+
 Expected: PASS.
 
 - [ ] **Step 3: Re-run the click-to-seek smoke to confirm it still works**
 
 Run:
+
 ```bash
 xcodebuild -project OnlyCue.xcodeproj -scheme OnlyCue \
   -destination 'platform=macOS' \
   -only-testing:OnlyCueUITests/WaveformHoldScrubUITests/test_click_whilePaused_dispatchesWithoutCrash \
   test
 ```
+
 Expected: PASS.
 
 - [ ] **Step 4: Commit**
@@ -530,17 +552,20 @@ The risk surface for this change is gesture wiring on the main-pane waveform. Th
 - [ ] **Step 1: Run the full unit test target**
 
 Run:
+
 ```bash
 xcodebuild -project OnlyCue.xcodeproj -scheme OnlyCue \
   -destination 'platform=macOS' \
   -only-testing:OnlyCueTests \
   test
 ```
+
 Expected: all tests pass. Pay attention to: `CueMarkersOverlayDispatchTests`, `CueMarkersGeometryTests`, `CueMarkerHaloTests`, `TimelineScrubOrchestratorTests`, `PlayheadInterpolator*` if present.
 
 - [ ] **Step 2: Run the waveform-adjacent UI tests**
 
 Run:
+
 ```bash
 xcodebuild -project OnlyCue.xcodeproj -scheme OnlyCue \
   -destination 'platform=macOS' \
@@ -550,6 +575,7 @@ xcodebuild -project OnlyCue.xcodeproj -scheme OnlyCue \
   -only-testing:OnlyCueUITests/InspectorClockHeaderUITests \
   test
 ```
+
 Expected: all pass. The XCTSkip'd marker-drag tests in `CueGroupDragUITests` remain skipped — that's the unrelated #273 blocker, not a regression.
 
 - [ ] **Step 3: SwiftLint**

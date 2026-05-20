@@ -36,6 +36,7 @@ docs/superpowers/plans/
 ```
 
 Files that exist on GitHub only (not in repo):
+
 - 13 issues (created via `gh issue create --body-file <path>`)
 - 17 labels
 - 3 milestones
@@ -46,6 +47,7 @@ Files that exist on GitHub only (not in repo):
 ## Task 1: Link the GitHub remote
 
 **Files:**
+
 - Modify: local git config (no file in repo)
 
 - [ ] **Step 1: Verify no remote exists yet**
@@ -56,6 +58,7 @@ Expected output: empty (no `origin`)
 - [ ] **Step 2: Add the remote**
 
 Run:
+
 ```bash
 git remote add origin git@github.com:chienchuanw/only-cue.git
 ```
@@ -63,9 +66,11 @@ git remote add origin git@github.com:chienchuanw/only-cue.git
 - [ ] **Step 3: Push the existing main branch**
 
 Run:
+
 ```bash
 git push -u origin main
 ```
+
 Expected: push succeeds, `main` is now tracking `origin/main`.
 
 - [ ] **Step 4: Verify**
@@ -85,6 +90,7 @@ No commit needed (this task only touches local git config and the remote).
 ## Task 2: Author the label setup script
 
 **Files:**
+
 - Create: `docs/superpowers/plans/setup-labels.sh`
 
 - [ ] **Step 1: Write the script**
@@ -169,6 +175,7 @@ No commit needed.
 ## Task 4: Author the milestone setup script
 
 **Files:**
+
 - Create: `docs/superpowers/plans/setup-milestones.sh`
 
 - [ ] **Step 1: Write the script**
@@ -226,6 +233,7 @@ Expected: `3`
 
 Run: `gh api repos/chienchuanw/only-cue/milestones --jq '.[].title' | sort`
 Expected:
+
 ```
 MVP
 Phase 2 — Pro handoff
@@ -239,6 +247,7 @@ No commit needed.
 ## Task 6: Author chore C1 body (bootstrap)
 
 **Files:**
+
 - Create: `docs/superpowers/plans/issue-bodies/C1-bootstrap.md`
 
 - [ ] **Step 1: Write the body**
@@ -290,6 +299,7 @@ git commit -m "docs: add C1 bootstrap issue body"
 ## Task 7: Author chore C2 body (CI)
 
 **Files:**
+
 - Create: `docs/superpowers/plans/issue-bodies/C2-ci.md`
 
 - [ ] **Step 1: Write the body**
@@ -335,6 +345,7 @@ git commit -m "docs: add C2 CI issue body"
 ## Task 8: Author chore C3 body (release pipeline)
 
 **Files:**
+
 - Create: `docs/superpowers/plans/issue-bodies/C3-release.md`
 
 - [ ] **Step 1: Write the body**
@@ -382,6 +393,7 @@ git commit -m "docs: add C3 release pipeline issue body"
 ## Task 9: Author epic E1 body (skeleton)
 
 **Files:**
+
 - Create: `docs/superpowers/plans/issue-bodies/E1-skeleton.md`
 
 - [ ] **Step 1: Write the body**
@@ -420,9 +432,11 @@ Scenario: ProjectModel round-trips through JSON
 ```
 
 ## Out of scope
+
 - Player engine (E2)
 - Media import (E3)
 - Any UI beyond an empty document window
+
 ```
 
 - [ ] **Step 2: Commit**
@@ -437,6 +451,7 @@ git commit -m "docs: add E1 skeleton epic body"
 ## Task 10: Author epic E2 body (player core)
 
 **Files:**
+
 - Create: `docs/superpowers/plans/issue-bodies/E2-player-core.md`
 
 - [ ] **Step 1: Write the body**
@@ -476,9 +491,11 @@ Scenario: Time readout updates
 ```
 
 ## Out of scope
+
 - Loading user-imported media (E3)
 - Video preview pane (E4)
 - Waveform (E5)
+
 ```
 
 - [ ] **Step 2: Commit**
@@ -493,6 +510,7 @@ git commit -m "docs: add E2 player-core epic body"
 ## Task 11: Author epic E3 body (media import)
 
 **Files:**
+
 - Create: `docs/superpowers/plans/issue-bodies/E3-media-import.md`
 
 - [ ] **Step 1: Write the body**
@@ -536,8 +554,10 @@ Scenario: Reject unsupported file
 ```
 
 ## Out of scope
+
 - Re-link UX for missing media (E9)
 - Multi-media-per-document (out of MVP per data-model.md)
+
 ```
 
 - [ ] **Step 2: Commit**
@@ -552,6 +572,7 @@ git commit -m "docs: add E3 media-import epic body"
 ## Task 12: Author epic E4 body (video preview)
 
 **Files:**
+
 - Create: `docs/superpowers/plans/issue-bodies/E4-video-preview.md`
 
 - [ ] **Step 1: Write the body**
@@ -584,9 +605,11 @@ Scenario: Audio imports show audio placeholder
 ```
 
 ## Out of scope
+
 - Waveform rendering for audio (E5)
 - Cue marker overlay (E8)
 - Full-screen video
+
 ```
 
 - [ ] **Step 2: Commit**
@@ -601,6 +624,7 @@ git commit -m "docs: add E4 video-preview epic body"
 ## Task 13: Author epic E5 body (waveform)
 
 **Files:**
+
 - Create: `docs/superpowers/plans/issue-bodies/E5-waveform.md`
 
 - [ ] **Step 1: Write the body**
@@ -635,9 +659,11 @@ Scenario: Peak cache hits on reopen
 ```
 
 ## Out of scope
+
 - Cue markers on waveform (E8)
 - Zoom / horizontal scroll
 - Stereo / multi-channel display
+
 ```
 
 - [ ] **Step 2: Commit**
@@ -652,6 +678,7 @@ git commit -m "docs: add E5 waveform epic body"
 ## Task 14: Author epic E6 body (cue list pane)
 
 **Files:**
+
 - Create: `docs/superpowers/plans/issue-bodies/E6-cue-list-pane.md`
 
 - [ ] **Step 1: Write the body**
@@ -689,9 +716,11 @@ Scenario: Click row to seek
 ```
 
 ## Out of scope
+
 - Adding/editing/deleting cues (E7)
 - Drag-to-reorder
 - Inline edit
+
 ```
 
 - [ ] **Step 2: Commit**
@@ -706,6 +735,7 @@ git commit -m "docs: add E6 cue-list-pane epic body"
 ## Task 15: Author epic E7 body (add/edit/delete cues)
 
 **Files:**
+
 - Create: `docs/superpowers/plans/issue-bodies/E7-add-edit-delete-cues.md`
 
 - [ ] **Step 1: Write the body**
@@ -759,9 +789,11 @@ Scenario: Delete
 ```
 
 ## Out of scope
+
 - Cue markers on waveform (E8)
 - Drag-to-reorder
 - Multi-select operations
+
 ```
 
 - [ ] **Step 2: Commit**
@@ -776,6 +808,7 @@ git commit -m "docs: add E7 add-edit-delete-cues epic body"
 ## Task 16: Author epic E8 body (cue markers)
 
 **Files:**
+
 - Create: `docs/superpowers/plans/issue-bodies/E8-cue-markers.md`
 
 - [ ] **Step 1: Write the body**
@@ -816,9 +849,11 @@ Scenario: Click seeks
 ```
 
 ## Out of scope
+
 - Hover preview / tooltip (E9 polish)
 - Keyboard nudge ("←" / "→" to retime)
 - Snap to grid
+
 ```
 
 - [ ] **Step 2: Commit**
@@ -833,6 +868,7 @@ git commit -m "docs: add E8 cue-markers epic body"
 ## Task 17: Author epic E9 body (polish)
 
 **Files:**
+
 - Create: `docs/superpowers/plans/issue-bodies/E9-polish.md`
 
 - [ ] **Step 1: Write the body**
@@ -869,9 +905,11 @@ Scenario: Missing media on reopen
 ```
 
 ## Out of scope
+
 - Auto-update / Sparkle (post-MVP)
 - Settings/preferences UI (post-MVP)
 - Theme / accent customization
+
 ```
 
 - [ ] **Step 2: Commit**
@@ -886,6 +924,7 @@ git commit -m "docs: add E9 polish epic body"
 ## Task 18: Author epic E10 body (distribution)
 
 **Files:**
+
 - Create: `docs/superpowers/plans/issue-bodies/E10-distribution.md`
 
 - [ ] **Step 1: Write the body**
@@ -926,9 +965,11 @@ Scenario: End-to-end manual script passes
 ```
 
 ## Out of scope
+
 - Sparkle auto-update
 - Mac App Store
 - Crash reporting
+
 ```
 
 - [ ] **Step 2: Commit**
@@ -947,12 +988,14 @@ git commit -m "docs: add E10 distribution epic body"
 - [ ] **Step 1: Create the issue**
 
 Run:
+
 ```bash
 gh issue create \
   --title "chore: bootstrap — Xcode project, SwiftLint, issue & PR templates, CLAUDE.md, labels" \
   --body-file docs/superpowers/plans/issue-bodies/C1-bootstrap.md \
   --label "chore,type:build,p0-blocker"
 ```
+
 Expected: prints a URL like `https://github.com/chienchuanw/only-cue/issues/1`. **Note the issue number** (will be 1 if first issue).
 
 - [ ] **Step 2: Verify**
@@ -1195,6 +1238,7 @@ Expected: `3`
 - [ ] **Step 4: Every epic cites build-sequence**
 
 Run:
+
 ```bash
 for n in $(gh issue list --label epic --json number --jq '.[].number'); do
   body=$(gh issue view "$n" --json body --jq '.body')
@@ -1204,17 +1248,20 @@ for n in $(gh issue list --label epic --json number --jq '.[].number'); do
 done
 echo "epic spec-link check complete"
 ```
+
 Expected: only the final `epic spec-link check complete` line printed (no `FAIL`).
 
 - [ ] **Step 5: Milestones**
 
 Run: `gh api repos/chienchuanw/only-cue/milestones --jq '.[] | .title + " — " + (.open_issues|tostring) + " open"'`
 Expected:
+
 ```
 MVP — 11 open
 Phase 2 — Pro handoff — 0 open
 Phase 3 — Differentiator — 0 open
 ```
+
 (11 in MVP = 10 epics + C3.)
 
 - [ ] **Step 6: Labels**

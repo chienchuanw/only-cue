@@ -86,17 +86,21 @@ Scenario: <name>
 ```
 
 ## Tests to write first (TDD)
+
 - [ ] Unit: `<TestClass>.<test_method>`
 - [ ] UI: `<UITestClass>.<test_method>` (covers Scenario X)
 
 ## Out of scope
+
 - …
 
 ## Definition of Done
+
 - [ ] All tests above written and **failing first** (red), then green
 - [ ] Spec section updated if behavior diverged
 - [ ] PR linked to this issue and to the parent Epic
 - [ ] CI green
+
 ```
 
 ### Epic template
@@ -118,7 +122,9 @@ Scenario: …
 ```
 
 ## Out of scope
+
 - …
+
 ```
 
 ### Chore template
@@ -140,6 +146,7 @@ Every issue gets exactly one **kind** label and exactly one **type** label. **Ar
 ## Files added by chore C1
 
 ```
+
 .gitignore
 .editorconfig
 .swiftlint.yml
@@ -162,6 +169,7 @@ OnlyCue.xcodeproj                                    # macOS app, SwiftUI lifecy
 OnlyCue/                                             # folder layout per architecture.md
 OnlyCueTests/
 OnlyCueUITests/
+
 ```
 
 ### PR template override (option B)

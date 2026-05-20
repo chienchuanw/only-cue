@@ -1,17 +1,21 @@
 ## Spec source
+
 Build-sequence step 2 — `docs/build-sequence.md` ("Player core")
 Architecture — `docs/architecture.md#layer-responsibilities` (Media layer)
 
 ## Done when
+
 `PlayerEngine` plays/pauses/seeks a hardcoded asset. `TransportBar` UI hooked up. `currentTime` updates drive a label.
 
 ## Leaves
+
 - [ ] Leaf: `PlayerEngine` (`@Observable`, wraps `AVPlayer`, exposes `currentTime`, `rate`, `status`)
 - [ ] Leaf: `PlayerEngine.play() / pause() / seek(to:)` with unit tests
 - [ ] Leaf: `TransportBar` SwiftUI view (play/pause button, scrubber, time readout)
 - [ ] Leaf: `Time+Format.swift` — `HH:MM:SS.mmm` formatter + tests
 
 ## Acceptance (epic-level Gherkin)
+
 ```gherkin
 Scenario: Play and pause
   Given a PlayerEngine loaded with a 30-second audio asset
@@ -32,6 +36,7 @@ Scenario: Time readout updates
 ```
 
 ## Out of scope
+
 - Loading user-imported media (E3)
 - Video preview pane (E4)
 - Waveform (E5)

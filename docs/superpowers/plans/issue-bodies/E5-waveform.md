@@ -1,11 +1,14 @@
 ## Spec source
+
 Build-sequence step 5 — `docs/build-sequence.md` ("Waveform")
 Architecture — `docs/architecture.md` (Media/, WaveformGenerator, WaveformCache)
 
 ## Done when
+
 `WaveformGenerator` produces peak arrays asynchronously. `WaveformView` renders peaks via `Canvas`. Peak cache hits on second open of the same asset.
 
 ## Leaves
+
 - [ ] Leaf: `WaveformGenerator` — `AVAssetReader` → `[Float]` peaks, async, cancellable
 - [ ] Leaf: `WaveformGeneratorTests` — peak count == requested resolution, deterministic
 - [ ] Leaf: `WaveformCache` — on-disk cache keyed by `(assetSHA, resolution)`
@@ -14,6 +17,7 @@ Architecture — `docs/architecture.md` (Media/, WaveformGenerator, WaveformCach
 - [ ] Leaf: Performance — 5-min audio renders in < 1s on cache miss; instant on hit
 
 ## Acceptance (epic-level Gherkin)
+
 ```gherkin
 Scenario: Waveform appears for imported audio
   Given the user has just imported sample.mp3
@@ -27,6 +31,7 @@ Scenario: Peak cache hits on reopen
 ```
 
 ## Out of scope
+
 - Cue markers on waveform (E8)
 - Zoom / horizontal scroll
 - Stereo / multi-channel display

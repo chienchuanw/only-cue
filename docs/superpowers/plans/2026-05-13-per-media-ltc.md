@@ -46,6 +46,7 @@
 Lift the start offset out of `ProjectTimecodeSettings` and onto `MediaItem`. Migrate every existing item. Route the LTC engine and transport readout through the new per-item mapping in the same leaf so the codebase compiles.
 
 **Files:**
+
 - Create: `OnlyCue/Document/ProjectModel+MigrationV10.swift`
 - Create: `OnlyCueTests/ProjectModelMigrationV10Tests.swift`
 - Modify: `OnlyCue/Document/MediaItem.swift`
@@ -253,6 +254,7 @@ git commit -m "feat(document): per-media start timecode (schema v10)"
 Add `MediaItem.ltcMuted` plumbing end-to-end: the data model field already exists (from leaf 1); add `LTCAudioOutput.setLTCMuted(_:)`, the `CueCommands.setLTCMuted` undoable command, and the `LTCOutputHost` observation. No UI yet — that's leaf 6.
 
 **Files:**
+
 - Modify: `OnlyCue/LTC/LTCAudioOutput.swift`
 - Modify: `OnlyCue/Commands/CueCommands+Timecode.swift` (or create `CueCommands+LTC.swift` if it gets crowded — follow the existing one-file-per-domain convention)
 - Modify: `OnlyCue/UI/LTCOutputHost.swift`
@@ -330,6 +332,7 @@ git commit -m "feat(ltc): per-clip LTC mute (encoder keeps running)"
 Extend the existing sheet (Tools → Timecode Settings) with a list of every MediaItem and an editable HH:MM:SS:FF field per row. Use `Timecode.parse` for validation; invalid input outlines the field red and does not commit.
 
 **Files:**
+
 - Modify: `OnlyCue/UI/TimecodeSettingsSheet.swift`
 - Create: `OnlyCue/UI/MediaTimecodeRow.swift`
 - Modify: `OnlyCue/Commands/CueCommands+Timecode.swift` (add `setStartTimecode(itemID:frames:)`)
@@ -449,6 +452,7 @@ git commit -m "feat(ui): per-media start TC editor in the Timecode Settings shee
 Add a context-menu item to each media row in the document sidebar that pins an inline TC editor on the row (reuses the same parser/validation as the sheet field).
 
 **Files:**
+
 - Modify: `OnlyCue/UI/MediaSidebarRow.swift` (or whichever file owns sidebar rows — find with `rg "ContextMenu|contextMenu" OnlyCue/UI/`)
 - Modify (maybe): `OnlyCue/UI/DocumentSidebar.swift` (or equivalent)
 - Modify: `OnlyCueUITests/MediaSidebarUITests.swift` (or create if absent)
@@ -493,6 +497,7 @@ git commit -m "feat(ui): \"Set start timecode…\" context menu on sidebar rows"
 Build the two pure types the strip will consume. No UI, no SwiftUI — just `Int`/`Double` math and label formatting. Lets the strip itself stay thin in leaf 6.
 
 **Files:**
+
 - Create: `OnlyCue/UI/LTCTickInterval.swift`
 - Create: `OnlyCue/UI/LTCTickGenerator.swift`
 - Create: `OnlyCueTests/LTCTickIntervalTests.swift`
@@ -632,6 +637,7 @@ git commit -m "feat(ui): pure LTC tick helpers"
 Mount `LTCStrip` below the waveform in `WaveformContainer`. Only render when `LTCRoutingStore.shared.settings.isEnabled` and an item is active. Lane header (fixed) shows file name + mute toggle bound to `ltcMuted`; TC ruler scrolls with the waveform.
 
 **Files:**
+
 - Create: `OnlyCue/UI/LTCStrip.swift`
 - Modify: `OnlyCue/UI/WaveformContainer.swift`
 - Create: `OnlyCueUITests/MainViewLTCStripUITests.swift`

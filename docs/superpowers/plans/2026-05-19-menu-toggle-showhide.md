@@ -15,6 +15,7 @@ Spec: `docs/superpowers/specs/2026-05-19-menu-toggle-showhide-design.md`
 ### Task 1: Extend the UITest (failing-first)
 
 **Files:**
+
 - Modify: `OnlyCueUITests/MenuBarReorganizationUITests.swift`
 
 - [ ] **Step 1: Add a new test asserting the state-flipping verb**
@@ -63,11 +64,13 @@ Expected: `OnlyCue.xcodeproj` regenerated, no errors.
 - [ ] **Step 3: Build the test target to confirm it compiles**
 
 Run:
+
 ```bash
 xcodebuild build-for-testing -project OnlyCue.xcodeproj -scheme OnlyCue \
   -destination 'platform=macOS' CODE_SIGNING_ALLOWED=NO 2>&1 \
   | grep -E "TEST BUILD SUCCEEDED|BUILD FAILED|error:"
 ```
+
 Expected: `** TEST BUILD SUCCEEDED **`.
 
 Note on red phase: local UITest execution is blocked by a macOS TCC
@@ -89,6 +92,7 @@ git commit -m "test(ui): assert View menu toggles use state-flipping verb"
 ### Task 2: Convert the View-menu toggles to Buttons
 
 **Files:**
+
 - Modify: `OnlyCue/App/AppCommands.swift`
 
 - [ ] **Step 1: Replace the three View `Toggle`s**
@@ -129,11 +133,13 @@ with:
 - [ ] **Step 2: Build to confirm it compiles**
 
 Run:
+
 ```bash
 xcodebuild build -project OnlyCue.xcodeproj -scheme OnlyCue \
   -destination 'platform=macOS' CODE_SIGNING_ALLOWED=NO 2>&1 \
   | grep -E "BUILD SUCCEEDED|BUILD FAILED|error:"
 ```
+
 Expected: `** BUILD SUCCEEDED **`.
 
 - [ ] **Step 3: Commit**
@@ -148,6 +154,7 @@ git commit -m "feat(menu): View toggles use Show/Hide verb buttons (de-indent)"
 ### Task 3: Convert the Playback "Pause at Each Cue" toggle
 
 **Files:**
+
 - Modify: `OnlyCue/App/AppCommands.swift`
 
 - [ ] **Step 1: Replace the Playback `Toggle`**
@@ -171,11 +178,13 @@ with:
 - [ ] **Step 2: Build to confirm it compiles**
 
 Run:
+
 ```bash
 xcodebuild build -project OnlyCue.xcodeproj -scheme OnlyCue \
   -destination 'platform=macOS' CODE_SIGNING_ALLOWED=NO 2>&1 \
   | grep -E "BUILD SUCCEEDED|BUILD FAILED|error:"
 ```
+
 Expected: `** BUILD SUCCEEDED **`.
 
 - [ ] **Step 3: SwiftLint**
@@ -186,11 +195,13 @@ Expected: no violations (exit 0).
 - [ ] **Step 4: Run the local-verifiable gate (unit suite)**
 
 Run:
+
 ```bash
 xcodebuild test -project OnlyCue.xcodeproj -scheme OnlyCue \
   -destination 'platform=macOS' -only-testing:OnlyCueTests \
   CODE_SIGNING_ALLOWED=NO 2>&1 | grep -E "TEST SUCCEEDED|TEST FAILED"
 ```
+
 Expected: `** TEST SUCCEEDED **`.
 
 - [ ] **Step 5: Commit**
@@ -214,9 +225,11 @@ provisioned macOS runner — the authoritative gate for the new UITest, since
 local UITest execution is TCC-blocked.
 
 Run (after the PR exists):
+
 ```bash
 gh pr checks <PR_NUMBER> --watch
 ```
+
 Expected: `Build & test (macOS)  pass`. `test_viewMenuToggles_useShowHideVerb_andFlipOnClick`
 passes (Show titles in default state; flips to `Hide Tempo Grid` after click)
 and the unchanged `test_pauseAtEachCue_isUnderPlaybackMenu` /
@@ -234,6 +247,7 @@ relevant task, fix, recommit, re-push, re-watch. Do not advance until green.
 ## Self-Review
 
 **Spec coverage:**
+
 - 3 View toggles → state-flipping Show/Hide buttons → Task 2 Step 1. ✓
 - Playback `Pause at Each Cue` → `Don't Pause at Each Cue` button → Task 3
   Step 1. ✓

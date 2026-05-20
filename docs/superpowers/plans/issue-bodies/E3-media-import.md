@@ -1,11 +1,14 @@
 ## Spec source
+
 Build-sequence step 3 — `docs/build-sequence.md` ("Media import")
 Data model — `docs/data-model.md` (`MediaReference`, bookmark behavior)
 
 ## Done when
+
 `⌘O` and drag-drop accept supported audio + video. Bookmark created and stored in `MediaReference`. Player loads the imported asset.
 
 ## Leaves
+
 - [ ] Leaf: `Bookmarks.swift` — create/resolve security-scoped bookmarks, `staleness` handling
 - [ ] Leaf: `BookmarksTests` — round-trip create → encode → decode → resolve on a temp file
 - [ ] Leaf: File importer (`fileImporter` modifier) accepting `.audio` + `.movie` content types
@@ -14,6 +17,7 @@ Data model — `docs/data-model.md` (`MediaReference`, bookmark behavior)
 - [ ] Leaf: On import success, populate `ProjectModel.media` and call `PlayerEngine.load(asset:)`
 
 ## Acceptance (epic-level Gherkin)
+
 ```gherkin
 Scenario: Import audio via file picker
   Given a new document is open
@@ -36,5 +40,6 @@ Scenario: Reject unsupported file
 ```
 
 ## Out of scope
+
 - Re-link UX for missing media (E9)
 - Multi-media-per-document (out of MVP per data-model.md)

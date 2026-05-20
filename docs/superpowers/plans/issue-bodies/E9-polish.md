@@ -1,12 +1,15 @@
 ## Spec source
+
 Build-sequence step 9 — `docs/build-sequence.md` ("Polish")
 Data model — `docs/data-model.md` (bookmark stale handling)
 Verification — `docs/verification.md`
 
 ## Done when
+
 Empty states. Missing-media relink alert. App icon. Default keyboard shortcuts wired. About box. Standard macOS feel.
 
 ## Leaves
+
 - [ ] Leaf: Empty document state ("Drop a file or press ⌘O")
 - [ ] Leaf: Bookmark-stale alert with "Relink media…" button on document open
 - [ ] Leaf: Replace `Untitled` window title with `<filename> — OnlyCue` once saved
@@ -16,6 +19,7 @@ Empty states. Missing-media relink alert. App icon. Default keyboard shortcuts w
 - [ ] Leaf: First-launch nudge with link to docs (one-time, dismissible)
 
 ## Acceptance (epic-level Gherkin)
+
 ```gherkin
 Scenario: Missing media on reopen
   Given Show.cuelist references sample.mp3
@@ -29,6 +33,7 @@ Scenario: Missing media on reopen
 ```
 
 ## Out of scope
+
 - Auto-update / Sparkle (post-MVP)
 - Settings/preferences UI (post-MVP)
 - Theme / accent customization

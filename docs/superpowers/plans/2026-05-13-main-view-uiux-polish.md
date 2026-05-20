@@ -38,6 +38,7 @@
 ## Task 1: Rename "OnlyCue" → "Only Cue" (display strings only)
 
 **Files:**
+
 - Modify: `OnlyCue/Resources/Info.plist`
 - Modify: `OnlyCue/UI/FirstLaunchSheet.swift:18`
 - Modify: `OnlyCue/UI/DocumentView.swift:68` (this line is also removed in Task 2 — if Task 2 is done first, skip the DocumentView edit here)
@@ -92,6 +93,7 @@ git commit -m "chore: rename user-facing app name to \"Only Cue\""
 ## Task 2: Declutter the main pane (minimal)
 
 **Files:**
+
 - Create: `OnlyCue/UI/DocumentEmptyState.swift`
 - Modify: `OnlyCue/UI/DocumentView.swift` (`mainPane`, lines ~65–134)
 - Create: `OnlyCueUITests/MainViewDeclutterUITests.swift`
@@ -251,6 +253,7 @@ git commit -m "feat(ui): declutter main pane; move import + hints to empty state
 ## Task 3: High-resolution waveform peaks + render-time bucketing
 
 **Files:**
+
 - Create: `OnlyCue/Media/WaveformPeakBucketer.swift`
 - Create: `OnlyCueTests/WaveformPeakBucketerTests.swift`
 - Modify: `OnlyCue/UI/WaveformContainer.swift:7` (default `resolution`)
@@ -376,6 +379,7 @@ git commit -m "feat(media): high-resolution waveform peaks + pixel-bucketing hel
 ## Task 4: Filled mirrored-envelope waveform rendering
 
 **Files:**
+
 - Modify: `OnlyCue/UI/WaveformView.swift` (full rewrite of `body`)
 - Modify: `OnlyCue/UI/WaveformContainer.swift` (pass nothing new — `WaveformView` reads its own `size` via `Canvas`)
 
@@ -466,6 +470,7 @@ git commit -m "feat(ui): render waveform as a filled mirrored envelope"
 ## Task 5: Smooth playhead — faster observer + display-link interpolation
 
 **Files:**
+
 - Modify: `OnlyCue/Media/PlayerEngine.swift` (`observeTime`, lines ~77–90)
 - Create: `OnlyCue/UI/PlayheadInterpolator.swift`
 - Create: `OnlyCueTests/PlayheadInterpolatorTests.swift`
@@ -674,6 +679,7 @@ git commit -m "feat(media): smooth playhead via faster observer + display-link i
 ## Task 6: Click-to-seek on the waveform body + playhead-line drag + hand cursor
 
 **Files:**
+
 - Modify: `OnlyCue/UI/CueMarkersGeometry.swift` (add `time(forX:width:duration:)`)
 - Create: `OnlyCueTests/CueMarkersGeometryTests.swift` (or extend if it already exists — check `ls OnlyCueTests`)
 - Modify: `OnlyCue/UI/WaveformPlayheadLayer.swift` (tap-to-seek; cursor on hover)
@@ -880,6 +886,7 @@ git commit -m "feat(ui): click-to-seek on the waveform; hand cursor for playhead
 ## Self-Review
 
 **Spec coverage:**
+
 - §1 rename → Task 1 ✓
 - §2 declutter (remove title/summary/cueCount, Import+hints to empty state, keep Add Cue + hidden shortcut buttons) → Task 2 ✓
 - §3 high-res peaks + cache supersede → Task 3 ✓

@@ -15,6 +15,7 @@ Spec: `docs/superpowers/specs/2026-05-18-view-menu-zoom-labels-design.md`
 ### Task 1: Update + extend the UITest (failing-first)
 
 **Files:**
+
 - Modify: `OnlyCueUITests/MenuBarReorganizationUITests.swift`
 
 - [ ] **Step 1: Update the sanity assertion and add the parallel-group assertions**
@@ -46,11 +47,13 @@ Expected: `OnlyCue.xcodeproj` regenerated, no errors.
 - [ ] **Step 3: Build the test target to confirm it compiles**
 
 Run:
+
 ```bash
 xcodebuild build-for-testing -project OnlyCue.xcodeproj -scheme OnlyCue \
   -destination 'platform=macOS' CODE_SIGNING_ALLOWED=NO 2>&1 \
   | grep -E "TEST BUILD SUCCEEDED|BUILD FAILED|error:"
 ```
+
 Expected: `** TEST BUILD SUCCEEDED **`.
 
 Note on red phase: local UITest execution is blocked by a macOS TCC
@@ -72,6 +75,7 @@ git commit -m "test(ui): assert View menu zoom items state their axis"
 ### Task 2: Rename the three horizontal-zoom labels
 
 **Files:**
+
 - Modify: `OnlyCue/App/AppCommands.swift`
 
 - [ ] **Step 1: Rename `Zoom In`**
@@ -142,11 +146,13 @@ display toggles.
 - [ ] **Step 4: Build to confirm it compiles**
 
 Run:
+
 ```bash
 xcodebuild build -project OnlyCue.xcodeproj -scheme OnlyCue \
   -destination 'platform=macOS' CODE_SIGNING_ALLOWED=NO 2>&1 \
   | grep -E "BUILD SUCCEEDED|BUILD FAILED|error:"
 ```
+
 Expected: `** BUILD SUCCEEDED **`.
 
 - [ ] **Step 5: SwiftLint**
@@ -157,11 +163,13 @@ Expected: no violations (exit 0).
 - [ ] **Step 6: Run the local-verifiable gate (unit suite)**
 
 Run:
+
 ```bash
 xcodebuild test -project OnlyCue.xcodeproj -scheme OnlyCue \
   -destination 'platform=macOS' -only-testing:OnlyCueTests \
   CODE_SIGNING_ALLOWED=NO 2>&1 | grep -E "TEST SUCCEEDED|TEST FAILED"
 ```
+
 Expected: `** TEST SUCCEEDED **`.
 
 - [ ] **Step 7: Commit**
@@ -185,9 +193,11 @@ provisioned macOS runner — this is the authoritative gate for the renamed
 UITest assertions, since local UITest execution is TCC-blocked.
 
 Run (after the PR exists):
+
 ```bash
 gh pr checks <PR_NUMBER> --watch
 ```
+
 Expected: `Build & test (macOS)  pass`. The updated
 `test_viewMenu_noLongerContainsCueEditingItems` now passes because
 `Zoom In Horizontally` and `Zoom In Vertically` exist and the bare `Zoom In`
@@ -205,6 +215,7 @@ relevant task, fix, recommit, re-push, re-watch. Do not advance until green.
 ## Self-Review
 
 **Spec coverage:**
+
 - Three horizontal-zoom renames (`Zoom In/Out Horizontally`,
   `Actual Horizontal Size`) → Task 2 Steps 1–3. ✓
 - Vertical group / toggles / dividers unchanged → explicit "do not touch" in

@@ -26,6 +26,7 @@
 ## Task 1: Add horizontal `applyDrag` to `WaveformZoomController`
 
 **Files:**
+
 - Modify: `OnlyCue/UI/WaveformZoomController.swift`
 - Test: `OnlyCueTests/WaveformZoomRailHorizontalDragTests.swift`
 
@@ -202,6 +203,7 @@ git commit -m "feat(ui): add WaveformZoomController.applyDrag for horizontal dra
 ## Task 2: Create `WaveformZoomRail` view
 
 **Files:**
+
 - Create: `OnlyCue/UI/WaveformZoomRail.swift`
 
 This task adds the view but does not wire it in yet. We commit it standalone so the next task is a clean wiring change.
@@ -359,6 +361,7 @@ git commit -m "feat(ui): add WaveformZoomRail view (axis-parameterized hover rai
 ## Task 3: Wire rails into `WaveformContainer` and remove the old handle
 
 **Files:**
+
 - Modify: `OnlyCue/UI/WaveformContainer.swift`
 - Delete: `OnlyCue/UI/VerticalZoomDragHandle.swift`
 
@@ -438,6 +441,7 @@ Replace the existing `loaded(peaks:)` method with:
 - [ ] **Step 2: Delete the old handle file**
 
 Run:
+
 ```bash
 git rm OnlyCue/UI/VerticalZoomDragHandle.swift
 ```

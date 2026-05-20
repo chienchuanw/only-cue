@@ -11,6 +11,7 @@
 Spec: `docs/superpowers/specs/2026-05-19-cuelist-encryption-design.md`
 
 **Conventions used in this plan:**
+
 - Regenerate the Xcode project after adding any new file: `xcodegen generate` (sources are folder-based; new files need a project regen).
 - Test command form: `xcodebuild test -scheme OnlyCue -destination 'platform=macOS' -only-testing:OnlyCueTests/<Class> 2>&1 | tail -25`
 - Branch: this is issue work — create `issues/<N>` off `dev` first if not already on it (per project CLAUDE.md). Commits use Conventional Commits, lowercase, no `Co-Authored-By` trailer.
@@ -20,6 +21,7 @@ Spec: `docs/superpowers/specs/2026-05-19-cuelist-encryption-design.md`
 ### Task 1: `CuelistCrypto` value type (pure, TDD)
 
 **Files:**
+
 - Create: `OnlyCue/Document/CuelistCrypto.swift`
 - Test: `OnlyCueTests/CuelistCryptoTests.swift`
 
@@ -158,6 +160,7 @@ git commit -m "feat(document): add CuelistCrypto AES-GCM envelope with legacy pa
 ### Task 2: Wire `CueListDocument` read/write through the crypto seam
 
 **Files:**
+
 - Modify: `OnlyCue/Document/CueListDocument.swift:43-59`
 - Test: `OnlyCueTests/CueListDocumentTests.swift` (append to existing file)
 
@@ -256,6 +259,7 @@ git commit -m "feat(document): seal .cuelist on save, read legacy plaintext tran
 ### Task 3: `Info.plist` — "OnlyCue Document" Kind + non-JSON UTType
 
 **Files:**
+
 - Modify: `OnlyCue/Resources/Info.plist:30-31` and `:44-67`
 
 - [ ] **Step 1: Edit `CFBundleTypeName`**
@@ -266,7 +270,9 @@ In `OnlyCue/Resources/Info.plist`, change:
             <key>CFBundleTypeName</key>
             <string>OnlyCue Cue List</string>
 ```
+
 to:
+
 ```xml
             <key>CFBundleTypeName</key>
             <string>OnlyCue Document</string>
@@ -324,6 +330,7 @@ git commit -m "feat(document): kind column reads \"OnlyCue Document\"; declare a
 ### Task 4: Documentation — ADR-021, ADR-006 status, data-model
 
 **Files:**
+
 - Modify: `docs/decisions.md` (add ADR-021 above ADR-020; amend ADR-006 status)
 - Modify: `docs/data-model.md:3-7`
 
@@ -343,7 +350,7 @@ In `docs/decisions.md`, insert directly above the `## ADR-020` line:
 
 - [ ] **Step 2: Amend ADR-006 status**
 
-In `docs/decisions.md`, under `## ADR-006 — JSON `.cuelist` document with referenced media`, change the `**Status**: Accepted` line for that ADR to:
+In `docs/decisions.md`, under `## ADR-006 — JSON`.cuelist`document with referenced media`, change the `**Status**: Accepted` line for that ADR to:
 
 ```markdown
 **Status**: Accepted (amended by ADR-021 — the on-disk file is now an encrypted envelope around this JSON; the "diffs cleanly under git / inspectable" benefit no longer applies to saved files)
@@ -351,7 +358,7 @@ In `docs/decisions.md`, under `## ADR-006 — JSON `.cuelist` document with refe
 
 - [ ] **Step 3: Update `docs/data-model.md`**
 
-In `docs/data-model.md`, replace lines 3–7 (the `## `.cuelist` file` heading and the two sentences under it) with:
+In `docs/data-model.md`, replace lines 3–7 (the `##`.cuelist`file` heading and the two sentences under it) with:
 
 ```markdown
 ## `.cuelist` file
@@ -379,6 +386,7 @@ git commit -m "docs: ADR-021 encrypted .cuelist container; amend ADR-006 + data-
 ## Self-Review
 
 **Spec coverage:**
+
 - §2 Crypto (AES-256-GCM, fixed key, per-save nonce) → Task 1.
 - §3 Envelope (`OCUE`+version+nonce+ct+tag) → Task 1 (`seal`).
 - §4 Code seam (`CuelistCrypto`, `CueListDocument` two chokepoints, migration untouched, legacy passthrough, error → `CocoaError(.fileReadCorruptFile)`) → Task 1 + Task 2.

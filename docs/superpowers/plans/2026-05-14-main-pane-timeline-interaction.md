@@ -15,17 +15,20 @@
 ## File structure
 
 **New files:**
+
 - `OnlyCue/UI/TimelineScrubOrchestrator.swift` — pure helper. Encapsulates the begin/end decisions of the timeline drag gesture so the orchestration is unit-testable. ~30 lines.
 - `OnlyCueTests/TimelineScrubOrchestratorTests.swift` — unit tests for the orchestrator.
 - `OnlyCueTests/CueMarkerHaloTests.swift` — unit tests for the halo dispatch helper.
 - `OnlyCueUITests/WaveformHoldScrubUITests.swift` — BDD smoke for click-to-seek + hold-to-scrub on empty timeline.
 
 **Modified files:**
+
 - `OnlyCue/UI/WaveformPlayheadLayer.swift` — replace `onTapGesture` with `DragGesture(minimumDistance: 0)`; delete the playhead grabber `Color.clear` block; delete `scrubGesture(width:)`. Drives orchestrator + existing `ScrubController`.
 - `OnlyCue/UI/CueMarkersOverlay.swift` (`CueMarkerView` only) — add `@State var isHovered`; expand `.onHover` to drive it; insert halo `Circle` behind the line/cap; add static `showHalo(isHovered:isSelected:)` helper.
 - `project.yml` — **no change** (both new source files live under `OnlyCue/UI/` and `OnlyCueTests/` which are already covered by existing source paths).
 
 **Untouched (must not regress):**
+
 - `OnlyCue/UI/ScrubController.swift`
 - `OnlyCue/UI/CueMarkersGeometry.swift`
 - `OnlyCue/UI/PlayheadOverlay.swift` (the visible line + label)
@@ -35,6 +38,7 @@
 ## Task 1: Add `TimelineScrubOrchestrator` (pure decision helper)
 
 **Files:**
+
 - Create: `OnlyCue/UI/TimelineScrubOrchestrator.swift`
 - Test: `OnlyCueTests/TimelineScrubOrchestratorTests.swift`
 
@@ -139,6 +143,7 @@ git commit -m "feat(main-pane): add TimelineScrubOrchestrator for hold-to-scrub 
 ## Task 2: Add `CueMarkerView.showHalo(...)` helper + tests
 
 **Files:**
+
 - Modify: `OnlyCue/UI/CueMarkersOverlay.swift` (add a static helper inside `CueMarkerView`; no rendering change yet)
 - Test: `OnlyCueTests/CueMarkerHaloTests.swift`
 
@@ -214,6 +219,7 @@ git commit -m "feat(cue-marker): add showHalo dispatch helper"
 ## Task 3: Rewire `WaveformPlayheadLayer` — hold-to-scrub, delete grabber
 
 **Files:**
+
 - Modify: `OnlyCue/UI/WaveformPlayheadLayer.swift`
 
 This is the structural change. The 12-px playhead grabber `Color.clear` block is deleted along with `scrubGesture(width:)`. The seek surface `Color.clear` gains a `DragGesture(minimumDistance: 0)` that drives the orchestrator + `ScrubController`. The visible playhead (`PlayheadOverlay`) is unchanged.
@@ -334,6 +340,7 @@ struct WaveformPlayheadLayer: View {
 ```
 
 Notes for the implementer:
+
 - The constant `grabberWidth` and the second `Color.clear` block with `.gesture(scrubGesture(width:))` (formerly lines 16, 44–55) are gone. The visible playhead is rendered by `PlayheadOverlay` only.
 - The old `.accessibilityIdentifier("playheadGrabber")` element no longer exists. No XCUITest currently references it (verified by `grep`), so no test cleanup is needed here.
 - `value.startLocation.x` is the press location; `value.translation.width` is the displacement from that press. `ScrubController.update(dx:width:duration:)` adds dx to `originalTime` — feeding `value.translation.width` is correct because `originalTime` is now the pressed time.
@@ -376,6 +383,7 @@ If a fallback z-order or `.simultaneousGesture` change was needed, stage `OnlyCu
 ## Task 4: Add hover halo to `CueMarkerView`
 
 **Files:**
+
 - Modify: `OnlyCue/UI/CueMarkersOverlay.swift` (`CueMarkerView` only)
 
 The static `showHalo` helper from Task 2 is already in place. This task wires up `@State var isHovered`, expands `.onHover` on the hit-zone capsule, and inserts the halo `Circle` underneath the line/cap inside the `ZStack(alignment: .top)`.
@@ -483,6 +491,7 @@ git commit -m "feat(cue-marker): show hover halo on unselected markers"
 ## Task 5: UI smoke for click-to-seek + hold-to-scrub
 
 **Files:**
+
 - Create: `OnlyCueUITests/WaveformHoldScrubUITests.swift`
 
 Mirrors the Gherkin acceptance from the spec. Uses the existing UI-test seed mechanism (`docs/superpowers/specs/2026-05-14-ui-test-seed-mechanism-design.md`) and the same launch pattern as `CueGroupDragUITests`.

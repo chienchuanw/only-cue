@@ -104,8 +104,8 @@ Use `UITestSeedHandler` to seed a deterministic project with one media item and 
 
 Pure-view-model logic for this change is minimal (most behaviour is gesture wiring), but two pieces are worth pinning:
 
-5. **`WaveformSeekSurface` and `WaveformPlayheadVisual` are independently constructible** with the same inputs the old `WaveformPlayheadLayer` accepted. Compile-level assertion that the split didn't break the public surface used by `WaveformContainer`.
-6. **`waveformBody`'s ZStack order is asserted via a snapshot of the view hierarchy debug description** OR by an `accessibilityIdentifier`-ordered query — pick whichever is already established in the codebase. (Goal: future refactors that re-reorder these layers are caught by CI, not by user-reported regressions.)
+1. **`WaveformSeekSurface` and `WaveformPlayheadVisual` are independently constructible** with the same inputs the old `WaveformPlayheadLayer` accepted. Compile-level assertion that the split didn't break the public surface used by `WaveformContainer`.
+2. **`waveformBody`'s ZStack order is asserted via a snapshot of the view hierarchy debug description** OR by an `accessibilityIdentifier`-ordered query — pick whichever is already established in the codebase. (Goal: future refactors that re-reorder these layers are caught by CI, not by user-reported regressions.)
 
 ## Out of scope
 

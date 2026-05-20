@@ -42,6 +42,7 @@ This enum lives in `OnlyCue/UI/CueListPane.swift` (top of the file, above `struc
 ## Task 1: Remove search field and filter helper
 
 **Files:**
+
 - Modify: `OnlyCue/UI/CueListPane.swift` (lines 15–18, 26–33, 133–147, 196–202)
 - Delete: `OnlyCueTests/CueListFilterTests.swift`
 
@@ -64,16 +65,19 @@ If the build is still green, that's also fine — proceed.
 In `OnlyCue/UI/CueListPane.swift`:
 
 Delete this property (around line 15):
+
 ```swift
     @State private var searchQuery: String = ""
 ```
 
 Delete this computed property (around line 18):
+
 ```swift
     private var visibleCues: [Cue] { Self.filtered(cues, by: searchQuery) }
 ```
 
 Delete the entire `static func filtered(...)` block including its doc comment (around lines 20–33):
+
 ```swift
     /// Pure filter helper — case-insensitive localized contains on name OR notes.
     /// ...
@@ -90,6 +94,7 @@ Delete the entire `static func filtered(...)` block including its doc comment (a
 - [ ] **Step 4: Remove `searchField` view and inline it out of `cueList`**
 
 Delete the `searchField` computed property (around lines 133–139):
+
 ```swift
     private var searchField: some View {
         TextField("Search cues", text: $searchQuery)
@@ -101,6 +106,7 @@ Delete the `searchField` computed property (around lines 133–139):
 ```
 
 Replace the `cueList` view (around lines 141–147):
+
 ```swift
     private var cueList: some View {
         VStack(spacing: 0) {
@@ -112,6 +118,7 @@ Replace the `cueList` view (around lines 141–147):
 ```
 
 with (Task 4 will re-introduce a header here; for now we just keep the list):
+
 ```swift
     private var cueList: some View {
         scrollableList
@@ -121,15 +128,19 @@ with (Task 4 will re-introduce a header here; for now we just keep the list):
 - [ ] **Step 5: Switch `ForEach` and `deleteAtOffsets` to use `cues` directly**
 
 In `scrollableList`, replace:
+
 ```swift
                 ForEach(Array(visibleCues.enumerated()), id: \.element.id) { index, cue in
 ```
+
 with:
+
 ```swift
                 ForEach(Array(cues.enumerated()), id: \.element.id) { index, cue in
 ```
 
 In `deleteAtOffsets`, replace the body:
+
 ```swift
     private func deleteAtOffsets(_ offsets: IndexSet) {
         // ForEach iterates `visibleCues`, so swipe-to-delete offsets index into
@@ -144,6 +155,7 @@ In `deleteAtOffsets`, replace the body:
 ```
 
 with:
+
 ```swift
     private func deleteAtOffsets(_ offsets: IndexSet) {
         for index in offsets {
@@ -180,6 +192,7 @@ git commit -m "refactor(cue-list): remove search field and filter helper"
 ## Task 2: Remove BPM column and View-menu toggle
 
 **Files:**
+
 - Modify: `OnlyCue/UI/CueRowView.swift` (line 20, lines 42–48)
 - Modify: `OnlyCue/App/AppCommands.swift` (line 9, line 106)
 
@@ -192,11 +205,13 @@ Expected: matches in `CueRowView.swift` (lines 20, 42, 47), `AppCommands.swift` 
 - [ ] **Step 2: Remove BPM cell from `CueRowView`**
 
 In `OnlyCue/UI/CueRowView.swift`, delete this property (line 20):
+
 ```swift
     @AppStorage("showBPMColumn") private var showBPMColumn = false
 ```
 
 And delete this block from `body` (around lines 42–48):
+
 ```swift
                 if showBPMColumn {
                     Text(cue.bpm.map { String(Int($0.rounded())) } ?? "")
@@ -210,11 +225,13 @@ And delete this block from `body` (around lines 42–48):
 - [ ] **Step 3: Remove BPM toggle from the View menu**
 
 In `OnlyCue/App/AppCommands.swift`, delete the property (line 9):
+
 ```swift
     @AppStorage("showBPMColumn") private var showBPMColumn = false
 ```
 
 And delete the `Toggle` line (line 106):
+
 ```swift
             Toggle("Show BPM Column", isOn: $showBPMColumn)
 ```
@@ -245,6 +262,7 @@ git commit -m "refactor(cue-list): drop BPM column and view-menu toggle"
 ## Task 3: Reshape `CueRowView` — new column order, drop index + swatch
 
 **Files:**
+
 - Create: `OnlyCueTests/CueRowLayoutTests.swift`
 - Modify: `OnlyCue/UI/CueRowView.swift` (entire `body` plus signature)
 - Modify: `OnlyCue/UI/CueListPane.swift` (the `CueRowView(index: …)` call site in `scrollableList`)
@@ -405,6 +423,7 @@ git commit -m "refactor(cue-list): reorder row to time | cue# | name and drop in
 ## Task 4: Add column header row and cue-color row tint
 
 **Files:**
+
 - Create: `OnlyCueTests/CueListHeaderTests.swift`
 - Modify: `OnlyCue/UI/CueListPane.swift` (`cueList` view and `scrollableList`'s `ForEach` row)
 

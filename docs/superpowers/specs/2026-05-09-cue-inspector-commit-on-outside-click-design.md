@@ -20,6 +20,7 @@ When focus moves between two SwiftUI focusable views (`TextField` ↔ `TextField
 The bug: SwiftUI's `@FocusState` only updates when focus moves to **another focusable view**. When the user clicks on a non-focusable area — the inspector divider, the gap between rows, the waveform pane, the document title text, or the sidebar's background — `@FocusState focused` retains its previous value, `.onChange(of: focused)` never fires, and the user's typed draft is silently lost (typically when they switch cues, which clears the draft buffer via `syncDrafts` for any non-active field).
 
 User confirmation of repro click targets (via `AskUserQuestion` during brainstorm):
+
 1. ✅ Inside the inspector pane (divider, Manage Types button area, gaps between rows)
 2. ✅ On the waveform or video preview
 3. ✅ On the sidebar (media item list) or the document title area

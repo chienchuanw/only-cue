@@ -1,17 +1,21 @@
 ## Spec source
+
 Build-sequence step 6 — `docs/build-sequence.md` ("Cue list pane")
 Data model — `docs/data-model.md` (Cue)
 
 ## Done when
+
 Right-side pane shows cues from `ProjectModel.cues`. Empty state when none. Read-only at this stage.
 
 ## Leaves
+
 - [ ] Leaf: `CueListPane` view in a `NavigationSplitView` inspector slot
 - [ ] Leaf: `CueRowView` — `#`, name, time (formatted), color swatch
 - [ ] Leaf: Empty-state view ("No cues yet — press M to add one at the playhead")
 - [ ] Leaf: Click-to-seek wiring (selecting a row calls `PlayerEngine.seek(to:)`)
 
 ## Acceptance (epic-level Gherkin)
+
 ```gherkin
 Scenario: Empty cue list
   Given a document with no cues
@@ -30,6 +34,7 @@ Scenario: Click row to seek
 ```
 
 ## Out of scope
+
 - Adding/editing/deleting cues (E7)
 - Drag-to-reorder
 - Inline edit

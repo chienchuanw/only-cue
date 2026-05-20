@@ -18,7 +18,7 @@ struct ModeAwareInspector: View {
         case .lyric:
             LyricsInspectorPane(document: document, engine: engine, lyricsCursor: $lyricsCursor)
         case .show:
-            CueListPane(document: document, engine: engine, selection: $cueSelection)
+            CueListPane(document: document, engine: engine, selection: $cueSelection, isReadOnly: true)
         }
     }
 }

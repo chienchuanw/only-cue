@@ -43,6 +43,9 @@ struct CueListPane: View {
     @ObservedObject var document: CueListDocument
     let engine: PlayerEngine
     @Binding var selection: Set<Cue.ID>
+    /// When true (Show mode) the cue list is read-only: row fields, the
+    /// context menu, delete, and column resize are all disabled.
+    var isReadOnly: Bool = false
 
     /// The single selected cue's id, when exactly one is selected — the
     /// granularity the inspector / snap / nudge / duplicate commands work at
@@ -106,6 +109,20 @@ struct CueListPane: View {
             return Color.clear
         }
         return base.opacity(CueListLayout.rowTintOpacity)
+    }
+
+    /// The cue currently "active" at the playhead — emphasized in Show mode.
+    private var currentCueID: Cue.ID? {
+        document.model.activeItem?.activeCue(at: engine.currentTime)?.id
+    }
+
+    /// A row's background — the cue's type tint, or an accent highlight for the
+    /// cue currently playing when the list is read-only (Show mode).
+    private func rowBackground(for cue: Cue) -> Color {
+        if isReadOnly, cue.id == currentCueID {
+            return Color.accentColor.opacity(0.25)
+        }
+        return rowTint(for: cue)
     }
 
     var body: some View {
@@ -252,6 +269,7 @@ struct CueListPane: View {
         .padding(.horizontal, CueListLayout.rowHorizontalPadding)
         .padding(.vertical, 6)
         .accessibilityIdentifier(Self.headerAccessibilityIdentifier)
+        .disabled(isReadOnly)
     }
 
     private var cueList: some View {
@@ -267,43 +285,13 @@ struct CueListPane: View {
             List(selection: $selection) {
                 ForEach(cues, id: \.id) { cue in
                     cueRow(for: cue)
-                        .contextMenu {
-                            Button("Edit Notes…") { activeCueSheet = .notes(cue.id) }
-                                .keyboardShortcut("n", modifiers: [.command, .option])
-                                .accessibilityIdentifier("cueRowContextEditNotes")
-                            Button("Tempo…") { activeCueSheet = .tempo(cue.id) }
-                                .keyboardShortcut("t", modifiers: [.command, .option])
-                                .accessibilityIdentifier("cueRowContextTempo")
-                            Menu("Change Type") {
-                                ForEach(document.model.cuePointTypes) { type in
-                                    Button {
-                                        guard type.id != cue.typeID else { return }
-                                        CueCommands.setType(
-                                            cueId: cue.id,
-                                            to: type.id,
-                                            document: document,
-                                            undoManager: undoManager
-                                        )
-                                    } label: {
-                                        Label {
-                                            Text(type.name)
-                                        } icon: {
-                                            if type.id == cue.typeID {
-                                                Image(systemName: "checkmark")
-                                            }
-                                        }
-                                    }
-                                    .accessibilityIdentifier("cueRowContextChangeType-\(type.id)")
-                                }
-                            }
-                            .accessibilityIdentifier("cueRowContextChangeType")
-                        }
+                        .contextMenu { cueContextMenu(for: cue) }
                         .tag(cue.id)
-                        .listRowBackground(rowTint(for: cue))
+                        .listRowBackground(rowBackground(for: cue))
                 }
-                .onDelete(perform: deleteAtOffsets)
+                .onDelete(perform: isReadOnly ? nil : deleteAtOffsets)
             }
-            .onDeleteCommand { deleteSelected() }
+            .onDeleteCommand { if !isReadOnly { deleteSelected() } }
             .onChange(of: selection) { _, _ in
                 guard
                     let id = soleSelectedID,
@@ -332,8 +320,46 @@ struct CueListPane: View {
             },
             onCommitFade: { newFade in
                 CueCommands.setFadeTime(cueId: cue.id, to: newFade, document: document, undoManager: undoManager)
-            }
+            },
+            isReadOnly: isReadOnly
         )
+    }
+
+    /// The per-row right-click menu — empty (no menu) when the list is
+    /// read-only (Show mode).
+    @ViewBuilder
+    private func cueContextMenu(for cue: Cue) -> some View {
+        if !isReadOnly {
+            Button("Edit Notes…") { activeCueSheet = .notes(cue.id) }
+                .keyboardShortcut("n", modifiers: [.command, .option])
+                .accessibilityIdentifier("cueRowContextEditNotes")
+            Button("Tempo…") { activeCueSheet = .tempo(cue.id) }
+                .keyboardShortcut("t", modifiers: [.command, .option])
+                .accessibilityIdentifier("cueRowContextTempo")
+            Menu("Change Type") {
+                ForEach(document.model.cuePointTypes) { type in
+                    Button {
+                        guard type.id != cue.typeID else { return }
+                        CueCommands.setType(
+                            cueId: cue.id,
+                            to: type.id,
+                            document: document,
+                            undoManager: undoManager
+                        )
+                    } label: {
+                        Label {
+                            Text(type.name)
+                        } icon: {
+                            if type.id == cue.typeID {
+                                Image(systemName: "checkmark")
+                            }
+                        }
+                    }
+                    .accessibilityIdentifier("cueRowContextChangeType-\(type.id)")
+                }
+            }
+            .accessibilityIdentifier("cueRowContextChangeType")
+        }
     }
 
     func deleteAtOffsets(_ offsets: IndexSet) {

@@ -12,14 +12,24 @@ final class ModeAwareInspectorUITests: XCTestCase {
         return app
     }
 
+    private func element(_ app: XCUIApplication, _ identifier: String) -> XCUIElement {
+        app.descendants(matching: .any).matching(identifier: identifier).firstMatch
+    }
+
+    /// Switches editor mode via the View ▸ Mode menu — reliable in XCUITest,
+    /// and the same `.editorModeChangeRequested` path the `⌘1/2/3` keys use.
+    private func selectMode(_ app: XCUIApplication, _ menuTitle: String) {
+        app.menuBars.menuBarItems["View"].click()
+        app.menuItems[menuTitle].click()
+    }
+
     /// Scenario: Cue mode shows the cue list inspector
     /// Given a seeded document in Cue mode
     /// Then the cue list inspector is present.
     func test_cueMode_showsCueListInspector() throws {
         let app = launchSeeded()
         defer { app.terminate() }
-        let pane = app.descendants(matching: .any).matching(identifier: "cueListPane").firstMatch
-        XCTAssertTrue(pane.waitForExistence(timeout: 15))
+        XCTAssertTrue(element(app, "cueListPane").waitForExistence(timeout: 15))
     }
 
     /// Scenario: Lyric mode shows the lyrics inspector
@@ -29,10 +39,11 @@ final class ModeAwareInspectorUITests: XCTestCase {
     func test_lyricMode_showsLyricsInspector() throws {
         let app = launchSeeded()
         defer { app.terminate() }
-        let lyricSegment = app.descendants(matching: .any).matching(identifier: "editorModeSegment-lyric").firstMatch
-        XCTAssertTrue(lyricSegment.waitForExistence(timeout: 15))
-        lyricSegment.click()
-        let pane = app.descendants(matching: .any).matching(identifier: "lyricsInspectorPane").firstMatch
-        XCTAssertTrue(pane.waitForExistence(timeout: 5), "Lyric mode should show the lyrics inspector")
+        XCTAssertTrue(element(app, "cueListPane").waitForExistence(timeout: 15))
+        selectMode(app, "Lyric Mode")
+        XCTAssertTrue(
+            element(app, "lyricsInspectorPane").waitForExistence(timeout: 5),
+            "Lyric mode should show the lyrics inspector"
+        )
     }
 }

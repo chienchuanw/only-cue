@@ -15,6 +15,17 @@ ADR template:
 
 ---
 
+## ADR-022 — Lyrics are a per-`MediaItem` annotation layer, decoupled from cues (schema v13)
+
+**Date**: 2026-05-20
+**Status**: Accepted
+**Decision**: Timestamped lyrics are stored as `MediaItem.lyrics: Lyrics` (schema v13) — a reference / playback-HUD layer that is never a cue source and never moves cues.
+**Why**: Lighting designers locate themselves in a song by its lyrics while placing cues, and a show caller wants a karaoke-style readout during playback. Keeping lyrics out of the cue model preserves the rule that cues are the only first-class timed objects. The offset is a non-destructive display addend — `effectiveTime = LyricLine.time + Lyrics.offsetSeconds`, where `time` is song-relative and `offsetSeconds` is the media time the song begins at — so stored timestamps are never rewritten when the offset changes.
+**Reversal cost**: Low–moderate. `Lyrics` is additive (schema v13; `ProjectModel+MigrationV12` seeds `.empty`); removing it is another schema bump. The UI surfaces (`Tools → Lyrics Editor…`, the `Show Lyrics Overlay` HUD, the `Show Lyrics Lane` strip) are self-contained.
+**Deferred**: `.lrc` import/export, word-level karaoke highlighting, multiple lyric sets per song, lyric→cue conversion, lyric-lane reordering, rebindable keyboard shortcuts for lyrics actions.
+
+---
+
 ## ADR-021 — Encrypted `.cuelist` container with a fixed app key (obfuscation + tamper-evidence, not vendor-proof confidentiality)
 
 **Date**: 2026-05-19

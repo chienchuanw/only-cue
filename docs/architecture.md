@@ -289,6 +289,22 @@ A per-`MediaItem` **tempo map** (epic #199, Phase 3 option A scoped to v1): an o
 | Grid overlay | *(planned — leaf #204)* `TempoGridOverlay` — a layer in the waveform pane (alongside `CueMarkersOverlay`), thin lines on beats, heavier on downbeats, section-boundary markers, respects horizontal zoom, only walks `beatTimes(in:)` for the visible window, `allowsHitTesting(false)`. Toggled by a View-menu item + `KeymapAction.toggleTempoGrid` (default off, per-window session state). | `OnlyCue/UI/TempoGridOverlay.swift` |
 | Editor sheet | *(planned — leaf #205)* `TempoMapSheet` (`Tools → Tempo Map…`, hosted by a `.tempoMapSheet(item:document:)` modifier on `DocumentView`) — a table of sections (start, BPM, beats-per-bar, downbeat offset) + add / split-at-playhead / delete + per-section "Detect tempo" + a whole-item "Detect tempo"; plus a `Tools → Split Tempo Section at Playhead` quick command (`KeymapAction.splitTempoSectionAtPlayhead`). | `OnlyCue/UI/TempoMapSheet.swift`, `OnlyCue/UI/TempoMapHost.swift` |
 
+## Lyrics
+
+Timestamped lyrics attached per `MediaItem` (epic #307, schema v13, ADR-022) — a reference + playback-HUD layer, decoupled from cues. `LyricLine.time` is song-relative; `Lyrics.offsetSeconds` is the media time the song begins at; `effectiveTime = time + offset`. Authored in a self-contained `Tools → Lyrics Editor…` sheet (manual table + tap-along), displayed as a playback HUD and a waveform lane.
+
+| Piece | API | Where it lives |
+|---|---|---|
+| Value types | `LyricLine` (id/time/text) + `Lyrics` (sorted `[LyricLine]` + `offsetSeconds`; `effectiveTime` / `activeLine` / `nextLine` / `untimedLines`) | `OnlyCue/Document/LyricLine.swift`, `Lyrics.swift` |
+| Persistence | `MediaItem.lyrics: Lyrics` (schema v13; `ProjectModel+MigrationV12` seeds `.empty`) | `OnlyCue/Document/MediaItem.swift`, `ProjectModel+MigrationV12.swift` |
+| Commands | `CueCommands+Lyrics` — `setLyrics` / `setLyricsOffset` / `setLyricLines` / `pasteLyrics` (undoable) | `OnlyCue/Commands/CueCommands+Lyrics.swift` |
+| Editor sheet | `LyricsEditorSheet` (+ host modifier) — `Tools → Lyrics Editor…`; manual time/text table, paste-first, tap-along (`LyricsTapAlong`), offset control (`LyricsOffsetControl`) | `OnlyCue/UI/LyricsEditorSheet.swift`, `LyricsTapAlong.swift`, `LyricsOffsetControl.swift` |
+| Playback HUD | `LyricsOverlayView` (`LyricsHUDContent` projection) — `View → Show Lyrics Overlay`; current + next line, stacked with the Notes Overlay | `OnlyCue/UI/LyricsOverlayView.swift`, mounted in `PreviewPane` |
+| Lyric lane | `LyricsLaneView` (+ `LyricsLaneLayout` density-collapse) — `View → Show Lyrics Lane`; a zoom-aware strip in the waveform content, click-to-seek | `OnlyCue/UI/LyricsLaneView.swift`, `LyricsLaneLayout.swift`, `WaveformContainer+Overlays.swift` |
+| Time format | `LyricsTimeFormat` — `M:SS.mmm` parse/format for the line and offset fields | `OnlyCue/Utilities/LyricsTimeFormat.swift` |
+
+All mutation routes through `CueCommands+Lyrics`. Lyrics never become cues and never move cues (ADR-022).
+
 ## Phase-2 seams
 
 These are explicit extension points so future features don't require rewrites. See [`roadmap.md`](roadmap.md) for what plugs in here.

@@ -71,7 +71,7 @@ UTType: `com.onlycue.cuelist`, conforms to `public.data`. Finder Kind: "OnlyCue 
 
 ```swift
 struct ProjectModel: Codable {
-    static let currentSchemaVersion = 8
+    static let currentSchemaVersion = 13
 
     var schemaVersion: Int
     var id: UUID
@@ -107,9 +107,25 @@ struct CuePointType: Codable, Identifiable, Equatable {
 
 struct MediaItem: Codable, Identifiable, Equatable {
     var id: UUID
-    var media: MediaReference   // non-optional — items only exist after import
+    var media: MediaReference     // non-optional — items only exist after import
     var cues: [Cue]
-    var tempoMap: TempoMap      // since v8; empty == no tempo grid
+    var startTimecodeFrames: Int  // since v10; per-clip start timecode
+    var ltcMuted: Bool            // since v10; per-clip LTC channel mute
+    var alternateName: String?    // since v12; per-clip display-name override
+    var lyrics: Lyrics            // since v13; timestamped lyrics (ADR-022)
+}
+
+struct LyricLine: Codable, Identifiable, Equatable {
+    var id: UUID
+    var time: TimeInterval        // SONG-relative seconds; >= 0
+    var text: String              // may be empty — an instrumental gap
+}
+
+struct Lyrics: Codable, Equatable {
+    private(set) var lines: [LyricLine]   // normalized: sorted by time
+    var offsetSeconds: TimeInterval       // media time the song begins at
+    // .empty == no lyrics
+    // derived: effectiveTime(of:) -> time + offset; activeLine(atMediaSeconds:); nextLine(afterMediaSeconds:)
 }
 
 struct TempoMap: Codable, Equatable {
@@ -182,10 +198,11 @@ enum MediaKind: String, Codable {
 | `cue.fadeTime` | Required. `FadeTime(fadeIn:fadeOut:)`. New cues default to `.symmetric(0)` (no fade); v4 → v5 migration backfills the same. The cue inspector parses input via `FadeTime.parse(_:)` (accepts `"1"` / `"1.5"` symmetric and `"1/2"` split, trims whitespace, rejects empty/non-numeric/negative/multi-slash/half-empty), routes valid edits through `CueCommands.setFadeTime`, and reverts the field to `FadeTime.format()`'s canonical form on rejection. The struct itself does not trap on negative values; the parser is the gate. |
 | `timecodeSettings` | Since v7. `framerate` is `"24"` / `"25"` / `"30"` / `"30df"` (`SMPTEFramerate` raw value); `startOffsetFrames` is the project's start timecode expressed as a count of frames since `00:00:00:00` (drop-frame aware via `Timecode`). Defaults to `{framerate: "30", startOffsetFrames: 0}`. Used by the LTC generator (epic #33) and the Audio & Timecode preferences pane (leaf 6 — the pane edits these; the field is pre-provisioned here, same as `isVisible` was before the breakdown view). v6 → v7 migration seeds the default. |
 | `tempoMap` (per `MediaItem`) | Since v8. A `TempoMap` of `TempoSection`s — an empty map means "no tempo grid". Persisted per media item. The map is normalized on construction: sections sorted by `startSeconds`, de-duplicated by start (last wins), the first section forced to `startSeconds == 0`, and each section's `downbeatOffsetSeconds` reduced into `[0, barDuration)`. `bpm` is clamped to `[20, 400]` and `beatsPerBar` to `>= 1`. It is a visual + snap aid only — it does not move cues (ADR-020). Mutated via `CueCommands` (epic #199); the DSP tempo analyzer can seed a section's `bpm` + `downbeatOffsetSeconds`. v7 → v8 migration seeds an empty map on every item. |
+| `item.lyrics` | Since v13. A `Lyrics` — a sorted `[LyricLine]` plus `offsetSeconds`. Empty (`.empty`) means no lyrics. A reference / playback-HUD layer decoupled from cues (ADR-022). `LyricLine.time` is song-relative; `offsetSeconds` is the media time the song begins at; `effectiveTime = time + offset`. Authored via the `Tools → Lyrics Editor…` sheet, routed through `CueCommands.setLyrics` / `setLyricsOffset` / `setLyricLines` / `pasteLyrics`. v12 → v13 migration seeds an empty `Lyrics` on every item. |
 
 ## Versioning policy
 
-- `schemaVersion: 8` is the current file. We will **never** mutate v8 semantics; new fields go in v9.
+- `schemaVersion: 13` is the current file. We will **never** mutate v13 semantics; new fields go in v14.
 - Adding optional fields → old readers ignore unknown keys via `Codable`; no version bump required.
 - Adding a required field, or removing / repurposing a field → bump `schemaVersion` and write a migration.
 - Migrations are pure functions `(JSONvN) -> ProjectModel`, applied during `ProjectModel.decode(from:)`. Pre-v4 chains run `assignCueNumbersBySort` so cues land with sequential `cueNumber` values; every chain backfills `fadeTime = .symmetric(0)` at the cue boundary so pre-v5 sources land with a valid `fadeTime`; every chain drops the legacy per-cue `colorHex` at the boundary so any pre-v6 source lands with color resolving via the Type; every chain seeds `timecodeSettings = .default` so any pre-v7 source lands with valid timecode settings; and every chain lands an empty `tempoMap` on every item so any pre-v8 source has a valid (empty) tempo map:
@@ -196,7 +213,8 @@ enum MediaKind: String, Codable {
   - **v5 → current**: keeps everything except `cue.colorHex` (dropped); color resolves through `ProjectModel.colorHex(for:)`; seeds `timecodeSettings = .default`.
   - **v6 → current**: keeps everything; seeds `timecodeSettings = .default` (v6 had no timecode settings); seeds an empty `tempoMap` on every item.
   - **v7 → current**: keeps everything (including `timecodeSettings`); seeds an empty `tempoMap` on every item (v7 had no tempo maps).
-- v8 is a one-way upgrade: every prior build (v1 through v7) cannot open v8 files.
+  - **v12 → current**: keeps everything; seeds an empty `Lyrics` on every item (`MediaItem.lyrics`, ADR-022). The intervening v8–v11 schema bumps (from earlier epics) are additive in the same way.
+- v13 is a one-way upgrade: every prior build (v1 through v12) cannot open v13 files.
 
 ## Bookmark behavior
 

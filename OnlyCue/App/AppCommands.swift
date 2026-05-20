@@ -96,6 +96,23 @@ struct AppCommands: Commands {
 
             Divider()
 
+            Button("Cue Mode") {
+                NotificationCenter.default.post(name: .editorModeChangeRequested, object: EditorMode.cue)
+            }
+            .keyboardShortcut("1", modifiers: .command)
+
+            Button("Lyric Mode") {
+                NotificationCenter.default.post(name: .editorModeChangeRequested, object: EditorMode.lyric)
+            }
+            .keyboardShortcut("2", modifiers: .command)
+
+            Button("Show Mode") {
+                NotificationCenter.default.post(name: .editorModeChangeRequested, object: EditorMode.show)
+            }
+            .keyboardShortcut("3", modifiers: .command)
+
+            Divider()
+
             Button(showNotesOverlay ? "Hide Notes Overlay" : "Show Notes Overlay") {
                 showNotesOverlay.toggle()
             }

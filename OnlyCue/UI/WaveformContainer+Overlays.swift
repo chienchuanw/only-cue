@@ -28,7 +28,8 @@ extension WaveformContainer {
                 onToggleCue: onToggleCue,
                 onSeek: onSeek,
                 onRetime: onRetime,
-                onNudge: onNudge
+                onNudge: onNudge,
+                isEditable: editorMode.cueMarkersEditable
             )
         }
     }

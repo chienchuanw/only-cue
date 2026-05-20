@@ -301,7 +301,7 @@ The document window is in one of three **editor modes** — Cue, Lyric, Show —
 
 | Piece | API | Where it lives |
 |---|---|---|
-| Mode | `EditorMode` (`cue`/`lyric`/`show`; `cueMarkersEditable` / `lyricsEditable` / `isReadOnly`). Held in `DocumentView`'s `@SceneStorage`; the `View → Mode` menu + `⌘1/2/3` post `.editorModeChangeRequested`. | `OnlyCue/UI/EditorMode.swift` |
+| Mode | `EditorMode` (`cue`/`lyric`/`show`; `cueMarkersEditable` / `lyricsEditable` / `isReadOnly`). Held in `DocumentView`'s `@SceneStorage`; the View menu's Cue/Lyric/Show Mode items + `⌘1/2/3` post `.editorModeChangeRequested`. | `OnlyCue/UI/EditorMode.swift` |
 | Switcher | `EditorModeSwitcher` — a `Cue \| Lyric \| Show` segmented control at the top of `PreviewPane`, per-mode tint. | `OnlyCue/UI/EditorModeSwitcher.swift` |
 | Cue-marker gating | `CueMarkersOverlay.isEditable` — dimmed + non-hit-testing outside Cue mode, so clicks fall through to the seek surface. | `OnlyCue/UI/CueMarkersOverlay.swift` |
 | Mode-aware inspector | `ModeAwareInspector` swaps `CueListPane` / `LyricsInspectorPane` / read-only `CueListPane` by mode. | `OnlyCue/UI/ModeAwareInspector.swift` |
@@ -312,7 +312,7 @@ Timestamped lyrics attached per `MediaItem` (epic #307 / schema v13 / ADR-022; e
 
 | Piece | API | Where it lives |
 |---|---|---|
-| Value types | `LyricLine` (id / optional `time` / text) + `Lyrics` (`[LyricLine]` in authoring order + `offsetSeconds`; `placedLines` / `unplacedLines`, `effectiveTime` / `activeLine` / `nextLine` / `untimedLines`) | `OnlyCue/Document/LyricLine.swift`, `Lyrics.swift` |
+| Value types | `LyricLine` (id / optional `time` / text) + `Lyrics` (`[LyricLine]` in authoring order + `offsetSeconds`; derived `placedLines` / `unplacedLines` / `effectiveTime` / `activeLine` / `nextLine`; the `untimedLines(fromPlainText:)` paste factory) | `OnlyCue/Document/LyricLine.swift`, `Lyrics.swift` |
 | Persistence | `MediaItem.lyrics: Lyrics` (schema v13; `time` optional at v14 — `MigrationV12` seeds `.empty`, `MigrationV13` makes `time` optional) | `OnlyCue/Document/MediaItem.swift`, `ProjectModel+MigrationV12.swift`, `ProjectModel+MigrationV13.swift` |
 | Commands | `CueCommands+Lyrics` — `setLyrics` / `setLyricsOffset` / `setLyricLines` / `pasteLyrics` / `placeLyricLine` / `unplaceLyricLine` / `deleteLyricLine` (undoable) | `OnlyCue/Commands/CueCommands+Lyrics.swift` |
 | Lyric lane | `LyricsLaneView` — a tall editing strip in Lyric mode (place / drag / right-click unplace-or-delete; a ghost chip rides the cursor for click-to-drop), a compact read-only click-to-seek strip otherwise (`LyricsLaneLayout` density-collapse). `LyricsLaneInteraction` is the pure x↔time math. | `OnlyCue/UI/LyricsLaneView.swift`, `LyricsLaneLayout.swift`, `LyricsLaneInteraction.swift`, `WaveformContainer+Overlays.swift` |

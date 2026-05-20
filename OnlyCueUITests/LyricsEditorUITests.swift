@@ -14,10 +14,23 @@ final class LyricsEditorUITests: XCTestCase {
         return app
     }
 
+    /// One-call-per-line element lookup by identifier.
+    private func element(_ identifier: String, in app: XCUIApplication) -> XCUIElement {
+        app.descendants(matching: .any)
+            .matching(identifier: identifier)
+            .firstMatch
+    }
+
+    /// One-call-per-line element lookup by predicate.
+    private func element(matching predicate: NSPredicate, in app: XCUIApplication) -> XCUIElement {
+        app.descendants(matching: .any)
+            .matching(predicate)
+            .firstMatch
+    }
+
     private func openEditor(_ app: XCUIApplication) {
         XCTAssertTrue(
-            app.descendants(matching: .any).matching(identifier: "cueMarkersOverlay").firstMatch
-                .waitForExistence(timeout: 15),
+            element("cueMarkersOverlay", in: app).waitForExistence(timeout: 15),
             "seed document should open"
         )
         app.activate()
@@ -38,8 +51,7 @@ final class LyricsEditorUITests: XCTestCase {
         defer { app.terminate() }
         openEditor(app)
         XCTAssertTrue(
-            app.descendants(matching: .any).matching(identifier: "lyricsEditorSheet").firstMatch
-                .waitForExistence(timeout: 5),
+            element("lyricsEditorSheet", in: app).waitForExistence(timeout: 5),
             "the Lyrics Editor sheet should appear"
         )
     }
@@ -55,10 +67,9 @@ final class LyricsEditorUITests: XCTestCase {
         let addButton = app.buttons["lyricsEditorAddLine"]
         XCTAssertTrue(addButton.waitForExistence(timeout: 5))
         addButton.click()
+        let rowPredicate = NSPredicate(format: "identifier BEGINSWITH 'lyricsEditorRow-'")
         XCTAssertTrue(
-            app.descendants(matching: .any).matching(
-                NSPredicate(format: "identifier BEGINSWITH 'lyricsEditorRow-'")
-            ).firstMatch.waitForExistence(timeout: 3),
+            element(matching: rowPredicate, in: app).waitForExistence(timeout: 3),
             "Add Line should insert a table row"
         )
     }

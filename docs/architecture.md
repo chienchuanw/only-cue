@@ -289,18 +289,36 @@ A per-`MediaItem` **tempo map** (epic #199, Phase 3 option A scoped to v1): an o
 | Grid overlay | *(planned — leaf #204)* `TempoGridOverlay` — a layer in the waveform pane (alongside `CueMarkersOverlay`), thin lines on beats, heavier on downbeats, section-boundary markers, respects horizontal zoom, only walks `beatTimes(in:)` for the visible window, `allowsHitTesting(false)`. Toggled by a View-menu item + `KeymapAction.toggleTempoGrid` (default off, per-window session state). | `OnlyCue/UI/TempoGridOverlay.swift` |
 | Editor sheet | *(planned — leaf #205)* `TempoMapSheet` (`Tools → Tempo Map…`, hosted by a `.tempoMapSheet(item:document:)` modifier on `DocumentView`) — a table of sections (start, BPM, beats-per-bar, downbeat offset) + add / split-at-playhead / delete + per-section "Detect tempo" + a whole-item "Detect tempo"; plus a `Tools → Split Tempo Section at Playhead` quick command (`KeymapAction.splitTempoSectionAtPlayhead`). | `OnlyCue/UI/TempoMapSheet.swift`, `OnlyCue/UI/TempoMapHost.swift` |
 
-## Lyrics
+## Editor modes
 
-Timestamped lyrics attached per `MediaItem` (epic #307, schema v13, ADR-022) — a reference + playback-HUD layer, decoupled from cues. `LyricLine.time` is song-relative; `Lyrics.offsetSeconds` is the media time the song begins at; `effectiveTime = time + offset`. Authored in a self-contained `Tools → Lyrics Editor…` sheet (manual table + tap-along), displayed as a playback HUD and a waveform lane.
+The document window is in one of three **editor modes** — Cue, Lyric, Show — held per-window in `@SceneStorage` (`EditorMode`, default `.cue`; not document data). The mode gates the waveform editing surface (epic #326, ADR-023). A plain waveform click always seeks, in every mode.
+
+| Mode | Waveform | Inspector |
+|---|---|---|
+| Cue | cue markers editable (select / drag-retime / group-nudge / hotkey-add); lyric lane dimmed | cue list |
+| Lyric | lyric lane is the tall editing surface (place / drag lyric lines); cue markers dimmed + locked | lyrics pane (paste box, unplaced queue, placed-line rows, offset control) |
+| Show | read-only — every edit gesture disabled; the current cue is emphasized | cue list, read-only |
 
 | Piece | API | Where it lives |
 |---|---|---|
-| Value types | `LyricLine` (id/time/text) + `Lyrics` (sorted `[LyricLine]` + `offsetSeconds`; `effectiveTime` / `activeLine` / `nextLine` / `untimedLines`) | `OnlyCue/Document/LyricLine.swift`, `Lyrics.swift` |
-| Persistence | `MediaItem.lyrics: Lyrics` (schema v13; `ProjectModel+MigrationV12` seeds `.empty`) | `OnlyCue/Document/MediaItem.swift`, `ProjectModel+MigrationV12.swift` |
-| Commands | `CueCommands+Lyrics` — `setLyrics` / `setLyricsOffset` / `setLyricLines` / `pasteLyrics` (undoable) | `OnlyCue/Commands/CueCommands+Lyrics.swift` |
-| Editor sheet | `LyricsEditorSheet` (+ host modifier) — `Tools → Lyrics Editor…`; manual time/text table, paste-first, tap-along (`LyricsTapAlong`), offset control (`LyricsOffsetControl`) | `OnlyCue/UI/LyricsEditorSheet.swift`, `LyricsTapAlong.swift`, `LyricsOffsetControl.swift` |
+| Mode | `EditorMode` (`cue`/`lyric`/`show`; `cueMarkersEditable` / `lyricsEditable` / `isReadOnly`). Held in `DocumentView`'s `@SceneStorage`; the `View → Mode` menu + `⌘1/2/3` post `.editorModeChangeRequested`. | `OnlyCue/UI/EditorMode.swift` |
+| Switcher | `EditorModeSwitcher` — a `Cue \| Lyric \| Show` segmented control at the top of `PreviewPane`, per-mode tint. | `OnlyCue/UI/EditorModeSwitcher.swift` |
+| Cue-marker gating | `CueMarkersOverlay.isEditable` — dimmed + non-hit-testing outside Cue mode, so clicks fall through to the seek surface. | `OnlyCue/UI/CueMarkersOverlay.swift` |
+| Mode-aware inspector | `ModeAwareInspector` swaps `CueListPane` / `LyricsInspectorPane` / read-only `CueListPane` by mode. | `OnlyCue/UI/ModeAwareInspector.swift` |
+
+## Lyrics
+
+Timestamped lyrics attached per `MediaItem` (epic #307 / schema v13 / ADR-022; epic #326 / schema v14 / ADR-023) — a reference + playback-HUD layer, decoupled from cues. `LyricLine.time` is song-relative and **optional** (`nil` = unplaced); `Lyrics.offsetSeconds` is the media time the song begins at; `effectiveTime = time + offset` for placed lines. Lyrics are authored **directly on the waveform** in Lyric mode — there is no modal editor.
+
+| Piece | API | Where it lives |
+|---|---|---|
+| Value types | `LyricLine` (id / optional `time` / text) + `Lyrics` (`[LyricLine]` in authoring order + `offsetSeconds`; `placedLines` / `unplacedLines`, `effectiveTime` / `activeLine` / `nextLine` / `untimedLines`) | `OnlyCue/Document/LyricLine.swift`, `Lyrics.swift` |
+| Persistence | `MediaItem.lyrics: Lyrics` (schema v13; `time` optional at v14 — `MigrationV12` seeds `.empty`, `MigrationV13` makes `time` optional) | `OnlyCue/Document/MediaItem.swift`, `ProjectModel+MigrationV12.swift`, `ProjectModel+MigrationV13.swift` |
+| Commands | `CueCommands+Lyrics` — `setLyrics` / `setLyricsOffset` / `setLyricLines` / `pasteLyrics` / `placeLyricLine` / `unplaceLyricLine` / `deleteLyricLine` (undoable) | `OnlyCue/Commands/CueCommands+Lyrics.swift` |
+| Lyric lane | `LyricsLaneView` — a tall editing strip in Lyric mode (place / drag / right-click unplace-or-delete; a ghost chip rides the cursor for click-to-drop), a compact read-only click-to-seek strip otherwise (`LyricsLaneLayout` density-collapse). `LyricsLaneInteraction` is the pure x↔time math. | `OnlyCue/UI/LyricsLaneView.swift`, `LyricsLaneLayout.swift`, `LyricsLaneInteraction.swift`, `WaveformContainer+Overlays.swift` |
+| Placement | `LyricsAuthoringCursor` — the unplaced-queue cursor (tracked by `LyricLine.ID`). Click-to-drop on the lane and the `T` tap-along key both place the cursor line and advance. | `OnlyCue/UI/LyricsAuthoringCursor.swift`, `DocumentView.swift` |
+| Inspector | `LyricsInspectorPane` — the Lyric-mode inspector: paste box, unplaced queue (cursor-highlighted), editable placed-line rows, offset control (`LyricsOffsetControl`) | `OnlyCue/UI/LyricsInspectorPane.swift` |
 | Playback HUD | `LyricsOverlayView` (`LyricsHUDContent` projection) — `View → Show Lyrics Overlay`; current + next line, stacked with the Notes Overlay | `OnlyCue/UI/LyricsOverlayView.swift`, mounted in `PreviewPane` |
-| Lyric lane | `LyricsLaneView` (+ `LyricsLaneLayout` density-collapse) — `View → Show Lyrics Lane`; a zoom-aware strip in the waveform content, click-to-seek | `OnlyCue/UI/LyricsLaneView.swift`, `LyricsLaneLayout.swift`, `WaveformContainer+Overlays.swift` |
 | Time format | `LyricsTimeFormat` — `M:SS.mmm` parse/format for the line and offset fields | `OnlyCue/Utilities/LyricsTimeFormat.swift` |
 
 All mutation routes through `CueCommands+Lyrics`. Lyrics never become cues and never move cues (ADR-022).

@@ -126,12 +126,11 @@ struct LyricsEditorSheet: View {
 
     /// Whether `line` is the row the next tap will stamp.
     private func rowIsCursor(_ line: LyricLine) -> Bool {
-        guard let cursor = tapAlong?.cursor else { return false }
-        return lines.firstIndex(where: { $0.id == line.id }) == cursor
+        tapAlong?.cursorID == line.id
     }
 
     private func toggleTapAlong() {
-        tapAlong = tapAlong == nil ? LyricsTapAlong() : nil
+        tapAlong = tapAlong == nil ? LyricsTapAlong(lines: lines) : nil
     }
 
     /// Stamps the cursor row with `playhead - offset` and advances. Bound to

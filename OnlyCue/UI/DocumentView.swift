@@ -74,7 +74,6 @@ struct DocumentView: View {
         }
         .manageTypesSheet(document: document)
         .timecodeSettingsSheet(document: document)
-        .lyricsEditorSheet(engine: engine, document: document)
         .onReceive(NotificationCenter.default.publisher(for: .editorModeChangeRequested)) { note in
             if let mode = note.object as? EditorMode { editorModeRaw = mode.rawValue }
         }
@@ -346,7 +345,6 @@ extension Notification.Name {
     static let snapSelectedCuesToBar = Notification.Name("OnlyCue.snapSelectedCuesToBar")
     static let manageTypesRequested = Notification.Name("OnlyCue.manageTypesRequested")
     static let editorModeChangeRequested = Notification.Name("OnlyCue.editorModeChangeRequested")
-    static let lyricsEditorRequested = Notification.Name("OnlyCue.lyricsEditorRequested")
     static let playbackRateUp = Notification.Name("OnlyCue.playbackRateUp")
     static let playbackRateDown = Notification.Name("OnlyCue.playbackRateDown")
     static let playbackRateReset = Notification.Name("OnlyCue.playbackRateReset")

@@ -145,6 +145,15 @@ enum UITestSeedHandler {
                 ],
                 offsetSeconds: 0
             )
+        case "lyrics-with-placed-lines":
+            return Lyrics(
+                lines: [
+                    LyricLine(time: 2, text: "first placed line"),
+                    LyricLine(time: 5, text: "second placed line"),
+                    LyricLine(time: nil, text: "an unplaced line")
+                ],
+                offsetSeconds: 0
+            )
         default:
             return .empty
         }
@@ -171,7 +180,7 @@ enum UITestSeedHandler {
                 CueSpec(time: 3, bpm: nil, beatsPerBar: nil),
                 CueSpec(time: 6, bpm: nil, beatsPerBar: nil)
             ]
-        case "song-with-lyrics":
+        case "song-with-lyrics", "lyrics-with-placed-lines":
             return [CueSpec(time: 1, bpm: nil, beatsPerBar: nil)]
         default:
             throw NSError(

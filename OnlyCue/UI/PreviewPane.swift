@@ -200,7 +200,22 @@ struct PreviewPane: View {
             engine: withPlayhead ? engine : nil,
             lyrics: item.lyrics,
             onSeekToLyric: { time in Task { await engine.seek(to: time) } },
-            editorMode: editorMode
+            editorMode: editorMode,
+            onRetimeLyric: { id, newTime in
+                CueCommands.placeLyricLine(
+                    id: id,
+                    atMediaTime: newTime,
+                    itemID: item.id,
+                    document: document,
+                    undoManager: undoManager
+                )
+            },
+            onUnplaceLyric: { id in
+                CueCommands.unplaceLyricLine(id: id, itemID: item.id, document: document, undoManager: undoManager)
+            },
+            onDeleteLyric: { id in
+                CueCommands.deleteLyricLine(id: id, itemID: item.id, document: document, undoManager: undoManager)
+            }
         )
     }
 

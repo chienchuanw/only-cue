@@ -3,8 +3,9 @@ import SwiftUI
 /// The lyric lane — a band inside `WaveformContainer`'s zoomable content showing
 /// each placed line positioned by its effective time. In Lyric mode it grows
 /// into a tall editing strip: chips show full text, drag to retime, right-click
-/// to unplace or delete. In Cue / Show modes it is the compact, read-only,
-/// click-to-seek strip that collapses to ticks when lines pack tightly.
+/// to unplace or delete, and a ghost chip rides the cursor for click-to-drop
+/// placement. In Cue / Show modes it is the compact, read-only, click-to-seek
+/// strip that collapses to ticks when lines pack tightly.
 struct LyricsLaneView: View {
 
     let lyrics: Lyrics
@@ -14,12 +15,17 @@ struct LyricsLaneView: View {
     var onRetime: (LyricLine.ID, TimeInterval) -> Void = { _, _ in }
     var onUnplace: (LyricLine.ID) -> Void = { _ in }
     var onDelete: (LyricLine.ID) -> Void = { _ in }
+    /// The unplaced line the next placement gesture will target (the cursor).
+    var ghostLine: LyricLine?
+    /// Place `ghostLine` at a media time (click-to-drop). Lyric mode only.
+    var onPlaceAtMediaTime: (TimeInterval) -> Void = { _ in }
 
     static let compactHeight: CGFloat = 26
     static let tallHeight: CGFloat = 64
 
     @State private var dragLineID: LyricLine.ID?
     @State private var dragDX: CGFloat = 0
+    @State private var hoverX: CGFloat?
 
     private var isEditing: Bool { editorMode.lyricsEditable }
     private var laneHeight: CGFloat { isEditing ? Self.tallHeight : Self.compactHeight }
@@ -35,8 +41,25 @@ struct LyricsLaneView: View {
                 ForEach(lyrics.placedLines) { line in
                     marker(for: line, width: width, collapsed: collapse)
                 }
+                if isEditing, let ghost = ghostLine {
+                    ghostChip(for: ghost)
+                }
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottomLeading)
+            .contentShape(Rectangle())
+            .onContinuousHover { phase in
+                guard isEditing else { hoverX = nil; return }
+                switch phase {
+                case .active(let point): hoverX = point.x
+                case .ended: hoverX = nil
+                }
+            }
+            .onTapGesture(coordinateSpace: .local) { location in
+                guard isEditing, ghostLine != nil else { return }
+                onPlaceAtMediaTime(
+                    LyricsLaneInteraction.mediaTime(forX: location.x, width: width, duration: duration)
+                )
+            }
         }
         .frame(height: laneHeight)
         .accessibilityElement(children: .contain)
@@ -69,6 +92,26 @@ struct LyricsLaneView: View {
                 .background(RoundedRectangle(cornerRadius: 4).fill(.purple.opacity(isEditing ? 0.85 : 0.18)))
                 .foregroundStyle(isEditing ? Color.white : Color.primary)
         }
+    }
+
+    /// The dashed chip that rides the cursor over the lane, previewing where the
+    /// next unplaced line will drop.
+    private func ghostChip(for line: LyricLine) -> some View {
+        Text(line.text.isEmpty ? "\u{266A}" : line.text)
+            .font(.system(size: 11))
+            .lineLimit(1)
+            .padding(.horizontal, 6)
+            .padding(.vertical, 5)
+            .background(
+                RoundedRectangle(cornerRadius: 4)
+                    .stroke(.purple, style: StrokeStyle(lineWidth: 1, dash: [3]))
+                    .background(RoundedRectangle(cornerRadius: 4).fill(.purple.opacity(0.25)))
+            )
+            .foregroundStyle(.white)
+            .offset(x: hoverX ?? 0)
+            .opacity(hoverX == nil ? 0 : 0.9)
+            .allowsHitTesting(false)
+            .accessibilityIdentifier("lyricsLaneGhostChip")
     }
 
     @ViewBuilder

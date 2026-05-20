@@ -21,6 +21,8 @@ struct WaveformContainer: View {
     var onRetimeLyric: (LyricLine.ID, TimeInterval) -> Void = { _, _ in }
     var onUnplaceLyric: (LyricLine.ID) -> Void = { _ in }
     var onDeleteLyric: (LyricLine.ID) -> Void = { _ in }
+    var ghostLyricLine: LyricLine?
+    var onPlaceLyricAtMediaTime: (TimeInterval) -> Void = { _ in }
 
     @State private var peaks: [Float]?
     @State private var failed = false
@@ -188,18 +190,6 @@ struct WaveformContainer: View {
             }
     }
 
-    private func applyZoomIn() {
-        mutateZoom { width, offset in
-            zoom.zoomIn(viewportWidth: width, scrollOffset: &offset)
-        }
-    }
-
-    private func applyZoomOut() {
-        mutateZoom { width, offset in
-            zoom.zoomOut(viewportWidth: width, scrollOffset: &offset)
-        }
-    }
-
     func applyZoomReset() {
         var offset = scrollOffset
         zoom.reset(scrollOffset: &offset)
@@ -207,15 +197,6 @@ struct WaveformContainer: View {
         isProgrammaticAnchor = true
         leadingAnchor = 0
         pinchBaseline = 1
-    }
-
-    private func mutateZoom(_ block: (CGFloat, inout CGFloat) -> Void) {
-        guard viewportWidth > 0 else { return }
-        var offset = scrollOffset
-        block(viewportWidth, &offset)
-        scrollOffset = offset
-        pinchBaseline = zoom.zoom
-        syncAnchorFromOffset(viewportWidth: viewportWidth)
     }
 
     func syncAnchorFromOffset(viewportWidth: CGFloat) {
@@ -294,6 +275,27 @@ extension WaveformContainer {
     fileprivate func anchorCount() -> Int {
         let raw = max(Int(loadedDuration.rounded(.up)), 1)
         return min(raw, Self.maxAnchorCount)
+    }
+
+    fileprivate func applyZoomIn() {
+        mutateZoom { width, offset in
+            zoom.zoomIn(viewportWidth: width, scrollOffset: &offset)
+        }
+    }
+
+    fileprivate func applyZoomOut() {
+        mutateZoom { width, offset in
+            zoom.zoomOut(viewportWidth: width, scrollOffset: &offset)
+        }
+    }
+
+    fileprivate func mutateZoom(_ block: (CGFloat, inout CGFloat) -> Void) {
+        guard viewportWidth > 0 else { return }
+        var offset = scrollOffset
+        block(viewportWidth, &offset)
+        scrollOffset = offset
+        pinchBaseline = zoom.zoom
+        syncAnchorFromOffset(viewportWidth: viewportWidth)
     }
 }
 

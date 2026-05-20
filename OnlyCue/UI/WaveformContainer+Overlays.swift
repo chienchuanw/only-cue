@@ -51,7 +51,9 @@ extension WaveformContainer {
                     onSeek: onSeekToLyric,
                     onRetime: onRetimeLyric,
                     onUnplace: onUnplaceLyric,
-                    onDelete: onDeleteLyric
+                    onDelete: onDeleteLyric,
+                    ghostLine: ghostLyricLine,
+                    onPlaceAtMediaTime: onPlaceLyricAtMediaTime
                 )
             }
         }

@@ -10,6 +10,7 @@ struct PreviewPane: View {
     var onToggleCue: (Cue.ID) -> Void = { _ in }
     var editorMode: EditorMode = .cue
     var setEditorMode: (EditorMode) -> Void = { _ in }
+    @Binding var lyricsCursor: LyricsAuthoringCursor
 
     @Environment(\.undoManager) private var undoManager
     @State private var waveformURL: URL?
@@ -215,7 +216,9 @@ struct PreviewPane: View {
             },
             onDeleteLyric: { id in
                 CueCommands.deleteLyricLine(id: id, itemID: item.id, document: document, undoManager: undoManager)
-            }
+            },
+            ghostLyricLine: ghostLyricLine(for: item),
+            onPlaceLyricAtMediaTime: { placeGhostLyric(atMediaTime: $0, item: item) }
         )
     }
 
@@ -261,5 +264,36 @@ struct PreviewPane: View {
         if document.model.activeItem?.media.bookmarkData == bookmarkData {
             waveformURL = resolved?.url
         }
+    }
+}
+
+/// Lyric-placement helpers. Split into an extension so the main `PreviewPane`
+/// body stays under the SwiftLint `type_body_length` cap.
+extension PreviewPane {
+
+    /// Places the resolved cursor line at `mediaTime` and advances the cursor
+    /// (click-to-drop). No-op when the queue is empty.
+    fileprivate func placeGhostLyric(atMediaTime mediaTime: TimeInterval, item: MediaItem) {
+        guard let targetID = ghostLyricLineID(for: item) else { return }
+        CueCommands.placeLyricLine(
+            id: targetID,
+            atMediaTime: mediaTime,
+            itemID: item.id,
+            document: document,
+            undoManager: undoManager
+        )
+        let remaining = document.model.activeItem?.lyrics.unplacedLines ?? []
+        lyricsCursor.advance(afterPlacing: targetID, remainingUnplaced: remaining)
+    }
+
+    /// The id of the unplaced line the next placement gesture targets.
+    fileprivate func ghostLyricLineID(for item: MediaItem) -> LyricLine.ID? {
+        lyricsCursor.resolvedCursorID(unplaced: item.lyrics.unplacedLines)
+    }
+
+    /// The ghost line shown riding the cursor on the lane — only in Lyric mode.
+    fileprivate func ghostLyricLine(for item: MediaItem) -> LyricLine? {
+        guard editorMode.lyricsEditable, let id = ghostLyricLineID(for: item) else { return nil }
+        return item.lyrics.unplacedLines.first { $0.id == id }
     }
 }

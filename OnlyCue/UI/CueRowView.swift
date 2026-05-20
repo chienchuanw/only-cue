@@ -10,6 +10,8 @@ struct CueRowView: View {
     var onRename: (String) -> Void = { _ in }
     var onCommitNumber: (Double?) -> CueNumberValidator.Result = { _ in .ok }
     var onCommitFade: (FadeTime) -> Void = { _ in }
+    /// When true (Show mode) the row's editable fields are disabled.
+    var isReadOnly: Bool = false
 
     @State private var isEditingName = false
     @State private var draftName = ""
@@ -66,6 +68,7 @@ struct CueRowView: View {
         // .contextMenu is applied by the parent `CueListPane` matching the
         // ItemListPane pattern that's proven to work on macOS.
         .contentShape(Rectangle())
+        .disabled(isReadOnly)
         .accessibilityIdentifier("cueRow-\(cue.id)")
     }
 

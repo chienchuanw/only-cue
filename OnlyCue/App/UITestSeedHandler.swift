@@ -124,11 +124,30 @@ enum UITestSeedHandler {
                             bpm: spec.bpm,
                             beatsPerBar: spec.beatsPerBar
                         )
-                    }
+                    },
+                    lyrics: lyricsSeed(for: key)
                 )
             ],
             activeItemID: itemID
         )
+    }
+
+    /// Lyrics seeded onto the media item for lyrics-related UI tests. The first
+    /// line sits at `time = 0` so the HUD has an active line at the opening
+    /// playhead. Empty for every other seed.
+    private static func lyricsSeed(for key: String) -> Lyrics {
+        switch key {
+        case "song-with-lyrics":
+            return Lyrics(
+                lines: [
+                    LyricLine(time: 0, text: "Seeded opening line"),
+                    LyricLine(time: 5, text: "Seeded second line")
+                ],
+                offsetSeconds: 0
+            )
+        default:
+            return .empty
+        }
     }
 
     private struct CueSpec {
@@ -152,6 +171,8 @@ enum UITestSeedHandler {
                 CueSpec(time: 3, bpm: nil, beatsPerBar: nil),
                 CueSpec(time: 6, bpm: nil, beatsPerBar: nil)
             ]
+        case "song-with-lyrics":
+            return [CueSpec(time: 1, bpm: nil, beatsPerBar: nil)]
         default:
             throw NSError(
                 domain: "UITestSeedHandler",

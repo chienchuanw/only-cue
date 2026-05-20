@@ -49,7 +49,7 @@ The offset is a **non-destructive display addend**: `LyricLine.time` values neve
 - `activeLine(atMediaSeconds:) -> LyricLine?` — the line with the largest `effectiveTime <= playhead`; `nil` before the first line; the last line persists once the playhead is past it (mirrors `MediaItem.activeCue(at:)` semantics).
 - `nextLine(afterMediaSeconds:) -> LyricLine?` — the line immediately after the active one; `nil` past the last line.
 
-**Schema.** `lyrics` is a required (non-optional) field, so `ProjectModel.currentSchemaVersion` bumps **12 → 13**. A new `ProjectModel+MigrationV12.swift` migration seeds `lyrics = .empty` on every `MediaItem`; **every** prior migration chain (v1 → current, … v11 → current) also lands `.empty` at the item boundary, exactly as each chain already seeds an empty `tempoMap`. v13 is a one-way upgrade — prior builds cannot open v13 files.
+**Schema.** Adding a `MediaItem` field follows OnlyCue's convention of one schema bump per field (the same was done for `alternateName` at v12), so `ProjectModel.currentSchemaVersion` bumps **12 → 13** with a new `ProjectModel+MigrationV12.swift` (`migrateFromV12`) registered in the `decode(from:)` dispatch. `MediaItem.lyrics` is declared with a default of `.empty`, so the memberwise initializer used by **every** existing migration chain (v1 → current, … v11 → current) lands `.empty` lyrics on each item with no change to those migrations. v13 is a one-way upgrade — prior builds cannot open v13 files.
 
 ## 3. Commands layer — `OnlyCue/Commands/CueCommands+Lyrics.swift`
 
@@ -64,7 +64,7 @@ The Lyrics Editor sheet edits a local working draft and commits via these comman
 
 ## 4. Authoring — `Tools → Lyrics Editor…` sheet
 
-`LyricsEditorSheet` + `LyricsEditorHost` (a `.lyricsEditorSheet(item:document:)` view modifier on `DocumentView`), following the `TempoMapSheet` / `TempoMapHost` pattern. Opened from a new `Tools → Lyrics Editor…` menu item in `AppCommands`. The sheet is self-contained — `AVPlayer` audio keeps running underneath it, which is all tap-along needs.
+`LyricsEditorSheet` + a host `ViewModifier` exposed as a `.lyricsEditorSheet(engine:document:)` modifier on `DocumentView`, following the **`TimecodeSettingsSheet` + host-modifier** pattern (sheet content view + private `ViewModifier` that owns the `@State` flag and the `.onReceive(...).sheet(isPresented:)` chain + a `View` extension). The tempo-map sheet this design originally cited was removed in migration #244 and no longer exists. Opened from a new `Tools → Lyrics Editor…` menu item in `AppCommands`, which posts a `.lyricsEditorRequested` notification. The host takes `engine` as well as `document` because tap-along needs the playhead. The sheet is self-contained — `AVPlayer` audio keeps running underneath it, which is all tap-along needs.
 
 **Table.** A `[time | text]` grid. Every cell is directly editable for manual entry and fixups.
 
@@ -72,7 +72,7 @@ The Lyrics Editor sheet edits a local working draft and commits via these comman
 
 **Tap-along.** A highlighted cursor row, the sheet's own minimal play/pause + time readout, and a **Tap** button:
 
-- **Return** (while the sheet owns focus) or the Tap button stamps the cursor row with the **raw current playhead time** (the offset is never baked in here) and advances the cursor to the next row.
+- **Return** (while the sheet owns focus) or the Tap button stamps the cursor row with a **song-relative time** — `playhead − offsetSeconds`, clamped to `>= 0` — so the stored `time` stays on the song clock and the line's effective time lands exactly where you tapped. When the offset is 0 (the common case while tap-along is in use) this is simply the raw playhead. The cursor then advances to the next row.
 - Step-back (a button, plus ⌫) moves the cursor up one row without stamping.
 - Re-tapping a row overwrites its time.
 - Tapping past the last row is a no-op. Tap-along only *times existing rows* — it never creates rows (rows are added/removed via the table).

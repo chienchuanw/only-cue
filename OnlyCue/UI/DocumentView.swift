@@ -40,8 +40,14 @@ struct DocumentView: View {
         } detail: {
             mainPane
                 .inspector(isPresented: .constant(true)) {
-                    CueListPane(document: document, engine: engine, selection: $cueSelection)
-                        .cueListInspectorColumnWidth()
+                    ModeAwareInspector(
+                        document: document,
+                        engine: engine,
+                        editorMode: editorMode,
+                        cueSelection: $cueSelection,
+                        lyricsCursor: $lyricsCursor
+                    )
+                    .cueListInspectorColumnWidth()
                 }
         }
         .navigationSubtitle(document.model.activeItem?.resolvedName ?? "")

@@ -19,7 +19,7 @@ final class TokenConformanceTests: XCTestCase {
 
     /// Patterns that indicate a raw literal where a `DS.*` token belongs.
     private let banned: [(name: String, regex: String)] = [
-        ("raw Color literal", #"Color\.(white|black|gray|red|green|blue|orange|yellow|purple|pink)\b"#),
+        ("raw Color literal", #"Color\.(white|black|gray|red|green|blue|orange|yellow|purple|pink|accentColor)\b"#),
         ("system font size", #"\.font\(\.system\(size:"#),
         ("magic padding", #"\.padding\([^)]*\b[1-9][0-9]*\b[^)]*\)"#)
     ]

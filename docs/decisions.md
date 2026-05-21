@@ -30,7 +30,7 @@ ADR template:
 ## ADR-023 — Editing is gated by a per-window editor mode (Cue / Lyric / Show); lyrics are authored on the waveform (schema v14)
 
 **Date**: 2026-05-21
-**Status**: Accepted
+**Status**: Accepted (switcher styling amended by ADR-024)
 **Amends**: ADR-022
 **Decision**: The document window has one of three editor modes — **Cue**, **Lyric**, **Show** — held per-window in `@SceneStorage` (not document data). The mode gates the waveform editing surface: Cue mode edits cue markers; Lyric mode makes the lyric lane the editing surface; Show mode is read-only. A plain waveform click always seeks, in every mode. Lyrics are authored directly on the waveform — the next unplaced line is placed by tap-along (the `T` key) or click-to-drop over the lyric lane and then drag-corrected — so `LyricLine.time` becomes optional (`nil` = unplaced) and the schema bumps v13 → v14. The modal `Tools → Lyrics Editor…` sheet and the `View → Show Lyrics Lane` toggle are retired; lyric text now lives in a mode-aware inspector.
 **Why**: Typing each lyric timestamp into the modal sheet was tedious, and the sheet hid the waveform — the timeline is the natural place to position a line. A mode keeps cue editing, lyric editing, and a safe read-only performance state from competing for the same clicks. The mode is per-window working state, not show data, so it is not stored in `.cuelist`. Optional `LyricLine.time` lets a partly-timed song persist across save/reopen.

@@ -120,7 +120,7 @@ struct CueListPane: View {
     /// cue currently playing when the list is read-only (Show mode).
     private func rowBackground(for cue: Cue) -> Color {
         if isReadOnly, cue.id == currentCueID {
-            return Color.accentColor.opacity(0.25)
+            return DS.Color.selection
         }
         return rowTint(for: cue)
     }

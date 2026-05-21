@@ -6,17 +6,17 @@ struct ItemRowView: View {
     @Environment(\.projectFramerate) private var framerate
 
     var body: some View {
-        HStack(spacing: 8) {
+        HStack(spacing: DS.Space.sm) {
             Image(systemName: icon)
-                .foregroundStyle(.secondary)
+                .foregroundStyle(DS.Color.textSecondary)
                 .frame(width: 16)
-            VStack(alignment: .leading, spacing: 2) {
+            VStack(alignment: .leading, spacing: DS.Space.xs / 2) {
                 Text(item.resolvedName)
                     .lineLimit(1)
                     .truncationMode(.middle)
                 Text(TimeFormat.smpte(item.media.duration, rate: framerate))
-                    .font(.caption)
-                    .foregroundStyle(.tertiary)
+                    .font(DS.Text.label)
+                    .foregroundStyle(DS.Color.textTertiary)
                     .monospacedDigit()
             }
         }

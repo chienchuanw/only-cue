@@ -17,6 +17,7 @@ struct ItemListPane: View {
             }
         }
         .frame(minWidth: 200)
+        .background(DS.Color.panel)
         .accessibilityIdentifier("itemListPane")
         .dropDestination(for: URL.self) { urls, _ in
             guard !urls.isEmpty else { return false }
@@ -63,19 +64,20 @@ struct ItemListPane: View {
     }
 
     private var emptyState: some View {
-        VStack(spacing: 8) {
+        VStack(spacing: DS.Space.sm) {
             Image(systemName: "rectangle.stack.badge.plus")
                 .font(.largeTitle)
-                .foregroundStyle(.tertiary)
+                .foregroundStyle(DS.Color.textTertiary)
             Text("No media")
-                .font(.headline)
+                .font(DS.Text.heading)
+                .foregroundStyle(DS.Color.textPrimary)
             Text("Drag files here or use ⌘O")
-                .font(.callout)
-                .foregroundStyle(.secondary)
+                .font(DS.Text.body)
+                .foregroundStyle(DS.Color.textSecondary)
                 .multilineTextAlignment(.center)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .padding()
+        .padding(DS.Space.lg)
         .accessibilityIdentifier("itemListEmptyState")
     }
 
@@ -98,6 +100,7 @@ struct ItemListPane: View {
             .onDelete(perform: deleteAtOffsets)
         }
         .onDeleteCommand { deleteSelected() }
+        .scrollContentBackground(.hidden)
     }
 
     private var selectionBinding: Binding<MediaItem.ID?> {

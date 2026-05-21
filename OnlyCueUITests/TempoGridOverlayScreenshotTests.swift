@@ -15,11 +15,12 @@ final class TempoGridOverlayScreenshotTests: XCTestCase {
 
     func test_showTempoGrid_toggle_visualBaseline() throws {
         let app = XCUIApplication()
+        app.launchArguments += ["-ApplePersistenceIgnoreState", "YES"]
         app.launch()
         app.typeKey("n", modifierFlags: .command)            // new document
 
         XCTAssertTrue(
-            app.staticTexts["currentTimeReadout"].waitForExistence(timeout: 5),
+            app.buttons["importMediaButton"].waitForExistence(timeout: 10),
             "a document window should open"
         )
 

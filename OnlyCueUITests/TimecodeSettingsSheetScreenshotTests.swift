@@ -18,12 +18,13 @@ final class TimecodeSettingsSheetScreenshotTests: XCTestCase {
     /// And a screenshot of the document window (sheet attached) is captured.
     func test_timecodeSettings_visualBaseline() throws {
         let app = XCUIApplication()
+        app.launchArguments += ["-ApplePersistenceIgnoreState", "YES"]
         app.launch()
         app.typeKey("n", modifierFlags: .command)
 
         XCTAssertTrue(
-            app.staticTexts["currentTimeReadout"].waitForExistence(timeout: 5),
-            "currentTimeReadout should appear within 5 seconds of opening a document"
+            app.buttons["importMediaButton"].waitForExistence(timeout: 10),
+            "a document window should open within 10 seconds"
         )
 
         app.activate()

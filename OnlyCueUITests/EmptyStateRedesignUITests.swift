@@ -45,18 +45,19 @@ final class EmptyStateRedesignUITests: XCTestCase {
     }
 
     /// The cue-list inspector's empty-state copy must be present in full — it
-    /// was clipped before the Quiet Pro redesign (spec §6 item 4).
+    /// was clipped before the Quiet Pro redesign (spec §6 item 4). The icon +
+    /// text VStack merges into one AX element, so the full sentence is asserted
+    /// as a substring of the merged `cueListEmptyState` label.
     func test_inspectorEmptyState_messageIsPresentAndUntruncated() throws {
         let app = launchEmptyDocument()
-        let message = app.staticTexts["cueListEmptyStateMessage"]
+        let emptyState = app.descendants(matching: .any)["cueListEmptyState"]
         XCTAssertTrue(
-            message.waitForExistence(timeout: 15),
-            "the cue-list empty-state message should be present"
+            emptyState.waitForExistence(timeout: 15),
+            "the cue-list empty state should be present"
         )
-        XCTAssertEqual(
-            message.label,
-            "Import a media file to start adding cues.",
-            "the empty-state copy should be the full, untruncated sentence"
+        XCTAssertTrue(
+            emptyState.label.contains("Import a media file to start adding cues."),
+            "the empty-state copy should be the full, untruncated sentence — got: '\(emptyState.label)'"
         )
     }
 }

@@ -24,4 +24,14 @@ enum EditorMode: String, CaseIterable, Codable {
 
     /// Show mode is fully read-only.
     var isReadOnly: Bool { self == .show }
+
+    /// The SF Symbol shown leading the segment label — carries mode identity
+    /// by shape now that the switcher is achromatic (ADR-023 amendment).
+    var symbolName: String {
+        switch self {
+        case .cue: return "smallcircle.filled.circle"
+        case .lyric: return "text.quote"
+        case .show: return "lock.fill"
+        }
+    }
 }

@@ -15,6 +15,18 @@ ADR template:
 
 ---
 
+## ADR-024 — Quiet Pro: a centralized design-token system; achromatic main-window chrome
+
+**Date**: 2026-05-22
+**Status**: Accepted
+**Amends**: ADR-023
+**Decision**: The main document window's visual language ("Quiet Pro") is a centralized design-token layer in `OnlyCue/UI/DesignSystem/` — the `DS` namespace (`DS.Color`, `DS.Text`, `DS.Space`, `DS.Radius`, `DS.Motion`). Every main-window view consumes `DS.*` tokens rather than raw color / spacing / font literals, enforced by a `TokenConformanceTests` gate that scans the main-window view set (a line may opt out only with a `// semantic:` or `// off-grid:` annotation). The chrome is **achromatic** — a warm-tinted neutral palette (OKLCH hue ~85°, very low chroma) with no chromatic accent — so user-defined cue-type color is the only chroma on screen. The row / selection highlight is an achromatic neutral fill, not the system accent. `DS.Color` tokens resolve per system appearance through a single `NSColor` dynamic provider, so light and dark mode are both correct from one definition. The editor-mode switcher's blue / purple / gray segment tints introduced with ADR-023 are superseded: the switcher is achromatic and distinguishes modes by a per-mode SF Symbol (Show mode = lock) rather than hue.
+**Why**: Color, spacing, and typography were applied ad hoc across ~15 main-window views — consistency was unverifiable and dark mode was scattered. A single greppable token namespace makes conformance enforceable and dark mode a one-file concern. An achromatic chrome is the discipline that lets cue-type colors (the data the user actually authored) read as the meaningful signal; competing chrome color — a blue selection bar, tinted mode segments — drowns them out.
+**Reversal cost**: Moderate. Unwinding the token layer means re-scattering literals across the main-window view set; but `DS` is additive infrastructure and views could revert piecemeal. The achromatic-selection and achromatic-switcher choices are visual and localized. The one mechanical commitment is the `TokenConformanceTests` gate — a new main-window view must consume `DS.*` or the gate fails.
+**Deferred**: retrofitting the ~12 sheets and the two projected overlays to `DS.*` (a follow-up pass); a full dark-mode UI-test suite (dark mode is dark-ready and manually verified, not screenshot-tested).
+
+---
+
 ## ADR-023 — Editing is gated by a per-window editor mode (Cue / Lyric / Show); lyrics are authored on the waveform (schema v14)
 
 **Date**: 2026-05-21
@@ -24,6 +36,8 @@ ADR template:
 **Why**: Typing each lyric timestamp into the modal sheet was tedious, and the sheet hid the waveform — the timeline is the natural place to position a line. A mode keeps cue editing, lyric editing, and a safe read-only performance state from competing for the same clicks. The mode is per-window working state, not show data, so it is not stored in `.cuelist`. Optional `LyricLine.time` lets a partly-timed song persist across save/reopen.
 **Reversal cost**: Low–moderate. `EditorMode` is per-window UI state; the v13 → v14 migration is a no-op on data (a v13 line always wrote a concrete `time`, which decodes straight into the optional). Reverting on-waveform authoring would mean restoring the retired sheet — but the command seam (`CueCommands+Lyrics`) and the model shape are otherwise unchanged.
 **Deferred**: a full front-of-house performance view (Show mode is lock + light polish only), a macOS window toolbar, modes driving other overlays' visibility. The ADR-022 deferrals (`.lrc` import/export, word-level karaoke, multiple lyric sets, lyric→cue conversion) still stand.
+
+**Quiet Pro amendment (2026-05-22, ADR-024)**: the editor-mode switcher's blue / purple / gray segment tints are retired — the Quiet Pro redesign makes the switcher achromatic, carrying mode identity by a per-mode SF Symbol (Show = lock) instead of hue. The at-a-glance-reading intent is preserved through shape, not color.
 
 ---
 

@@ -14,13 +14,9 @@ final class MainViewDeclutterUITests: XCTestCase {
         app.launch()
         app.typeKey("n", modifierFlags: .command)
 
-        // Sanity: the document window opened (TransportBar renders in both states).
-        XCTAssertTrue(
-            app.staticTexts["currentTimeReadout"].waitForExistence(timeout: 10),
-            "document window should open within 10s of ⌘N"
-        )
-
-        // The empty-state onboarding affordance: the Import button.
+        // The empty-state onboarding affordance: the Import button. Its
+        // appearance also confirms the document window opened. The transport is
+        // intentionally absent until media exists (Quiet Pro redesign).
         XCTAssertTrue(
             app.buttons["importMediaButton"].waitForExistence(timeout: 10),
             "Import Media button should appear in the no-media empty state"

@@ -99,20 +99,20 @@ struct DocumentView: View {
                     setEditorMode: { editorModeRaw = $0.rawValue },
                     lyricsCursor: $lyricsCursor
                 )
+
+                ltcStripIfEnabled(activeItem)
+
+                TransportControls(
+                    engine: engine,
+                    cues: activeItem?.cues ?? [],
+                    mediaDuration: activeItem?.media.duration ?? 0,
+                    timecodeSettings: document.model.timecodeSettings,
+                    activeItem: activeItem,
+                    onStepPrevCue: { stepPlayhead(.previous) },
+                    onStepNextCue: { stepPlayhead(.next) }
+                )
+                    .padding(.top, DS.Space.xs)
             }
-
-            ltcStripIfEnabled(activeItem)
-
-            TransportControls(
-                engine: engine,
-                cues: activeItem?.cues ?? [],
-                mediaDuration: activeItem?.media.duration ?? 0,
-                timecodeSettings: document.model.timecodeSettings,
-                activeItem: activeItem,
-                onStepPrevCue: { stepPlayhead(.previous) },
-                onStepNextCue: { stepPlayhead(.next) }
-            )
-                .padding(.top, DS.Space.xs)
 
             transportShortcuts
             digitShortcuts

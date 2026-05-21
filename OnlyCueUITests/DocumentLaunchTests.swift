@@ -9,8 +9,9 @@ final class DocumentLaunchTests: XCTestCase {
     /// Scenario: New document opens
     /// Given the app is launched fresh
     /// When the user creates a new document (⌘N)
-    /// Then a window appears (transport bar is visible)
-    /// And — with no media imported — the empty-state Import button is offered.
+    /// Then — with no media imported — the empty-state Import button is offered.
+    /// The transport appears only once media exists (Quiet Pro redesign), so the
+    /// Import button's appearance is the window-opened signal.
     func test_newDocument_showsEmptyStateOnboarding() throws {
         let app = XCUIApplication()
         app.launchArguments += ["-ApplePersistenceIgnoreState", "YES"]
@@ -18,10 +19,6 @@ final class DocumentLaunchTests: XCTestCase {
 
         app.typeKey("n", modifierFlags: .command)
 
-        XCTAssertTrue(
-            app.staticTexts["currentTimeReadout"].waitForExistence(timeout: 10),
-            "document window should open within 10s of ⌘N"
-        )
         XCTAssertTrue(
             app.buttons["importMediaButton"].waitForExistence(timeout: 10),
             "Import Media button should appear in the no-media empty state"

@@ -103,14 +103,16 @@ struct DocumentView: View {
 
             ltcStripIfEnabled(activeItem)
 
-            TransportBar(
+            TransportControls(
                 engine: engine,
                 cues: activeItem?.cues ?? [],
                 mediaDuration: activeItem?.media.duration ?? 0,
                 timecodeSettings: document.model.timecodeSettings,
-                activeItem: activeItem
+                activeItem: activeItem,
+                onStepPrevCue: { stepPlayhead(.previous) },
+                onStepNextCue: { stepPlayhead(.next) }
             )
-                .padding(.top, 4)
+                .padding(.top, DS.Space.xs)
 
             transportShortcuts
             digitShortcuts

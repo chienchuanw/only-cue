@@ -20,7 +20,7 @@ enum CueListLayout {
     /// #297: this must never exceed `CueListInspectorMetrics.minWidth`, or
     /// the splitter cannot reach the 240 column minimum without the content
     /// demanding more and feeding the constraint-update loop. `CueRowView`
-    /// rows add a 3pt stripe + 6pt leading pad (~9pt wider) but stay well
+    /// rows carry a leading color swatch (~14pt of leading chrome) but stay
     /// inside the same 40pt slack, so the header is the binding floor.
     static var headerMinimumWidth: CGFloat {
         CueListColumnWidths.timeRange.lowerBound
@@ -138,6 +138,7 @@ struct CueListPane: View {
             .frame(maxWidth: .infinity, maxHeight: .infinity)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .background(DS.Color.panel)
         .accessibilityIdentifier("cueListPane")
         .onReceive(NotificationCenter.default.publisher(for: .snapSelectedCueToPlayhead)) { _ in
             snapSelectedToPlayhead()
@@ -206,21 +207,24 @@ struct CueListPane: View {
     }
 
     private var emptyState: some View {
-        VStack(spacing: 8) {
+        VStack(spacing: DS.Space.sm) {
             Image(systemName: "list.bullet.rectangle")
                 .font(.largeTitle)
-                .foregroundStyle(.tertiary)
+                .foregroundStyle(DS.Color.textTertiary)
             Text("No cues yet")
-                .font(.headline)
+                .font(DS.Text.heading)
+                .foregroundStyle(DS.Color.textPrimary)
             Text(document.model.activeItem == nil
-                 ? "Import or select a media item first"
-                 : "Press M to add one at the playhead")
-                .font(.callout)
-                .foregroundStyle(.secondary)
+                 ? "Import a media file to start adding cues."
+                 : "Press M to add a cue at the playhead.")
+                .font(DS.Text.body)
+                .foregroundStyle(DS.Color.textSecondary)
                 .multilineTextAlignment(.center)
+                .fixedSize(horizontal: false, vertical: true)
+                .accessibilityIdentifier("cueListEmptyStateMessage")
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .padding()
+        .padding(DS.Space.lg)
         .accessibilityIdentifier("cueListEmptyState")
     }
 
@@ -267,10 +271,10 @@ struct CueListPane: View {
                     .accessibilityIdentifier("cueListFadeColumnResizeHandle")
                 }
         }
-        .font(.caption)
-        .foregroundStyle(.secondary)
+        .font(DS.Text.label)
+        .foregroundStyle(DS.Color.textSecondary)
         .padding(.horizontal, CueListLayout.rowHorizontalPadding)
-        .padding(.vertical, 6)
+        .padding(.vertical, DS.Space.sm)
         .accessibilityIdentifier(Self.headerAccessibilityIdentifier)
         .disabled(isReadOnly)
     }
@@ -305,6 +309,7 @@ struct CueListPane: View {
                     proxy.scrollTo(id, anchor: .center)
                 }
             }
+            .scrollContentBackground(.hidden)
         }
     }
 

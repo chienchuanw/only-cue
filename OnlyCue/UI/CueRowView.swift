@@ -29,15 +29,16 @@ struct CueRowView: View {
     @Environment(\.projectFramerate) private var framerate
 
     var body: some View {
-        HStack(spacing: 0) {
-            stripe
-                .frame(width: 3)
-                .accessibilityIdentifier("cueRowStripe-\(cue.id)")
+        HStack(spacing: DS.Space.xs) {
+            // The cue-type color as a leading swatch — the same component the
+            // inspector's Type picker uses. (Replaces the old 3pt side-stripe.)
+            CueColorSwatch(hex: resolvedColorHex, diameter: 8, fallback: DS.Color.border)
+                .accessibilityIdentifier("cueRowSwatch-\(cue.id)")
             VStack(alignment: .leading, spacing: 0) {
                 HStack(spacing: CueListLayout.rowHorizontalSpacing) {
                     Text(TimeFormat.smpte(cue.time, rate: framerate))
-                        .font(.system(.body, design: .monospaced))
-                        .foregroundStyle(.secondary)
+                        .font(DS.Text.mono)
+                        .foregroundStyle(DS.Color.textSecondary)
                         .cueColumnFrame(width: timeColumnWidth, range: CueListColumnWidths.timeRange)
                         .accessibilityIdentifier("cueTime-\(cue.id)")
 
@@ -56,14 +57,14 @@ struct CueRowView: View {
                 if let numberError {
                     Text(numberError)
                         .font(.caption2)
-                        .foregroundStyle(.red)
+                        .foregroundStyle(.red) // semantic: error
                         .padding(.leading, timeColumnWidth + CueListLayout.rowHorizontalSpacing)
                         .accessibilityIdentifier("cueNumberError-\(cue.id)")
                 }
             }
-            .padding(.leading, 6)
         }
-        .padding(.vertical, 2)
+        .padding(.leading, DS.Space.xs / 2)
+        .padding(.vertical, DS.Space.xs / 2)
         // Right-click hit-test needs the row's full width, not just text bounds —
         // .contextMenu is applied by the parent `CueListPane` matching the
         // ItemListPane pattern that's proven to work on macOS.
@@ -73,20 +74,11 @@ struct CueRowView: View {
     }
 
     @ViewBuilder
-    private var stripe: some View {
-        if let hex = resolvedColorHex, let color = Color(hex: hex) {
-            Rectangle().fill(color)
-        } else {
-            Rectangle().fill(Color.clear)
-        }
-    }
-
-    @ViewBuilder
     private var numberCell: some View {
         if isEditingNumber {
             TextField("", text: $numberDraft)
                 .textFieldStyle(.plain)
-                .font(.system(.body, design: .monospaced))
+                .font(DS.Text.mono)
                 .focused($numberFieldFocused)
                 .onSubmit { commitNumber() }
                 .onExitCommand { cancelNumberEdit() }
@@ -97,8 +89,8 @@ struct CueRowView: View {
                 .onAppear { numberFieldFocused = true }
         } else {
             Text(cue.cueNumber.map(FadeTime.formatNumber) ?? "")
-                .font(.system(.body, design: .monospaced))
-                .foregroundStyle(cue.cueNumber == nil ? .tertiary : .primary)
+                .font(DS.Text.mono)
+                .foregroundStyle(cue.cueNumber == nil ? DS.Color.textTertiary : DS.Color.textPrimary)
                 .frame(maxWidth: .infinity, alignment: .leading)
                 .contentShape(Rectangle())
                 .onTapGesture(count: 2) { beginNumberEdit() }
@@ -116,6 +108,8 @@ struct CueRowView: View {
                 .onAppear { nameFieldFocused = true }
         } else {
             Text(cue.name.isEmpty ? "Untitled" : cue.name)
+                .font(DS.Text.body)
+                .foregroundStyle(DS.Color.textPrimary)
                 .lineLimit(1)
                 .truncationMode(.tail)
                 .onTapGesture(count: 2) { beginRename() }
@@ -127,7 +121,7 @@ struct CueRowView: View {
         if isEditingFade {
             TextField("", text: $fadeDraft)
                 .textFieldStyle(.plain)
-                .font(.system(.body, design: .monospaced))
+                .font(DS.Text.mono)
                 .focused($fadeFieldFocused)
                 .onSubmit { commitFade() }
                 .onExitCommand { cancelFadeEdit() }
@@ -137,8 +131,8 @@ struct CueRowView: View {
                 .onAppear { fadeFieldFocused = true }
         } else {
             Text(cue.fadeTime.format())
-                .font(.system(.body, design: .monospaced))
-                .foregroundStyle(.secondary)
+                .font(DS.Text.mono)
+                .foregroundStyle(DS.Color.textSecondary)
                 .frame(maxWidth: .infinity, alignment: .leading)
                 .contentShape(Rectangle())
                 .onTapGesture(count: 2) { beginFadeEdit() }

@@ -20,21 +20,21 @@ struct PreviewPane: View {
     @AppStorage(NotesOverlayPreferences.storageKey) private var overlayPrefsData = NotesOverlayPreferences.defaultEncoded
 
     var body: some View {
-        VStack(spacing: 8) {
+        VStack(spacing: DS.Space.sm) {
             EditorModeSwitcher(mode: editorMode, setMode: setEditorMode)
             ZStack {
-                Color.black.opacity(0.05)
+                DS.Color.surfaceSunken
                 content
             }
             .frame(minHeight: 180)
-            .clipShape(RoundedRectangle(cornerRadius: 6))
+            .clipShape(RoundedRectangle(cornerRadius: DS.Radius.sm))
             .accessibilityIdentifier("previewPane")
             .task(id: document.model.activeItemID) { await resolveWaveformURL() }
             // Bottom stack — the Notes Overlay (when its position is bottom)
             // above the Lyrics HUD. The spec stacks notes above lyrics;
             // non-bottom Notes Overlay positions keep their own overlay below.
             .overlay(alignment: .bottom) {
-                VStack(spacing: 8) {
+                VStack(spacing: DS.Space.sm) {
                     if showNotesOverlay, overlayPrefs.position == .bottom {
                         notesOverlayCard
                     }
@@ -42,12 +42,12 @@ struct PreviewPane: View {
                         LyricsOverlayView(lyrics: item.lyrics, mediaSeconds: engine.currentTime)
                     }
                 }
-                .padding(.bottom, 12)
+                .padding(.bottom, DS.Space.md)
             }
             .overlay(alignment: overlayAlignment) {
                 if showNotesOverlay, overlayPrefs.position != .bottom {
                     notesOverlayCard
-                        .padding(overlayPadding, 12)
+                        .padding(overlayPadding, DS.Space.md)
                 }
             }
         }
@@ -204,8 +204,8 @@ struct PreviewPane: View {
 
     private func placeholder(_ message: String) -> some View {
         Text(message)
-            .font(.callout)
-            .foregroundStyle(.secondary)
+            .font(DS.Text.body)
+            .foregroundStyle(DS.Color.textSecondary)
             .frame(maxWidth: .infinity, maxHeight: .infinity)
             .multilineTextAlignment(.center)
     }
@@ -219,13 +219,13 @@ struct PreviewPane: View {
         Button {
             NotificationCenter.default.post(name: .importMediaRequested, object: nil)
         } label: {
-            VStack(spacing: 8) {
+            VStack(spacing: DS.Space.sm) {
                 Image(systemName: "square.and.arrow.down")
                     .font(.largeTitle)
-                    .foregroundStyle(.tertiary)
+                    .foregroundStyle(DS.Color.textTertiary)
                 Text("Import audio or video to preview")
-                    .font(.callout)
-                    .foregroundStyle(.secondary)
+                    .font(DS.Text.body)
+                    .foregroundStyle(DS.Color.textSecondary)
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity)
             .multilineTextAlignment(.center)

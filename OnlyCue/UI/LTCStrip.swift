@@ -21,13 +21,13 @@ struct LTCStrip: View {
             ruler
         }
         .frame(height: Self.stripHeight)
-        .background(Color.secondary.opacity(0.08))
+        .background(DS.Color.surfaceSunken)
         .accessibilityElement(children: .contain)
         .accessibilityIdentifier("ltcStrip")
     }
 
     private var header: some View {
-        HStack(spacing: 6) {
+        HStack(spacing: DS.Space.sm) {
             Button(action: onToggleMute) {
                 Image(systemName: item.ltcMuted ? "speaker.slash.fill" : "speaker.fill")
                     .frame(width: 18, height: 18)
@@ -37,12 +37,12 @@ struct LTCStrip: View {
             .accessibilityLabel(item.ltcMuted ? "LTC muted" : "LTC unmuted")
             .accessibilityIdentifier("ltcMuteToggle.\(item.id.uuidString)")
             Text(item.resolvedName)
-                .font(.caption.monospaced())
-                .foregroundStyle(.secondary)
+                .font(DS.Text.monoSmall)
+                .foregroundStyle(DS.Color.textSecondary)
                 .lineLimit(1)
                 .truncationMode(.middle)
         }
-        .padding(.horizontal, 8)
+        .padding(.horizontal, DS.Space.sm)
         .frame(width: Self.laneHeaderWidth, alignment: .leading)
     }
 
@@ -67,7 +67,7 @@ struct LTCStrip: View {
             bucketSeconds: bucket,
             contentWidth: size.width
         )
-        let strokeColor = GraphicsContext.Shading.color(.secondary)
+        let strokeColor = GraphicsContext.Shading.color(DS.Color.textTertiary)
         for tick in ticks {
             let tickHeight: CGFloat = tick.isMajor ? 10 : 6
             var path = Path()
@@ -76,7 +76,7 @@ struct LTCStrip: View {
             context.stroke(path, with: strokeColor, lineWidth: 1)
             let text = Text(tick.label)
                 .font(.caption2.monospacedDigit())
-                .foregroundColor(.secondary)
+                .foregroundColor(DS.Color.textTertiary)
             context.draw(
                 text,
                 at: CGPoint(x: tick.xPosition + 2, y: size.height - tickHeight - 8),

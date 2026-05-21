@@ -12,14 +12,18 @@ final class TransportBarSMPTEGatingUITests: XCTestCase {
 
     func test_smpteReadout_hiddenByDefault_whenLTCOutputDisabled() throws {
         let app = XCUIApplication()
-        app.launchArguments += ["-ApplePersistenceIgnoreState", "YES"]
+        // A seeded document (media present) so the transport — and its SMPTE
+        // readout — render; the transport is hidden in the no-media state.
+        app.launchArguments += [
+            "-ApplePersistenceIgnoreState", "YES",
+            "--ui-test-seed=three-cues-1-3-6"
+        ]
         app.launch()
-        app.typeKey("n", modifierFlags: .command)
 
-        // Sanity: document opened.
+        // Sanity: the seeded document opened and the transport rendered.
         XCTAssertTrue(
             app.staticTexts["currentTimeReadout"].waitForExistence(timeout: 10),
-            "document window should open within 10s of ⌘N"
+            "transport should render for the seeded document within 10s"
         )
 
         // The gate under test: with LTCRoutingStore.shared.settings.isEnabled

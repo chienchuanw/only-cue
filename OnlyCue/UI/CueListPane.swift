@@ -225,6 +225,9 @@ struct CueListPane: View {
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .padding(DS.Space.lg)
+        // `.contain` keeps the message Text individually queryable — without it
+        // the icon + text VStack collapses into one merged AX element.
+        .accessibilityElement(children: .contain)
         .accessibilityIdentifier("cueListEmptyState")
     }
 

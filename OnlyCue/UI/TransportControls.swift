@@ -36,6 +36,10 @@ struct TransportControls: View {
         .background(DS.Color.panel)
         .overlay(RoundedRectangle(cornerRadius: DS.Radius.md).strokeBorder(DS.Color.border))
         .clipShape(RoundedRectangle(cornerRadius: DS.Radius.md))
+        // `.contain` keeps the bar itself queryable AND lets XCUITest walk to
+        // the child controls/readouts — without it, the container identifier
+        // collapses the subtree (same pattern as EditorModeSwitcher).
+        .accessibilityElement(children: .contain)
         .accessibilityIdentifier("transportControls")
     }
 

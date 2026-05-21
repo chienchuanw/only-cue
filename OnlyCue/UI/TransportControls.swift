@@ -150,7 +150,9 @@ struct TransportControls: View {
             )
             Button(action: cycleCountdownMode) {
                 VStack(alignment: .trailing, spacing: DS.Space.xs / 2) {
-                    Text("Next Cue").dsSectionHeader()
+                    // Decorative caps label — hidden from AX so the toggle
+                    // button's composed label stays just the countdown value.
+                    Text("Next Cue").dsSectionHeader().accessibilityHidden(true)
                     Text(label)
                         .font(DS.Text.mono)
                         .foregroundStyle(DS.Color.textPrimary)

@@ -50,5 +50,7 @@ identifier_name:
 type_name:
   min_length:
     warning: 3
+  excluded:
+    - DS
 
 reporter: "xcode"

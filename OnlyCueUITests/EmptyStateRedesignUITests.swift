@@ -43,4 +43,20 @@ final class EmptyStateRedesignUITests: XCTestCase {
         XCTAssertTrue(help.isHittable, "the shortcut-reference button should be clickable")
         help.click()
     }
+
+    /// The cue-list inspector's empty-state copy must be present in full — it
+    /// was clipped before the Quiet Pro redesign (spec §6 item 4).
+    func test_inspectorEmptyState_messageIsPresentAndUntruncated() throws {
+        let app = launchEmptyDocument()
+        let message = app.staticTexts["cueListEmptyStateMessage"]
+        XCTAssertTrue(
+            message.waitForExistence(timeout: 15),
+            "the cue-list empty-state message should be present"
+        )
+        XCTAssertEqual(
+            message.label,
+            "Import a media file to start adding cues.",
+            "the empty-state copy should be the full, untruncated sentence"
+        )
+    }
 }

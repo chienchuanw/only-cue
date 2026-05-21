@@ -37,4 +37,12 @@ final class EditorModeTests: XCTestCase {
         XCTAssertFalse(EditorMode.lyric.isReadOnly)
         XCTAssertTrue(EditorMode.show.isReadOnly)
     }
+
+    func test_symbolName_isDistinctPerMode() {
+        // The achromatic switcher distinguishes modes by shape, not hue — each
+        // mode needs its own SF Symbol, and Show's must be a lock.
+        let symbols = Set(EditorMode.allCases.map(\.symbolName))
+        XCTAssertEqual(symbols.count, EditorMode.allCases.count, "each mode needs a distinct symbol")
+        XCTAssertEqual(EditorMode.show.symbolName, "lock.fill", "Show mode's glyph must be a lock")
+    }
 }

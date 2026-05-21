@@ -27,13 +27,18 @@ final class TransportBarScreenshotTests: XCTestCase {
     /// And a screenshot of the document window is captured for review.
     func test_transportBar_visualBaseline() throws {
         let app = XCUIApplication()
+        // Seed a document with media so the transport renders — it is hidden
+        // in the no-media empty state (Quiet Pro redesign).
+        app.launchArguments += [
+            "-ApplePersistenceIgnoreState", "YES",
+            "--ui-test-seed=three-cues-1-3-6"
+        ]
         app.launch()
-        app.typeKey("n", modifierFlags: .command)
 
         let timeReadout = app.staticTexts["currentTimeReadout"]
         XCTAssertTrue(
-            timeReadout.waitForExistence(timeout: 5),
-            "currentTimeReadout should appear within 5 seconds of opening a document"
+            timeReadout.waitForExistence(timeout: 10),
+            "the transport should render for the seeded document within 10 seconds"
         )
         XCTAssertFalse(
             app.staticTexts["smpteTimecode"].exists,

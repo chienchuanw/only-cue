@@ -21,8 +21,8 @@ final class AudioSettingsScreenshotTests: XCTestCase {
         app.launch()
         app.typeKey("n", modifierFlags: .command)
         XCTAssertTrue(
-            app.staticTexts["currentTimeReadout"].waitForExistence(timeout: 5),
-            "currentTimeReadout should appear within 5 seconds of opening a document"
+            app.buttons["importMediaButton"].waitForExistence(timeout: 5),
+            "a document window should open within 5 seconds"
         )
 
         let windowsBefore = app.windows.count

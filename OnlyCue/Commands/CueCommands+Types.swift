@@ -126,9 +126,10 @@ extension CueCommands {
 
     /// Wide undo seam: snapshots the entire (cuePointTypes, items, activeItemID) tuple
     /// and restores all three on undo. Used by mutations that cross the Type/cue boundary
-    /// (currently only `removeCuePointType`, which both deletes a Type and rewrites
-    /// referenced cues' typeIDs).
-    fileprivate static func mutateProject(
+    /// (`removeCuePointType`, which deletes a Type and rewrites referenced cues' typeIDs;
+    /// `importCueList`, which adds Types and writes the active item's cues). `internal`
+    /// rather than `fileprivate` so sibling command files can reuse the seam.
+    static func mutateProject(
         _ document: CueListDocument,
         undoManager: UndoManager?,
         actionName: String,

@@ -152,6 +152,7 @@ struct DocumentView: View {
             pendingErrorMessage: pendingAlertMessageBinding,
             undoManager: undoManager
         )
+        .cueTransferMenuReceiver(document: document, undoManager: undoManager)
     }
 
     @ViewBuilder
@@ -339,6 +340,8 @@ extension DocumentView {
 extension Notification.Name {
     static let importMediaRequested = Notification.Name("OnlyCue.importMediaRequested")
     static let exportCuesToCSVRequested = Notification.Name("OnlyCue.exportCuesToCSVRequested")
+    static let exportCueListRequested = Notification.Name("OnlyCue.exportCueListRequested")
+    static let importCueListRequested = Notification.Name("OnlyCue.importCueListRequested")
     static let saveTemplateRequested = Notification.Name("OnlyCue.saveTemplateRequested")
     static let loadTemplateRequested = Notification.Name("OnlyCue.loadTemplateRequested")
     static let oscMonitorRequested = Notification.Name("OnlyCue.oscMonitorRequested")

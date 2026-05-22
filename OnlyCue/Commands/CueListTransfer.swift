@@ -139,6 +139,22 @@ enum CueListTransfer {
         return TypeReconciliation(typesToAdd: typesToAdd, idMap: idMap)
     }
 
+    /// Reconcile imported cues for the destination: a fresh `id` per cue
+    /// (uniqueness, including against re-imports) and `typeID` remapped through
+    /// `idMap`. `cueNumber`, `time`, `name`, `notes`, `fadeTime`, `bpm` and
+    /// `beatsPerBar` are preserved verbatim — a console-facing `cueNumber` is
+    /// never silently rewritten. A `typeID` absent from `idMap` is left as-is.
+    static func reconcileCues(_ payloadCues: [Cue], idMap: [UUID: UUID]) -> [Cue] {
+        payloadCues.map { cue in
+            var copy = cue
+            copy.id = UUID()
+            if let mapped = idMap[cue.typeID] {
+                copy.typeID = mapped
+            }
+            return copy
+        }
+    }
+
     private static func normalizedName(_ name: String) -> String {
         name.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
     }

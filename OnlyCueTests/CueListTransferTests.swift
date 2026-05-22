@@ -189,4 +189,51 @@ final class CueListTransferTests: XCTestCase {
         )
         XCTAssertEqual(result.typesToAdd[0].name, "spotlight (imported)")
     }
+
+    // MARK: cue reconciliation
+
+    func test_reconcileCues_regeneratesIDs_andRemapsTypeID() {
+        let oldTypeID = UUID()
+        let newTypeID = UUID()
+        let cue = sampleCue(typeID: oldTypeID, number: 1.5)
+
+        let result = CueListTransfer.reconcileCues([cue], idMap: [oldTypeID: newTypeID])
+
+        XCTAssertEqual(result.count, 1)
+        XCTAssertNotEqual(result[0].id, cue.id, "imported cue must get a fresh id")
+        XCTAssertEqual(result[0].typeID, newTypeID, "typeID must be remapped")
+    }
+
+    func test_reconcileCues_preservesEveryOtherField() {
+        let oldTypeID = UUID()
+        let cue = Cue(
+            id: UUID(),
+            typeID: oldTypeID,
+            cueNumber: 2.5,
+            name: "Wash full",
+            time: 12.0,
+            notes: "hold",
+            fadeTime: FadeTime(fadeIn: 1.0, fadeOut: 2.0),
+            bpm: 120,
+            beatsPerBar: 4
+        )
+        let result = CueListTransfer.reconcileCues([cue], idMap: [oldTypeID: UUID()])[0]
+
+        XCTAssertEqual(result.cueNumber, 2.5)
+        XCTAssertEqual(result.name, "Wash full")
+        XCTAssertEqual(result.time, 12.0)
+        XCTAssertEqual(result.notes, "hold")
+        XCTAssertEqual(result.fadeTime, FadeTime(fadeIn: 1.0, fadeOut: 2.0))
+        XCTAssertEqual(result.bpm, 120)
+        XCTAssertEqual(result.beatsPerBar, 4)
+    }
+
+    func test_reconcileCues_unmappedTypeID_keepsOriginal() {
+        // Defensive: a payload cue whose type isn't in the map (hand-tampered
+        // file) keeps its original typeID rather than crashing.
+        let strayTypeID = UUID()
+        let cue = sampleCue(typeID: strayTypeID)
+        let result = CueListTransfer.reconcileCues([cue], idMap: [:])[0]
+        XCTAssertEqual(result.typeID, strayTypeID)
+    }
 }

@@ -141,4 +141,52 @@ final class CueListTransferTests: XCTestCase {
             export, mediaItem(name: "OTHER.wav", duration: 100.0, cues: [])
         ))
     }
+
+    // MARK: type reconciliation
+
+    func test_reconcileTypes_uniqueName_keptAsIs_freshID_hotkeyDropped() {
+        let source = sampleType(name: "Haze", hotkey: 5)
+        let result = CueListTransfer.reconcileTypes([source], existing: [sampleType(name: "General", hotkey: nil)])
+
+        XCTAssertEqual(result.typesToAdd.count, 1)
+        let added = result.typesToAdd[0]
+        XCTAssertEqual(added.name, "Haze")
+        XCTAssertNotEqual(added.id, source.id, "imported type must get a fresh id")
+        XCTAssertNil(added.hotkey, "imported type must not carry a hotkey")
+        XCTAssertEqual(added.colorHex, source.colorHex)
+        XCTAssertEqual(result.idMap[source.id], added.id)
+    }
+
+    func test_reconcileTypes_nameCollision_suffixedImported() {
+        let source = sampleType(name: "Spotlight")
+        let existing = sampleType(name: "Spotlight")
+        let result = CueListTransfer.reconcileTypes([source], existing: [existing])
+        XCTAssertEqual(result.typesToAdd[0].name, "Spotlight (imported)")
+    }
+
+    func test_reconcileTypes_doubleCollision_numbersTheSuffix() {
+        let source = sampleType(name: "Spotlight")
+        let existing = [
+            sampleType(name: "Spotlight"),
+            sampleType(name: "Spotlight (imported)")
+        ]
+        let result = CueListTransfer.reconcileTypes([source], existing: existing)
+        XCTAssertEqual(result.typesToAdd[0].name, "Spotlight (imported 2)")
+    }
+
+    func test_reconcileTypes_collisionWithinSameBatch_isDisambiguated() {
+        let result = CueListTransfer.reconcileTypes(
+            [sampleType(name: "Wash"), sampleType(name: "Wash")],
+            existing: []
+        )
+        XCTAssertEqual(result.typesToAdd.map(\.name), ["Wash", "Wash (imported)"])
+    }
+
+    func test_reconcileTypes_nameMatchIsCaseAndWhitespaceInsensitive() {
+        let result = CueListTransfer.reconcileTypes(
+            [sampleType(name: "spotlight")],
+            existing: [sampleType(name: "  Spotlight ")]
+        )
+        XCTAssertEqual(result.typesToAdd[0].name, "spotlight (imported)")
+    }
 }

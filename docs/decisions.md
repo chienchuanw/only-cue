@@ -15,6 +15,17 @@ ADR template:
 
 ---
 
+## ADR-025 — Portable cue lists: a `.occues` interchange file, decoupled from the document model
+
+**Date**: 2026-05-22
+**Status**: Accepted
+**Decision**: A song's cue list can be exported to a portable `.occues` file and imported onto a song in another project. `.occues` reuses the `.cuelist` encrypted envelope (AES-256-GCM, fixed key — ADR-021) with a distinct `OCCU` magic and its own JSON payload carrying `formatVersion`, `sourceMedia`, the referenced `cuePointTypes`, and the `cues`. Import is **always additive for types** — every payload `CuePointType` becomes a new destination type (fresh id, `hotkey` cleared, name suffixed `(imported)` on collision); the destination catalog is never mutated in place. Imported cues get fresh ids and remapped `typeID`s; `cueNumber` is preserved verbatim. The whole import is one undo group via `CueCommands.importCueList`.
+**Why**: Lighting designers reuse the same song across many shows and want prior cue work as a starting point. A standalone interchange file keeps `ProjectModel` unchanged — `data-model.md`'s "no shared cue lists in the model" non-goal still holds — and makes the feature a pure copy-in/copy-out with no cross-project references, no schema bump, and no live-sync surface. Additive type reconciliation avoids ever recoloring or rebinding the destination project's own palette.
+**Reversal cost**: Low. `.occues` is an additive, external format with its own `formatVersion`; `CueListTransfer` and `CueCommands+Transfer` are self-contained, and the only shared-code change is parameterizing `CuelistCrypto` by magic (the `.cuelist` path keeps the `OCUE` default).
+**Deferred**: carrying tempo maps / lyrics in `.occues`; auto-matching the import to a media item by identity; a global cue library.
+
+---
+
 ## ADR-024 — Quiet Pro: a centralized design-token system; achromatic main-window chrome
 
 **Date**: 2026-05-22

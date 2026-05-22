@@ -71,4 +71,34 @@ enum CueListTransfer {
         }
         return export
     }
+
+    // MARK: Export
+
+    /// Build a `.occues` payload from one media item. `cuePointTypes` carries
+    /// only the types `item.cues` reference, preserving `projectTypes` order.
+    static func makeExport(
+        of item: MediaItem,
+        projectTypes: [CuePointType],
+        now: Date = Date()
+    ) -> CueListExport {
+        let referencedIDs = Set(item.cues.map(\.typeID))
+        return CueListExport(
+            formatVersion: currentFormatVersion,
+            exportedAt: now,
+            sourceMedia: ExportedSourceMedia(
+                displayName: item.media.displayName,
+                duration: item.media.duration
+            ),
+            cuePointTypes: projectTypes.filter { referencedIDs.contains($0.id) },
+            cues: item.cues
+        )
+    }
+
+    /// True when `item` is plausibly the same media the export came from:
+    /// identical display name and a duration within 0.5 s. Drives the
+    /// import-time mismatch confirmation.
+    static func mediaMatches(_ export: CueListExport, _ item: MediaItem) -> Bool {
+        export.sourceMedia.displayName == item.media.displayName
+            && abs(export.sourceMedia.duration - item.media.duration) <= 0.5
+    }
 }

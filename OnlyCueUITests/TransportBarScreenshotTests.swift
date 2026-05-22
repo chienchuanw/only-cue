@@ -60,6 +60,35 @@ final class TransportBarScreenshotTests: XCTestCase {
         app.terminate()
     }
 
+    /// Scenario: Transport bar renders correctly in Dark appearance
+    /// Given the app is launched pinned to Dark appearance via
+    ///   `--ui-test-appearance=dark`
+    /// And an untitled document seeded with three cues is opened
+    /// Then the HMS time readout is visible
+    /// And a screenshot of the document window is captured for the
+    ///   dark-mode visual sanity pass (spec §9 — issue #365).
+    func test_transportBar_darkMode_visualBaseline() throws {
+        let app = XCUIApplication()
+        app.launchArguments += [
+            "-ApplePersistenceIgnoreState", "YES",
+            "--ui-test-appearance=dark",
+            "--ui-test-seed=three-cues-1-3-6"
+        ]
+        app.launch()
+
+        let timeReadout = app.staticTexts["currentTimeReadout"]
+        XCTAssertTrue(
+            timeReadout.waitForExistence(timeout: 10),
+            "the transport should render for the seeded document in Dark appearance within 10 seconds"
+        )
+
+        app.activate()
+
+        try captureScreenshot(named: "transport-bar-dark-baseline", window: app.windows.firstMatch)
+
+        app.terminate()
+    }
+
     // MARK: - Screenshot helpers
 
     /// Attaches a screenshot to the xcresult bundle AND writes a PNG copy to

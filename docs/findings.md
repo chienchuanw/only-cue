@@ -407,3 +407,9 @@ If you `.accessibilityIdentifier("foo")` a SwiftUI `Text("Bar")` and then query 
 ## A `Closes #N` line in the PR body auto-closes the issue at merge
 
 Verified on PR #14 → issue #1. No need to manually close the issue. Same syntax works for `Fixes #N` / `Resolves #N`. If the PR uses GitHub's "linked issues" UI, that's separate from this body marker but functions identically.
+
+## XCUITests can't be run from a sandboxed/headless local shell — CI is their gate
+
+While delivering #366 (PR #367), every `xcodebuild test -only-testing:OnlyCueUITests/...` run failed locally with `Failed to initialize for UI testing: ... "Timed out while enabling automation mode."` — the `XCTRunner` process needs the OS to grant it automation/Accessibility permission, which a non-interactive shell session cannot do. This is **not** a code defect and is not specific to one test: it affects the whole `OnlyCueUITests` target locally in that environment. The UITest still *compiles* in that run (the failure is at runtime runner-init, after compilation), and it passes on the GitHub Actions `macos-latest` runner, which is configured for it.
+
+Practical rule: when working from a restricted shell, verify UITests **compile** locally (a normal `xcodebuild build`/`test` reaches the runner stage) but treat the CI `Build & test (macOS)` job as the real pass/fail gate for anything under `OnlyCueUITests`. Don't burn retries on the automation-mode timeout — it will not clear by retrying.

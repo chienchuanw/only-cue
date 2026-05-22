@@ -227,6 +227,22 @@ enum MediaKind: String, Codable {
 - If `stale`, refresh and rewrite the document silently.
 - If unresolvable (file moved/deleted), surface a "Relink media…" alert. The cues remain intact; only playback is gated.
 
+## `.occues` interchange file
+
+A `.occues` file is a portable, one-song cue list — used to copy a marked-up
+song's cues from one project into another as a starting point (ADR-025). It is
+**not** part of `ProjectModel` and does **not** affect `schemaVersion`: it is an
+external artifact produced by `Cue ▸ Export Cue List…` and consumed by
+`Cue ▸ Import Cue List…`.
+
+It uses the same encrypted envelope as `.cuelist` (ADR-021) with a distinct
+`OCCU` magic. The decrypted payload is JSON with its own `formatVersion`
+(currently `1`, independent of `schemaVersion`): `exportedAt`, a `sourceMedia`
+identity (`displayName` + `duration`), the referenced `cuePointTypes`, and the
+`cues`. On import, types are reconciled additively (new ids, `hotkey` dropped,
+`(imported)` suffix on a name collision) and cues get fresh ids with remapped
+`typeID`s; `cueNumber` is preserved. UTType `com.onlycue.cues`.
+
 ## What's deliberately NOT in the model
 
 These are out of scope. Adding any of them is a `schemaVersion` bump.

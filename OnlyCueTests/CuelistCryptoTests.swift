@@ -52,4 +52,34 @@ final class CuelistCryptoTests: XCTestCase {
         bad.append(Data(repeating: 0, count: 30))
         XCTAssertThrowsError(try CuelistCrypto.open(bad))
     }
+
+    func test_seal_withExportMagic_roundTrips() throws {
+        let payload = Data(#"{"formatVersion":1}"#.utf8)
+        let sealed = try CuelistCrypto.seal(payload, magic: CuelistCrypto.cueListExportMagic)
+        XCTAssertEqual(sealed.prefix(4), Data("OCCU".utf8), "export envelope must start with OCCU")
+        XCTAssertEqual(
+            try CuelistCrypto.open(sealed, magic: CuelistCrypto.cueListExportMagic),
+            payload
+        )
+    }
+
+    func test_open_exportMagic_rejectsCuelistEnvelope() throws {
+        // A .cuelist (OCUE) opened as an export (OCCU), with no legacy fallback,
+        // must be a malformed envelope — not a silent plaintext pass-through.
+        let cuelist = try CuelistCrypto.seal(Data("x".utf8)) // default OCUE
+        XCTAssertThrowsError(
+            try CuelistCrypto.open(cuelist, magic: CuelistCrypto.cueListExportMagic, allowLegacyPlaintext: false)
+        ) { error in
+            XCTAssertEqual(error as? CuelistCrypto.CryptoError, .malformedEnvelope)
+        }
+    }
+
+    func test_open_exportMagic_rejectsBareJSON() {
+        let bareJSON = Data(#"{"formatVersion":1}"#.utf8)
+        XCTAssertThrowsError(
+            try CuelistCrypto.open(bareJSON, magic: CuelistCrypto.cueListExportMagic, allowLegacyPlaintext: false)
+        ) { error in
+            XCTAssertEqual(error as? CuelistCrypto.CryptoError, .malformedEnvelope)
+        }
+    }
 }

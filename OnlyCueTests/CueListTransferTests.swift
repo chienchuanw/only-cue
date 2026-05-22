@@ -90,4 +90,55 @@ final class CueListTransferTests: XCTestCase {
             XCTAssertEqual(error as? CueListTransfer.TransferError, .malformedPayload)
         }
     }
+
+    // MARK: export builder
+
+    func test_makeExport_carriesOnlyReferencedTypes() {
+        let usedA = sampleType(name: "Used A")
+        let usedB = sampleType(name: "Used B")
+        let unused = sampleType(name: "Unused")
+        let item = mediaItem(
+            name: "song.wav",
+            duration: 100,
+            cues: [sampleCue(typeID: usedA.id), sampleCue(typeID: usedB.id)]
+        )
+
+        let export = CueListTransfer.makeExport(
+            of: item,
+            projectTypes: [usedA, unused, usedB]
+        )
+
+        XCTAssertEqual(export.formatVersion, CueListTransfer.currentFormatVersion)
+        XCTAssertEqual(Set(export.cuePointTypes.map(\.id)), [usedA.id, usedB.id])
+        XCTAssertEqual(export.cues.count, 2)
+        XCTAssertEqual(export.sourceMedia.displayName, "song.wav")
+        XCTAssertEqual(export.sourceMedia.duration, 100)
+    }
+
+    func test_makeExport_emptyCueList_producesEmptyExport() {
+        let item = mediaItem(name: "song.wav", duration: 100, cues: [])
+        let export = CueListTransfer.makeExport(of: item, projectTypes: [sampleType()])
+        XCTAssertTrue(export.cues.isEmpty)
+        XCTAssertTrue(export.cuePointTypes.isEmpty)
+    }
+
+    func test_mediaMatches_exactName_andDurationWithinTolerance() {
+        let type = sampleType()
+        let export = CueListExport(
+            formatVersion: 1,
+            exportedAt: Date(),
+            sourceMedia: ExportedSourceMedia(displayName: "song.wav", duration: 100.0),
+            cuePointTypes: [type],
+            cues: []
+        )
+        XCTAssertTrue(CueListTransfer.mediaMatches(
+            export, mediaItem(name: "song.wav", duration: 100.4, cues: [])
+        ))
+        XCTAssertFalse(CueListTransfer.mediaMatches(
+            export, mediaItem(name: "song.wav", duration: 101.0, cues: [])
+        ))
+        XCTAssertFalse(CueListTransfer.mediaMatches(
+            export, mediaItem(name: "OTHER.wav", duration: 100.0, cues: [])
+        ))
+    }
 }

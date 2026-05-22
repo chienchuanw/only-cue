@@ -25,10 +25,10 @@ A native macOS application for lighting designers and show programmers, inspired
 
 ## Screenshots
 
-Document window (fresh, untitled) — media library sidebar, preview / waveform area, transport bar with SMPTE readout, and the cue list pane with the playhead clock pinned above it:
+Document window with audio loaded — media library sidebar, Cue / Lyric / Show mode switcher, timeline with cue markers, transport bar, and the cue list pane with the playhead clock pinned above it:
 
 ![OnlyCue document window](static/document-window.png)
-<!-- Regenerate: xcodebuild test -project OnlyCue.xcodeproj -scheme OnlyCue -destination 'platform=macOS' -only-testing:OnlyCueUITests/TransportBarScreenshotTests, then copy transport-bar-baseline.png from the runner tmp dir (~/Library/Containers/com.chienchuanw.OnlyCueUITests.xctrunner/Data/tmp/screenshots/) into static/document-window.png. TODO: a media-loaded variant needs a new UI test + media fixture. -->
+<!-- Regenerate: xcodebuild test -project OnlyCue.xcodeproj -scheme OnlyCue -destination 'platform=macOS' -only-testing:OnlyCueUITests/TransportBarScreenshotTests, then extract the attachment from the xcresult bundle (xcrun xcresulttool export attachments --path <result>.xcresult --output-path <dir>) into static/document-window.png. test_transportBar_visualBaseline captures light mode; test_transportBar_darkMode_visualBaseline captures the dark-mode appearance sanity pass. -->
 
 Export Cues sheet (`⇧⌘E`) — format picker and per-cue-type filter:
 

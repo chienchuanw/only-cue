@@ -165,6 +165,22 @@ struct AppCommands: Commands {
                 NotificationCenter.default.post(name: .snapSelectedCuesToBar, object: nil)
             }
             .keyboardShortcut(shortcut(.snapSelectedCuesToBar))
+
+            Divider()
+
+            Button {
+                NotificationCenter.default.post(name: .exportCueListRequested, object: nil)
+            } label: {
+                Label("Export Cue List…", systemImage: "square.and.arrow.up.on.square")
+            }
+            .accessibilityIdentifier("exportCueListMenuItem")
+
+            Button {
+                NotificationCenter.default.post(name: .importCueListRequested, object: nil)
+            } label: {
+                Label("Import Cue List…", systemImage: "square.and.arrow.down.on.square")
+            }
+            .accessibilityIdentifier("importCueListMenuItem")
         }
 
         CommandMenu("Playback") {

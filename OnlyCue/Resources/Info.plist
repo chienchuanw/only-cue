@@ -60,6 +60,23 @@
                 </array>
             </dict>
         </dict>
+        <dict>
+            <key>UTTypeConformsTo</key>
+            <array>
+                <string>public.data</string>
+            </array>
+            <key>UTTypeDescription</key>
+            <string>OnlyCue Cue List</string>
+            <key>UTTypeIdentifier</key>
+            <string>com.onlycue.cues</string>
+            <key>UTTypeTagSpecification</key>
+            <dict>
+                <key>public.filename-extension</key>
+                <array>
+                    <string>occues</string>
+                </array>
+            </dict>
+        </dict>
     </array>
 </dict>
 </plist>

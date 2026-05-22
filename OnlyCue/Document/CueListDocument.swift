@@ -3,6 +3,9 @@ import UniformTypeIdentifiers
 
 extension UTType {
     static let cueList = UTType(exportedAs: "com.onlycue.cuelist")
+    /// The portable `.occues` cue-list interchange file (not a document type —
+    /// handled via NSOpenPanel/NSSavePanel, never DocumentGroup).
+    static let cueListExport = UTType(exportedAs: "com.onlycue.cues")
 }
 
 final class CueListDocument: ReferenceFileDocument {

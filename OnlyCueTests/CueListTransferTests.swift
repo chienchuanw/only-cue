@@ -236,4 +236,14 @@ final class CueListTransferTests: XCTestCase {
         let result = CueListTransfer.reconcileCues([cue], idMap: [:])[0]
         XCTAssertEqual(result.typeID, strayTypeID)
     }
+
+    // MARK: UTType
+
+    func test_cueListExportUTType_hasExpectedIdentifierAndExtension() {
+        XCTAssertEqual(UTType.cueListExport.identifier, "com.onlycue.cues")
+        XCTAssertTrue(
+            UTType.cueListExport.tags[.filenameExtension]?.contains("occues") ?? false,
+            "the cueListExport UTType must own the .occues extension"
+        )
+    }
 }

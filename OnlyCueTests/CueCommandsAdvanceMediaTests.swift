@@ -20,23 +20,23 @@ final class CueCommandsAdvanceMediaTests: XCTestCase {
     // MARK: - Pure helper: nextMediaItemID(after:in:)
 
     func test_nextMediaItemID_returnsNextWhenMiddle() {
-        let a = makeItem("a"), b = makeItem("b"), c = makeItem("c")
-        XCTAssertEqual(CueCommands.nextMediaItemID(after: a.id, in: [a, b, c]), b.id)
+        let itemA = makeItem("a"), itemB = makeItem("b"), itemC = makeItem("c")
+        XCTAssertEqual(CueCommands.nextMediaItemID(after: itemA.id, in: [itemA, itemB, itemC]), itemB.id)
     }
 
     func test_nextMediaItemID_returnsNilAtLastItem() {
-        let a = makeItem("a"), b = makeItem("b")
-        XCTAssertNil(CueCommands.nextMediaItemID(after: b.id, in: [a, b]))
+        let itemA = makeItem("a"), itemB = makeItem("b")
+        XCTAssertNil(CueCommands.nextMediaItemID(after: itemB.id, in: [itemA, itemB]))
     }
 
     func test_nextMediaItemID_returnsNilForSingleItem() {
-        let a = makeItem("a")
-        XCTAssertNil(CueCommands.nextMediaItemID(after: a.id, in: [a]))
+        let itemA = makeItem("a")
+        XCTAssertNil(CueCommands.nextMediaItemID(after: itemA.id, in: [itemA]))
     }
 
     func test_nextMediaItemID_returnsNilForUnknownID() {
-        let a = makeItem("a"), b = makeItem("b")
-        XCTAssertNil(CueCommands.nextMediaItemID(after: UUID(), in: [a, b]))
+        let itemA = makeItem("a"), itemB = makeItem("b")
+        XCTAssertNil(CueCommands.nextMediaItemID(after: UUID(), in: [itemA, itemB]))
     }
 
     func test_nextMediaItemID_returnsNilForEmptyList() {
@@ -53,8 +53,8 @@ final class CueCommandsAdvanceMediaTests: XCTestCase {
     }
 
     func test_advance_movesActiveToNextAndInvokesPlay() async {
-        let a = makeItem("a"), b = makeItem("b")
-        let document = seed([a, b], active: a.id)
+        let itemA = makeItem("a"), itemB = makeItem("b")
+        let document = seed([itemA, itemB], active: itemA.id)
         var playedID: MediaItem.ID?
 
         await CueCommands.advanceToNextMediaAndPlay(
@@ -62,13 +62,13 @@ final class CueCommandsAdvanceMediaTests: XCTestCase {
             reloadAndPlay: { playedID = $0 }
         )
 
-        XCTAssertEqual(document.model.activeItemID, b.id)
-        XCTAssertEqual(playedID, b.id)
+        XCTAssertEqual(document.model.activeItemID, itemB.id)
+        XCTAssertEqual(playedID, itemB.id)
     }
 
     func test_advance_atLastItem_isNoOp() async {
-        let a = makeItem("a"), b = makeItem("b")
-        let document = seed([a, b], active: b.id)
+        let itemA = makeItem("a"), itemB = makeItem("b")
+        let document = seed([itemA, itemB], active: itemB.id)
         var playCalled = false
 
         await CueCommands.advanceToNextMediaAndPlay(
@@ -76,28 +76,28 @@ final class CueCommandsAdvanceMediaTests: XCTestCase {
             reloadAndPlay: { _ in playCalled = true }
         )
 
-        XCTAssertEqual(document.model.activeItemID, b.id)
+        XCTAssertEqual(document.model.activeItemID, itemB.id)
         XCTAssertFalse(playCalled, "no transition → no play")
     }
 
     func test_advance_capturesNextIDAtFireTime() async {
-        let a = makeItem("a"), b = makeItem("b"), c = makeItem("c")
-        let document = seed([a, b, c], active: a.id)
-        // Mutate items[] between mode-set and fire time — remove `b`
-        // so the "next" should now be `c`.
-        document.model.items = [a, c]
+        let itemA = makeItem("a"), itemB = makeItem("b"), itemC = makeItem("c")
+        let document = seed([itemA, itemB, itemC], active: itemA.id)
+        // Mutate items[] between mode-set and fire time — remove itemB
+        // so the "next" should now be itemC.
+        document.model.items = [itemA, itemC]
 
         await CueCommands.advanceToNextMediaAndPlay(
             document: document,
             reloadAndPlay: { _ in }
         )
 
-        XCTAssertEqual(document.model.activeItemID, c.id)
+        XCTAssertEqual(document.model.activeItemID, itemC.id)
     }
 
     func test_advance_withNilActive_isNoOp() async {
-        let a = makeItem("a")
-        let document = seed([a], active: nil)
+        let itemA = makeItem("a")
+        let document = seed([itemA], active: nil)
         var playCalled = false
 
         await CueCommands.advanceToNextMediaAndPlay(

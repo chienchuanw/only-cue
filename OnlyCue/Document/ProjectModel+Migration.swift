@@ -1,3 +1,4 @@
+// swiftlint:disable file_length
 import Foundation
 
 /// Schema-migration machinery for `ProjectModel`: one `LegacyVN` snapshot struct

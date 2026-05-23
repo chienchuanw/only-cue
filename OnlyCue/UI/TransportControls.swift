@@ -12,6 +12,9 @@ struct TransportControls: View {
     var timecodeSettings: ProjectTimecodeSettings = .default
     /// Active media item — drives the SMPTE readout's per-clip start TC.
     var activeItem: MediaItem?
+    /// Current end-of-media policy from the active document. Renders the
+    /// non-default mode badge next to the playback-rate badge.
+    var playbackMode: PlaybackMode = .playOnce
     /// Steps the playhead to the previous / next cue. Supplied by `DocumentView`.
     var onStepPrevCue: () -> Void = {}
     var onStepNextCue: () -> Void = {}
@@ -105,6 +108,7 @@ struct TransportControls: View {
                     .foregroundStyle(DS.Color.textTertiary)
             }
             PlaybackRateBadge(engine: engine, ltcEnabled: ltcRoutingStore.settings.isEnabled)
+            PlaybackModeBadge(mode: playbackMode)
             if ltcRoutingStore.settings.isEnabled {
                 Text("SMPTE \(smpteReadout)")
                     .font(DS.Text.mono)

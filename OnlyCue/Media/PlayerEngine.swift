@@ -1,4 +1,5 @@
 import AVFoundation
+import Combine
 import Observation
 import QuartzCore
 
@@ -27,6 +28,15 @@ final class PlayerEngine {
     @ObservationIgnored
     private var timeObserver: Any?
 
+    /// Publishes `()` when the currently-loaded `AVPlayerItem` reaches its end
+    /// via natural playback. Programmatic `seek(to: duration)` does NOT fire
+    /// this — AVFoundation only emits `didPlayToEndTimeNotification` on natural
+    /// arrival at the boundary.
+    let mediaDidReachEnd = PassthroughSubject<Void, Never>()
+
+    @ObservationIgnored
+    private var endOfMediaObserver: NSObjectProtocol?
+
     /// Last user intent: `true` between `play()` and the next `pause()` /
     /// `unload()`. `setPlaybackRate(_:)` pushes the new rate to `AVPlayer.rate`
     /// while this is `true`, regardless of whether the player has actually
@@ -52,12 +62,16 @@ final class PlayerEngine {
         if let timeObserver {
             player.removeTimeObserver(timeObserver)
         }
+        if let endOfMediaObserver {
+            NotificationCenter.default.removeObserver(endOfMediaObserver)
+        }
     }
 
     func load(asset: AVAsset) async {
         let item = AVPlayerItem(asset: asset)
         item.audioTimePitchAlgorithm = .spectral
         player.replaceCurrentItem(with: item)
+        rebindEndOfMediaObserver(to: item)
         rate = 0
         currentTime = 0
         if let cmDuration = try? await asset.load(.duration) {
@@ -69,6 +83,7 @@ final class PlayerEngine {
         wantsToPlay = false
         player.pause()
         player.replaceCurrentItem(with: nil)
+        unbindEndOfMediaObserver()
         rate = 0
         currentTime = 0
         duration = 0
@@ -143,6 +158,26 @@ final class PlayerEngine {
     /// Reset to 1.0×.
     func resetPlaybackRate() {
         setPlaybackRate(1.0)
+    }
+
+    private func rebindEndOfMediaObserver(to item: AVPlayerItem) {
+        unbindEndOfMediaObserver()
+        endOfMediaObserver = NotificationCenter.default.addObserver(
+            forName: AVPlayerItem.didPlayToEndTimeNotification,
+            object: item,
+            queue: .main
+        ) { [weak self] _ in
+            MainActor.assumeIsolated {
+                self?.mediaDidReachEnd.send(())
+            }
+        }
+    }
+
+    private func unbindEndOfMediaObserver() {
+        if let endOfMediaObserver {
+            NotificationCenter.default.removeObserver(endOfMediaObserver)
+        }
+        endOfMediaObserver = nil
     }
 
     private func observeTime() {

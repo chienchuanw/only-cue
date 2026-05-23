@@ -38,8 +38,7 @@ final class ProjectModelMigrationV14Tests: XCTestCase {
 
     func test_v13ToV14_bumpsSchemaVersion() throws {
         let migrated = try ProjectModel.decode(from: Data(v13Doc(lyricTime: "3.5").utf8))
-        XCTAssertEqual(migrated.schemaVersion, 14)
-        XCTAssertEqual(ProjectModel.currentSchemaVersion, 14)
+        XCTAssertEqual(migrated.schemaVersion, ProjectModel.currentSchemaVersion)
     }
 
     func test_v13ToV14_preservesPlacedLyricLine() throws {

@@ -22,7 +22,7 @@ struct DocumentView: View {
     /// Drives the main-view LTC strip's visibility — it appears whenever LTC
     /// routing is enabled. Observing the singleton here means flipping the
     /// switch in Preferences updates the strip in real time.
-    @ObservedObject private var ltcRoutingStore = LTCRoutingStore.shared
+    @ObservedObject var ltcRoutingStore = LTCRoutingStore.shared
     @Environment(\.undoManager) private var undoManager
 
     private func shortcut(_ action: KeymapAction) -> KeyboardShortcut {
@@ -214,51 +214,6 @@ struct DocumentView: View {
         }
     }
 
-    /// End-of-media dispatcher. The chosen `PlaybackMode` decides whether to
-    /// stop, loop the current media, or advance to the next item. Loop and
-    /// Auto-Next are *suppressed* while LTC output is active because either
-    /// transition would introduce a media-time discontinuity on the LTC
-    /// timecode contract — the suppression posts `.ltcInterlockEngaged` (same
-    /// signal the speed-key interlock uses) and leaves the document's
-    /// `playbackMode` unchanged so the mode resumes the instant LTC is turned
-    /// off. The playback rate is preserved across loop wraps and auto-next
-    /// transitions (`engine.playbackRate` is sticky between `load()` calls).
-    private func handleMediaDidReachEnd() {
-        switch document.model.playbackMode {
-        case .playOnce:
-            return
-        case .loop:
-            if ltcRoutingStore.settings.isEnabled {
-                NotificationCenter.default.post(name: .ltcInterlockEngaged, object: nil)
-                return
-            }
-            Task {
-                await engine.seek(to: 0)
-                engine.play()
-            }
-        case .autoNext:
-            if ltcRoutingStore.settings.isEnabled {
-                NotificationCenter.default.post(name: .ltcInterlockEngaged, object: nil)
-                return
-            }
-            Task {
-                await CueCommands.advanceToNextMediaAndPlay(
-                    document: document,
-                    reloadAndPlay: { _ in
-                        do {
-                            try await MediaImporter.loadActive(into: document, engine: engine)
-                            engine.play()
-                        } catch {
-                            pendingAlert = .relink(
-                                document.model.activeItem?.media.displayName ?? "The media file"
-                            )
-                        }
-                    }
-                )
-            }
-        }
-    }
-
     private func handlePickerResult(_ result: Result<[URL], Error>) {
         switch result {
         case .success(let urls):
@@ -410,26 +365,6 @@ extension Notification.Name {
     static let playbackRateReset = Notification.Name("OnlyCue.playbackRateReset")
     static let playbackRateInterlockBlocked = Notification.Name("OnlyCue.playbackRateInterlockBlocked")
     static let playbackRateInterlockReset = Notification.Name("OnlyCue.playbackRateInterlockReset")
-    /// Posted by the Playback menu when the user picks a playback mode.
-    /// `object` is the `PlaybackMode`. Handled by `DocumentView`.
-    static let setPlaybackModeRequested = Notification.Name("OnlyCue.setPlaybackModeRequested")
-    /// Posted by the end-of-media dispatcher when LTC is enabled and a Loop /
-    /// Auto-Next transition was suppressed. Mirrors the speed-key interlock
-    /// signal so existing beep/flash sinks can subscribe uniformly.
-    static let ltcInterlockEngaged = Notification.Name("OnlyCue.ltcInterlockEngaged")
-}
-
-/// Carries the active document's playback mode up the SwiftUI focus chain so
-/// `AppCommands` can render the leading checkmark on the active menu item.
-struct CurrentPlaybackModeFocusKey: FocusedValueKey {
-    typealias Value = PlaybackMode
-}
-
-extension FocusedValues {
-    var currentPlaybackMode: PlaybackMode? {
-        get { self[CurrentPlaybackModeFocusKey.self] }
-        set { self[CurrentPlaybackModeFocusKey.self] = newValue }
-    }
 }
 
 enum DocumentAlert: Identifiable {

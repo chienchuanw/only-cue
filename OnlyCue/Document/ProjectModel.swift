@@ -2,7 +2,7 @@ import Foundation
 
 struct ProjectModel: Codable, Equatable {
 
-    static let currentSchemaVersion = 14
+    static let currentSchemaVersion = 15
 
     var schemaVersion: Int
     var id: UUID
@@ -11,6 +11,7 @@ struct ProjectModel: Codable, Equatable {
     var items: [MediaItem]
     var activeItemID: UUID?
     var timecodeSettings: ProjectTimecodeSettings = .default
+    var playbackMode: PlaybackMode = .playOnce
 
     var defaultCuePointTypeID: UUID? { cuePointTypes.first?.id }
 
@@ -37,6 +38,14 @@ struct ProjectModel: Codable, Equatable {
     func cuePointType(forHotkey digit: Int) -> CuePointType? {
         cuePointTypes.first(where: { $0.hotkey == digit })
     }
+}
+
+/// End-of-media transport policy. Mutually exclusive — exactly one mode is
+/// active per document. Default `.playOnce` preserves pre-v15 behavior.
+enum PlaybackMode: String, Codable, Equatable, CaseIterable {
+    case playOnce
+    case loop
+    case autoNext
 }
 
 extension ProjectModel {

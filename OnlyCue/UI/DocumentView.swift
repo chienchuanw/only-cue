@@ -83,6 +83,9 @@ struct DocumentView: View {
             }
         }
         .focusedSceneValue(\.currentPlaybackMode, document.model.playbackMode)
+        .onReceive(engine.mediaDidReachEnd) { _ in
+            handleMediaDidReachEnd()
+        }
         .exportSheet(model: document.model, pendingErrorMessage: pendingAlertMessageBinding)
         .oscServerHost(engine: engine, document: document, undoManager: undoManager)
         .ltcOutput(engine: engine, document: document)
@@ -207,6 +210,51 @@ struct DocumentView: View {
             try await MediaImporter.loadActive(into: document, engine: engine)
         } catch {
             pendingAlert = .relink(document.model.activeItem?.media.displayName ?? "The media file")
+        }
+    }
+
+    /// End-of-media dispatcher. The chosen `PlaybackMode` decides whether to
+    /// stop, loop the current media, or advance to the next item. Loop and
+    /// Auto-Next are *suppressed* while LTC output is active because either
+    /// transition would introduce a media-time discontinuity on the LTC
+    /// timecode contract — the suppression posts `.ltcInterlockEngaged` (same
+    /// signal the speed-key interlock uses) and leaves the document's
+    /// `playbackMode` unchanged so the mode resumes the instant LTC is turned
+    /// off. The playback rate is preserved across loop wraps and auto-next
+    /// transitions (`engine.playbackRate` is sticky between `load()` calls).
+    private func handleMediaDidReachEnd() {
+        switch document.model.playbackMode {
+        case .playOnce:
+            return
+        case .loop:
+            if ltcRoutingStore.settings.isEnabled {
+                NotificationCenter.default.post(name: .ltcInterlockEngaged, object: nil)
+                return
+            }
+            Task {
+                await engine.seek(to: 0)
+                engine.play()
+            }
+        case .autoNext:
+            if ltcRoutingStore.settings.isEnabled {
+                NotificationCenter.default.post(name: .ltcInterlockEngaged, object: nil)
+                return
+            }
+            Task {
+                await CueCommands.advanceToNextMediaAndPlay(
+                    document: document,
+                    reloadAndPlay: { _ in
+                        do {
+                            try await MediaImporter.loadActive(into: document, engine: engine)
+                            engine.play()
+                        } catch {
+                            pendingAlert = .relink(
+                                document.model.activeItem?.media.displayName ?? "The media file"
+                            )
+                        }
+                    }
+                )
+            }
         }
     }
 

@@ -117,6 +117,7 @@ struct DocumentView: View {
                     mediaDuration: activeItem?.media.duration ?? 0,
                     timecodeSettings: document.model.timecodeSettings,
                     activeItem: activeItem,
+                    playbackMode: document.model.playbackMode,
                     onStepPrevCue: { stepPlayhead(.previous) },
                     onStepNextCue: { stepPlayhead(.next) }
                 )

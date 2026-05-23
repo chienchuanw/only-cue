@@ -77,6 +77,12 @@ struct DocumentView: View {
         .onReceive(NotificationCenter.default.publisher(for: .editorModeChangeRequested)) { note in
             if let mode = note.object as? EditorMode { editorModeRaw = mode.rawValue }
         }
+        .onReceive(NotificationCenter.default.publisher(for: .setPlaybackModeRequested)) { note in
+            if let mode = note.object as? PlaybackMode {
+                CueCommands.setPlaybackMode(mode, document: document, undoManager: undoManager)
+            }
+        }
+        .focusedSceneValue(\.currentPlaybackMode, document.model.playbackMode)
         .exportSheet(model: document.model, pendingErrorMessage: pendingAlertMessageBinding)
         .oscServerHost(engine: engine, document: document, undoManager: undoManager)
         .ltcOutput(engine: engine, document: document)
@@ -355,6 +361,26 @@ extension Notification.Name {
     static let playbackRateReset = Notification.Name("OnlyCue.playbackRateReset")
     static let playbackRateInterlockBlocked = Notification.Name("OnlyCue.playbackRateInterlockBlocked")
     static let playbackRateInterlockReset = Notification.Name("OnlyCue.playbackRateInterlockReset")
+    /// Posted by the Playback menu when the user picks a playback mode.
+    /// `object` is the `PlaybackMode`. Handled by `DocumentView`.
+    static let setPlaybackModeRequested = Notification.Name("OnlyCue.setPlaybackModeRequested")
+    /// Posted by the end-of-media dispatcher when LTC is enabled and a Loop /
+    /// Auto-Next transition was suppressed. Mirrors the speed-key interlock
+    /// signal so existing beep/flash sinks can subscribe uniformly.
+    static let ltcInterlockEngaged = Notification.Name("OnlyCue.ltcInterlockEngaged")
+}
+
+/// Carries the active document's playback mode up the SwiftUI focus chain so
+/// `AppCommands` can render the leading checkmark on the active menu item.
+struct CurrentPlaybackModeFocusKey: FocusedValueKey {
+    typealias Value = PlaybackMode
+}
+
+extension FocusedValues {
+    var currentPlaybackMode: PlaybackMode? {
+        get { self[CurrentPlaybackModeFocusKey.self] }
+        set { self[CurrentPlaybackModeFocusKey.self] = newValue }
+    }
 }
 
 enum DocumentAlert: Identifiable {

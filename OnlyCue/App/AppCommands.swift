@@ -10,11 +10,31 @@ struct AppCommands: Commands {
     @AppStorage("pauseAtEachCue") private var pauseAtEachCue = false
     @ObservedObject private var keymapStore = KeymapStore.shared
     @ObservedObject private var ltcRoutingStore = LTCRoutingStore.shared
+    @FocusedValue(\.currentPlaybackMode) private var currentPlaybackMode
 
     private func shortcut(_ action: KeymapAction) -> KeyboardShortcut {
         keymapStore.keymap.chord(for: action).keyboardShortcut
             ?? Keymap.default.chord(for: action).keyboardShortcut
             ?? KeyboardShortcut(KeyEquivalent("/"), modifiers: .command)
+    }
+
+    /// Renders one Playback Mode menu item with a leading checkmark when this
+    /// mode is the active document's current selection. The macOS SwiftUI
+    /// renderer maps `Image(systemName: "checkmark")` leading a `Label` to the
+    /// underlying `NSMenuItem.state`, which XCUITest reads as `value == "1"`.
+    @ViewBuilder
+    private func playbackModeItem(_ mode: PlaybackMode, title: String, id: String) -> some View {
+        let isActive = (currentPlaybackMode ?? .playOnce) == mode
+        Button {
+            NotificationCenter.default.post(name: .setPlaybackModeRequested, object: mode)
+        } label: {
+            if isActive {
+                Label(title, systemImage: "checkmark")
+            } else {
+                Text(title)
+            }
+        }
+        .accessibilityIdentifier(id)
     }
 
     var body: some Commands {
@@ -210,6 +230,12 @@ struct AppCommands: Commands {
             .keyboardShortcut(shortcut(.playbackRateReset))
             .accessibilityIdentifier("playbackRateResetMenuItem")
             .disabled(ltcOn)
+
+            Divider()
+
+            playbackModeItem(.playOnce, title: "Play Once", id: "playbackModePlayOnceMenuItem")
+            playbackModeItem(.loop, title: "Loop Current Media", id: "playbackModeLoopMenuItem")
+            playbackModeItem(.autoNext, title: "Auto Play Next Media", id: "playbackModeAutoNextMenuItem")
 
             Divider()
 

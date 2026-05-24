@@ -83,6 +83,12 @@ final class DocumentViewModeScreenshotTests: XCTestCase {
         }
         app.launch()
 
+        // The seed handler opens a document on its own; otherwise drive ⌘N
+        // so the empty-state document window appears.
+        if seed == nil {
+            app.typeKey("n", modifierFlags: .command)
+        }
+
         // Wait for some part of the document window to appear. The import-well
         // exists only in empty state, so for seeded launches we look for the
         // sidebar/media row instead.

@@ -57,9 +57,6 @@ jobs:
             -scheme OnlyCue \
             -configuration Debug \
             -destination 'platform=macOS' \
-            CODE_SIGN_IDENTITY="-" \
-            CODE_SIGNING_REQUIRED=NO \
-            CODE_SIGNING_ALLOWED=NO \
             | xcbeautify --renderer github-actions
 
       - name: Unit tests
@@ -71,9 +68,6 @@ jobs:
             -destination 'platform=macOS' \
             -only-testing:OnlyCueTests \
             -parallel-testing-enabled NO \
-            CODE_SIGN_IDENTITY="-" \
-            CODE_SIGNING_REQUIRED=NO \
-            CODE_SIGNING_ALLOWED=NO \
             | xcbeautify --renderer github-actions
 
       # UI tests run on the maintainer's real logged-in macOS session, so
@@ -88,7 +82,4 @@ jobs:
             -destination 'platform=macOS' \
             -only-testing:OnlyCueUITests \
             -parallel-testing-enabled NO \
-            CODE_SIGN_IDENTITY="-" \
-            CODE_SIGNING_REQUIRED=NO \
-            CODE_SIGNING_ALLOWED=NO \
             | xcbeautify --renderer github-actions

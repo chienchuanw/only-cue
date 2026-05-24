@@ -14,7 +14,7 @@ concurrency:
 jobs:
   lint-and-build:
     name: Lint & build (macOS)
-    runs-on: macos-14
+    runs-on: macos-latest
     timeout-minutes: 15
 
     steps:
@@ -61,7 +61,7 @@ jobs:
 
   unit-tests:
     name: Unit tests (macOS)
-    runs-on: macos-14
+    runs-on: macos-latest
     timeout-minutes: 15
     needs: lint-and-build
 
@@ -105,17 +105,25 @@ jobs:
             CODE_SIGNING_ALLOWED=NO \
             | xcbeautify --renderer github-actions
 
-  # All three jobs pin `macos-14` instead of `macos-latest`. The image bump
-  # to macos-15.7.7 (24G720, runner image 20260520.0085) regressed XCUITest
-  # foregrounding on hosted runners — every UI test fails with "Failed to
-  # activate application … (current state: Running Background)". macos-14
-  # (Sonoma) is on the deprecation track (begins 2026-07-06, fully
-  # unsupported 2026-11-02), so this pin is intentionally short-lived;
-  # remove it once GitHub fixes the macOS 15 image or once macOS 16 lands
-  # with the issue resolved. See issue #371 for the investigation trail.
+  # The GHA macos-15 runner image 20260520.0085 (macOS 15.7.7 / 24G720)
+  # regressed XCUITest application foregrounding: every UI test fails with
+  # "Failed to activate application (current state: Running Background)".
+  # The runner has no logged-in GUI session, so the foreground promotion
+  # that the test runner attempts after `[XCUIApplication launch]` is
+  # ignored by the post-15.7.7 WindowServer.
+  #
+  # Pinning to macos-14 is not viable — that image only ships Xcode 16.2,
+  # but OnlyCue requires Xcode 26 SDK (uses `Unmanaged<MTAudioProcessingTap>`
+  # and other macOS-26 APIs).
+  #
+  # Workaround: keep the macos-latest runner, but before launching tests,
+  # wake the display (`caffeinate`) and explicitly bring the test app
+  # forward via AppleScript. This isn't bullet-proof — if it still flakes,
+  # the screenshot-baseline tests should move to a nightly cron and PR CI
+  # gates on lint+unit only. See issue #371.
   ui-tests:
     name: UI tests (macOS)
-    runs-on: macos-14
+    runs-on: macos-latest
     timeout-minutes: 30
     needs: lint-and-build
 
@@ -145,13 +153,17 @@ jobs:
             ${{ runner.os }}-xcode-${{ hashFiles('project.yml', '.swiftlint.yml') }}-
             ${{ runner.os }}-xcode-
 
-      # UI tests on the GitHub Actions macOS runner intermittently hit
-      # "Failed to activate application … (current state: Running Background)"
-      # when test bundles launch the app concurrently — the runner's window
-      # server can only foreground one process. Disabling parallel testing
-      # plus a single retry on failure (`-test-iterations 2
-      # -retry-tests-on-failure`) absorbs that race without changing the
-      # tests themselves.
+      # Keep the runner display awake for the whole test step so the
+      # WindowServer remains willing to grant frontmost status to the
+      # XCUITest-spawned OnlyCue process. Without this, macOS 15.7.7+ on
+      # the hosted runner refuses to foreground the app and every UI test
+      # times out with "Failed to activate application (current state:
+      # Running Background)".
+      - name: Keep display awake
+        run: |
+          caffeinate -dimsu -t 1800 &
+          echo "CAFFEINATE_PID=$!" >> $GITHUB_ENV
+
       - name: UI tests
         run: |
           set -o pipefail

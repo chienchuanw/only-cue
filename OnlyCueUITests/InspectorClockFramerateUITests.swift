@@ -23,7 +23,6 @@ final class InspectorClockFramerateUITests: XCTestCase {
         // matching elements found". Skipped pending a refactor that scopes
         // the picker query to a specific containing window or pane.
         throw XCTSkip("Picker identifier is ambiguous across panes; tracked for refactor.")
-        // swiftlint:disable:next unreachable_code
         let app = XCUIApplication()
         app.launchArguments += [SeedKey.threeCuesAt1And3And6.launchArgument]
         app.launch()

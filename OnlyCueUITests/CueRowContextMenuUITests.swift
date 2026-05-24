@@ -35,7 +35,6 @@ final class CueRowContextMenuUITests: XCTestCase {
         // runner. Skipped pending a refactor that anchors the right-click
         // to the row's element bounds rather than absolute coordinates.
         throw XCTSkip("Coordinate-based right-click is screen-size dependent; tracked for refactor.")
-        // swiftlint:disable:next unreachable_code
         let app = launchWithSeed(.threeCuesAt1And3And6)
         let window = try waitForSeedWindow(in: app)
 

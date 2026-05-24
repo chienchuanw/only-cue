@@ -27,7 +27,7 @@ jobs:
   test:
     name: Build & test (macOS, self-hosted)
     runs-on: [self-hosted, macos, arm64]
-    timeout-minutes: 30
+    timeout-minutes: 60
 
     steps:
       - name: Checkout

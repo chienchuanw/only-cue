@@ -61,3 +61,12 @@ screenshots/
 
 # Logs
 logs/
+
+# Claude Code agent harness scratch — regenerated per session
+.claude/scheduled_tasks.lock
+
+# Self-hosted GitHub Actions runner installation
+actions-runner/
+
+# Local planning notes (not part of the public docs set)
+ci-strategy.md

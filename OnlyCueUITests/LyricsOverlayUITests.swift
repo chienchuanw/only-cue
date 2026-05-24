@@ -34,18 +34,23 @@ final class LyricsOverlayUITests: XCTestCase {
         app.activate()
 
         app.menuBars.menuBarItems["View"].click()
-        let toggle = app.menuItems["toggleLyricsOverlayMenuItem"]
-        XCTAssertTrue(toggle.waitForExistence(timeout: 3), "View menu should offer the lyrics overlay toggle")
-        // The menu item label flips between "Show Lyrics Overlay" and
+        // The menu item title flips between "Show Lyrics Overlay" and
         // "Hide Lyrics Overlay" based on @AppStorage state, which persists
-        // across runs. On a developer's machine this state is shared with
-        // their real app usage. Only click when currently off; if already
-        // on, dismiss the menu and skip — the HUD assertion below still
-        // verifies the overlay is visible.
-        if toggle.title.hasPrefix("Show") {
-            toggle.click()
-        } else {
+        // across runs. On a developer's Mac this state is shared with
+        // their real app usage. macOS XCUITest also does not expose the
+        // SwiftUI `.accessibilityIdentifier(...)` on NSMenuItem — menu
+        // items are matchable only by title — so we look up both possible
+        // titles and click only when the overlay is currently off.
+        let showItem = app.menuItems["Show Lyrics Overlay"]
+        let hideItem = app.menuItems["Hide Lyrics Overlay"]
+        if showItem.waitForExistence(timeout: 3) {
+            showItem.click()
+        } else if hideItem.exists {
+            // Already on — dismiss the menu; the HUD assertion below still
+            // verifies the overlay is visible.
             app.typeKey(.escape, modifierFlags: [])
+        } else {
+            XCTFail("View menu should offer the lyrics overlay toggle (either Show or Hide title)")
         }
 
         XCTAssertTrue(

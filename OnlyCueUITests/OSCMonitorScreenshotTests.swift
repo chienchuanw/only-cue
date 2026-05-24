@@ -30,6 +30,7 @@ final class OSCMonitorScreenshotTests: XCTestCase {
 
     private func runOSCMonitorCapture(appearance: String?, screenshotName: String) throws {
         let app = XCUIApplication()
+        app.launchArguments += ["-ApplePersistenceIgnoreState", "YES"]
         if let appearance {
             app.launchArguments += ["--ui-test-appearance=\(appearance)"]
         }

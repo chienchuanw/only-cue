@@ -28,6 +28,7 @@ final class OSCSettingsScreenshotTests: XCTestCase {
 
     private func runOSCSettingsCapture(appearance: String?, screenshotName: String) throws {
         let app = XCUIApplication()
+        app.launchArguments += ["-ApplePersistenceIgnoreState", "YES"]
         if let appearance {
             app.launchArguments += ["--ui-test-appearance=\(appearance)"]
         }

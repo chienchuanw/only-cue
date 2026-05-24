@@ -16,7 +16,21 @@ final class KeyboardSettingsScreenshotTests: XCTestCase {
     /// Then the keymap table is shown with one row per action
     /// And a screenshot of the Settings window is captured.
     func test_keyboardSettings_visualBaseline() throws {
+        try runKeyboardSettingsCapture(appearance: nil, screenshotName: "keyboard-settings")
+    }
+
+    /// Dark-mode sibling for the figma↔app audit (issue #373). There is no
+    /// dedicated Figma frame for the Keyboard pane yet — the capture serves
+    /// as a baseline so the audit doc can flag the gap.
+    func test_keyboardSettings_darkMode_visualBaseline() throws {
+        try runKeyboardSettingsCapture(appearance: "dark", screenshotName: "keyboard-settings-dark")
+    }
+
+    private func runKeyboardSettingsCapture(appearance: String?, screenshotName: String) throws {
         let app = XCUIApplication()
+        if let appearance {
+            app.launchArguments += ["--ui-test-appearance=\(appearance)"]
+        }
         app.launch()
         app.typeKey("n", modifierFlags: .command)
         XCTAssertTrue(
@@ -44,7 +58,7 @@ final class KeyboardSettingsScreenshotTests: XCTestCase {
         }
 
         Thread.sleep(forTimeInterval: 0.9)
-        try captureScreenshot(named: "keyboard-settings", window: SettingsWindowFinder.window(in: app))
+        try captureScreenshot(named: screenshotName, window: SettingsWindowFinder.window(in: app))
         app.terminate()
     }
 

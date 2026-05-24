@@ -18,7 +18,21 @@ final class OSCMonitorScreenshotTests: XCTestCase {
     /// Then the OSC monitor sheet is presented
     /// And a screenshot of the document window (sheet attached) is captured.
     func test_oscMonitor_visualBaseline() throws {
+        try runOSCMonitorCapture(appearance: nil, screenshotName: "osc-monitor")
+    }
+
+    /// Dark-mode sibling of `test_oscMonitor_visualBaseline`. Forces Dark
+    /// appearance so the capture lines up with the Figma reference
+    /// (frame 320:2346) for the figma↔app audit (issue #373).
+    func test_oscMonitor_darkMode_visualBaseline() throws {
+        try runOSCMonitorCapture(appearance: "dark", screenshotName: "osc-monitor-dark")
+    }
+
+    private func runOSCMonitorCapture(appearance: String?, screenshotName: String) throws {
         let app = XCUIApplication()
+        if let appearance {
+            app.launchArguments += ["--ui-test-appearance=\(appearance)"]
+        }
         app.launch()
         app.typeKey("n", modifierFlags: .command)
 
@@ -39,7 +53,7 @@ final class OSCMonitorScreenshotTests: XCTestCase {
         // Fixed delay so the sheet animates in before the screenshot fires.
         Thread.sleep(forTimeInterval: 1.5)
 
-        try captureScreenshot(named: "osc-monitor", window: app.windows.firstMatch)
+        try captureScreenshot(named: screenshotName, window: app.windows.firstMatch)
         app.terminate()
     }
 

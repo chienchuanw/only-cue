@@ -17,8 +17,22 @@ final class TimecodeSettingsSheetScreenshotTests: XCTestCase {
     /// Then the Timecode Settings sheet is presented (framerate picker + start-timecode field)
     /// And a screenshot of the document window (sheet attached) is captured.
     func test_timecodeSettings_visualBaseline() throws {
+        try runTimecodeSettingsCapture(appearance: nil, screenshotName: "timecode-settings")
+    }
+
+    /// Dark-mode sibling of `test_timecodeSettings_visualBaseline`. Forces
+    /// Dark appearance so the capture lines up with the Figma reference
+    /// (frame 321:2279) for the figma↔app audit (issue #373).
+    func test_timecodeSettings_darkMode_visualBaseline() throws {
+        try runTimecodeSettingsCapture(appearance: "dark", screenshotName: "timecode-settings-dark")
+    }
+
+    private func runTimecodeSettingsCapture(appearance: String?, screenshotName: String) throws {
         let app = XCUIApplication()
         app.launchArguments += ["-ApplePersistenceIgnoreState", "YES"]
+        if let appearance {
+            app.launchArguments += ["--ui-test-appearance=\(appearance)"]
+        }
         app.launch()
         app.typeKey("n", modifierFlags: .command)
 
@@ -39,7 +53,7 @@ final class TimecodeSettingsSheetScreenshotTests: XCTestCase {
         // Fixed delay so the sheet animates in before the screenshot fires.
         Thread.sleep(forTimeInterval: 1.2)
 
-        try captureScreenshot(named: "timecode-settings", window: app.windows.firstMatch)
+        try captureScreenshot(named: screenshotName, window: app.windows.firstMatch)
         app.terminate()
     }
 

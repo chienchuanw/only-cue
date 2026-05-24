@@ -15,7 +15,21 @@ final class ExportSheetScreenshotTests: XCTestCase {
     /// Then the export sheet is presented
     /// And a screenshot of the document window (sheet attached) is captured.
     func test_exportSheet_visualBaseline() throws {
+        try runExportSheetCapture(appearance: nil, screenshotName: "export-sheet")
+    }
+
+    /// Dark-mode sibling of `test_exportSheet_visualBaseline`. Forces Dark
+    /// appearance so the capture lines up with the Figma reference
+    /// (frame 320:2193) for the figma↔app audit (issue #373).
+    func test_exportSheet_darkMode_visualBaseline() throws {
+        try runExportSheetCapture(appearance: "dark", screenshotName: "export-sheet-dark")
+    }
+
+    private func runExportSheetCapture(appearance: String?, screenshotName: String) throws {
         let app = XCUIApplication()
+        if let appearance {
+            app.launchArguments += ["--ui-test-appearance=\(appearance)"]
+        }
         app.launch()
         app.typeKey("n", modifierFlags: .command)
 
@@ -44,7 +58,7 @@ final class ExportSheetScreenshotTests: XCTestCase {
         // Fixed delay so the sheet animates in before the screenshot fires.
         Thread.sleep(forTimeInterval: 1.5)
 
-        try captureScreenshot(named: "export-sheet", window: app.windows.firstMatch)
+        try captureScreenshot(named: screenshotName, window: app.windows.firstMatch)
         app.terminate()
     }
 

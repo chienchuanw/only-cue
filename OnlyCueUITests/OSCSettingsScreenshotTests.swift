@@ -16,7 +16,21 @@ final class OSCSettingsScreenshotTests: XCTestCase {
     /// Then the OSC settings pane is shown with the enable toggle and address list
     /// And a screenshot of the Settings window is captured.
     func test_oscSettings_visualBaseline() throws {
+        try runOSCSettingsCapture(appearance: nil, screenshotName: "osc-settings")
+    }
+
+    /// Dark-mode sibling for the figma↔app audit (issue #373). There is no
+    /// dedicated Figma frame for the OSC settings pane — capture serves as
+    /// the baseline so the audit doc can flag any token/layout drift.
+    func test_oscSettings_darkMode_visualBaseline() throws {
+        try runOSCSettingsCapture(appearance: "dark", screenshotName: "osc-settings-dark")
+    }
+
+    private func runOSCSettingsCapture(appearance: String?, screenshotName: String) throws {
         let app = XCUIApplication()
+        if let appearance {
+            app.launchArguments += ["--ui-test-appearance=\(appearance)"]
+        }
         app.launch()
         // A document isn't required for Settings, but ⌘N gives a stable focused
         // window state matching the other screenshot tests' setup.
@@ -42,7 +56,7 @@ final class OSCSettingsScreenshotTests: XCTestCase {
         _ = app.checkBoxes["oscEnableToggle"].waitForExistence(timeout: 2)
 
         Thread.sleep(forTimeInterval: 0.8)
-        try captureScreenshot(named: "osc-settings", window: SettingsWindowFinder.window(in: app))
+        try captureScreenshot(named: screenshotName, window: SettingsWindowFinder.window(in: app))
         app.terminate()
     }
 

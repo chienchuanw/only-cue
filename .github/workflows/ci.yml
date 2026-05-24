@@ -14,7 +14,7 @@ concurrency:
 jobs:
   lint-and-build:
     name: Lint & build (macOS)
-    runs-on: macos-latest
+    runs-on: macos-14
     timeout-minutes: 15
 
     steps:
@@ -61,7 +61,7 @@ jobs:
 
   unit-tests:
     name: Unit tests (macOS)
-    runs-on: macos-latest
+    runs-on: macos-14
     timeout-minutes: 15
     needs: lint-and-build
 
@@ -105,21 +105,19 @@ jobs:
             CODE_SIGNING_ALLOWED=NO \
             | xcbeautify --renderer github-actions
 
-  # UI tests run on push to dev/main only, NOT on every PR. The GHA macOS
-  # runner cannot reliably foreground the OnlyCue app from a background
-  # launch — every UI test fails with "Failed to activate application …
-  # (current state: Running Background)" because there is no logged-in GUI
-  # session on the hosted runner to grant frontmost status. Retrying makes
-  # it worse (each retry burns another ~60s before failing the same way).
-  # Until the runner activation issue is fixed (see follow-up tracking), we
-  # gate PRs on lint + unit only and run the UI smoke suite on push to
-  # protected branches as a regression net.
+  # All three jobs pin `macos-14` instead of `macos-latest`. The image bump
+  # to macos-15.7.7 (24G720, runner image 20260520.0085) regressed XCUITest
+  # foregrounding on hosted runners — every UI test fails with "Failed to
+  # activate application … (current state: Running Background)". macos-14
+  # (Sonoma) is on the deprecation track (begins 2026-07-06, fully
+  # unsupported 2026-11-02), so this pin is intentionally short-lived;
+  # remove it once GitHub fixes the macOS 15 image or once macOS 16 lands
+  # with the issue resolved. See issue #371 for the investigation trail.
   ui-tests:
     name: UI tests (macOS)
-    runs-on: macos-latest
+    runs-on: macos-14
     timeout-minutes: 30
     needs: lint-and-build
-    if: github.event_name == 'push'
 
     steps:
       - name: Checkout

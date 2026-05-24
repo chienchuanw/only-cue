@@ -73,6 +73,12 @@ jobs:
       # UI tests run on the maintainer's real logged-in macOS session, so
       # the XCUITest foreground promotion works (unlike on the hosted
       # `macos-latest` runner, where every test failed activation).
+      # `-test-iterations 2 -retry-tests-on-failure` absorbs the known
+      # XCUITest "Failed to activate application" flake without hiding real
+      # regressions (a test that fails twice in a row still fails the job).
+      # Was present on the macos-latest workflow; dropped during the
+      # self-hosted migration (3a002cb) but the same flake still happens on
+      # the self-hosted runner, so it needs to come back.
       - name: UI tests
         run: |
           set -o pipefail
@@ -82,4 +88,6 @@ jobs:
             -destination 'platform=macOS' \
             -only-testing:OnlyCueUITests \
             -parallel-testing-enabled NO \
+            -test-iterations 2 \
+            -retry-tests-on-failure \
             | xcbeautify --renderer github-actions

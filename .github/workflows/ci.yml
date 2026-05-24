@@ -12,10 +12,10 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  build-test:
-    name: Build & test (macOS)
+  lint-and-build:
+    name: Lint & build (macOS)
     runs-on: macos-latest
-    timeout-minutes: 25
+    timeout-minutes: 15
 
     steps:
       - name: Checkout
@@ -41,8 +41,9 @@ jobs:
           path: |
             ~/Library/Developer/Xcode/DerivedData
             ~/Library/Caches/org.swift.swiftpm
-          key: ${{ runner.os }}-xcode-${{ hashFiles('project.yml', '.swiftlint.yml', 'OnlyCue/**/*.swift', 'OnlyCueTests/**/*.swift', 'OnlyCueUITests/**/*.swift') }}
+          key: ${{ runner.os }}-xcode-${{ hashFiles('project.yml', '.swiftlint.yml') }}-${{ hashFiles('OnlyCue/**/*.swift') }}
           restore-keys: |
+            ${{ runner.os }}-xcode-${{ hashFiles('project.yml', '.swiftlint.yml') }}-
             ${{ runner.os }}-xcode-
 
       - name: Build
@@ -58,13 +59,102 @@ jobs:
             CODE_SIGNING_ALLOWED=NO \
             | xcbeautify --renderer github-actions
 
-      - name: Test
+  unit-tests:
+    name: Unit tests (macOS)
+    runs-on: macos-latest
+    timeout-minutes: 15
+    needs: lint-and-build
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Select latest stable Xcode
+        uses: maxim-lobanov/setup-xcode@v1
+        with:
+          xcode-version: latest-stable
+
+      - name: Install tooling
+        run: brew install xcodegen xcbeautify
+
+      - name: Generate Xcode project
+        run: xcodegen generate
+
+      - name: Cache DerivedData and SPM
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/Library/Developer/Xcode/DerivedData
+            ~/Library/Caches/org.swift.swiftpm
+          key: ${{ runner.os }}-xcode-${{ hashFiles('project.yml', '.swiftlint.yml') }}-${{ hashFiles('OnlyCue/**/*.swift') }}
+          restore-keys: |
+            ${{ runner.os }}-xcode-${{ hashFiles('project.yml', '.swiftlint.yml') }}-
+            ${{ runner.os }}-xcode-
+
+      - name: Unit tests
         run: |
           set -o pipefail
           xcodebuild test \
             -project OnlyCue.xcodeproj \
             -scheme OnlyCue \
             -destination 'platform=macOS' \
+            -only-testing:OnlyCueTests \
+            -parallel-testing-enabled NO \
+            CODE_SIGN_IDENTITY="-" \
+            CODE_SIGNING_REQUIRED=NO \
+            CODE_SIGNING_ALLOWED=NO \
+            | xcbeautify --renderer github-actions
+
+  ui-tests:
+    name: UI tests (macOS)
+    runs-on: macos-latest
+    timeout-minutes: 30
+    needs: lint-and-build
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Select latest stable Xcode
+        uses: maxim-lobanov/setup-xcode@v1
+        with:
+          xcode-version: latest-stable
+
+      - name: Install tooling
+        run: brew install xcodegen xcbeautify
+
+      - name: Generate Xcode project
+        run: xcodegen generate
+
+      - name: Cache DerivedData and SPM
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/Library/Developer/Xcode/DerivedData
+            ~/Library/Caches/org.swift.swiftpm
+          key: ${{ runner.os }}-xcode-${{ hashFiles('project.yml', '.swiftlint.yml') }}-${{ hashFiles('OnlyCue/**/*.swift') }}
+          restore-keys: |
+            ${{ runner.os }}-xcode-${{ hashFiles('project.yml', '.swiftlint.yml') }}-
+            ${{ runner.os }}-xcode-
+
+      # UI tests on the GitHub Actions macOS runner intermittently hit
+      # "Failed to activate application … (current state: Running Background)"
+      # when test bundles launch the app concurrently — the runner's window
+      # server can only foreground one process. Disabling parallel testing
+      # plus a single retry on failure (`-test-iterations 2
+      # -retry-tests-on-failure`) absorbs that race without changing the
+      # tests themselves.
+      - name: UI tests
+        run: |
+          set -o pipefail
+          xcodebuild test \
+            -project OnlyCue.xcodeproj \
+            -scheme OnlyCue \
+            -destination 'platform=macOS' \
+            -only-testing:OnlyCueUITests \
+            -parallel-testing-enabled NO \
+            -test-iterations 2 \
+            -retry-tests-on-failure \
             CODE_SIGN_IDENTITY="-" \
             CODE_SIGNING_REQUIRED=NO \
             CODE_SIGNING_ALLOWED=NO \

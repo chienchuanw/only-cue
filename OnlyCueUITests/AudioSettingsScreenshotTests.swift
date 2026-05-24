@@ -29,6 +29,7 @@ final class AudioSettingsScreenshotTests: XCTestCase {
 
     private func runAudioSettingsCapture(appearance: String?, screenshotName: String) throws {
         let app = XCUIApplication()
+        app.launchArguments += ["-ApplePersistenceIgnoreState", "YES"]
         if let appearance {
             app.launchArguments += ["--ui-test-appearance=\(appearance)"]
         }

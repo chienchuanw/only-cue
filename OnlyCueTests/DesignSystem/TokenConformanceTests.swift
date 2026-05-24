@@ -25,8 +25,26 @@ final class TokenConformanceTests: XCTestCase {
     ]
 
     /// `OnlyCue/UI`, resolved from this test file's compile-time path.
+    ///
+    /// Walks up from `#filePath` until it finds `project.yml` (the
+    /// xcodegen project marker) — robust to any CI workdir layout. A
+    /// fixed "up 3 components" traversal works in a normal local checkout
+    /// but breaks on the GitHub Actions self-hosted runner, whose work
+    /// directory pattern is `_work/<repo>/<repo>/…` and confuses the
+    /// fixed-depth assumption.
     private func uiDirectory() -> URL {
-        URL(fileURLWithPath: #filePath)
+        var dir = URL(fileURLWithPath: #filePath).deletingLastPathComponent()
+        let fileManager = FileManager.default
+        while dir.path != "/" {
+            if fileManager.fileExists(atPath: dir.appendingPathComponent("project.yml").path) {
+                return dir.appendingPathComponent("OnlyCue/UI")
+            }
+            dir.deleteLastPathComponent()
+        }
+        // Fall back to the previous fixed traversal so the test fails with
+        // its original "missing main-window file" message rather than
+        // pointing at the root if `project.yml` cannot be found.
+        return URL(fileURLWithPath: #filePath)
             .deletingLastPathComponent()
             .deletingLastPathComponent()
             .deletingLastPathComponent()

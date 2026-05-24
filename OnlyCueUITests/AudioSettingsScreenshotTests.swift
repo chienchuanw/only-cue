@@ -17,7 +17,21 @@ final class AudioSettingsScreenshotTests: XCTestCase {
     ///   per-channel role table appear once it is turned on)
     /// And a screenshot of the Settings window is captured.
     func test_audioSettings_visualBaseline() throws {
+        try runAudioSettingsCapture(appearance: nil, screenshotName: "audio-settings")
+    }
+
+    /// Dark-mode sibling of `test_audioSettings_visualBaseline`. Forces the
+    /// Settings window into Dark appearance so the captured PNG can be
+    /// compared 1:1 against the Figma dark-mode reference (frame 321:2200).
+    func test_audioSettings_darkMode_visualBaseline() throws {
+        try runAudioSettingsCapture(appearance: "dark", screenshotName: "audio-settings-dark")
+    }
+
+    private func runAudioSettingsCapture(appearance: String?, screenshotName: String) throws {
         let app = XCUIApplication()
+        if let appearance {
+            app.launchArguments += ["--ui-test-appearance=\(appearance)"]
+        }
         app.launch()
         app.typeKey("n", modifierFlags: .command)
         XCTAssertTrue(
@@ -41,7 +55,7 @@ final class AudioSettingsScreenshotTests: XCTestCase {
         }
 
         Thread.sleep(forTimeInterval: 0.9)
-        try captureScreenshot(named: "audio-settings", window: SettingsWindowFinder.window(in: app))
+        try captureScreenshot(named: screenshotName, window: SettingsWindowFinder.window(in: app))
         app.terminate()
     }
 

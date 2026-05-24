@@ -105,27 +105,24 @@ jobs:
             CODE_SIGNING_ALLOWED=NO \
             | xcbeautify --renderer github-actions
 
-  # The GHA macos-15 runner image 20260520.0085 (macOS 15.7.7 / 24G720)
-  # regressed XCUITest application foregrounding: every UI test fails with
-  # "Failed to activate application (current state: Running Background)".
-  # The runner has no logged-in GUI session, so the foreground promotion
-  # that the test runner attempts after `[XCUIApplication launch]` is
-  # ignored by the post-15.7.7 WindowServer.
-  #
-  # Pinning to macos-14 is not viable — that image only ships Xcode 16.2,
-  # but OnlyCue requires Xcode 26 SDK (uses `Unmanaged<MTAudioProcessingTap>`
-  # and other macOS-26 APIs).
-  #
-  # Workaround: keep the macos-latest runner, but before launching tests,
-  # wake the display (`caffeinate`) and explicitly bring the test app
-  # forward via AppleScript. This isn't bullet-proof — if it still flakes,
-  # the screenshot-baseline tests should move to a nightly cron and PR CI
-  # gates on lint+unit only. See issue #371.
+  # UI tests run on push to dev/main, NOT on every PR. GHA macos-15 runner
+  # image 20260520.0085 (macOS 15.7.7 / 24G720) regressed XCUITest's
+  # ability to foreground the test app — every UI test fails with "Failed
+  # to activate application (current state: Running Background)". Workarounds
+  # investigated and ruled out (see issue #371): pinning to macos-14
+  # (only ships Xcode 16.2, but OnlyCue needs Xcode 26 SDK) and
+  # `caffeinate -dimsu` (does not address the WindowServer-side foreground
+  # gate). Until GitHub fixes the macOS 15 image or macOS 16 lands without
+  # the regression, PRs are gated on lint + unit only. The nightly
+  # `ui-smoke.yml` workflow attempts UI tests on a fresh runner so we
+  # detect any drift in this PR's user-visible behavior on a recurring
+  # schedule even if not per-PR.
   ui-tests:
     name: UI tests (macOS)
     runs-on: macos-latest
     timeout-minutes: 30
     needs: lint-and-build
+    if: github.event_name == 'push'
 
     steps:
       - name: Checkout
@@ -153,17 +150,6 @@ jobs:
             ${{ runner.os }}-xcode-${{ hashFiles('project.yml', '.swiftlint.yml') }}-
             ${{ runner.os }}-xcode-
 
-      # Keep the runner display awake for the whole test step so the
-      # WindowServer remains willing to grant frontmost status to the
-      # XCUITest-spawned OnlyCue process. Without this, macOS 15.7.7+ on
-      # the hosted runner refuses to foreground the app and every UI test
-      # times out with "Failed to activate application (current state:
-      # Running Background)".
-      - name: Keep display awake
-        run: |
-          caffeinate -dimsu -t 1800 &
-          echo "CAFFEINATE_PID=$!" >> $GITHUB_ENV
-
       - name: UI tests
         run: |
           set -o pipefail
@@ -173,8 +159,6 @@ jobs:
             -destination 'platform=macOS' \
             -only-testing:OnlyCueUITests \
             -parallel-testing-enabled NO \
-            -test-iterations 2 \
-            -retry-tests-on-failure \
             CODE_SIGN_IDENTITY="-" \
             CODE_SIGNING_REQUIRED=NO \
             CODE_SIGNING_ALLOWED=NO \

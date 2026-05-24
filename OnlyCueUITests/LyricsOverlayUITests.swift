@@ -34,9 +34,19 @@ final class LyricsOverlayUITests: XCTestCase {
         app.activate()
 
         app.menuBars.menuBarItems["View"].click()
-        let toggle = app.menuItems["Show Lyrics Overlay"]
-        XCTAssertTrue(toggle.waitForExistence(timeout: 3), "View menu should offer Show Lyrics Overlay")
-        toggle.click()
+        let toggle = app.menuItems["toggleLyricsOverlayMenuItem"]
+        XCTAssertTrue(toggle.waitForExistence(timeout: 3), "View menu should offer the lyrics overlay toggle")
+        // The menu item label flips between "Show Lyrics Overlay" and
+        // "Hide Lyrics Overlay" based on @AppStorage state, which persists
+        // across runs. On a developer's machine this state is shared with
+        // their real app usage. Only click when currently off; if already
+        // on, dismiss the menu and skip — the HUD assertion below still
+        // verifies the overlay is visible.
+        if toggle.title.hasPrefix("Show") {
+            toggle.click()
+        } else {
+            app.typeKey(.escape, modifierFlags: [])
+        }
 
         XCTAssertTrue(
             app.staticTexts["Seeded opening line"].waitForExistence(timeout: 5),

@@ -79,6 +79,15 @@ jobs:
       # Was present on the macos-latest workflow; dropped during the
       # self-hosted migration (3a002cb) but the same flake still happens on
       # the self-hosted runner, so it needs to come back.
+      # Marker file consumed by `CIRuntime.isSelfHostedRunner` inside the
+      # test target. Environment variables don't propagate through the
+      # macOS XCUITest sandbox, so the workflow writes a known path the
+      # test process can read via FileManager. Removed on `always()`
+      # after the UI-tests step to avoid leaking the marker into local
+      # test runs on the same machine.
+      - name: Mark CI active
+        run: touch "$HOME/.onlycue-ci-active"
+
       - name: UI tests
         run: |
           set -o pipefail
@@ -90,5 +99,8 @@ jobs:
             -parallel-testing-enabled NO \
             -test-iterations 3 \
             -retry-tests-on-failure \
-            TEST_RUNNER_GITHUB_ACTIONS=true \
             | xcbeautify --renderer github-actions
+
+      - name: Clear CI marker
+        if: always()
+        run: rm -f "$HOME/.onlycue-ci-active"

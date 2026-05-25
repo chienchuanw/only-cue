@@ -46,14 +46,32 @@ enum Foregrounding {
     }
 }
 
-/// Detects whether the test process is running inside a GitHub Actions
-/// runner. Used to scope `XCTSkipIf` guards around tests that are known to
-/// flake on the self-hosted runner's degraded XCUITest stack but pass
-/// reliably during local development.
+/// Detects whether the test process is running inside the project's
+/// self-hosted CI runner. Used to scope `XCTSkipIf` guards around tests
+/// that are known to flake on the runner's degraded XCUITest stack but
+/// pass reliably during local development.
+///
+/// Detection mechanism: the workflow writes a marker file at a known
+/// path before invoking `xcodebuild test`, then deletes it after. The
+/// test process reads the path via `FileManager` — which works through
+/// the macOS test-runner sandbox unlike environment variables.
+/// Hostname-based detection is unreliable because the runner Mac is
+/// the maintainer's primary dev machine, so both contexts share a host.
 enum CIRuntime {
-    /// True when invoked from a GitHub Actions workflow (self-hosted or
-    /// hosted). GitHub sets `GITHUB_ACTIONS=true` for every action run.
-    static var isGitHubActions: Bool {
-        ProcessInfo.processInfo.environment["GITHUB_ACTIONS"] == "true"
+    /// Path of the marker file the CI workflow writes before
+    /// `xcodebuild test` and removes after the job. Lives under the
+    /// runner user's home so it's reachable through the XCUITest
+    /// sandbox without granting any extra entitlements.
+    static let markerPath = NSHomeDirectory() + "/.onlycue-ci-active"
+
+    /// True when the CI workflow's marker file exists, i.e. tests are
+    /// running under GitHub Actions on the self-hosted runner.
+    static var isSelfHostedRunner: Bool {
+        FileManager.default.fileExists(atPath: markerPath)
     }
+
+    /// Backwards-compatible alias retained so existing `XCTSkipIf` call
+    /// sites keep working. The semantic is the same — "skip this test on
+    /// CI".
+    static var isGitHubActions: Bool { isSelfHostedRunner }
 }

@@ -39,7 +39,7 @@ final class ExportSheetScreenshotTests: XCTestCase {
             "a document window should open within 5 seconds"
         )
 
-        app.activate()
+        Foregrounding.activateRobustly(app)
 
         // Drive the export sheet via the menu bar. SwiftUI sheets on macOS
         // render their content with limited accessibility-tree exposure —

@@ -14,7 +14,7 @@ final class NewFromTemplateMenuTests: XCTestCase {
     func test_fileMenu_offersNewFromTemplate() {
         let app = XCUIApplication()
         app.launch()
-        app.activate()
+        Foregrounding.activateRobustly(app)
 
         let fileMenu = app.menuBars.menuBarItems["File"]
         XCTAssertTrue(fileMenu.waitForExistence(timeout: 5))

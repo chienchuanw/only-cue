@@ -41,7 +41,7 @@ final class TimecodeSettingsSheetScreenshotTests: XCTestCase {
             "a document window should open within 10 seconds"
         )
 
-        app.activate()
+        Foregrounding.activateRobustly(app)
 
         let toolsMenu = app.menuBars.menuBarItems["Tools"]
         XCTAssertTrue(toolsMenu.waitForExistence(timeout: 2))

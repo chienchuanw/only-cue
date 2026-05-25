@@ -49,7 +49,7 @@ final class TransportBarScreenshotTests: XCTestCase {
         // this the OnlyCue window may be hidden behind whatever else is on the
         // user's screen, leaving the captured PNG visually unhelpful even
         // though accessibility queries still work.
-        app.activate()
+        Foregrounding.activateRobustly(app)
 
         try captureScreenshot(named: "transport-bar-baseline", window: app.windows.firstMatch)
 
@@ -82,7 +82,7 @@ final class TransportBarScreenshotTests: XCTestCase {
             "the transport should render for the seeded document in Dark appearance within 10 seconds"
         )
 
-        app.activate()
+        Foregrounding.activateRobustly(app)
 
         try captureScreenshot(named: "transport-bar-dark-baseline", window: app.windows.firstMatch)
 

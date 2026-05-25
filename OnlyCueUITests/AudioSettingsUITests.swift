@@ -19,7 +19,7 @@ final class AudioSettingsUITests: XCTestCase {
         )
 
         let windowsBefore = app.windows.count
-        app.activate()
+        Foregrounding.activateRobustly(app)
         app.typeKey(",", modifierFlags: .command)
         XCTAssertTrue(
             SettingsWindowFinder.waitForNewWindow(in: app, above: windowsBefore, timeout: 15),

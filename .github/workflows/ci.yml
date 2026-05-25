@@ -90,4 +90,5 @@ jobs:
             -parallel-testing-enabled NO \
             -test-iterations 3 \
             -retry-tests-on-failure \
+            TEST_RUNNER_GITHUB_ACTIONS=true \
             | xcbeautify --renderer github-actions

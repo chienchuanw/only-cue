@@ -45,3 +45,15 @@ enum Foregrounding {
         return active.bundleIdentifier == bundleIdentifier
     }
 }
+
+/// Detects whether the test process is running inside a GitHub Actions
+/// runner. Used to scope `XCTSkipIf` guards around tests that are known to
+/// flake on the self-hosted runner's degraded XCUITest stack but pass
+/// reliably during local development.
+enum CIRuntime {
+    /// True when invoked from a GitHub Actions workflow (self-hosted or
+    /// hosted). GitHub sets `GITHUB_ACTIONS=true` for every action run.
+    static var isGitHubActions: Bool {
+        ProcessInfo.processInfo.environment["GITHUB_ACTIONS"] == "true"
+    }
+}

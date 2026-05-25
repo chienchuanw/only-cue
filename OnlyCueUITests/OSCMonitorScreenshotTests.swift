@@ -42,7 +42,7 @@ final class OSCMonitorScreenshotTests: XCTestCase {
             "a document window should open within 5 seconds"
         )
 
-        app.activate()
+        Foregrounding.activateRobustly(app)
 
         let toolsMenu = app.menuBars.menuBarItems["Tools"]
         XCTAssertTrue(toolsMenu.waitForExistence(timeout: 2))

@@ -27,7 +27,7 @@ final class TempoGridOverlayScreenshotTests: XCTestCase {
         // View → Show Tempo Grid (⇧⌘G in the default keymap).
         app.typeKey("g", modifierFlags: [.command, .shift])
 
-        app.activate()
+        Foregrounding.activateRobustly(app)
         let screenshot = app.windows.firstMatch.waitForExistence(timeout: 2)
             ? app.windows.firstMatch.screenshot()
             : XCUIScreen.main.screenshot()

@@ -31,7 +31,7 @@ final class LyricsOverlayUITests: XCTestCase {
             element("previewPane", in: app).waitForExistence(timeout: 15),
             "seed document should open"
         )
-        app.activate()
+        Foregrounding.activateRobustly(app)
 
         app.menuBars.menuBarItems["View"].click()
         // The menu item title flips between "Show Lyrics Overlay" and

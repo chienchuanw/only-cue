@@ -109,7 +109,7 @@ final class DocumentViewModeScreenshotTests: XCTestCase {
             }
         }
 
-        app.activate()
+        Foregrounding.activateRobustly(app)
         Thread.sleep(forTimeInterval: 0.8)
         try captureScreenshot(named: screenshotName, window: app.windows.firstMatch)
         app.terminate()

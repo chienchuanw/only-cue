@@ -42,7 +42,7 @@ final class OSCSettingsScreenshotTests: XCTestCase {
         )
 
         let windowsBefore = app.windows.count
-        app.activate()
+        Foregrounding.activateRobustly(app)
         app.typeKey(",", modifierFlags: .command)
 
         // Settings is a `TabView` on macOS, so the window's *title* follows the

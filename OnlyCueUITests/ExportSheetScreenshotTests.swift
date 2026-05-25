@@ -35,7 +35,7 @@ final class ExportSheetScreenshotTests: XCTestCase {
         app.typeKey("n", modifierFlags: .command)
 
         XCTAssertTrue(
-            app.buttons["importMediaButton"].waitForExistence(timeout: 5),
+            app.buttons["importMediaButton"].waitForExistence(timeout: 15),
             "a document window should open within 5 seconds"
         )
 

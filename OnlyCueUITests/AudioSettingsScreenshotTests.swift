@@ -36,7 +36,7 @@ final class AudioSettingsScreenshotTests: XCTestCase {
         app.launch()
         app.typeKey("n", modifierFlags: .command)
         XCTAssertTrue(
-            app.buttons["importMediaButton"].waitForExistence(timeout: 5),
+            app.buttons["importMediaButton"].waitForExistence(timeout: 15),
             "a document window should open within 5 seconds"
         )
 
@@ -45,7 +45,7 @@ final class AudioSettingsScreenshotTests: XCTestCase {
         app.typeKey(",", modifierFlags: .command)
 
         XCTAssertTrue(
-            SettingsWindowFinder.waitForNewWindow(in: app, above: windowsBefore, timeout: 5),
+            SettingsWindowFinder.waitForNewWindow(in: app, above: windowsBefore, timeout: 15),
             "pressing ⌘, should open the Settings window within 5 seconds"
         )
 

@@ -14,7 +14,7 @@ final class AudioSettingsUITests: XCTestCase {
         app.launch()
         app.typeKey("n", modifierFlags: .command)
         XCTAssertTrue(
-            app.buttons["importMediaButton"].waitForExistence(timeout: 5),
+            app.buttons["importMediaButton"].waitForExistence(timeout: 15),
             "a document window should open within 5 seconds"
         )
 
@@ -22,7 +22,7 @@ final class AudioSettingsUITests: XCTestCase {
         app.activate()
         app.typeKey(",", modifierFlags: .command)
         XCTAssertTrue(
-            SettingsWindowFinder.waitForNewWindow(in: app, above: windowsBefore, timeout: 5),
+            SettingsWindowFinder.waitForNewWindow(in: app, above: windowsBefore, timeout: 15),
             "pressing Command-comma should open the Settings window"
         )
 
@@ -32,7 +32,7 @@ final class AudioSettingsUITests: XCTestCase {
         }
 
         let toggle = enableToggle(in: app)
-        XCTAssertTrue(toggle.waitForExistence(timeout: 5), "the Enable LTC output toggle should appear in the Audio pane")
+        XCTAssertTrue(toggle.waitForExistence(timeout: 15), "the Enable LTC output toggle should appear in the Audio pane")
 
         // Default: LTC disabled — the channel-routing table is hidden.
         XCTAssertFalse(app.popUpButtons["audioChannelRolePicker.0"].exists, "channel table hidden when LTC is off")

@@ -88,7 +88,20 @@ jobs:
       - name: Mark CI active
         run: touch "/tmp/.onlycue-ci-active"
 
+      # UI tests run on push to dev/main only, NOT on PR. The
+      # self-hosted runner Mac is also the maintainer's primary
+      # workstation; when no human is at the keyboard (overnight,
+      # screen locked, fast-user-switched), the macOS window-server
+      # refuses to foreground a freshly-launched app from the
+      # XCTRunner process. Every UI test then fails with "Failed to
+      # activate application (current state: Running Background)"
+      # regardless of retry budget or timeout cap — see PR #387
+      # for the 7-attempt rabbit hole that established this. Per-test
+      # XCTSkipIf guards still apply when UI tests do run (push to
+      # dev/main, when the dev is at the keyboard), they just no
+      # longer block every PR sit behind a 90-min flake budget.
       - name: UI tests
+        if: github.event_name == 'push'
         run: |
           set -o pipefail
           xcodebuild test-without-building \

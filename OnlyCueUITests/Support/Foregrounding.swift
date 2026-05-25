@@ -59,10 +59,14 @@ enum Foregrounding {
 /// the maintainer's primary dev machine, so both contexts share a host.
 enum CIRuntime {
     /// Path of the marker file the CI workflow writes before
-    /// `xcodebuild test` and removes after the job. Lives under the
-    /// runner user's home so it's reachable through the XCUITest
-    /// sandbox without granting any extra entitlements.
-    static let markerPath = NSHomeDirectory() + "/.onlycue-ci-active"
+    /// `xcodebuild test` and removes after the job. Hardcoded to
+    /// `/tmp` rather than under `$HOME` because XCUITest's sandboxed
+    /// runner remaps `NSHomeDirectory()` to a per-container directory
+    /// under `~/Library/Containers/...` — `$HOME` from the workflow
+    /// shell and `NSHomeDirectory()` from the test process resolve to
+    /// different paths. `/tmp` is the real shared `/private/tmp` in
+    /// both contexts.
+    static let markerPath = "/tmp/.onlycue-ci-active"
 
     /// True when the CI workflow's marker file exists, i.e. tests are
     /// running under GitHub Actions on the self-hosted runner.

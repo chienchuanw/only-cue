@@ -88,6 +88,6 @@ jobs:
             -destination 'platform=macOS' \
             -only-testing:OnlyCueUITests \
             -parallel-testing-enabled NO \
-            -test-iterations 2 \
+            -test-iterations 3 \
             -retry-tests-on-failure \
             | xcbeautify --renderer github-actions

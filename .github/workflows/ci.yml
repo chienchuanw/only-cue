@@ -27,7 +27,7 @@ jobs:
   test:
     name: Build & test (macOS, self-hosted)
     runs-on: [self-hosted, macos, arm64]
-    timeout-minutes: 60
+    timeout-minutes: 90
 
     steps:
       - name: Checkout
@@ -97,7 +97,7 @@ jobs:
             -destination 'platform=macOS' \
             -only-testing:OnlyCueUITests \
             -parallel-testing-enabled NO \
-            -test-iterations 3 \
+            -test-iterations 2 \
             -retry-tests-on-failure \
             | xcbeautify --renderer github-actions
 

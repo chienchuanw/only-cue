@@ -21,14 +21,14 @@ struct KeyboardSettingsView: View {
                 } header: {
                     Text("Click a shortcut to record a new key combination. Press Esc to cancel.")
                         .font(.caption)
-                        .foregroundStyle(.secondary)
+                        .foregroundStyle(DS.Color.textSecondary)
                         .textCase(nil)
                 }
             }
             Divider()
             footer
         }
-        .frame(width: 480, height: 440)
+        .frame(width: 600, height: 440)
         .accessibilityIdentifier("keyboardSettings")
         .onChange(of: recording) { _, newValue in
             captureFocused = newValue != nil

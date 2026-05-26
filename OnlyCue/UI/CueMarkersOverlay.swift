@@ -17,9 +17,14 @@ struct CueMarkersOverlay: View {
     /// Rigid shift of every cue in the set by the same Δt (clamped at 0 per cue),
     /// committed as a single undo entry. Used by group drag.
     var onNudge: (Set<Cue.ID>, TimeInterval) -> Void = { _, _ in }
-    /// When false (Lyric / Show mode) the overlay renders dimmed and stops
-    /// hit-testing, so clicks fall through to the seek surface below.
+    /// When false (Lyric / Show mode) the overlay stops hit-testing, so
+    /// clicks fall through to the seek surface below.
     var isEditable: Bool = true
+    /// Lyric mode dims markers so the lyric ribbons read as the active
+    /// surface. Show mode keeps markers solid (audit §9.1) — the dimming is
+    /// applied to the underlying waveform peaks in `WaveformContainer`
+    /// instead, so the cue list still reads at a glance during a show run.
+    var isDimmed: Bool = false
 
     @State private var activeDrag: ActiveDrag?
 
@@ -63,7 +68,7 @@ struct CueMarkersOverlay: View {
         // accessibility container collapses children into the overlay.
         .accessibilityElement(children: .contain)
         .accessibilityIdentifier("cueMarkersOverlay")
-        .opacity(isEditable ? 1 : 0.35)
+        .opacity(isDimmed ? 0.35 : 1)
         .allowsHitTesting(isEditable)
     }
 

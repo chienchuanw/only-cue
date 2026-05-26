@@ -29,7 +29,11 @@ extension WaveformContainer {
                 onSeek: onSeek,
                 onRetime: onRetime,
                 onNudge: onNudge,
-                isEditable: editorMode.cueMarkersEditable
+                isEditable: editorMode.cueMarkersEditable,
+                // Only Lyric mode dims markers (lyric ribbons are the active
+                // surface). Show mode keeps markers solid; the waveform peaks
+                // below are dimmed instead. Audit §9.1.
+                isDimmed: editorMode == .lyric
             )
         }
     }

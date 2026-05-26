@@ -36,6 +36,14 @@ struct ItemRowView: View {
                 .accessibilityIdentifier("inlineEditMedia-\(item.id.uuidString)")
             }
         }
+        // SwiftUI's `List { ForEach { … .tag(item.id) } }` wraps every row
+        // in an accessibility container that, with a single
+        // `.accessibilityIdentifier` on the HStack, collapses the children
+        // into a single AX element — `inlineEditMedia-<id>` then becomes
+        // unreachable from XCUITest. `.accessibilityElement(children:
+        // .contain)` explicitly preserves the children's identifiers
+        // beneath the row's own identifier.
+        .accessibilityElement(children: .contain)
         .accessibilityIdentifier("itemRow")
     }
 

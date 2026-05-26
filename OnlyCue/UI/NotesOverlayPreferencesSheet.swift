@@ -50,6 +50,13 @@ struct NotesOverlayPreferencesSheet: View {
                 Button("Restore Defaults", role: .destructive) {
                     prefs = .default
                 }
+                // Audit §11.7: Figma renders this as an outlined secondary
+                // pill (panel-tinted with `color/border-strong` stroke), not
+                // a red-destructive button. `.bordered` style gives the
+                // outlined look; the `.destructive` role is preserved so
+                // VoiceOver still reads the action as a reset.
+                .buttonStyle(.bordered)
+                .accessibilityIdentifier("notesOverlayRestoreDefaults")
             }
         }
         .formStyle(.grouped)

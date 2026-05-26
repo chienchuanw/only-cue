@@ -9,7 +9,16 @@ struct ItemListPane: View {
     @State private var editingItemID: MediaItem.ID?
 
     var body: some View {
-        Group {
+        VStack(alignment: .leading, spacing: 0) {
+            // Audit §6.1: pin the `MEDIA` caption above the sidebar's content
+            // (or its empty-state affordance) so the section identity is
+            // visible whether or not media has been imported.
+            Text("Media")
+                .dsSectionHeader()
+                .padding(.horizontal, DS.Space.sm)
+                .padding(.top, DS.Space.sm)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .accessibilityIdentifier("itemListSectionCaption")
             if document.model.items.isEmpty {
                 emptyState
             } else {

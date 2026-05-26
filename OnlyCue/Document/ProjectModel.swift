@@ -38,6 +38,14 @@ struct ProjectModel: Codable, Equatable {
     func cuePointType(forHotkey digit: Int) -> CuePointType? {
         cuePointTypes.first(where: { $0.hotkey == digit })
     }
+
+    /// Counts every cue across every media item that references the given
+    /// type. Used by the Manage Types row count badge (audit §10.1).
+    func cueCount(forTypeID id: CuePointType.ID) -> Int {
+        items.reduce(0) { acc, item in
+            acc + item.cues.reduce(0) { $0 + ($1.typeID == id ? 1 : 0) }
+        }
+    }
 }
 
 /// End-of-media transport policy. Mutually exclusive — exactly one mode is

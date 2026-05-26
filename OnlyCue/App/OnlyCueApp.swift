@@ -15,6 +15,7 @@ struct OnlyCueApp: App {
     var body: some Scene {
         DocumentGroup(newDocument: CueListDocument.init) { file in
             DocumentView(document: file.document)
+                .tint(DS.Color.cueIndigo)
         }
         .commands { AppCommands() }
 
@@ -27,6 +28,7 @@ struct OnlyCueApp: App {
                 AudioSettingsView()
                     .tabItem { Label("Audio", systemImage: "hifispeaker") }
             }
+            .tint(DS.Color.cueIndigo)
         }
     }
 }

@@ -4,13 +4,20 @@ import XCTest
 @MainActor
 final class CueListDocumentTests: XCTestCase {
 
-    func test_initEmpty_seedsDefaultCuePointType() {
+    func test_initEmpty_seedsCanonicalCuePointTypes() {
         let document = CueListDocument()
 
-        XCTAssertEqual(document.model.cuePointTypes.count, 1, "new documents must seed exactly one default Type")
-        let defaultType = document.model.cuePointTypes.first
-        XCTAssertEqual(defaultType?.name, "General")
-        XCTAssertEqual(defaultType?.colorHex, "#4ECDC4")
+        // Audit §2.2: new documents seed the 5 canonical cue types
+        // (General, Lighting, Sound, Scene, Standby) so the Figma export-sheet
+        // reference renders out of the box. Order is canonical — General leads
+        // so the existing `defaultCuePointTypeID` accessor (first element)
+        // continues to resolve to "General".
+        XCTAssertEqual(
+            document.model.cuePointTypes.map(\.name),
+            ["General", "Lighting", "Sound", "Scene", "Standby"]
+        )
+        XCTAssertEqual(document.model.cuePointTypes.first?.colorHex, "#4ECDC4")
+        XCTAssertEqual(Set(document.model.cuePointTypes.map(\.colorHex)).count, 5, "every default type uses a distinct palette color")
     }
 
     func test_encodeModel_producesEncryptedEnvelope() throws {

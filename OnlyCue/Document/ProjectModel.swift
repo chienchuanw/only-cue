@@ -64,4 +64,21 @@ extension ProjectModel {
             colorHex: defaultCuePointTypeColorHex
         )
     }
+
+    /// The canonical 5 cue types a fresh document is seeded with. Order is
+    /// load-bearing — `General` leads so `defaultCuePointTypeID` (first
+    /// element) keeps resolving to General for any caller that expects the
+    /// historical default. Colors are drawn from `CuePointType.defaultPalette`
+    /// so the design-system vocabulary stays consistent. Migrations from
+    /// earlier schemas deliberately do NOT call this — they keep the user's
+    /// own type set intact.
+    static func makeCanonicalCuePointTypes() -> [CuePointType] {
+        [
+            CuePointType(id: UUID(), name: "General", colorHex: "#4ECDC4"), // teal
+            CuePointType(id: UUID(), name: "Lighting", colorHex: "#FFD93D"), // yellow
+            CuePointType(id: UUID(), name: "Sound", colorHex: "#4D96FF"), // blue
+            CuePointType(id: UUID(), name: "Scene", colorHex: "#9D7EE0"), // purple
+            CuePointType(id: UUID(), name: "Standby", colorHex: "#FFA94D")  // orange
+        ]
+    }
 }

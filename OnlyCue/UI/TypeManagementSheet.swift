@@ -46,6 +46,7 @@ struct TypeManagementSheet: View {
                 ForEach(document.model.cuePointTypes) { type in
                     TypeManagementRow(
                         type: type,
+                        cueCount: document.model.cueCount(forTypeID: type.id),
                         canDelete: document.model.cuePointTypes.count > 1,
                         onRename: { rename(type.id, to: $0) },
                         onRecolor: { recolor(type.id, to: $0) },
@@ -137,6 +138,7 @@ struct TypeManagementSheet: View {
 struct TypeManagementRow: View {
 
     let type: CuePointType
+    let cueCount: Int
     let canDelete: Bool
     var onRename: (String) -> Void
     var onRecolor: (String) -> Void
@@ -144,35 +146,41 @@ struct TypeManagementRow: View {
     var onRequestDelete: () -> Void
 
     @State private var nameDraft = ""
+    @State private var isEditingName = false
     @FocusState private var nameFocused: Bool
 
     var body: some View {
         HStack(spacing: 12) {
-            ColorPicker(
-                "",
-                selection: Binding(
-                    get: { Color(hex: type.colorHex) ?? .accentColor },
-                    set: { newColor in
-                        if let hex = newColor.toHex(), hex != type.colorHex {
-                            onRecolor(hex)
-                        }
-                    }
-                ),
-                supportsOpacity: false
-            )
-            .labelsHidden()
-            .frame(width: 36)
+            colorCapsule
 
-            TextField("Type name", text: $nameDraft)
-                .textFieldStyle(.roundedBorder)
-                .focused($nameFocused)
-                .onSubmit { commitName() }
-                .onAppear { nameDraft = type.name }
-                .onChange(of: type.name) { _, new in if !nameFocused { nameDraft = new } }
-                .onChange(of: nameFocused) { wasFocused, isFocused in
-                    if wasFocused && !isFocused { commitName() }
-                }
-                .accessibilityIdentifier("typeName-\(type.id.uuidString)")
+            if isEditingName {
+                TextField("Type name", text: $nameDraft)
+                    .textFieldStyle(.roundedBorder)
+                    .focused($nameFocused)
+                    .onSubmit { commitName() }
+                    .onAppear { nameFocused = true }
+                    .onChange(of: nameFocused) { wasFocused, isFocused in
+                        if wasFocused && !isFocused { commitName() }
+                    }
+                    .accessibilityIdentifier("typeName-\(type.id.uuidString)")
+            } else {
+                Text(type.name)
+                    .font(DS.Text.body)
+                    .foregroundStyle(DS.Color.textPrimary)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .contentShape(Rectangle())
+                    .onTapGesture(count: 2) { beginRename() }
+                    .accessibilityIdentifier("typeName-\(type.id.uuidString)")
+            }
+
+            // Audit §10.1: count badge — pluralised, monospaced digit so
+            // a column of rows aligns numerically.
+            Text("\(cueCount)")
+                .font(DS.Text.label.monospacedDigit())
+                .foregroundStyle(DS.Color.textTertiary)
+                .frame(minWidth: 24, alignment: .trailing)
+                .accessibilityLabel(cueCount == 1 ? "1 cue" : "\(cueCount) cues")
+                .accessibilityIdentifier("typeCount-\(type.id.uuidString)")
 
             Picker("", selection: hotkeyBinding) {
                 Text("—").tag(Int?.none)
@@ -197,6 +205,35 @@ struct TypeManagementRow: View {
         .padding(.vertical, 8)
     }
 
+    // Audit §10.5: large rounded capsule replaces the small ColorPicker
+    // chip. The capsule itself is the affordance — clicking opens a system
+    // color popover via the underlying ColorPicker, but the rendered shape
+    // is now sized to match Figma's visual weight (~40×16 pt).
+    @ViewBuilder
+    private var colorCapsule: some View {
+        ColorPicker(
+            "",
+            selection: Binding(
+                get: { Color(hex: type.colorHex) ?? .accentColor },
+                set: { newColor in
+                    if let hex = newColor.toHex(), hex != type.colorHex {
+                        onRecolor(hex)
+                    }
+                }
+            ),
+            supportsOpacity: false
+        )
+        .labelsHidden()
+        .frame(width: 44)
+        .background(
+            RoundedRectangle(cornerRadius: 8)
+                .fill(Color(hex: type.colorHex) ?? .accentColor)
+                .frame(width: 40, height: 16)
+                .allowsHitTesting(false)
+        )
+        .accessibilityIdentifier("typeColor-\(type.id.uuidString)")
+    }
+
     private var hotkeyBinding: Binding<Int?> {
         Binding(
             get: { type.hotkey },
@@ -208,11 +245,17 @@ struct TypeManagementRow: View {
     }
 
     private func commitName() {
+        defer { isEditingName = false }
         let trimmed = nameDraft.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !trimmed.isEmpty, trimmed != type.name else {
             nameDraft = type.name
             return
         }
         onRename(trimmed)
+    }
+
+    private func beginRename() {
+        nameDraft = type.name
+        isEditingName = true
     }
 }

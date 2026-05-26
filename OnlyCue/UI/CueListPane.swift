@@ -283,6 +283,10 @@ struct CueListPane: View {
             headerRow
             Divider()
             scrollableList
+            if !isReadOnly {
+                Divider()
+                CueListFooter()
+            }
         }
     }
 

@@ -56,8 +56,7 @@ struct ExportSheet: View {
     @ViewBuilder
     private var typesCard: some View {
         VStack(alignment: .leading, spacing: DS.Space.xs) {
-            Text("Filter by Type")
-                .font(.headline)
+            Text("Filter by Type").dsSectionHeader()
             Text("Leave all unchecked to export every cue.")
                 .font(.caption)
                 .foregroundStyle(.secondary)

@@ -18,6 +18,20 @@ final class OSCMonitorTests: XCTestCase {
         XCTAssertEqual(OSCMonitorView.statusText(isListening: false, port: 8000), "Not listening")
     }
 
+    // MARK: - Message-count footer (audit §3.4)
+
+    func test_messageCountText_zero_isPluralised() {
+        XCTAssertEqual(OSCMonitorView.messageCountText(count: 0), "0 messages")
+    }
+
+    func test_messageCountText_one_isSingular() {
+        XCTAssertEqual(OSCMonitorView.messageCountText(count: 1), "1 message")
+    }
+
+    func test_messageCountText_many_isPluralised() {
+        XCTAssertEqual(OSCMonitorView.messageCountText(count: 42), "42 messages")
+    }
+
     // MARK: - Message line formatting
 
     func test_formatLine_addressOnly() {

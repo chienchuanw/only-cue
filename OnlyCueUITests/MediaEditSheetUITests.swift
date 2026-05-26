@@ -92,15 +92,18 @@ final class MediaEditSheetUITests: XCTestCase {
         let row = app.descendants(matching: .any).matching(identifier: "itemRow").firstMatch
         XCTAssertTrue(row.waitForExistence(timeout: 15), "Sidebar media row should appear after seed opens.")
 
-        // PR #432's MEDIA caption wrapped ItemListPane in an outer VStack that
-        // changes the AX container shape — SwiftUI's borderless Button no
-        // longer surfaces reliably as `.button` for `descendants(matching:)`.
-        // Broaden to `.any` and rely on the stable identifier instead.
-        let pencil = app.descendants(matching: .any)
+        // SwiftUI List intercepts the first click on a row for selection;
+        // subsequent clicks on the row's buttons reach SwiftUI's gesture
+        // recognizers. Click the row first to land selection, then click the
+        // pencil. (The right-click test below relies on this same pattern.)
+        row.click()
+        Thread.sleep(forTimeInterval: 0.3)
+
+        let pencil = row.descendants(matching: .button)
             .matching(NSPredicate(format: "identifier BEGINSWITH 'inlineEditMedia-'"))
             .firstMatch
         XCTAssertTrue(pencil.waitForExistence(timeout: 5), "Inline Edit Media pencil should be visible on the sidebar row.")
-        pencil.click()
+        pencil.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5)).click()
 
         let nameField = app.textFields["mediaEditNameField"]
         XCTAssertTrue(nameField.waitForExistence(timeout: 3), "MediaEditSheet name field should appear.")

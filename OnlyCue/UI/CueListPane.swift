@@ -280,6 +280,7 @@ struct CueListPane: View {
 
     private var cueList: some View {
         VStack(spacing: 0) {
+            CueListSectionHeader(count: cues.count)
             headerRow
             Divider()
             scrollableList

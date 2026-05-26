@@ -103,7 +103,14 @@ struct WaveformContainer: View {
 
             ScrollView(.horizontal, showsIndicators: zoom.zoom > 1) {
                 ZStack(alignment: .topLeading) {
+                    // Audit §9.1: Show mode dims the waveform peaks to convey
+                    // the "show-running" locked state while leaving cue
+                    // markers, the playhead, and the seek surface at full
+                    // contrast — the playhead therefore reads as amplified
+                    // against the dimmed envelope without any extra stroke
+                    // work on the playhead view itself.
                     WaveformView(peaks: peaks, verticalZoom: verticalZoom.zoom)
+                        .opacity(editorMode == .show ? 0.45 : 1)
                     tempoGridOverlay()
                     if let engine, loadedDuration > 0 {
                         // Seek surface BELOW the markers so a press on a cue

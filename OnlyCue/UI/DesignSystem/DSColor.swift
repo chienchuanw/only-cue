@@ -23,6 +23,21 @@ extension DS {
         static let inkOn         = dynamic(light: 0xFBFAF8, dark: 0x232220)
         // Achromatic selection fill (cue-type color stays the only chroma).
         static let selection     = dynamic(light: 0xE8E5DE, dark: 0x3A3733)
+        // Brand primary — the single chromatic accent ("cue/indigo" in the
+        // Figma design system). Resolves to the same hex in both light and
+        // dark appearance because the design intent is "always the same
+        // saturated indigo on whatever neutral chrome we ship with." Use
+        // this for primary actions (Done/Save/Export/Confirm), Toggle
+        // on-state, slider tint, segmented-control selected segment, and
+        // any small chromatic decorations (cue-mode indicator dot, lyric
+        // ribbon tints). Apply with `.tint(DS.Color.cueIndigo)` for
+        // primitives that honor `tint`; build dedicated styles
+        // (IndigoToggleStyle, IndigoPrimaryButtonStyle) for primitives
+        // that don't.
+        static let cueIndigo = dynamic(light: 0x5B5BD6, dark: 0x5B5BD6)
+        // On-indigo content (text/icons sitting on top of a cueIndigo
+        // fill). Always white for AA contrast in both appearances.
+        static let onCueIndigo = dynamic(light: 0xFFFFFF, dark: 0xFFFFFF)
 
         /// Builds a `Color` whose value follows the system appearance.
         private static func dynamic(light: UInt32, dark: UInt32) -> SwiftUI.Color {

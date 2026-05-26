@@ -82,14 +82,14 @@ struct LyricsLaneView: View {
     @ViewBuilder
     private func chip(for line: LyricLine, collapsed: Bool) -> some View {
         if collapsed {
-            Rectangle().fill(.purple.opacity(0.7)).frame(width: 1.5, height: 12)
+            Rectangle().fill(DS.Color.cueIndigo.opacity(0.7)).frame(width: 1.5, height: 12)
         } else {
             Text(line.text.isEmpty ? "\u{266A}" : line.text)
                 .font(.system(size: 11))
                 .lineLimit(1)
                 .padding(.horizontal, 6)
                 .padding(.vertical, isEditing ? 5 : 2)
-                .background(RoundedRectangle(cornerRadius: 4).fill(.purple.opacity(isEditing ? 0.85 : 0.18)))
+                .background(RoundedRectangle(cornerRadius: 4).fill(DS.Color.cueIndigo.opacity(isEditing ? 0.85 : 0.18)))
                 .foregroundStyle(isEditing ? Color.white : Color.primary)
         }
     }
@@ -104,8 +104,8 @@ struct LyricsLaneView: View {
             .padding(.vertical, 5)
             .background(
                 RoundedRectangle(cornerRadius: 4)
-                    .stroke(.purple, style: StrokeStyle(lineWidth: 1, dash: [3]))
-                    .background(RoundedRectangle(cornerRadius: 4).fill(.purple.opacity(0.25)))
+                    .stroke(DS.Color.cueIndigo, style: StrokeStyle(lineWidth: 1, dash: [3]))
+                    .background(RoundedRectangle(cornerRadius: 4).fill(DS.Color.cueIndigo.opacity(0.25)))
             )
             .foregroundStyle(.white)
             .offset(x: hoverX ?? 0)

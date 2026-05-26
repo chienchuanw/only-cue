@@ -35,7 +35,7 @@ final class CueListDocument: ReferenceFileDocument {
     private static func initialCuePointTypes() -> [CuePointType] {
         guard let template = TemplateStore.consumePendingNewDocumentTemplate(),
               !template.cuePointTypes.isEmpty
-        else { return [ProjectModel.makeDefaultCuePointType()] }
+        else { return ProjectModel.makeCanonicalCuePointTypes() }
         return template.cuePointTypes.map { type in
             var fresh = type
             fresh.id = UUID()

@@ -10,8 +10,9 @@ final class OSCMonitorTests: XCTestCase {
     // MARK: - Status line
 
     func test_statusText_whenListening_namesThePort() {
-        XCTAssertEqual(OSCMonitorView.statusText(isListening: true, port: 8000), "Listening on UDP 8000")
-        XCTAssertEqual(OSCMonitorView.statusText(isListening: true, port: 9001), "Listening on UDP 9001")
+        // Format follows audit §3.1's Figma reference: `Listening · :PORT`.
+        XCTAssertEqual(OSCMonitorView.statusText(isListening: true, port: 8000), "Listening · :8000")
+        XCTAssertEqual(OSCMonitorView.statusText(isListening: true, port: 9001), "Listening · :9001")
     }
 
     func test_statusText_whenNotListening_isStopped() {

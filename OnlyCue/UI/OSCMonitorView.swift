@@ -113,10 +113,11 @@ struct OSCMonitorView: View {
         }
     }
 
-    /// The headline line in the monitor — names the port when bound, plain
-    /// "Not listening" otherwise. Pure; pinned by `OSCMonitorTests`.
+    /// The headline line in the monitor — names the port when bound (Figma
+    /// format: `Listening · :PORT`), plain "Not listening" otherwise. Pure;
+    /// pinned by `OSCMonitorTests`.
     static func statusText(isListening: Bool, port: Int) -> String {
-        isListening ? "Listening on UDP \(port)" : "Not listening"
+        isListening ? "Listening · :\(port)" : "Not listening"
     }
 
     /// Row-count footer (audit §3.4). Pluralised: 0 messages / 1 message /

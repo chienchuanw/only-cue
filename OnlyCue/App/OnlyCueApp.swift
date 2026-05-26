@@ -7,6 +7,7 @@ struct OnlyCueApp: App {
     init() {
         Task { @MainActor in
             UITestAppearanceHandler.applyAppearanceOverrideIfRequested()
+            UITestFirstLaunchHandler.applyFirstLaunchOverrideIfRequested()
             UITestSeedHandler.openSeededDocumentIfRequested()
         }
     }

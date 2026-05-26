@@ -15,7 +15,7 @@ struct TypeManagementSheet: View {
             Divider()
             footer
         }
-        .frame(minWidth: 480, minHeight: 320)
+        .frame(minWidth: 500, minHeight: 320)
         .accessibilityIdentifier("typeManagementSheet")
         .confirmationDialog(
             confirmTitle,

@@ -24,7 +24,7 @@ struct OSCSettingsView: View {
                     + "the first time the server binds."
                 )
                 .font(.caption)
-                .foregroundStyle(.secondary)
+                .foregroundStyle(DS.Color.textSecondary)
             }
 
             Section("Supported address patterns") {
@@ -32,7 +32,7 @@ struct OSCSettingsView: View {
             }
         }
         .formStyle(.grouped)
-        .frame(width: 460, height: 360)
+        .frame(width: 600, height: 360)
         .accessibilityIdentifier("oscSettings")
     }
 }

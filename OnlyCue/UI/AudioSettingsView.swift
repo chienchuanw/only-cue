@@ -38,7 +38,7 @@ struct AudioSettingsView: View {
             }
             .padding(DS.Space.xl)
         }
-        .frame(width: 460, height: 420)
+        .frame(width: 600, height: 420)
         .accessibilityIdentifier("audioSettings")
         .onAppear {
             refreshDevices()
@@ -58,7 +58,7 @@ struct AudioSettingsView: View {
                 + "muted while LTC is on."
             )
             .font(.caption)
-            .foregroundStyle(.secondary)
+            .foregroundStyle(DS.Color.textSecondary)
         }
         .frame(maxWidth: .infinity, alignment: .leading)
         .dsCard()
@@ -88,7 +88,7 @@ struct AudioSettingsView: View {
                 + "A 4-channel interface can carry LTC on one channel and stereo track audio on two others."
             )
             .font(.caption)
-            .foregroundStyle(.secondary)
+            .foregroundStyle(DS.Color.textSecondary)
         }
         .frame(maxWidth: .infinity, alignment: .leading)
         .dsCard()
@@ -125,7 +125,7 @@ struct AudioSettingsView: View {
                 + "on this device while LTC is on.",
                 systemImage: "speaker.slash.fill"
             )
-            .foregroundStyle(.secondary)
+            .foregroundStyle(DS.Color.textSecondary)
             .font(.caption)
             .frame(maxWidth: .infinity, alignment: .leading)
             .dsCard()

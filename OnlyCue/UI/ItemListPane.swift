@@ -93,7 +93,7 @@ struct ItemListPane: View {
     private var itemList: some View {
         List(selection: selectionBinding) {
             ForEach(document.model.items) { item in
-                ItemRowView(item: item)
+                ItemRowView(item: item, onEdit: { editingItemID = item.id })
                 .contextMenu {
                     Button("Edit Media…") { editingItemID = item.id }
                         .accessibilityIdentifier("contextMenuEditMedia")

@@ -80,6 +80,38 @@ final class MediaEditSheetUITests: XCTestCase {
         )
     }
 
+    /// Drives Edit Media via the inline pencil affordance on the sidebar row
+    /// (audit §13 / #421). Bypasses the flaky right-click → context-menu chord
+    /// that gates `test_rightClickMediaRow_opensEditSheet_andSaveCommitsAlternateName`,
+    /// so this path stays runnable on the self-hosted runner where the
+    /// context-menu path is skipped.
+    func test_inlineEditButton_opensEditSheet_andSaveCommitsAlternateName() throws {
+        let app = launchWithSeed(.threeCuesAt1And3And6)
+        defer { app.terminate() }
+
+        let row = app.descendants(matching: .any).matching(identifier: "itemRow").firstMatch
+        XCTAssertTrue(row.waitForExistence(timeout: 15), "Sidebar media row should appear after seed opens.")
+
+        let pencil = app.descendants(matching: .button)
+            .matching(NSPredicate(format: "identifier BEGINSWITH 'inlineEditMedia-'"))
+            .firstMatch
+        XCTAssertTrue(pencil.waitForExistence(timeout: 5), "Inline Edit Media pencil should be visible on the sidebar row.")
+        pencil.click()
+
+        let nameField = app.textFields["mediaEditNameField"]
+        XCTAssertTrue(nameField.waitForExistence(timeout: 3), "MediaEditSheet name field should appear.")
+        nameField.click()
+        nameField.typeText("Inline Edit Cue")
+
+        app.buttons["mediaEditSave"].click()
+
+        let renamed = app.staticTexts["Inline Edit Cue"]
+        XCTAssertTrue(
+            renamed.waitForExistence(timeout: 3),
+            "Sidebar row should reflect the new alternate name after Save via the inline path."
+        )
+    }
+
     func test_editSheet_showsIdentityAndPreviewStrip() throws {
         let app = launchWithSeed(.threeCuesAt1And3And6)
         defer { app.terminate() }

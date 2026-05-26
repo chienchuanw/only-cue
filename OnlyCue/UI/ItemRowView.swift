@@ -29,6 +29,15 @@ struct ItemRowView: View {
                 Button(action: onEdit) {
                     Image(systemName: "pencil")
                         .foregroundStyle(DS.Color.textSecondary)
+                        // The raw SF Symbol's hit shape is ~14×14 pt — XCUITest
+                        // synthesizes a click at the AX element's center, but
+                        // SwiftUI's gesture recognizer needs a comfortable hit
+                        // target. Enlarge the hit-test region (and the visual
+                        // touch target for real users) via padding +
+                        // contentShape on the Image itself, so the Button's
+                        // gesture fires reliably.
+                        .frame(width: 22, height: 22)
+                        .contentShape(Rectangle())
                 }
                 .buttonStyle(.borderless)
                 .help("Edit Media…")

@@ -140,7 +140,7 @@ Anchored popover that opens from a specific cue-row chord (or inspector entry); 
 
 ### Phase 3.5 follow-up
 
-- **(XIV-A)** Add a stable a11y identifier on the cue-row affordance that opens the popover, and a manual `Phase3PopoverCapture` helper that drives a single row via that identifier.
+- **(XIV-A)** ~Add a stable a11y identifier on the cue-row affordance that opens the popover~ — **already present** (`cueRow-<id>` on the row + `cueRowContextEditNotes` on the menu item). Outstanding work is test-side only: write a `Phase3PopoverCaptureSupport` helper that selects a row by identifier and fires the `⌘⌥N` keyboard shortcut, then screenshots. Track under the broader Phase 3.5 capture-helper follow-up.
 
 ---
 
@@ -162,7 +162,7 @@ Same scoping as the Cue Notes popover above — anchored to a specific cue row.
 
 ### Phase 3.5 follow-up
 
-- **(XV-A)** Same recommendation as Cue Notes — add stable a11y on the trigger affordance + capture helper. Combine into a single follow-up if both popovers share the trigger pattern.
+- **(XV-A)** Same recommendation as Cue Notes — a11y identifiers (`cueRowContextTempo`, `⌘⌥T` shortcut) **already in place**. Outstanding work is the test-side capture helper, combined with XIV-A.
 
 ---
 
@@ -171,7 +171,7 @@ Same scoping as the Cue Notes popover above — anchored to a specific cue row.
 **Figma:** [`49:458`](https://www.figma.com/design/NhH2957iKQ8b581x3gI3Wk/OnlyCue-Design-System?node-id=49:458) · 960×540
 **App:** `NotesOverlayView.swift`
 
-The projected overlay is a borderless secondary window. The capture test toggled it via the default keymap (`⇧⌘N`), but `XCUIScreen.main.screenshot()` framed the entire main display (including browser tabs and menu-bar chrome) rather than just the projected window. The capture is in the artifacts folder but is misframed for a useful side-by-side comparison. Fix path: query the secondary `NSWindow` by its title or accessibility-identifier and screenshot it directly.
+**Correction (2026-05-26):** `NotesOverlayView` is not a separate `NSWindow` — it's rendered inline as an overlay card inside `PreviewPane` (`OnlyCue/UI/PreviewPane.swift:60–67`) with `accessibilityIdentifier("notesOverlay")` already applied at the SwiftUI view level (`NotesOverlayView.swift:34`). The original audit assumed a secondary projected window; that was wrong. The capture-fix is therefore test-side only: change the capture helper from `XCUIScreen.main.screenshot()` to `app.descendants(matching: .any).matching(identifier: "notesOverlay").firstMatch.screenshot()`. No app-side change is required.
 
 | Figma | App |
 |---|---|
@@ -184,7 +184,7 @@ The projected overlay is a borderless secondary window. The capture test toggled
 
 ### Phase 3.5 follow-up
 
-- **(XVI-A)** Wire an `accessibilityIdentifier("notesProjectedOverlay")` on the projected `NSWindow`, then update the capture to use `app.windows["notesProjectedOverlay"].screenshot()` instead of `XCUIScreen.main.screenshot()`.
+- **(XVI-A)** ~Wire an `accessibilityIdentifier("notesProjectedOverlay")` on the projected `NSWindow`~ — superseded by the correction above. The existing `notesOverlay` identifier suffices; the outstanding work is updating the capture helper to use it. Combine with XIV/XV-A's capture helper.
 
 ---
 

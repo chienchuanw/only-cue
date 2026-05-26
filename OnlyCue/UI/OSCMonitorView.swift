@@ -24,9 +24,15 @@ struct OSCMonitorView: View {
             Divider()
             supportedAddressesSection
             HStack {
+                Text(Self.messageCountText(count: server.recentMessages.count))
+                    .font(.caption)
+                    .foregroundStyle(DS.Color.textSecondary)
+                    .accessibilityIdentifier("oscMonitorMessageCount")
                 Spacer()
-                Button("Done") { dismiss() }
-                    .keyboardShortcut(.defaultAction)
+                Button("Clear") { server.clearRecentMessages() }
+                    .buttonStyle(.bordered)
+                    .disabled(server.recentMessages.isEmpty)
+                    .accessibilityIdentifier("oscMonitorClear")
             }
         }
         .padding()
@@ -55,14 +61,8 @@ struct OSCMonitorView: View {
 
     private var recentMessagesSection: some View {
         VStack(alignment: .leading, spacing: 6) {
-            HStack {
-                Text("Recent messages")
-                    .font(.subheadline.weight(.semibold))
-                Spacer()
-                Button("Clear") { server.clearRecentMessages() }
-                    .controlSize(.small)
-                    .disabled(server.recentMessages.isEmpty)
-            }
+            Text("Recent messages")
+                .font(.subheadline.weight(.semibold))
             if server.recentMessages.isEmpty {
                 emptyMessagesPlaceholder
             } else {
@@ -84,12 +84,21 @@ struct OSCMonitorView: View {
 
     private var messageList: some View {
         ScrollView {
-            LazyVStack(alignment: .leading, spacing: 2) {
-                ForEach(Array(server.recentMessages.enumerated()), id: \.offset) { _, line in
+            LazyVStack(alignment: .leading, spacing: 0) {
+                ForEach(Array(server.recentMessages.enumerated()), id: \.offset) { index, line in
                     Text(line)
                         .font(.system(.callout, design: .monospaced))
                         .textSelection(.enabled)
                         .frame(maxWidth: .infinity, alignment: .leading)
+                        .padding(.horizontal, DS.Space.xs)
+                        .padding(.vertical, 2)
+                        // Audit §3.5: zebra striping using design-system
+                        // surface-sunken on every other row.
+                        .background(
+                            index.isMultiple(of: 2)
+                                ? Color.clear
+                                : DS.Color.surfaceSunken
+                        )
                 }
             }
         }
@@ -108,5 +117,11 @@ struct OSCMonitorView: View {
     /// "Not listening" otherwise. Pure; pinned by `OSCMonitorTests`.
     static func statusText(isListening: Bool, port: Int) -> String {
         isListening ? "Listening on UDP \(port)" : "Not listening"
+    }
+
+    /// Row-count footer (audit §3.4). Pluralised: 0 messages / 1 message /
+    /// N messages. Pure so the contract is unit-testable.
+    static func messageCountText(count: Int) -> String {
+        count == 1 ? "1 message" : "\(count) messages"
     }
 }

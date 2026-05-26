@@ -21,8 +21,6 @@ struct OSCMonitorView: View {
             header
             Divider()
             recentMessagesSection
-            Divider()
-            supportedAddressesSection
             HStack {
                 Text(Self.messageCountText(count: server.recentMessages.count))
                     .font(.caption)
@@ -36,7 +34,7 @@ struct OSCMonitorView: View {
             }
         }
         .padding()
-        .frame(width: 480, height: 460)
+        .frame(width: 480, height: 360)
         .accessibilityIdentifier("oscMonitor")
     }
 
@@ -105,13 +103,9 @@ struct OSCMonitorView: View {
         .frame(maxHeight: 160)
     }
 
-    private var supportedAddressesSection: some View {
-        VStack(alignment: .leading, spacing: 6) {
-            Text("Supported addresses")
-                .font(.subheadline.weight(.semibold))
-            OSCSupportedAddressList()
-        }
-    }
+    // Supported address patterns moved to Settings → OSC (audit §3.2 / #400).
+    // The monitor sheet is now a single-purpose live log; the contract list
+    // lives next to the enable toggle where users configure the server.
 
     /// The headline line in the monitor — names the port when bound (Figma
     /// format: `Listening · :PORT`), plain "Not listening" otherwise. Pure;

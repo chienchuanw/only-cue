@@ -7,6 +7,21 @@ extension View {
         background(DS.Color.panel)
     }
 
+    /// A rounded sectioned-card container — `color/panel` fill, 12 pt corner,
+    /// 1 pt `color/border` stroke, with comfortable inner padding. The Figma
+    /// "panel card" used to group settings controls and sheet sections.
+    func dsCard() -> some View {
+        padding(DS.Space.md)
+            .background(
+                RoundedRectangle(cornerRadius: DS.Radius.xl, style: .continuous)
+                    .fill(DS.Color.panel)
+            )
+            .overlay(
+                RoundedRectangle(cornerRadius: DS.Radius.xl, style: .continuous)
+                    .strokeBorder(DS.Color.border, lineWidth: 1)
+            )
+    }
+
     /// The empty-state import target — a sunken well with a dashed border.
     func dsImportWell() -> some View {
         padding(DS.Space.xl)

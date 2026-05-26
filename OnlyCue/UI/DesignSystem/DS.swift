@@ -21,6 +21,9 @@ enum DS {
         static let sm: CGFloat = 6
         static let md: CGFloat = 8
         static let lg: CGFloat = 10
+        // Sectioned-card radius (audit §1.4 / §2.1 / §2.3) — matches the
+        // Figma "panel card" container used for grouped settings controls.
+        static let xl: CGFloat = 12
     }
 
     /// Motion. Ease-out only; motion conveys state, never decoration.

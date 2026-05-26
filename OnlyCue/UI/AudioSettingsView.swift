@@ -27,27 +27,17 @@ struct AudioSettingsView: View {
     }
 
     var body: some View {
-        Form {
-            Section {
-                Toggle("Enable LTC output", isOn: enabledSelection)
-                    .accessibilityIdentifier("enableLTCOutputToggle")
-            } footer: {
-                Text(
-                    "When on, OnlyCue generates SMPTE LTC and sends it — plus the media’s audio on the "
-                    + "Track channels — to the chosen output device. The media’s normal audio output is "
-                    + "muted while LTC is on."
-                )
-                .font(.caption)
-                .foregroundStyle(.secondary)
+        ScrollView {
+            VStack(alignment: .leading, spacing: DS.Space.lg) {
+                enableCard
+                if settings.isEnabled {
+                    deviceCard
+                    channelCard
+                    routingStatusCard
+                }
             }
-
-            if settings.isEnabled {
-                deviceSection
-                channelSection
-                routingStatusSection
-            }
+            .padding(DS.Space.xl)
         }
-        .formStyle(.grouped)
         .frame(width: 460, height: 420)
         .accessibilityIdentifier("audioSettings")
         .onAppear {
@@ -56,16 +46,35 @@ struct AudioSettingsView: View {
         }
     }
 
-    // MARK: Sections
+    // MARK: Cards
 
-    private var deviceSection: some View {
-        Section {
+    private var enableCard: some View {
+        VStack(alignment: .leading, spacing: DS.Space.sm) {
+            Toggle("Enable LTC output", isOn: enabledSelection)
+                .accessibilityIdentifier("enableLTCOutputToggle")
+            Text(
+                "When on, OnlyCue generates SMPTE LTC and sends it — plus the media’s audio on the "
+                + "Track channels — to the chosen output device. The media’s normal audio output is "
+                + "muted while LTC is on."
+            )
+            .font(.caption)
+            .foregroundStyle(.secondary)
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .dsCard()
+    }
+
+    private var deviceCard: some View {
+        VStack(alignment: .leading, spacing: DS.Space.sm) {
+            Text("Output Device").dsSectionHeader()
             Picker("Output device", selection: deviceSelection) {
                 Text("System Default").tag(String?.none)
                 ForEach(devices) { device in
                     Text("\(device.name) — \(device.outputChannelCount) ch").tag(String?.some(device.uid))
                 }
             }
+            .labelsHidden()
+            .frame(maxWidth: .infinity, alignment: .leading)
             .accessibilityIdentifier("audioOutputDevicePicker")
 
             HStack {
@@ -73,7 +82,7 @@ struct AudioSettingsView: View {
                 Spacer()
                 Button("Reset Routing") { resetRouting() }
             }
-        } footer: {
+
             Text(
                 "The LTC generator plays onto the channel assigned “LTC”. "
                 + "A 4-channel interface can carry LTC on one channel and stereo track audio on two others."
@@ -81,10 +90,13 @@ struct AudioSettingsView: View {
             .font(.caption)
             .foregroundStyle(.secondary)
         }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .dsCard()
     }
 
-    private var channelSection: some View {
-        Section("Channel assignment") {
+    private var channelCard: some View {
+        VStack(alignment: .leading, spacing: DS.Space.sm) {
+            Text("Channel Assignment").dsSectionHeader()
             ForEach(0..<channelCount, id: \.self) { channel in
                 Picker("Channel \(channel + 1)", selection: roleSelection(forChannel: channel)) {
                     ForEach(ChannelRole.allCases, id: \.self) { role in
@@ -94,28 +106,30 @@ struct AudioSettingsView: View {
                 .accessibilityIdentifier("audioChannelRolePicker.\(channel)")
             }
         }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .dsCard()
     }
 
     @ViewBuilder
-    private var routingStatusSection: some View {
+    private var routingStatusCard: some View {
         if settings.ltcChannel == nil {
-            Section {
-                Label("No channel is assigned to LTC.", systemImage: "exclamationmark.triangle.fill")
-                    .foregroundStyle(.orange)
-                    .font(.caption)
-                    .accessibilityIdentifier("audioRoutingWarning")
-            }
-        } else if !settings.hasTrackChannels {
-            Section {
-                Label(
-                    "No channel is assigned to Track L / Track R — the media’s audio will be silent "
-                    + "on this device while LTC is on.",
-                    systemImage: "speaker.slash.fill"
-                )
-                .foregroundStyle(.secondary)
+            Label("No channel is assigned to LTC.", systemImage: "exclamationmark.triangle.fill")
+                .foregroundStyle(.orange)
                 .font(.caption)
-                .accessibilityIdentifier("audioNoTrackChannelsHint")
-            }
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .dsCard()
+                .accessibilityIdentifier("audioRoutingWarning")
+        } else if !settings.hasTrackChannels {
+            Label(
+                "No channel is assigned to Track L / Track R — the media’s audio will be silent "
+                + "on this device while LTC is on.",
+                systemImage: "speaker.slash.fill"
+            )
+            .foregroundStyle(.secondary)
+            .font(.caption)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .dsCard()
+            .accessibilityIdentifier("audioNoTrackChannelsHint")
         }
     }
 

@@ -81,10 +81,12 @@ struct LyricsInspectorPane: View {
     @ViewBuilder
     private func placedSection(item: MediaItem) -> some View {
         let placed = item.lyrics.placedLines
+        let currentID = item.lyrics.activeLine(atMediaSeconds: engine.currentTime)?.id
         Text("Placed (\(placed.count))").font(.subheadline.weight(.semibold))
         ForEach(placed) { line in
             LyricsInspectorRow(
                 line: line,
+                isCurrent: line.id == currentID,
                 onCommitText: { newText in commitText(line.id, newText, item: item) }
             )
         }
@@ -118,6 +120,10 @@ struct LyricsInspectorPane: View {
 /// commits on submit / focus loss (spec §6 — placed lines have editable text).
 private struct LyricsInspectorRow: View {
     let line: LyricLine
+    /// True when this is the line whose interval contains the current playhead.
+    /// Drives the audit §8.1 "Now playing" emphasis: brand-tinted background,
+    /// indigo cue-mark color, and a heavier body font weight.
+    var isCurrent: Bool = false
     let onCommitText: (String) -> Void
 
     @State private var text: String = ""
@@ -127,12 +133,21 @@ private struct LyricsInspectorRow: View {
         HStack(spacing: 6) {
             Text(LyricsTimeFormat.string(line.time ?? 0))
                 .font(.caption.monospacedDigit())
-                .foregroundStyle(.secondary)
+                .foregroundStyle(isCurrent ? DS.Color.cueIndigo : DS.Color.textSecondary)
             TextField("lyric line", text: $text)
                 .focused($focused)
+                .font(isCurrent ? DS.Text.body.weight(.semibold) : DS.Text.body)
+                .foregroundStyle(isCurrent ? DS.Color.textPrimary : DS.Color.textPrimary)
                 .onSubmit { onCommitText(text) }
                 .onChange(of: focused) { _, isFocused in if !isFocused { onCommitText(text) } }
         }
+        .padding(.horizontal, isCurrent ? 6 : 0)
+        .padding(.vertical, isCurrent ? 3 : 0)
+        .background(
+            RoundedRectangle(cornerRadius: 4)
+                .fill(isCurrent ? DS.Color.cueIndigo.opacity(0.12) : Color.clear)
+        )
+        .animation(.easeOut(duration: 0.15), value: isCurrent)
         .onAppear { text = line.text }
         .onChange(of: line.text) { _, newText in
             // Resync when the model changes underneath us (undo/redo) while the
@@ -140,5 +155,6 @@ private struct LyricsInspectorRow: View {
             if !focused { text = newText }
         }
         .accessibilityIdentifier("lyricsPlacedRow-\(line.id.uuidString)")
+        .accessibilityAddTraits(isCurrent ? .isSelected : [])
     }
 }

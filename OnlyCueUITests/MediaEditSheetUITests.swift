@@ -92,7 +92,11 @@ final class MediaEditSheetUITests: XCTestCase {
         let row = app.descendants(matching: .any).matching(identifier: "itemRow").firstMatch
         XCTAssertTrue(row.waitForExistence(timeout: 15), "Sidebar media row should appear after seed opens.")
 
-        let pencil = app.descendants(matching: .button)
+        // PR #432's MEDIA caption wrapped ItemListPane in an outer VStack that
+        // changes the AX container shape — SwiftUI's borderless Button no
+        // longer surfaces reliably as `.button` for `descendants(matching:)`.
+        // Broaden to `.any` and rely on the stable identifier instead.
+        let pencil = app.descendants(matching: .any)
             .matching(NSPredicate(format: "identifier BEGINSWITH 'inlineEditMedia-'"))
             .firstMatch
         XCTAssertTrue(pencil.waitForExistence(timeout: 5), "Inline Edit Media pencil should be visible on the sidebar row.")

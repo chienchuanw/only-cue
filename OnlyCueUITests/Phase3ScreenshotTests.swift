@@ -37,14 +37,17 @@ final class Phase3ScreenshotTests: XCTestCase {
         )
     }
 
-    /// Sheet · First Launch (Figma `320:2286`) — forced by clearing
-    /// the `didShowFirstLaunch` AppStorage flag via launch argument.
+    /// Sheet · First Launch (Figma `320:2286`) — forced via the
+    /// `UITestFirstLaunchHandler` (PR #423, Phase 3.5 XII-A) which clears
+    /// the `didShowFirstLaunchNudge` AppStorage flag at app launch. The
+    /// older `-didShowFirstLaunch NO` AppStorage-shortcut approach didn't
+    /// propagate reliably on the runner.
     func test_firstLaunch_darkMode_visualBaseline() throws {
         let app = XCUIApplication()
         app.launchArguments += [
             "-ApplePersistenceIgnoreState", "YES",
             "--ui-test-appearance=dark",
-            "-didShowFirstLaunch", "NO"
+            "--ui-test-first-launch=force"
         ]
         app.launch()
         app.typeKey("n", modifierFlags: .command)

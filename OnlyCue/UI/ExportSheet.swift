@@ -14,49 +14,48 @@ struct ExportSheet: View {
     let onConfirm: () -> Void
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 16) {
+        VStack(alignment: .leading, spacing: DS.Space.lg) {
             Text("Export Cues")
                 .font(.title2)
                 .accessibilityIdentifier("exportSheetTitle")
 
-            formatRow
-            Divider()
-            typesSection
+            formatCard
+            typesCard
 
-            Spacer(minLength: 8)
+            Spacer(minLength: DS.Space.sm)
 
-            HStack {
-                Spacer()
-                Button("Cancel", role: .cancel, action: onCancel)
-                    .accessibilityIdentifier("exportCancel")
-                    .keyboardShortcut(.cancelAction)
-                Button("Export…", action: onConfirm)
-                    .accessibilityIdentifier("exportConfirm")
-                    .keyboardShortcut(.defaultAction)
-            }
+            actionRow
         }
-        .padding(20)
+        .padding(DS.Space.xl)
         .frame(minWidth: 380, idealWidth: 420, minHeight: 320)
+        .background(DS.Color.panel)
+        .overlay(
+            RoundedRectangle(cornerRadius: DS.Radius.xl, style: .continuous)
+                .strokeBorder(DS.Color.border, lineWidth: 1)
+        )
+        .clipShape(RoundedRectangle(cornerRadius: DS.Radius.xl, style: .continuous))
         .accessibilityIdentifier("exportSheet")
     }
 
-    private var formatRow: some View {
-        HStack {
-            Text("Format")
-                .frame(width: 80, alignment: .leading)
+    private var formatCard: some View {
+        VStack(alignment: .leading, spacing: DS.Space.sm) {
+            Text("Format").dsSectionHeader()
             Picker("Format", selection: $target) {
                 ForEach(ExportTarget.allCases) { target in
                     Text(target.displayName).tag(target)
                 }
             }
             .labelsHidden()
+            .frame(maxWidth: .infinity, alignment: .leading)
             .accessibilityIdentifier("exportFormatPicker")
         }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .dsCard()
     }
 
     @ViewBuilder
-    private var typesSection: some View {
-        VStack(alignment: .leading, spacing: 6) {
+    private var typesCard: some View {
+        VStack(alignment: .leading, spacing: DS.Space.xs) {
             Text("Filter by Type")
                 .font(.headline)
             Text("Leave all unchecked to export every cue.")
@@ -69,7 +68,7 @@ struct ExportSheet: View {
                     .foregroundStyle(.tertiary)
             } else {
                 ScrollView {
-                    VStack(alignment: .leading, spacing: 4) {
+                    VStack(alignment: .leading, spacing: DS.Space.xs) {
                         ForEach(cuePointTypes) { type in
                             Toggle(type.name, isOn: binding(for: type.id))
                                 .accessibilityIdentifier("exportTypeRow.\(type.id.uuidString)")
@@ -77,6 +76,31 @@ struct ExportSheet: View {
                     }
                 }
                 .frame(maxHeight: 180)
+            }
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .dsCard()
+    }
+
+    private var actionRow: some View {
+        VStack(spacing: DS.Space.md) {
+            // 1 px border-token divider separating the form from the action row
+            // (audit §2.5). Padded back out to span the full sheet width
+            // regardless of the parent VStack's spacing.
+            Rectangle()
+                .fill(DS.Color.border)
+                .frame(height: 1)
+                .padding(.horizontal, -DS.Space.xl)
+                .accessibilityIdentifier("exportActionRowDivider")
+
+            HStack {
+                Spacer()
+                Button("Cancel", role: .cancel, action: onCancel)
+                    .accessibilityIdentifier("exportCancel")
+                    .keyboardShortcut(.cancelAction)
+                Button("Export…", action: onConfirm)
+                    .accessibilityIdentifier("exportConfirm")
+                    .keyboardShortcut(.defaultAction)
             }
         }
     }

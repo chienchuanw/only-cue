@@ -27,7 +27,7 @@ struct ExportSheet: View {
             actionRow
         }
         .padding(DS.Space.xl)
-        .frame(minWidth: 380, idealWidth: 420, minHeight: 320)
+        .frame(minWidth: 460, idealWidth: 460, minHeight: 320)
         .background(DS.Color.panel)
         .overlay(
             RoundedRectangle(cornerRadius: DS.Radius.xl, style: .continuous)
@@ -59,7 +59,8 @@ struct ExportSheet: View {
             Text("Filter by Type").dsSectionHeader()
             Text("Leave all unchecked to export every cue.")
                 .font(.caption)
-                .foregroundStyle(.secondary)
+                .foregroundStyle(DS.Color.textSecondary)
+                .accessibilityIdentifier("exportFilterHelperText")
 
             if cuePointTypes.isEmpty {
                 Text("No types in this project.")

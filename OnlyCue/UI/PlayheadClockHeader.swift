@@ -13,7 +13,7 @@ struct PlayheadClockHeader: View {
     @Environment(\.projectFramerate) private var framerate
 
     var body: some View {
-        VStack(spacing: 8) {
+        VStack(spacing: 2) {
             Text(TimeFormat.smpte(engine.currentTime, rate: framerate))
                 .font(.system(size: 30, weight: .semibold, design: .monospaced))
                 .monospacedDigit()
@@ -28,7 +28,15 @@ struct PlayheadClockHeader: View {
                 .minimumScaleFactor(0.5)
                 .accessibilityIdentifier("playheadClock")
                 .frame(maxWidth: .infinity, alignment: .center)
+            // Audit §7.10: framerate caption beneath the HMS readout, in the
+            // design-system tertiary-text tone. Mirrors the Figma reference's
+            // `30 fps` subtitle next to the clock.
+            Text(framerate.displayName)
+                .dsSectionHeader()
+                .frame(maxWidth: .infinity, alignment: .center)
+                .accessibilityIdentifier("playheadFramerateCaption")
             Divider()
+                .padding(.top, 6)
         }
         .padding(.top, 4)
         .accessibilityElement(children: .contain)

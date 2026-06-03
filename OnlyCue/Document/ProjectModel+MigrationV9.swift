@@ -12,7 +12,7 @@ extension ProjectModel {
         let offset = legacy.timecodeSettings.startOffsetFrames
         let defaultTypeID = legacy.cuePointTypes.first?.id
         let items = legacy.items.map { item -> MediaItem in
-            let migratedCues = ProjectModel.applyLegacyTempoSectionsToCues(
+            let migratedCues = Self.applyLegacyTempoSectionsToCues(
                 item.tempoMap.sections,
                 cues: item.cues,
                 defaultTypeID: defaultTypeID

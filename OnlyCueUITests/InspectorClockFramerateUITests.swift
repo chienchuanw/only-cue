@@ -15,14 +15,11 @@ final class InspectorClockFramerateUITests: XCTestCase {
     }
 
     func testClockRerendersWhenFramerateChanges() throws {
-        // FIXME(#371-followup): the `timecodeFrameratePicker` lookup is
-        // ambiguous — XCUITest finds multiple matching PopUpButtons (likely
-        // the same control rendered in both inspector and timecode sheets,
-        // or a leftover element from a prior test in the same xctest
-        // process). Fails with "Find single matching element. Multiple
-        // matching elements found". Skipped pending a refactor that scopes
-        // the picker query to a specific containing window or pane.
-        throw XCTSkip("Picker identifier is ambiguous across panes; tracked for refactor.")
+        // The `timecodeFrameratePicker` identifier is set in exactly one place
+        // (`TimecodeSettingsSheet`), so the historical "Multiple matching
+        // elements found" failure was a stale element left by an earlier test
+        // / state-restoration window, not a duplicate identifier. Scoping the
+        // picker query to the seeded window (below) excludes those strays.
         let app = XCUIApplication()
         app.launchArguments += [SeedKey.threeCuesAt1And3And6.launchArgument]
         app.launch()
@@ -49,7 +46,7 @@ final class InspectorClockFramerateUITests: XCTestCase {
         XCTAssertTrue(menuItem.waitForExistence(timeout: 2))
         menuItem.click()
 
-        let picker = app.popUpButtons["timecodeFrameratePicker"]
+        let picker = window.popUpButtons["timecodeFrameratePicker"]
         guard picker.waitForExistence(timeout: 5) else {
             throw XCTSkip("Framerate picker not discoverable on this host; skipping live-flip.")
         }

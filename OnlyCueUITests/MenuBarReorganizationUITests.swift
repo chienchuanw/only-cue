@@ -35,15 +35,6 @@ final class MenuBarReorganizationUITests: XCTestCase {
     }
 
     func test_viewMenuToggles_useShowHideVerb_andFlipOnClick() throws {
-        // CI flake: app.menuBars.menuBarItems["View"] waitForExistence
-        // intermittently times out on the self-hosted runner — same
-        // foregrounding-race family as the context-menu chord gating in #387.
-        // Runs reliably during local development. Skip on CI; underlying
-        // toggle logic is covered by unit tests in the View command tree.
-        try XCTSkipIf(
-            CIRuntime.isGitHubActions,
-            "Flaky on self-hosted runner: menu-bar foregrounding race."
-        )
         let app = launchSeeded()
         _ = try waitForSeedWindow(in: app)
 
@@ -53,18 +44,33 @@ final class MenuBarReorganizationUITests: XCTestCase {
 
         let viewMenu = viewBarItem.menus.firstMatch
         XCTAssertTrue(viewMenu.waitForExistence(timeout: 3))
-        // Default seeded state: all flags off -> "Show ..." titles.
-        XCTAssertTrue(viewMenu.menuItems["Show Notes Overlay"].exists)
-        XCTAssertTrue(viewMenu.menuItems["Show Timeline Breakdown"].exists)
-        XCTAssertTrue(viewMenu.menuItems["Show Tempo Grid"].exists)
 
-        // Click Show Tempo Grid; it must flip to the Hide verb.
-        viewMenu.menuItems["Show Tempo Grid"].click()
+        // Don't assume the initial state: these flags are @AppStorage-backed,
+        // so they persist across runs (and are shared with the developer's
+        // real app usage locally). Each toggle must simply offer exactly one
+        // of its Show/Hide verbs — never both, never neither.
+        for label in ["Notes Overlay", "Timeline Breakdown", "Tempo Grid"] {
+            let show = viewMenu.menuItems["Show \(label)"].exists
+            let hide = viewMenu.menuItems["Hide \(label)"].exists
+            XCTAssertTrue(show != hide, "'\(label)' must offer exactly one verb (show=\(show) hide=\(hide)).")
+        }
+
+        // Flip Tempo Grid from whatever state it's in; the verb must invert.
+        // ("Show" present => currently hidden; clicking it shows the grid.)
+        let startedHidden = viewMenu.menuItems["Show Tempo Grid"].exists
+        let clickedVerb = startedHidden ? "Show Tempo Grid" : "Hide Tempo Grid"
+        let flippedVerb = startedHidden ? "Hide Tempo Grid" : "Show Tempo Grid"
+        viewMenu.menuItems[clickedVerb].click()
+
         viewBarItem.click()
         let viewMenu2 = viewBarItem.menus.firstMatch
         XCTAssertTrue(viewMenu2.waitForExistence(timeout: 3))
-        XCTAssertTrue(viewMenu2.menuItems["Hide Tempo Grid"].exists)
-        XCTAssertFalse(viewMenu2.menuItems["Show Tempo Grid"].exists)
+        XCTAssertTrue(viewMenu2.menuItems[flippedVerb].exists, "Tempo Grid verb must flip to '\(flippedVerb)'.")
+        XCTAssertFalse(viewMenu2.menuItems[clickedVerb].exists)
+
+        // Restore the original state so this toggle doesn't leak into later
+        // tests / runs — the leakage that made this test brittle (#378).
+        viewMenu2.menuItems[flippedVerb].click()
         app.typeKey(.escape, modifierFlags: [])
     }
 

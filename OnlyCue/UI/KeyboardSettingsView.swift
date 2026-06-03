@@ -66,7 +66,7 @@ struct KeyboardSettingsView: View {
         if recording == action {
             Text("Press a shortcut…")
                 .font(.system(.body, design: .monospaced))
-                .foregroundStyle(.secondary)
+                .foregroundStyle(DS.Color.textSecondary)
                 .padding(.horizontal, 8)
                 .padding(.vertical, 3)
                 .overlay(RoundedRectangle(cornerRadius: 5).strokeBorder(.tint))
@@ -101,7 +101,7 @@ struct KeyboardSettingsView: View {
             } else {
                 Text("No conflicts")
                     .font(.caption)
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(DS.Color.textSecondary)
             }
             Spacer()
             Button("Reset All…") {

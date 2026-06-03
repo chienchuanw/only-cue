@@ -8,9 +8,9 @@ name: CI
 # (2,000 minutes × 1/10 multiplier) is too small for a UI-test-heavy
 # native app — a single full PR run cost ~330 billable minutes.
 #
-# The self-hosted runner runs on the maintainer's logged-in macOS session,
+# The self-hosted runner runs on a dedicated, always-logged-in Mac mini,
 # so XCUITest foreground promotion works and there is no per-minute cost.
-# The runner must be online (Mac powered on / awake) for jobs to start.
+# The runner must be online (Mac mini powered on / awake) for jobs to start.
 
 on:
   pull_request:
@@ -70,7 +70,7 @@ jobs:
             -parallel-testing-enabled NO \
             | xcbeautify --renderer github-actions
 
-      # UI tests run on the maintainer's real logged-in macOS session, so
+      # UI tests run on the Mac mini's real logged-in macOS session, so
       # the XCUITest foreground promotion works (unlike on the hosted
       # `macos-latest` runner, where every test failed activation).
       # `-test-iterations 2 -retry-tests-on-failure` absorbs the known
@@ -88,18 +88,20 @@ jobs:
       - name: Mark CI active
         run: touch "/tmp/.onlycue-ci-active"
 
-      # UI tests run on push to dev/main only, NOT on PR. The
-      # self-hosted runner Mac is also the maintainer's primary
-      # workstation; when no human is at the keyboard (overnight,
-      # screen locked, fast-user-switched), the macOS window-server
-      # refuses to foreground a freshly-launched app from the
-      # XCTRunner process. Every UI test then fails with "Failed to
-      # activate application (current state: Running Background)"
-      # regardless of retry budget or timeout cap — see PR #387
-      # for the 7-attempt rabbit hole that established this. Per-test
-      # XCTSkipIf guards still apply when UI tests do run (push to
-      # dev/main, when the dev is at the keyboard), they just no
-      # longer block every PR sit behind a 90-min flake budget.
+      # UI tests run on push to dev/main only, NOT on PR. Historically the
+      # self-hosted runner ran on the maintainer's primary workstation, where
+      # an unattended desktop (overnight, screen locked, fast-user-switched)
+      # left the macOS window-server unable to foreground a freshly-launched
+      # app from the XCTRunner process — every UI test then failed with
+      # "Failed to activate application (current state: Running Background)"
+      # regardless of retry budget or timeout cap (see PR #387 for the
+      # 7-attempt rabbit hole that established this). The runner now lives on
+      # a dedicated, always-logged-in Mac mini, which should remove that
+      # constraint; re-enabling UI tests on PRs is a separate decision, gated
+      # on confirming the dedicated session stays foregroundable. Until then
+      # the push-only gate stays. Per-test XCTSkipIf guards still apply when
+      # UI tests do run; they just no longer sit behind a 90-min flake budget
+      # on every PR.
       - name: UI tests
         if: github.event_name == 'push'
         run: |

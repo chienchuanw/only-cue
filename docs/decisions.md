@@ -34,9 +34,7 @@ ADR template:
 **Why**: OnlyCue generates SMPTE LTC and drives shows to timecode; showing media positions in the operator's configured framecount everywhere (matching the clock and the LTC signal) is more consistent and professional than mixed decimal-second formats. The app already rendered SMPTE for most readouts (incidentally, via `TimeFormat.smpte`); this records it as the intended policy and extends it to the offset field (the last decimal holdout) via the existing `Timecode` parse/format.
 **Reversal cost**: Low–moderate. Display formatting is centralized in `TimeFormat.smpte` / `Timecode`; reverting any single surface to decimal is a local change. Lyric line times are already isolated in `LyricsTimeFormat`.
 
----
-
-## ADR-027 — Lyric mode keeps a dedicated Lyrics inspector in the right pane
+**Amendment (2026-06-05, #475)**: the media-sidebar clip **durations** are carved out of the SMPTE-everywhere rule and render compact `m:ss` / `H:MM:SS` (`TimeFormat.compactDuration`), matching the Figma sidebar (`318:1238`, e.g. `3:42`). The distinction is **length vs. position**: a clip's duration is *how long* it is, not *where* the playhead sits, so it carries no frame field. Every position readout — playhead clock, cue times, transport current/total/next, the per-media **start timecode**, LTC strip, Sync Offset — stays framerate SMPTE as decided above. This narrows the original decision (which listed "media-sidebar clip durations" under SMPTE); the rationale there — operators reading positions in their framecount — does not apply to a length label.
 
 **Date**: 2026-06-04
 **Status**: Accepted

@@ -15,6 +15,44 @@ extension WaveformContainer {
         }
     }
 
+    /// The mm:ss time-ruler pinned at the top of the waveform content (Figma
+    /// `318:1271`): `border-strong` ticks (major taller) with `monoMicro`
+    /// labels on the majors, sitting just below the cue-marker flags. Lives in
+    /// the zoomable scroll content so it tracks zoom/scroll and stays aligned to
+    /// the cues; non-interactive so click-to-seek and marker drags pass through.
+    @ViewBuilder
+    func timeRulerOverlay() -> some View {
+        if loadedDuration > 0 {
+            GeometryReader { proxy in
+                Canvas { context, size in
+                    drawTimeRuler(into: context, size: size)
+                }
+                .frame(width: proxy.size.width, height: proxy.size.height)
+            }
+            .allowsHitTesting(false)
+        }
+    }
+
+    private func drawTimeRuler(into context: GraphicsContext, size: CGSize) {
+        guard loadedDuration > 0, size.width > 0 else { return }
+        // Sit just under the cue-marker flag zone (flags occupy the top ~22pt).
+        let topInset: CGFloat = 24
+        let ticks = WaveformRulerTicks.ticks(duration: loadedDuration, contentWidth: size.width)
+        let strokeColor = GraphicsContext.Shading.color(DS.Color.borderStrong)
+        for tick in ticks {
+            let tickHeight: CGFloat = tick.isMajor ? 8 : 4
+            var path = Path()
+            path.move(to: CGPoint(x: tick.x, y: topInset))
+            path.addLine(to: CGPoint(x: tick.x, y: topInset + tickHeight))
+            context.stroke(path, with: strokeColor, lineWidth: 1)
+            guard tick.isMajor else { continue }
+            let text = Text(tick.label)
+                .font(DS.Text.monoMicro)
+                .foregroundColor(DS.Color.textTertiary)
+            context.draw(text, at: CGPoint(x: tick.x + 3, y: topInset), anchor: .topLeading)
+        }
+    }
+
     @ViewBuilder
     func markersOverlay() -> some View {
         if loadedDuration > 0 {

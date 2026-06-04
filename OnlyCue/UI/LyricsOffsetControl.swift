@@ -17,7 +17,7 @@ struct LyricsOffsetControl: View {
 
     var body: some View {
         HStack(spacing: 8) {
-            Text("Song starts at")
+            Text("Sync Offset")
                 .foregroundStyle(.secondary)
             TextField("0:00.000", text: $text)
                 .frame(width: 96)

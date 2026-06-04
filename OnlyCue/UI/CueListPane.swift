@@ -103,28 +103,6 @@ struct CueListPane: View {
         )
     }
 
-    func rowTint(for cue: Cue) -> Color {
-        guard let hex = document.model.colorHex(for: cue),
-              let base = Color(hex: hex) else {
-            return Color.clear
-        }
-        return base.opacity(CueListLayout.rowTintOpacity)
-    }
-
-    /// The cue currently "active" at the playhead — emphasized in Show mode.
-    private var currentCueID: Cue.ID? {
-        document.model.activeItem?.activeCue(at: engine.currentTime)?.id
-    }
-
-    /// A row's background — the cue's type tint, or an accent highlight for the
-    /// cue currently playing when the list is read-only (Show mode).
-    private func rowBackground(for cue: Cue) -> Color {
-        if isReadOnly, cue.id == currentCueID {
-            return DS.Color.selection
-        }
-        return rowTint(for: cue)
-    }
-
     var body: some View {
         VStack(spacing: 0) {
             PlayheadClockHeader(engine: engine)

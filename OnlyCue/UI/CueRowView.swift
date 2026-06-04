@@ -39,6 +39,9 @@ struct CueRowView: View {
                     Text(TimeFormat.smpte(cue.time, rate: framerate))
                         .font(DS.Text.mono)
                         .foregroundStyle(DS.Color.textSecondary)
+                        // One line: the SMPTE string must never wrap to two
+                        // rows when the column compresses (Figma 318:1228).
+                        .lineLimit(1)
                         .cueColumnFrame(width: timeColumnWidth, range: CueListColumnWidths.timeRange)
                         .accessibilityIdentifier("cueTime-\(cue.id)")
 

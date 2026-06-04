@@ -135,10 +135,14 @@ extension UITestSeedHandler {
         ]
         return [
             ItemSeed(displayName: "Act I — Opening.wav", kind: .audio, duration: 222, fixture: .silentAudioShort),
+            // duration matches the long fixture (7:30), not the Figma sidebar's
+            // 5:12 label: cue marker x-positions are `time / media.duration`
+            // (CueMarkersGeometry), so the clip MUST be at least as long as the
+            // last cue (Blackout @ 6:48) or cues #5–6 render off the timeline.
             ItemSeed(
                 displayName: "Dialogue — Scene 2.wav",
                 kind: .audio,
-                duration: 312,
+                duration: 450,
                 fixture: .silentAudioLong,
                 isActive: true,
                 cues: cues,

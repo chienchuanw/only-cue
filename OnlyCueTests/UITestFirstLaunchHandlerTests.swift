@@ -35,5 +35,35 @@ final class UITestFirstLaunchHandlerTests: XCTestCase {
             )
         )
     }
+
+    func test_shouldSuppressForSeed_withSeed_returnsTrue() {
+        XCTAssertTrue(
+            UITestFirstLaunchHandler.shouldSuppressForSeed(
+                arguments: ["OnlyCue", "--ui-test-seed=set-list-act-i"]
+            )
+        )
+    }
+
+    func test_shouldSuppressForSeed_withSeedButForced_returnsFalse() {
+        XCTAssertFalse(
+            UITestFirstLaunchHandler.shouldSuppressForSeed(
+                arguments: ["OnlyCue", "--ui-test-seed=set-list-act-i", "--ui-test-first-launch=force"]
+            )
+        )
+    }
+
+    func test_shouldSuppressForSeed_withoutSeed_returnsFalse() {
+        XCTAssertFalse(
+            UITestFirstLaunchHandler.shouldSuppressForSeed(
+                arguments: ["OnlyCue", "--ui-test-first-launch=force"]
+            )
+        )
+    }
+
+    func test_shouldSuppressForSeed_withNoArguments_returnsFalse() {
+        XCTAssertFalse(
+            UITestFirstLaunchHandler.shouldSuppressForSeed(arguments: ["OnlyCue"])
+        )
+    }
 }
 #endif

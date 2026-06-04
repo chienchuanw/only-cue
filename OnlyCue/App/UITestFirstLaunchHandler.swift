@@ -21,12 +21,19 @@ enum UITestFirstLaunchHandler {
 
     private static let argumentPrefix = "--ui-test-first-launch="
 
-    /// Called at app launch. If the force argument is present, clears the
-    /// `didShowFirstLaunchNudge` flag so the sheet renders.
+    private static let seedPrefix = "--ui-test-seed="
+
+    /// Called at app launch. Forces the sheet to render when `=force` is set;
+    /// otherwise suppresses it for any seeded launch so the welcome sheet never
+    /// overlays a deterministic screenshot capture (#476).
     @MainActor
     static func applyFirstLaunchOverrideIfRequested() {
-        guard shouldForceFirstLaunch(arguments: CommandLine.arguments) else { return }
-        UserDefaults.standard.set(false, forKey: FirstLaunchFlag.key)
+        let arguments = CommandLine.arguments
+        if shouldForceFirstLaunch(arguments: arguments) {
+            UserDefaults.standard.set(false, forKey: FirstLaunchFlag.key)
+        } else if shouldSuppressForSeed(arguments: arguments) {
+            UserDefaults.standard.set(true, forKey: FirstLaunchFlag.key)
+        }
     }
 
     /// Parses the launch arguments for `--ui-test-first-launch=<value>` and
@@ -37,6 +44,14 @@ enum UITestFirstLaunchHandler {
             return String(arg.dropFirst(argumentPrefix.count)) == "force"
         }
         return false
+    }
+
+    /// True when a `--ui-test-seed=` is present and the sheet was not explicitly
+    /// forced — seeded captures should never show the first-launch sheet. Pure
+    /// so the precedence is unit-tested without launching the app.
+    static func shouldSuppressForSeed(arguments: [String]) -> Bool {
+        let hasSeed = arguments.contains { $0.hasPrefix(seedPrefix) }
+        return hasSeed && !shouldForceFirstLaunch(arguments: arguments)
     }
 }
 #endif

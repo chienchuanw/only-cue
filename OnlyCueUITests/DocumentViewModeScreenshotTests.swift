@@ -67,6 +67,18 @@ final class DocumentViewModeScreenshotTests: XCTestCase {
         )
     }
 
+    /// Populated Set List — Act I (Figma 318:1228) — the `set-list-act-i` seed:
+    /// 8 mixed video/audio media items, 6 named/faded/colored cues, and a
+    /// 12-line lyric sheet. Captures the populated Cue-mode document for the
+    /// 1:1 audit against Figma's populated frames (§7.1/§7.5/§8.4/§9.2, #416).
+    func test_setListActI_darkMode_visualBaseline() throws {
+        try runDocumentCapture(
+            seed: "set-list-act-i",
+            modeSwitch: nil,
+            screenshotName: "main-setlist-cue-dark"
+        )
+    }
+
     /// Video Project (Figma 318:1614) — currently unsupported; needs a video
     /// seed in `UITestSeedHandler`. Skipped until that plumbing lands.
     func test_videoProject_darkMode_visualBaseline() throws {

@@ -86,7 +86,7 @@ struct LTCStrip: View {
             context.stroke(path, with: strokeColor, lineWidth: 1)
             guard tick.isMajor else { continue }
             let text = Text(tick.label)
-                .font(.system(size: 9, design: .monospaced))
+                .font(DS.Text.monoMicro)
                 .foregroundColor(DS.Color.textTertiary)
             context.draw(
                 text,

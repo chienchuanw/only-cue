@@ -40,7 +40,8 @@ extension WaveformContainer {
 
     /// The lyric lane pinned to the bottom of the waveform content. Shown in
     /// Lyric mode always (the editing surface), and in Cue / Show modes when the
-    /// item has at least one placed line. Lives in the zoomable scroll content,
+    /// item has at least one placed line — ribbons are a read-only reference
+    /// layer outside Lyric mode (ADR-026). Lives in the zoomable scroll content,
     /// so it inherits horizontal zoom.
     @ViewBuilder
     func lyricsLaneOverlay() -> some View {

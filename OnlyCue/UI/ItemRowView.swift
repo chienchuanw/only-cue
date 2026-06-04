@@ -8,7 +8,6 @@ struct ItemRowView: View {
     /// XCUITest can drive Edit Media without the flaky right-click chord and
     /// so users get a discoverable affordance. Audit §13.
     var onEdit: (() -> Void)?
-    @Environment(\.projectFramerate) private var framerate
 
     var body: some View {
         HStack(spacing: DS.Space.sm) {
@@ -19,7 +18,11 @@ struct ItemRowView: View {
                 Text(item.resolvedName)
                     .lineLimit(1)
                     .truncationMode(.middle)
-                Text(TimeFormat.smpte(item.media.duration, rate: framerate))
+                // The sidebar shows the clip *length* (a duration), so it uses
+                // the compact m:ss form, not framerate SMPTE (ADR-028 amendment;
+                // Figma 318:1238). The per-media start timecode (a position)
+                // stays SMPTE in MediaTimecodeRow / the TC editor.
+                Text(TimeFormat.compactDuration(item.media.duration))
                     .font(DS.Text.label)
                     .foregroundStyle(DS.Color.textTertiary)
                     .monospacedDigit()

@@ -102,48 +102,12 @@ struct WaveformContainer: View {
             let contentWidth = max(width * zoom.zoom, width)
 
             ScrollView(.horizontal, showsIndicators: zoom.zoom > 1) {
-                ZStack(alignment: .topLeading) {
-                    // Audit §9.1: Show mode dims the waveform peaks to convey
-                    // the "show-running" locked state while leaving cue
-                    // markers, the playhead, and the seek surface at full
-                    // contrast — the playhead therefore reads as amplified
-                    // against the dimmed envelope without any extra stroke
-                    // work on the playhead view itself.
-                    WaveformView(peaks: peaks, verticalZoom: verticalZoom.zoom)
-                        .opacity(editorMode == .show ? 0.45 : 1)
-                    tempoGridOverlay()
-                    if let engine, loadedDuration > 0 {
-                        // Seek surface BELOW the markers so a press on a cue
-                        // marker reaches `CueMarkerView` instead of being
-                        // absorbed by the full-bleed click-to-seek surface.
-                        WaveformSeekSurface(
-                            engine: engine,
-                            duration: loadedDuration,
-                            scrub: $scrub,
-                            seekTask: $seekTask
-                        )
-                    }
-                    markersOverlay()
-                    lyricsLaneOverlay()
-                    if let engine, loadedDuration > 0 {
-                        // Playhead line + time-label badge ABOVE the markers
-                        // so a selected (wider) cap never visually occludes
-                        // them. Hit-testing is disabled inside.
-                        WaveformPlayheadVisual(
-                            engine: engine,
-                            duration: loadedDuration,
-                            scrub: $scrub,
-                            zoom: zoom,
-                            viewportWidth: width,
-                            scrollOffset: scrollOffset,
-                            applyAutoFollow: applyAutoFollow
-                        )
-                    }
-                    if zoom.zoom > 1 && loadedDuration > 0 {
-                        anchorRail(contentWidth: contentWidth)
-                    }
-                }
-                .frame(width: contentWidth, height: proxy.size.height, alignment: .leading)
+                scrollContent(
+                    peaks: peaks,
+                    width: width,
+                    contentWidth: contentWidth,
+                    height: proxy.size.height
+                )
             }
             .scrollPosition(id: $leadingAnchor, anchor: .leading)
             .scrollDisabled(zoom.zoom <= 1)
@@ -160,6 +124,58 @@ struct WaveformContainer: View {
             .onAppear { viewportWidth = width }
             .onChange(of: width) { _, new in viewportWidth = new }
         }
+    }
+
+    /// The zoomable scroll content: waveform peaks, the tempo grid + time ruler,
+    /// the click-to-seek surface (below markers so marker presses win), the cue
+    /// markers + lyric lane, the playhead, and the scroll-anchor rail. Extracted
+    /// so `waveformBody` stays under the function-length cap.
+    @ViewBuilder
+    private func scrollContent(
+        peaks: [Float],
+        width: CGFloat,
+        contentWidth: CGFloat,
+        height: CGFloat
+    ) -> some View {
+        ZStack(alignment: .topLeading) {
+            // Audit §9.1: Show mode dims the waveform peaks to convey the
+            // "show-running" locked state while leaving cue markers, the
+            // playhead, and the seek surface at full contrast.
+            WaveformView(peaks: peaks, verticalZoom: verticalZoom.zoom)
+                .opacity(editorMode == .show ? 0.45 : 1)
+            tempoGridOverlay()
+            timeRulerOverlay()
+            if let engine, loadedDuration > 0 {
+                // Seek surface BELOW the markers so a press on a cue marker
+                // reaches `CueMarkerView` instead of being absorbed by the
+                // full-bleed click-to-seek surface.
+                WaveformSeekSurface(
+                    engine: engine,
+                    duration: loadedDuration,
+                    scrub: $scrub,
+                    seekTask: $seekTask
+                )
+            }
+            markersOverlay()
+            lyricsLaneOverlay()
+            if let engine, loadedDuration > 0 {
+                // Playhead line + time-label badge ABOVE the markers so a
+                // selected (wider) cap never visually occludes them.
+                WaveformPlayheadVisual(
+                    engine: engine,
+                    duration: loadedDuration,
+                    scrub: $scrub,
+                    zoom: zoom,
+                    viewportWidth: width,
+                    scrollOffset: scrollOffset,
+                    applyAutoFollow: applyAutoFollow
+                )
+            }
+            if zoom.zoom > 1 && loadedDuration > 0 {
+                anchorRail(contentWidth: contentWidth)
+            }
+        }
+        .frame(width: contentWidth, height: height, alignment: .leading)
     }
 
     private func anchorRail(contentWidth: CGFloat) -> some View {

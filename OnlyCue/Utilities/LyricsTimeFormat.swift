@@ -23,6 +23,21 @@ enum LyricsTimeFormat {
         return String(format: "%d:%02d.%03d", minutes, secs, millis)
     }
 
+    /// Clock-style display for the lyrics inspector's placed rows: zero-padded
+    /// `HH:MM:SS.d` with one-decimal tenths, matching the Figma reference
+    /// (`318:1369` shows `00:00:06.3`). Negative input clamps to zero. Distinct
+    /// from `string(_:)` (which is `M:SS.mmm` and drives the editable offset
+    /// field) so changing one display never disturbs the other.
+    static func clockString(_ seconds: TimeInterval) -> String {
+        let totalTenths = Int((max(0, seconds) * 10.0).rounded())
+        let tenths = totalTenths % 10
+        let totalSeconds = totalTenths / 10
+        let hours = totalSeconds / 3600
+        let minutes = (totalSeconds % 3600) / 60
+        let secs = totalSeconds % 60
+        return String(format: "%02d:%02d:%02d.%d", hours, minutes, secs, tenths)
+    }
+
     /// Parses `"S"`, `"M:SS"`, or `"H:MM:SS"` with an optional `.mmm` fraction
     /// on the final component. Returns `nil` for empty input, non-numeric
     /// components, negative values, more than three components, or a

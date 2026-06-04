@@ -88,4 +88,17 @@ final class FadeTimeTests: XCTestCase {
         XCTAssertEqual(parsed.format(), "1/2")
         XCTAssertEqual(FadeTime.parse(parsed.format()), parsed)
     }
+
+    // MARK: - columnDisplay (read-only cue-list fade cell, #463 / Figma 318:1228)
+
+    func test_columnDisplay_symmetric_oneDecimalPlusUnit() {
+        XCTAssertEqual(FadeTime.symmetric(1.5).columnDisplay, "1.5 s")
+        XCTAssertEqual(FadeTime.symmetric(2).columnDisplay, "2.0 s")
+        XCTAssertEqual(FadeTime.symmetric(0.5).columnDisplay, "0.5 s")
+        XCTAssertEqual(FadeTime.zero.columnDisplay, "0.0 s")
+    }
+
+    func test_columnDisplay_split_showsBothSides() {
+        XCTAssertEqual(FadeTime(fadeIn: 1, fadeOut: 2).columnDisplay, "1.0/2.0 s")
+    }
 }

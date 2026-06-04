@@ -3,15 +3,20 @@ import SwiftUI
 @main
 struct OnlyCueApp: App {
 
-    #if DEBUG
     init() {
         Task { @MainActor in
+            // Dark-only main window (ADR-029): pin system chrome to Dark Aqua
+            // regardless of the host's appearance setting.
+            AppAppearance.applyDarkOnly()
+            #if DEBUG
+            // Test hooks run after the dark-only pin so a `--ui-test-appearance`
+            // override (e.g. the Light visual baseline) can still take effect.
             UITestAppearanceHandler.applyAppearanceOverrideIfRequested()
             UITestFirstLaunchHandler.applyFirstLaunchOverrideIfRequested()
             UITestSeedHandler.openSeededDocumentIfRequested()
+            #endif
         }
     }
-    #endif
 
     var body: some Scene {
         DocumentGroup(newDocument: CueListDocument.init) { file in

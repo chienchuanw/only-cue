@@ -3,11 +3,14 @@ import AppKit
 
 extension DS {
 
-    /// Appearance-aware Quiet Pro color tokens. Each token resolves through a
-    /// single `NSColor` dynamic provider — no view branches on `colorScheme`,
-    /// and dark mode is changed by editing this file alone. OKLCH (hue ~85°)
-    /// is the design-time source of truth, recorded in the trailing comment;
-    /// the shipped hex is its sRGB conversion.
+    /// Quiet Pro color tokens. The main window is **dark-only** (ADR-029): every
+    /// token resolves to its `dark:` value in *every* system appearance, so the
+    /// app matches the dark Figma design system even on a Light-mode Mac. The
+    /// `light:` column is retained only as a design-time record of the retired
+    /// light palette — it is never shipped. OKLCH (hue ~85°) is the design-time
+    /// source of truth, recorded in the trailing comment; the shipped hex is its
+    /// sRGB conversion. `AppAppearance.applyDarkOnly()` pins system-drawn chrome
+    /// (titlebars, sheets, scrollbars) to dark to match.
     enum Color {
         // Chrome neutrals (warm tint, OKLCH hue ~85°, chroma ~0.005).
         static let surface       = dynamic(light: 0xFBFAF8, dark: 0x232220) // L .99 / .20
@@ -39,12 +42,12 @@ extension DS {
         // fill). Always white for AA contrast in both appearances.
         static let onCueIndigo = dynamic(light: 0xFFFFFF, dark: 0xFFFFFF)
 
-        /// Builds a `Color` whose value follows the system appearance.
+        /// Builds a dark-only token (ADR-029): always resolves to `dark`,
+        /// independent of the system appearance. `light` is ignored — kept in
+        /// the call site purely as a record of the retired light palette.
         private static func dynamic(light: UInt32, dark: UInt32) -> SwiftUI.Color {
-            SwiftUI.Color(nsColor: NSColor(name: nil) { appearance in
-                let isDark = appearance.bestMatch(from: [.aqua, .darkAqua]) == .darkAqua
-                return nsColor(hex: isDark ? dark : light)
-            })
+            _ = light
+            return SwiftUI.Color(nsColor: nsColor(hex: dark))
         }
 
         private static func nsColor(hex: UInt32) -> NSColor {

@@ -15,12 +15,14 @@ extension UITestSeedHandler {
     enum Fixture {
         case silentAudioShort   // silent-30s.m4a
         case silentAudioLong    // silent-450s.m4a (7:30 — spans the set-list cues)
+        case toneAudioLong      // tone-450s.m4a (7:30, amplitude-modulated — renders a real waveform)
         case silentVideo        // silent-video-90s.mov
 
         var resource: (name: String, ext: String) {
             switch self {
             case .silentAudioShort: return ("silent-30s", "m4a")
             case .silentAudioLong: return ("silent-450s", "m4a")
+            case .toneAudioLong: return ("tone-450s", "m4a")
             case .silentVideo: return ("silent-video-90s", "mov")
             }
         }
@@ -135,7 +137,10 @@ extension UITestSeedHandler {
             // 5:12 label: cue marker x-positions are `time / media.duration`
             // (CueMarkersGeometry), so the clip MUST be at least as long as the
             // last cue (Blackout @ 6:48) or cues #5–6 render off the timeline.
-            ItemSeed(displayName: "Dialogue — Scene 2.wav", kind: .audio, duration: 450, fixture: .silentAudioLong),
+            // The active clip uses an amplitude-modulated tone (not silence) so
+            // the preview renders a real waveform envelope for the figma↔app
+            // capture (#476); its 7:30 length still spans the cues to 6:48.
+            ItemSeed(displayName: "Dialogue — Scene 2.wav", kind: .audio, duration: 450, fixture: .toneAudioLong),
             ItemSeed(displayName: "Projection — Storm.mp4", kind: .video, duration: 90, fixture: .silentVideo),
             ItemSeed(displayName: "Underscore — Bridge.wav", kind: .audio, duration: 128, fixture: .silentAudioShort),
             ItemSeed(displayName: "Set Change.mov", kind: .video, duration: 41, fixture: .silentVideo),

@@ -15,7 +15,7 @@ struct LyricsInspectorPane: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 10) {
-            Text("Lyrics").font(.headline)
+            header
             if let item {
                 offsetControl(item: item)
                 Divider()
@@ -37,6 +37,31 @@ struct LyricsInspectorPane: View {
         .accessibilityIdentifier("lyricsInspectorPane")
     }
 
+    /// The uppercase `LYRICS` caption + a pluralised total-line count badge,
+    /// right-aligned — mirrors `CueListSectionHeader` (Figma `318:1469`, #413).
+    private var header: some View {
+        HStack(spacing: DS.Space.sm) {
+            Text("Lyrics")
+                .dsSectionHeader()
+                .accessibilityIdentifier("lyricsInspectorCaption")
+            Spacer(minLength: DS.Space.xs)
+            if let item {
+                Text(Self.lineCountText(for: item.lyrics.lines.count))
+                    .font(DS.Text.label)
+                    .foregroundStyle(DS.Color.textSecondary)
+                    .monospacedDigit()
+                    .accessibilityIdentifier("lyricsInspectorLineCount")
+            }
+        }
+    }
+
+    /// Pure pluralisation helper — extracted so the contract is unit-testable
+    /// without standing up a SwiftUI hosting view (mirrors
+    /// `CueListSectionHeader.countText(for:)`).
+    static func lineCountText(for count: Int) -> String {
+        count == 1 ? "1 line" : "\(count) lines"
+    }
+
     private func offsetControl(item: MediaItem) -> some View {
         LyricsOffsetControl(
             offsetSeconds: item.lyrics.offsetSeconds,
@@ -56,7 +81,9 @@ struct LyricsInspectorPane: View {
     @ViewBuilder
     private func queueSection(item: MediaItem) -> some View {
         let unplaced = item.lyrics.unplacedLines
-        Text("Unplaced (\(unplaced.count))").font(.subheadline.weight(.semibold))
+        Text("Unplaced · Next to place")
+            .dsSectionHeader()
+            .accessibilityIdentifier("lyricsUnplacedSectionCaption")
         if unplaced.isEmpty {
             Text("All lines are placed.").font(.caption).foregroundStyle(.secondary)
         } else {
@@ -82,7 +109,9 @@ struct LyricsInspectorPane: View {
     private func placedSection(item: MediaItem) -> some View {
         let placed = item.lyrics.placedLines
         let currentID = item.lyrics.activeLine(atMediaSeconds: engine.currentTime)?.id
-        Text("Placed (\(placed.count))").font(.subheadline.weight(.semibold))
+        Text("Placed")
+            .dsSectionHeader()
+            .accessibilityIdentifier("lyricsPlacedSectionCaption")
         ForEach(placed) { line in
             LyricsInspectorRow(
                 line: line,

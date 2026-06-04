@@ -15,6 +15,16 @@ ADR template:
 
 ---
 
+## ADR-027 — Lyric mode keeps a dedicated Lyrics inspector in the right pane
+
+**Date**: 2026-06-04
+**Status**: Accepted
+**Decision**: In Lyric mode the right inspector pane shows a dedicated **Lyrics inspector** — not the cue list. Its structure, aligned to the Figma reference (`318:1369` / inspector node `318:1469`), is: an uppercase `LYRICS` caption with a right-aligned total-line count; a `Sync Offset` row; an `UNPLACED · NEXT TO PLACE` section with the cursor-highlighted queue; and a `PLACED` section whose rows carry a read-only timecode plus editable text. The mode-swapped inspector (`ModeAwareInspector`: cue list in Cue/Show, Lyrics inspector in Lyric) stays as-is.
+**Why**: Issue #413 was filed on the premise that Figma's Lyric mode kept the *cue list* in the right pane while the app swapped to a Lyrics inspector, and asked which should win. Re-reading the live Figma file once the Figma MCP was connected showed the premise was stale: Figma's Lyric mode (`318:1369`) itself shows a Lyrics inspector (`Sync Offset` / `Unplaced · Next to place` / `Placed`), so app and design already agree on the architecture. Lyric authoring needs a paste box, an unplaced queue with a placement cursor, and per-line offset/timecode editing — surfaces the cue list cannot host — so a dedicated inspector is the right call regardless. The remaining work was cosmetic: aligning the inspector's captions and the line-count badge to Figma's section-label treatment (shared `dsSectionHeader()` + a unit-tested `lineCountText(for:)`, mirroring `CueListSectionHeader`).
+**Reversal cost**: Low. The pane is one `case .lyric` arm of `ModeAwareInspector`; the captions are local strings backed by a pure helper. Moving lyric editing to an overlay later (to free the right pane for the cue list) would touch only `LyricsInspectorPane` and that one switch arm.
+
+---
+
 ## ADR-026 — Lyric ribbons are visible in every editor mode; only Lyric mode edits them
 
 **Date**: 2026-06-04

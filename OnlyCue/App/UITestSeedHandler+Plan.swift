@@ -56,7 +56,7 @@ extension UITestSeedHandler {
     /// other seed keeps the single legacy "General" type.
     static func cueTypes(for key: String) -> [CuePointType] {
         switch key {
-        case "set-list-act-i":
+        case "set-list-act-i", "video-project":
             return [
                 CuePointType(id: UUID(), name: "Amber", colorHex: "#FFA94D"),
                 CuePointType(id: UUID(), name: "Teal", colorHex: "#4ECDC4"),
@@ -75,6 +75,8 @@ extension UITestSeedHandler {
         switch key {
         case "set-list-act-i":
             return setListActISeeds()
+        case "video-project":
+            return videoProjectSeeds()
         case "three-cues-1-3-6":
             return [legacyAudioItem(cues: [CueSpec(time: 1), CueSpec(time: 3), CueSpec(time: 6)])]
         case "three-cues-1-3-6-with-120bpm-tempo":
@@ -100,7 +102,10 @@ extension UITestSeedHandler {
     /// A human-facing document name for seeds whose title bar is part of the
     /// visual baseline; `nil` keeps the anonymous `seed-<uuid>` filename.
     static func documentBaseName(for key: String) -> String? {
-        key == "set-list-act-i" ? "Set List — Act I" : nil
+        switch key {
+        case "set-list-act-i", "video-project": return "Set List — Act I"
+        default: return nil
+        }
     }
 
     // MARK: - Plans
@@ -119,11 +124,48 @@ extension UITestSeedHandler {
         )
     }
 
-    /// The populated "Set List — Act I" plan — 8 mixed media items matching the
-    /// Figma sidebar (`318:1238`); the active "Dialogue — Scene 2.wav" clip
-    /// carries the six colored, faded, numbered cues and the 12-line lyric
-    /// sheet. Durations mirror the Figma row labels; the active clip bookmarks
-    /// the long fixture so its waveform actually spans the cues out to 6:48.
+    /// The 8 mixed media items of "Set List — Act I" (Figma sidebar `318:1238`),
+    /// none active and cue-free. The Dialogue / video active variants are minted
+    /// by `activate(_:name:cues:lyrics:)`. Durations mirror the Figma row labels
+    /// except where a clip must be long enough to host its cues (see Dialogue).
+    private static func setListBaseItems() -> [ItemSeed] {
+        [
+            ItemSeed(displayName: "Act I — Opening.wav", kind: .audio, duration: 222, fixture: .silentAudioShort),
+            // duration matches the long fixture (7:30), not the Figma sidebar's
+            // 5:12 label: cue marker x-positions are `time / media.duration`
+            // (CueMarkersGeometry), so the clip MUST be at least as long as the
+            // last cue (Blackout @ 6:48) or cues #5–6 render off the timeline.
+            ItemSeed(displayName: "Dialogue — Scene 2.wav", kind: .audio, duration: 450, fixture: .silentAudioLong),
+            ItemSeed(displayName: "Projection — Storm.mp4", kind: .video, duration: 90, fixture: .silentVideo),
+            ItemSeed(displayName: "Underscore — Bridge.wav", kind: .audio, duration: 128, fixture: .silentAudioShort),
+            ItemSeed(displayName: "Set Change.mov", kind: .video, duration: 41, fixture: .silentVideo),
+            ItemSeed(displayName: "Finale.wav", kind: .audio, duration: 235, fixture: .silentAudioShort),
+            ItemSeed(displayName: "Curtain Call.mov", kind: .video, duration: 75, fixture: .silentVideo),
+            ItemSeed(displayName: "Ambient Loop.wav", kind: .audio, duration: 480, fixture: .silentAudioShort)
+        ]
+    }
+
+    /// Marks the named base item active and attaches its cues / lyrics, leaving
+    /// every other item untouched. The shared seam for the populated seeds.
+    private static func activate(
+        _ items: [ItemSeed],
+        name: String,
+        cues: [CueSpec],
+        lyrics: Lyrics
+    ) -> [ItemSeed] {
+        items.map { item in
+            guard item.displayName == name else { return item }
+            var active = item
+            active.isActive = true
+            active.cues = cues
+            active.lyrics = lyrics
+            return active
+        }
+    }
+
+    /// The populated "Set List — Act I" plan — the active "Dialogue — Scene
+    /// 2.wav" clip carries the six colored, faded, numbered cues (Cue frame
+    /// `318:1228`) and the 12-line lyric sheet (Lyric frame `318:1369`).
     private static func setListActISeeds() -> [ItemSeed] {
         let cues: [CueSpec] = [
             CueSpec(time: 18, name: "Lights Up", fadeTime: .symmetric(1.5), typeIndex: 0, cueNumber: 1),
@@ -133,28 +175,20 @@ extension UITestSeedHandler {
             CueSpec(time: 320, name: "Final Chorus", fadeTime: .symmetric(2.0), typeIndex: 4, cueNumber: 5),
             CueSpec(time: 408, name: "Blackout", fadeTime: .symmetric(1.0), typeIndex: 5, cueNumber: 6)
         ]
-        return [
-            ItemSeed(displayName: "Act I — Opening.wav", kind: .audio, duration: 222, fixture: .silentAudioShort),
-            // duration matches the long fixture (7:30), not the Figma sidebar's
-            // 5:12 label: cue marker x-positions are `time / media.duration`
-            // (CueMarkersGeometry), so the clip MUST be at least as long as the
-            // last cue (Blackout @ 6:48) or cues #5–6 render off the timeline.
-            ItemSeed(
-                displayName: "Dialogue — Scene 2.wav",
-                kind: .audio,
-                duration: 450,
-                fixture: .silentAudioLong,
-                isActive: true,
-                cues: cues,
-                lyrics: setListLyrics()
-            ),
-            ItemSeed(displayName: "Projection — Storm.mp4", kind: .video, duration: 90, fixture: .silentVideo),
-            ItemSeed(displayName: "Underscore — Bridge.wav", kind: .audio, duration: 128, fixture: .silentAudioShort),
-            ItemSeed(displayName: "Set Change.mov", kind: .video, duration: 41, fixture: .silentVideo),
-            ItemSeed(displayName: "Finale.wav", kind: .audio, duration: 235, fixture: .silentAudioShort),
-            ItemSeed(displayName: "Curtain Call.mov", kind: .video, duration: 75, fixture: .silentVideo),
-            ItemSeed(displayName: "Ambient Loop.wav", kind: .audio, duration: 480, fixture: .silentAudioShort)
+        return activate(setListBaseItems(), name: "Dialogue — Scene 2.wav", cues: cues, lyrics: setListLyrics())
+    }
+
+    /// The "video-project" plan (Figma `318:1614`) — the same populated sidebar,
+    /// but the video clip "Projection — Storm.mp4" is active so the preview pane
+    /// renders video. Its four cues all fall within the 90s clip.
+    private static func videoProjectSeeds() -> [ItemSeed] {
+        let cues: [CueSpec] = [
+            CueSpec(time: 12, name: "Storm In", fadeTime: .symmetric(1.0), typeIndex: 0, cueNumber: 1),
+            CueSpec(time: 36, name: "Lightning", fadeTime: .symmetric(0.5), typeIndex: 2, cueNumber: 2),
+            CueSpec(time: 60, name: "Rain Peak", fadeTime: .symmetric(2.0), typeIndex: 4, cueNumber: 3),
+            CueSpec(time: 84, name: "Storm Out", fadeTime: .symmetric(1.5), typeIndex: 5, cueNumber: 4)
         ]
+        return activate(setListBaseItems(), name: "Projection — Storm.mp4", cues: cues, lyrics: .empty)
     }
 
     /// The 12-line "Set List — Act I" lyric sheet (Lyric frame `318:1369`):

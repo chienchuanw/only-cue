@@ -79,10 +79,15 @@ final class DocumentViewModeScreenshotTests: XCTestCase {
         )
     }
 
-    /// Video Project (Figma 318:1614) — currently unsupported; needs a video
-    /// seed in `UITestSeedHandler`. Skipped until that plumbing lands.
+    /// Video Project (Figma 318:1614) — the `video-project` seed: the populated
+    /// Set List sidebar with the "Projection — Storm.mp4" video clip active, so
+    /// the preview pane shows video over the timeline strip (#417).
     func test_videoProject_darkMode_visualBaseline() throws {
-        throw XCTSkip("requires a video seed in UITestSeedHandler — track via issue #376")
+        try runDocumentCapture(
+            seed: "video-project",
+            modeSwitch: nil,
+            screenshotName: "main-video-dark"
+        )
     }
 
     // MARK: - Helpers

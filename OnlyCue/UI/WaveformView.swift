@@ -7,7 +7,9 @@ import SwiftUI
 struct WaveformView: View {
 
     let peaks: [Float]
-    var color: Color = .accentColor
+    /// The waveform is achromatic chrome (ADR-024; Figma 318:1228) — a neutral
+    /// grey, not the cue/indigo accent (chroma is reserved for cue-type color).
+    var color: Color = DS.Color.textSecondary
     var verticalZoom: CGFloat = 1
 
     private static let minHairline: CGFloat = 0.5

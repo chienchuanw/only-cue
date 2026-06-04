@@ -51,6 +51,20 @@ final class SetListActISeedTests: XCTestCase {
         XCTAssertEqual(active.cues.compactMap(\.cueNumber), [1, 2, 3, 4, 5, 6])
     }
 
+    func test_activeItemDurationSpansAllCues() throws {
+        // Cue marker x = time / media.duration (CueMarkersGeometry), so the
+        // active clip must be at least as long as its last cue or cues render
+        // off the visible timeline. Blackout sits at 6:48 (408s).
+        let active = try XCTUnwrap(plan().first(where: \.isActive))
+        let lastCue = try XCTUnwrap(active.cues.map(\.time).max())
+        XCTAssertGreaterThanOrEqual(
+            active.duration,
+            lastCue,
+            "active clip must be long enough for every cue to fall on the timeline"
+        )
+        XCTAssertEqual(active.duration, 450)
+    }
+
     func test_activeItemHasTwelveLyrics_fourPlacedEightUnplaced() throws {
         let active = try XCTUnwrap(plan().first(where: \.isActive))
         XCTAssertEqual(active.lyrics.lines.count, 12)

@@ -37,7 +37,7 @@ struct LyricsOffsetControl: View {
             .font(DS.Text.mono)
             .multilineTextAlignment(.center)
             .frame(width: 120)
-            .padding(.vertical, 4)
+            .padding(.vertical, DS.Space.xs)
             .background(
                 RoundedRectangle(cornerRadius: DS.Radius.sm)
                     .fill(DS.Color.surface)

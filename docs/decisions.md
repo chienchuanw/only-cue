@@ -15,6 +15,17 @@ ADR template:
 
 ---
 
+## ADR-029 — The main window is dark-only
+
+**Date**: 2026-06-05
+**Status**: Accepted
+**Supersedes**: the dual-appearance half of ADR-024
+**Decision**: The app pins a fixed **dark** appearance regardless of the host's System Settings → Appearance. `DS.Color` tokens resolve to their `dark:` value in every appearance (the `light:` column is retained only as a design-time record of the retired light palette, never shipped), and `AppAppearance.applyDarkOnly()` pins `NSApp.appearance = .darkAqua` so system-drawn chrome (titlebars, sheets, menus, scrollbars, focus rings) matches. In DEBUG, the `--ui-test-appearance` test hook still overrides this (the Light visual baseline runs after the pin).
+**Why**: Every frame of the Figma design system's Screens page is dark, and OnlyCue is a show-control tool used in dark venues. ADR-024 made `DS.Color` resolve per system appearance ("light and dark mode are both correct from one definition"), so on a default Light-mode Mac the app rendered the warm-light palette and looked nothing like the mockups — the single largest figma↔app gap. Pinning dark makes the shipped app match the design 1:1 and removes an untested light-mode surface.
+**Reversal cost**: Low. The dark-only pin is two seams — `DS.Color.dynamic` (return the `dark:` value vs. branch on appearance) and `AppAppearance.applyDarkOnly()` (remove the pin). The `light:` hexes are still recorded at each call site, so restoring dual-appearance is a one-function change plus dropping the pin. A future light/dark *user preference* would build on the same seams.
+
+---
+
 ## ADR-028 — Timecode display follows the project framerate (SMPTE), not decimal
 
 **Date**: 2026-06-04

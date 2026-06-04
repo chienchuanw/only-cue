@@ -15,6 +15,16 @@ ADR template:
 
 ---
 
+## ADR-026 — Lyric ribbons are visible in every editor mode; only Lyric mode edits them
+
+**Date**: 2026-06-04
+**Status**: Accepted
+**Decision**: The lyric lane (the ribbon band pinned under the waveform) renders in **all** editor modes — Cue, Lyric, and Show — whenever the active media item has at least one placed lyric line. Lyric mode additionally shows the lane when there are no placed lines yet, because it is the authoring surface. Placement, drag, and deletion of ribbons are gated to Lyric mode; in Cue and Show the ribbons are read-only reference. This ratifies the behavior already shipping in `WaveformContainer+Overlays.swift` (`lyricsLaneOverlay()` shows the lane when `editorMode.lyricsEditable || hasPlaced`).
+**Why**: Lyrics are a per-clip reference layer (ADR-022), not mode-private state. A lighting designer cueing against a song in Cue mode needs to *see* where the words land relative to cues and waveform peaks without leaving Cue mode; hiding the ribbons outside Lyric mode would amputate that context exactly when it is most useful. The Figma Cue Mode frame (`318:1228`) shows the ribbons under the waveform, so app and design already agree — this ADR closes audit delta §7.9 by recording the policy rather than changing code. Restricting *editing* to Lyric mode keeps Cue mode's marker interactions unambiguous (only Lyric mode dims the cue markers so the ribbons become the active surface — see `markersOverlay()`).
+**Reversal cost**: Low. Visibility is a single predicate in `lyricsLaneOverlay()`; flipping to Lyric-only would be a one-line change plus a Figma update to drop ribbons from the Cue/Show frames.
+
+---
+
 ## ADR-025 — Portable cue lists: a `.occues` interchange file, decoupled from the document model
 
 **Date**: 2026-05-22

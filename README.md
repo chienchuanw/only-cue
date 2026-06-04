@@ -7,6 +7,7 @@ A native macOS application for lighting designers and show programmers, inspired
 - [OnlyCue](#onlycue)
   - [Table of Contents](#table-of-contents)
   - [Screenshots](#screenshots)
+  - [Design](#design)
   - [Install](#install)
   - [Status](#status)
     - [Current release](#current-release)
@@ -41,6 +42,14 @@ OSC settings (Settings → OSC) — enable the receive-only OSC server and pick 
 OSC Monitor (`Tools → OSC Monitor…`) — live message tail and copyable address list:
 
 ![OSC Monitor](static/osc-monitor.png)
+
+## Design
+
+OnlyCue's interface is built against a Figma design system, kept as the source of truth for layout, spacing, and the achromatic main-window chrome (ADR-024):
+
+- **[OnlyCue Design System on Figma](https://www.figma.com/design/NhH2957iKQ8b581x3gI3Wk/OnlyCue-Design-System)**
+
+The Screens page covers the [Document Window](#document-window)'s three editor modes — Cue Mode, Lyric Mode, and Show Mode — plus Empty and populated Video Project frames. App↔Figma fidelity is tracked as a Phase-2 audit (decisions recorded as ADRs in [`docs/decisions.md`](docs/decisions.md), e.g. lyric-ribbon visibility and the lyrics inspector). The `*ScreenshotTests` capture dark-mode baselines of each mode for 1:1 comparison against these frames, seeded deterministically via `UITestSeedHandler` — including the populated `set-list-act-i` and `video-project` seeds.
 
 ## Install
 

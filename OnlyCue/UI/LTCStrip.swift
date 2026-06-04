@@ -12,8 +12,8 @@ struct LTCStrip: View {
     let duration: TimeInterval
     let onToggleMute: () -> Void
 
-    private static let laneHeaderWidth: CGFloat = 140
-    private static let stripHeight: CGFloat = 28
+    private static let laneHeaderWidth: CGFloat = 150
+    private static let stripHeight: CGFloat = 34
 
     var body: some View {
         HStack(spacing: 0) {
@@ -22,6 +22,9 @@ struct LTCStrip: View {
         }
         .frame(height: Self.stripHeight)
         .background(DS.Color.surfaceSunken)
+        // Figma 318:1308 — the strip is bounded top and bottom by a hairline.
+        .dsHairline(edge: .top)
+        .dsHairline(edge: .bottom)
         .accessibilityElement(children: .contain)
         .accessibilityIdentifier("ltcStrip")
     }
@@ -36,7 +39,7 @@ struct LTCStrip: View {
             .help(item.ltcMuted ? "Unmute LTC for this clip" : "Mute LTC for this clip")
             .accessibilityLabel(item.ltcMuted ? "LTC muted" : "LTC unmuted")
             .accessibilityIdentifier("ltcMuteToggle.\(item.id.uuidString)")
-            Text(item.resolvedName)
+            Text("LTC · \(item.resolvedName)")
                 .font(DS.Text.monoSmall)
                 .foregroundStyle(DS.Color.textSecondary)
                 .lineLimit(1)
@@ -44,6 +47,9 @@ struct LTCStrip: View {
         }
         .padding(.horizontal, DS.Space.sm)
         .frame(width: Self.laneHeaderWidth, alignment: .leading)
+        // The header block is panel-tinted; the ruler area keeps the sunken fill.
+        .frame(maxHeight: .infinity)
+        .background(DS.Color.panel)
     }
 
     private var ruler: some View {
@@ -67,19 +73,24 @@ struct LTCStrip: View {
             bucketSeconds: bucket,
             contentWidth: size.width
         )
-        let strokeColor = GraphicsContext.Shading.color(DS.Color.textTertiary)
+        // Figma 318:1308: ticks are bottom-aligned in `border-strong` (major 9 /
+        // minor 5) with a 2pt bottom inset; labels sit at the top in tertiary.
+        let bottomInset: CGFloat = 2
+        let strokeColor = GraphicsContext.Shading.color(DS.Color.borderStrong)
         for tick in ticks {
-            let tickHeight: CGFloat = tick.isMajor ? 10 : 6
+            let tickHeight: CGFloat = tick.isMajor ? 9 : 5
+            let baseY = size.height - bottomInset
             var path = Path()
-            path.move(to: CGPoint(x: tick.xPosition, y: size.height))
-            path.addLine(to: CGPoint(x: tick.xPosition, y: size.height - tickHeight))
+            path.move(to: CGPoint(x: tick.xPosition, y: baseY))
+            path.addLine(to: CGPoint(x: tick.xPosition, y: baseY - tickHeight))
             context.stroke(path, with: strokeColor, lineWidth: 1)
+            guard tick.isMajor else { continue }
             let text = Text(tick.label)
-                .font(.caption2.monospacedDigit())
+                .font(.system(size: 9, design: .monospaced))
                 .foregroundColor(DS.Color.textTertiary)
             context.draw(
                 text,
-                at: CGPoint(x: tick.xPosition + 2, y: size.height - tickHeight - 8),
+                at: CGPoint(x: tick.xPosition + 2, y: 3),
                 anchor: .topLeading
             )
         }

@@ -20,6 +20,9 @@ enum SeedKey: String {
     case threeCuesAt1And3And6With120BPM = "three-cues-1-3-6-with-120bpm-tempo"
     case songWithLyrics = "song-with-lyrics"
     case lyricsWithPlacedLines = "lyrics-with-placed-lines"
+    /// Populated "Set List — Act I" project — 8 mixed media items, 6 named cues
+    /// with fades, and a 12-line lyric sheet (#416, Figma `318:1228`/`318:1369`).
+    case setListActI = "set-list-act-i"
 
     var launchArgument: String { "--ui-test-seed=\(rawValue)" }
 }

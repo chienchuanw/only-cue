@@ -23,6 +23,9 @@ enum SeedKey: String {
     /// Populated "Set List — Act I" project — 8 mixed media items, 6 named cues
     /// with fades, and a 12-line lyric sheet (#416, Figma `318:1228`/`318:1369`).
     case setListActI = "set-list-act-i"
+    /// Same populated sidebar with a video clip active so the preview pane shows
+    /// video — drives the Video Project baseline (#417, Figma `318:1614`).
+    case videoProject = "video-project"
 
     var launchArgument: String { "--ui-test-seed=\(rawValue)" }
 }

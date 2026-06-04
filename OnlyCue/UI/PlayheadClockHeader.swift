@@ -28,13 +28,15 @@ struct PlayheadClockHeader: View {
                 .minimumScaleFactor(0.5)
                 .accessibilityIdentifier("playheadClock")
                 .frame(maxWidth: .infinity, alignment: .center)
-            // Audit §7.10: framerate caption beneath the HMS readout, in the
-            // design-system tertiary-text tone. Mirrors the Figma reference's
-            // `30 fps` subtitle next to the clock.
-            Text(framerate.displayName)
-                .dsSectionHeader()
-                .frame(maxWidth: .infinity, alignment: .center)
-                .accessibilityIdentifier("playheadFramerateCaption")
+                // Audit §7.10 / Figma 318:1228: the framerate caption sits at the
+                // top-right of the clock — lowercase and quiet, the short
+                // `30 fps` form (not the verbose Settings displayName).
+                .overlay(alignment: .topTrailing) {
+                    Text(framerate.shortDisplayName)
+                        .font(DS.Text.label)
+                        .foregroundStyle(DS.Color.textTertiary)
+                        .accessibilityIdentifier("playheadFramerateCaption")
+                }
             Divider()
                 .padding(.top, 6)
         }

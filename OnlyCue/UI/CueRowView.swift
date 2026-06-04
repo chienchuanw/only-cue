@@ -130,7 +130,9 @@ struct CueRowView: View {
                 }
                 .onAppear { fadeFieldFocused = true }
         } else {
-            Text(cue.fadeTime.format())
+            // Glance-only display carries the `" s"` unit (Figma 318:1228); the
+            // edit draft still uses `format()` so it round-trips through parse.
+            Text(cue.fadeTime.columnDisplay)
                 .font(DS.Text.mono)
                 .foregroundStyle(DS.Color.textSecondary)
                 .frame(maxWidth: .infinity, alignment: .leading)

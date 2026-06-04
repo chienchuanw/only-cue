@@ -89,20 +89,34 @@ struct LyricsInspectorPane: View {
         } else {
             let cursorID = lyricsCursor.resolvedCursorID(unplaced: unplaced)
             ForEach(unplaced) { line in
-                Text(line.text.isEmpty ? "\u{266A}" : line.text)
-                    .lineLimit(1)
-                    .padding(.horizontal, 6)
-                    .padding(.vertical, 3)
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                    .background(
-                        RoundedRectangle(cornerRadius: 4)
-                            .fill(line.id == cursorID ? Color.purple.opacity(0.3) : Color.clear)
-                    )
-                    .contentShape(Rectangle())
-                    .onTapGesture { lyricsCursor.select(line.id) }
-                    .accessibilityIdentifier("lyricsQueueRow-\(line.id.uuidString)")
+                queueRow(line: line, isCursor: line.id == cursorID)
             }
         }
+    }
+
+    /// One unplaced-queue row. The next-to-place (cursor) row gets the Figma
+    /// treatment (`318:1369`): the `selection` tint, a 2 pt leading cursor bar,
+    /// and semibold primary text; the rest are quiet secondary text.
+    private func queueRow(line: LyricLine, isCursor: Bool) -> some View {
+        HStack(spacing: DS.Space.sm) {
+            RoundedRectangle(cornerRadius: 1)
+                .fill(isCursor ? DS.Color.textPrimary : Color.clear)
+                .frame(width: 2, height: 13)
+            Text(line.text.isEmpty ? "\u{266A}" : line.text)
+                .font(isCursor ? DS.Text.body.weight(.semibold) : DS.Text.body)
+                .foregroundStyle(isCursor ? DS.Color.textPrimary : DS.Color.textSecondary)
+                .lineLimit(1)
+                .frame(maxWidth: .infinity, alignment: .leading)
+        }
+        .padding(.horizontal, 10)
+        .padding(.vertical, 7)
+        .background(
+            RoundedRectangle(cornerRadius: DS.Radius.sm)
+                .fill(isCursor ? DS.Color.selection : Color.clear)
+        )
+        .contentShape(Rectangle())
+        .onTapGesture { lyricsCursor.select(line.id) }
+        .accessibilityIdentifier("lyricsQueueRow-\(line.id.uuidString)")
     }
 
     @ViewBuilder
@@ -160,7 +174,7 @@ private struct LyricsInspectorRow: View {
 
     var body: some View {
         HStack(spacing: 6) {
-            Text(LyricsTimeFormat.string(line.time ?? 0))
+            Text(LyricsTimeFormat.clockString(line.time ?? 0))
                 .font(.caption.monospacedDigit())
                 .foregroundStyle(isCurrent ? DS.Color.cueIndigo : DS.Color.textSecondary)
             TextField("lyric line", text: $text)

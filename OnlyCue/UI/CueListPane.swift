@@ -249,7 +249,7 @@ struct CueListPane: View {
                     )
                     .accessibilityIdentifier("cueListTimeColumnResizeHandle")
                 }
-            Text("Cue #")
+            Text("#")
                 .cueColumnFrame(width: numberColumnWidth, range: CueListColumnWidths.numberRange)
                 .overlay(alignment: .trailing) {
                     ColumnResizeHandle(
@@ -270,8 +270,9 @@ struct CueListPane: View {
                     .accessibilityIdentifier("cueListFadeColumnResizeHandle")
                 }
         }
-        .font(DS.Text.label)
-        .foregroundStyle(DS.Color.textSecondary)
+        // Uppercase, tracked, tertiary micro-labels — the shared section-header
+        // treatment, matching the Figma column header `TIME · # · NAME · FADE`.
+        .dsSectionHeader()
         .padding(.horizontal, CueListLayout.rowHorizontalPadding)
         .padding(.vertical, DS.Space.sm)
         .accessibilityIdentifier(Self.headerAccessibilityIdentifier)

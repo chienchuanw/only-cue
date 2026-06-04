@@ -8,11 +8,16 @@ import SwiftUI
 /// Name column intentionally has no entry — it absorbs the remaining width.
 enum CueListColumnWidths {
 
-    static let timeRange: ClosedRange<CGFloat> = 64...180
+    // The time column shows an 11-char SMPTE string (`HH:MM:SS:FF`, ~86pt at
+    // 13pt monospaced). Its floor must keep the full string on one line even
+    // when the pane is squeezed to its 240pt minimum (Figma 318:1228); the
+    // floor stays within the #297 budget (compressible floor <= 200, asserted
+    // by CueListPaneMinWidthTests).
+    static let timeRange: ClosedRange<CGFloat> = 92...180
     static let numberRange: ClosedRange<CGFloat> = 40...120
     static let fadeRange: ClosedRange<CGFloat> = 56...160
 
-    static let timeDefault: CGFloat = 96
+    static let timeDefault: CGFloat = 108
     static let numberDefault: CGFloat = 56
     static let fadeDefault: CGFloat = 72
 

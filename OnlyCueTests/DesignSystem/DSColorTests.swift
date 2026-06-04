@@ -17,18 +17,21 @@ final class DSColorTests: XCTestCase {
         return [rgb.redComponent, rgb.greenComponent, rgb.blueComponent]
     }
 
-    func testSurfaceResolvesLighterInLightThanDark() throws {
+    /// Dark-only (ADR-029): chrome tokens resolve to their dark value in
+    /// every appearance — including when the host Mac is in Light mode — so
+    /// the main window always matches the dark Figma design system.
+    func testSurfaceResolvesDarkEvenUnderLightAppearance() throws {
         let light = try sRGBComponents(of: DS.Color.surface, appearance: .aqua)
         let dark = try sRGBComponents(of: DS.Color.surface, appearance: .darkAqua)
-        XCTAssertGreaterThan(light[0], 0.9, "light surface should be near-white")
-        XCTAssertLessThan(dark[0], 0.2, "dark surface should be near-black")
+        XCTAssertLessThan(light[0], 0.2, "surface stays near-black under Light appearance")
+        XCTAssertLessThan(dark[0], 0.2, "surface is near-black under Dark appearance")
     }
 
-    func testTextPrimaryInvertsBetweenAppearances() throws {
+    func testTextPrimaryIsLightInkInEveryAppearance() throws {
         let light = try sRGBComponents(of: DS.Color.textPrimary, appearance: .aqua)
         let dark = try sRGBComponents(of: DS.Color.textPrimary, appearance: .darkAqua)
-        XCTAssertLessThan(light[0], 0.25, "light-mode text is dark ink")
-        XCTAssertGreaterThan(dark[0], 0.85, "dark-mode text is light ink")
+        XCTAssertGreaterThan(light[0], 0.85, "primary text stays light ink under Light appearance")
+        XCTAssertGreaterThan(dark[0], 0.85, "primary text is light ink under Dark appearance")
     }
 
     func testNeutralsAreWarmTinted() throws {

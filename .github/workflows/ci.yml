@@ -59,16 +59,47 @@ jobs:
             -destination 'platform=macOS' \
             | xcbeautify --renderer github-actions
 
+      # The self-hosted runner occasionally wedges its test daemon
+      # (`testmanagerd` / the UI-Automation control session) after an
+      # interrupted run, so the next `xcodebuild test` times out with
+      # "Timed out … initiating control session with daemon" → TEST EXECUTE
+      # FAILED (#471). Clear any stray app / runner processes first, and
+      # best-effort reset the daemon. `sudo -n` is a no-op when the runner
+      # user lacks passwordless sudo for `killall` — the user-process kills
+      # still help; granting `NOPASSWD: /usr/bin/killall testmanagerd` lets
+      # the daemon reset fire too.
+      - name: Reset stale test state
+        run: |
+          pkill -9 -x OnlyCue 2>/dev/null || true
+          pkill -9 -f 'OnlyCue.app/Contents/MacOS/OnlyCue' 2>/dev/null || true
+          pkill -9 -f XCTRunner 2>/dev/null || true
+          pkill -9 -f AutomationModeUI 2>/dev/null || true
+          sudo -n killall testmanagerd 2>/dev/null || true
+
+      # One-shot whole-step retry: the daemon-init timeout fails the entire
+      # run (not an individual test), so `-retry-tests-on-failure` (a
+      # per-test retry) can't catch it. On the first failure, reset the
+      # daemon and re-run once; a genuine test failure still fails twice.
       - name: Unit tests
         run: |
           set -o pipefail
-          xcodebuild test-without-building \
-            -project OnlyCue.xcodeproj \
-            -scheme OnlyCue \
-            -destination 'platform=macOS' \
-            -only-testing:OnlyCueTests \
-            -parallel-testing-enabled NO \
-            | xcbeautify --renderer github-actions
+          run_unit_tests() {
+            xcodebuild test-without-building \
+              -project OnlyCue.xcodeproj \
+              -scheme OnlyCue \
+              -destination 'platform=macOS' \
+              -only-testing:OnlyCueTests \
+              -parallel-testing-enabled NO \
+              | xcbeautify --renderer github-actions
+          }
+          run_unit_tests || {
+            echo "::warning::Unit tests failed once — resetting the test daemon and retrying once (absorbs the testmanagerd control-session flake; see #471)."
+            pkill -9 -f XCTRunner 2>/dev/null || true
+            pkill -9 -f AutomationModeUI 2>/dev/null || true
+            sudo -n killall testmanagerd 2>/dev/null || true
+            sleep 5
+            run_unit_tests
+          }
 
       # UI tests run on the Mac mini's real logged-in macOS session, so
       # the XCUITest foreground promotion works (unlike on the hosted

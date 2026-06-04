@@ -59,4 +59,26 @@ final class LyricsTimeFormatTests: XCTestCase {
         XCTAssertEqual(LyricsTimeFormat.string(2.9999), "0:03.000")
         XCTAssertEqual(LyricsTimeFormat.string(3599.9999), "1:00:00.000")
     }
+
+    // MARK: - clockString (placed-lyric inspector rows, #463 / Figma 318:1369)
+
+    func test_clockString_zeroPaddedHoursMinutesSeconds_oneDecimalTenths() {
+        // Figma placed rows: 00:00:06.3 / 00:00:51.6 / 00:02:12.0 / 00:02:55.0
+        XCTAssertEqual(LyricsTimeFormat.clockString(6.3), "00:00:06.3")
+        XCTAssertEqual(LyricsTimeFormat.clockString(51.6), "00:00:51.6")
+        XCTAssertEqual(LyricsTimeFormat.clockString(132.0), "00:02:12.0")
+        XCTAssertEqual(LyricsTimeFormat.clockString(175.0), "00:02:55.0")
+    }
+
+    func test_clockString_pastAnHour_keepsTwoDigitFields() {
+        XCTAssertEqual(LyricsTimeFormat.clockString(3661.5), "01:01:01.5")
+    }
+
+    func test_clockString_negativeClampsToZero() {
+        XCTAssertEqual(LyricsTimeFormat.clockString(-5), "00:00:00.0")
+    }
+
+    func test_clockString_roundsToNearestTenth_carryingUp() {
+        XCTAssertEqual(LyricsTimeFormat.clockString(59.96), "00:01:00.0")
+    }
 }

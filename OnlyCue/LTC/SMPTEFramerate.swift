@@ -50,4 +50,16 @@ enum SMPTEFramerate: String, Codable, CaseIterable, Identifiable, Sendable {
         case .fps30drop: return "30 fps (drop-frame)"
         }
     }
+
+    /// Compact caption for the playhead-clock corner (Figma `318:1228`/`318:1369`
+    /// show a lowercase `30 fps`). `displayName` stays verbose for the Settings
+    /// picker; this drops the non-drop qualifier and marks drop-frame as `DF`.
+    var shortDisplayName: String {
+        switch self {
+        case .fps24: return "24 fps"
+        case .fps25: return "25 fps"
+        case .fps30: return "30 fps"
+        case .fps30drop: return "30 fps DF"
+        }
+    }
 }

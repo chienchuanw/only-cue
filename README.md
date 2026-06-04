@@ -26,10 +26,10 @@ A native macOS application for lighting designers and show programmers, inspired
 
 ## Screenshots
 
-Document window with audio loaded — media library sidebar, Cue / Lyric / Show mode switcher, timeline with cue markers, transport bar, and the cue list pane with the playhead clock pinned above it:
+Document window (dark-only — ADR-029) with the "Set List — Act I" demo loaded: media library sidebar with compact clip durations, the Cue / Lyric / Show mode switcher, the achromatic waveform with numbered cue markers and lyric ribbons, the transport bar, and the cue list pane (one-line SMPTE times, clean rows) with the playhead clock pinned above it:
 
 ![OnlyCue document window](static/document-window.png)
-<!-- Regenerate: xcodebuild test -project OnlyCue.xcodeproj -scheme OnlyCue -destination 'platform=macOS' -only-testing:OnlyCueUITests/TransportBarScreenshotTests, then extract the attachment from the xcresult bundle (xcrun xcresulttool export attachments --path <result>.xcresult --output-path <dir>) into static/document-window.png. test_transportBar_visualBaseline captures light mode; test_transportBar_darkMode_visualBaseline captures the dark-mode appearance sanity pass. -->
+<!-- Regenerate: xcodebuild test -project OnlyCue.xcodeproj -scheme OnlyCue -destination 'platform=macOS' -only-testing:OnlyCueUITests/DocumentViewModeScreenshotTests/test_setListActI_darkMode_visualBaseline, then copy ~/Library/Containers/com.chienchuanw.OnlyCueUITests.xctrunner/Data/tmp/screenshots/main-setlist-cue-dark.png into static/document-window.png. The test forces dark via --ui-test-appearance=dark and seeds the populated Set List via --ui-test-seed=set-list-act-i. -->
 
 Export Cues sheet (`⇧⌘E`) — format picker and per-cue-type filter:
 

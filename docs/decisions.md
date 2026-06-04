@@ -75,6 +75,8 @@ ADR template:
 **Reversal cost**: Moderate. Unwinding the token layer means re-scattering literals across the main-window view set; but `DS` is additive infrastructure and views could revert piecemeal. The achromatic-selection and achromatic-switcher choices are visual and localized. The one mechanical commitment is the `TokenConformanceTests` gate — a new main-window view must consume `DS.*` or the gate fails.
 **Deferred**: retrofitting the ~12 sheets and the two projected overlays to `DS.*` (a follow-up pass); a full dark-mode UI-test suite (dark mode is dark-ready and manually verified, not screenshot-tested).
 
+**Cue-list amendment (2026-06-05, #474)**: the achromatic-selection rule has one deliberate carve-out in the cue list. Following the Figma Cue frame (`318:1228`), the **selected** cue row is filled with its own **cue-type tint** (via `CueRowFill`), not the achromatic `DS.Color.selection` — unselected rows are clean. This keeps the carve-out consistent with "cue-type color is the only chroma": the chroma now appears only on the row the operator selected, rather than on every row (the prior all-rows tint) or as a neutral bar. Show mode's playhead-current row still uses the achromatic highlight. The waveform body stays achromatic (`DS.Color.textSecondary`, #481).
+
 ---
 
 ## ADR-023 — Editing is gated by a per-window editor mode (Cue / Lyric / Show); lyrics are authored on the waveform (schema v14)

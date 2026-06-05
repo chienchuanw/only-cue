@@ -28,17 +28,20 @@ struct TransportControls: View {
     }
 
     var body: some View {
+        // Flat bottom bar (Figma 318:1309): panel background with a single top
+        // hairline — no rounded card, no side/bottom borders. Zones are
+        // left-grouped on a uniform divider gap (the trailing Spacer leaves the
+        // empty space on the right), not pushed apart by a flexible spacer.
         HStack(spacing: 0) {
             controlZone
             divider
             readoutZone
-            Spacer(minLength: DS.Space.md)
             divider
             nextCueZone
+            Spacer(minLength: 0)
         }
         .background(DS.Color.panel)
-        .overlay(RoundedRectangle(cornerRadius: DS.Radius.md).strokeBorder(DS.Color.border))
-        .clipShape(RoundedRectangle(cornerRadius: DS.Radius.md))
+        .overlay(alignment: .top) { DS.Color.border.frame(height: 1) }
         // `.contain` keeps the bar itself queryable AND lets XCUITest walk to
         // the child controls/readouts — without it, the container identifier
         // collapses the subtree (same pattern as EditorModeSwitcher).
@@ -153,7 +156,7 @@ struct TransportControls: View {
                 rate: timecodeSettings.framerate
             )
             Button(action: cycleCountdownMode) {
-                VStack(alignment: .trailing, spacing: DS.Space.xs / 2) {
+                VStack(alignment: .leading, spacing: DS.Space.xs / 2) {
                     // Decorative caps label — hidden from AX so the toggle
                     // button's composed label stays just the countdown value.
                     Text("Next Cue").dsSectionHeader().accessibilityHidden(true)

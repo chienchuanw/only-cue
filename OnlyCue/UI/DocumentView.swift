@@ -121,6 +121,12 @@ struct DocumentView: View {
                     onStepPrevCue: { stepPlayhead(.previous) },
                     onStepNextCue: { stepPlayhead(.next) }
                 )
+                    // Pin the transport to its natural height: its internal
+                    // full-height divider (.frame(maxHeight: .infinity)) would
+                    // otherwise make the whole bar greedy and split the column
+                    // with the preview, leaving a large empty box (Figma 318:1309
+                    // is a thin ~50pt row). fixedSize lets PreviewPane fill.
+                    .fixedSize(horizontal: false, vertical: true)
                     .padding(.top, DS.Space.xs)
             }
 
@@ -139,7 +145,10 @@ struct DocumentView: View {
                 shortcutFor: shortcut
             )
         }
-        .frame(minWidth: 560, minHeight: 480)
+        // Fill the detail column so the flexible PreviewPane can expand and the
+        // transport bar sits at the bottom (Figma 318:1252), instead of the
+        // content sizing to ~480pt and floating in a taller column.
+        .frame(minWidth: 560, maxWidth: .infinity, minHeight: 480, maxHeight: .infinity)
         .padding()
         .fileImporter(
             isPresented: $showImporter,

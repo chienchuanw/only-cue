@@ -26,7 +26,11 @@ struct PreviewPane: View {
                 DS.Color.surfaceSunken
                 content
             }
-            .frame(minHeight: 180)
+            // Fill the center pane (Figma 318:1252 — the preview/waveform well
+            // is the dominant vertical block, ~80% of the center height), so the
+            // transport bar sits as a thin row beneath it rather than floating in
+            // a large empty box.
+            .frame(maxWidth: .infinity, minHeight: 180, maxHeight: .infinity)
             .clipShape(RoundedRectangle(cornerRadius: DS.Radius.sm))
             .accessibilityIdentifier("previewPane")
             .task(id: document.model.activeItemID) { await resolveWaveformURL() }
@@ -102,10 +106,19 @@ struct PreviewPane: View {
 
     @ViewBuilder
     private func videoContent(item: MediaItem) -> some View {
-        VStack(spacing: 0) {
-            videoPlayer
-            timeline(item: item)
-                .frame(height: showTimelineBreakdown ? 160 : 100)
+        // Proportional split (Figma 318:1639): the video letterbox fills the top
+        // and the waveform/timeline takes a ~26% band beneath it, rather than a
+        // fixed 100pt that leaves the well mostly empty as the window grows.
+        GeometryReader { proxy in
+            VStack(spacing: 0) {
+                videoPlayer
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+                timeline(item: item)
+                    .frame(height: PreviewLayout.videoTimelineHeight(
+                        totalHeight: proxy.size.height,
+                        breakdown: showTimelineBreakdown
+                    ))
+            }
         }
     }
 

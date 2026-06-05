@@ -67,9 +67,9 @@ System requirements: macOS 14 (Sonoma) or later, Apple silicon or Intel.
 
 ### Current release
 
-**[v0.4.0](https://github.com/chienchuanw/only-cue/releases/tag/v0.4.0) is the latest release** — the "Quiet Pro" design-token redesign and a Figma-driven fidelity pass, the Cue / Lyric / Show editor-mode system with a full lyrics workflow, encrypted `.cuelist` documents, portable `.occues` cue lists, and loop / auto-next playback modes (schema settled at v15).
+**[v0.4.1](https://github.com/chienchuanw/only-cue/releases/tag/v0.4.1) is the latest release** — a dark-only main window (ADR-029) and a close Figma-fidelity pass on top of v0.4.0: clean cue rows with one-line SMPTE times, compact sidebar clip durations, and an achromatic waveform.
 
-Earlier releases: [v0.3.0](https://github.com/chienchuanw/only-cue/releases/tag/v0.3.0) (LTC routing, per-media timecode, cue-anchored tempo, SMPTE rendering), [v0.2.0](https://github.com/chienchuanw/only-cue/releases/tag/v0.2.0), and the MVP [v0.1.0](https://github.com/chienchuanw/only-cue/releases/tag/v0.1.0) (13 MVP issues via PRs [#14–#26](https://github.com/chienchuanw/only-cue/pulls?q=is%3Apr+is%3Amerged)).
+Earlier releases: [v0.4.0](https://github.com/chienchuanw/only-cue/releases/tag/v0.4.0) (the "Quiet Pro" design-token redesign, the Cue / Lyric / Show editor-mode system with a full lyrics workflow, encrypted `.cuelist` documents, portable `.occues` cue lists, loop / auto-next playback — schema settled at v15), [v0.3.0](https://github.com/chienchuanw/only-cue/releases/tag/v0.3.0) (LTC routing, per-media timecode, cue-anchored tempo, SMPTE rendering), [v0.2.0](https://github.com/chienchuanw/only-cue/releases/tag/v0.2.0), and the MVP [v0.1.0](https://github.com/chienchuanw/only-cue/releases/tag/v0.1.0) (13 MVP issues via PRs [#14–#26](https://github.com/chienchuanw/only-cue/pulls?q=is%3Apr+is%3Amerged)).
 
 ### Shipped beyond MVP (on `dev`)
 

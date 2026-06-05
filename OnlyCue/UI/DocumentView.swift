@@ -50,7 +50,10 @@ struct DocumentView: View {
                     .cueListInspectorColumnWidth()
                 }
         }
-        .navigationSubtitle(document.model.activeItem?.resolvedName ?? "")
+        // Figma 318:1236: the titlebar subtitle is the editor mode, not the
+        // active media item name (the active clip is already shown in the
+        // sidebar / preview).
+        .navigationSubtitle("\(editorMode.title) Mode")
         .sheet(isPresented: firstLaunchBinding) {
             FirstLaunchSheet { didShowFirstLaunch = true }
         }

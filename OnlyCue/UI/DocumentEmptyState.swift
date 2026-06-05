@@ -20,6 +20,12 @@ struct DocumentEmptyState: View {
                 .font(DS.Text.body)
                 .foregroundStyle(DS.Color.textSecondary)
             Button("Import Media…") { onImport() }
+                // Filled cue/indigo CTA — the one chroma element allowed by
+                // ADR-024 (Figma 318:1354). `.borderedProminent` + indigo tint
+                // (not the custom IndigoPrimaryButtonStyle) keeps the element
+                // queryable as a button for XCUITest's readiness probe.
+                .buttonStyle(.borderedProminent)
+                .tint(DS.Color.cueIndigo)
                 .accessibilityIdentifier("importMediaButton")
                 .help("Import Media (⌘O)")
                 .padding(.top, DS.Space.xs)

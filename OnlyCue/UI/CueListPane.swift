@@ -263,8 +263,12 @@ struct CueListPane: View {
             headerRow
             Divider()
             scrollableList
-            if !isReadOnly {
-                Divider()
+            Divider()
+            // Show mode (read-only) pins a "Read-only — Show Mode" lock footer
+            // (Figma 318:1608); editable modes keep the Manage Types… footer.
+            if isReadOnly {
+                ShowModeFooter()
+            } else {
                 CueListFooter()
             }
         }

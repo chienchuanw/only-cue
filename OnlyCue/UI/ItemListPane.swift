@@ -15,8 +15,11 @@ struct ItemListPane: View {
             // visible whether or not media has been imported.
             Text("Media")
                 .dsSectionHeader()
-                .padding(.horizontal, DS.Space.sm)
-                .padding(.top, DS.Space.sm)
+                // Align the caption to the row content gutter (~16pt) per Figma
+                // 318:1239, not the pane edge.
+                .padding(.leading, DS.Space.lg)
+                .padding(.trailing, DS.Space.sm)
+                .padding(.vertical, DS.Space.sm)
                 .frame(maxWidth: .infinity, alignment: .leading)
                 .accessibilityIdentifier("itemListSectionCaption")
             if document.model.items.isEmpty {
@@ -94,6 +97,7 @@ struct ItemListPane: View {
         List(selection: selectionBinding) {
             ForEach(document.model.items) { item in
                 ItemRowView(item: item, onEdit: { editingItemID = item.id })
+                .frame(height: 30)
                 .contextMenu {
                     Button("Edit Media…") { editingItemID = item.id }
                         .accessibilityIdentifier("contextMenuEditMedia")
@@ -104,10 +108,24 @@ struct ItemListPane: View {
                     }
                 }
                 .tag(Optional(item.id))
+                // Fixed 30pt rows on a 32pt pitch with an inset rounded
+                // selection pill (Figma 318:1238) — replaces the default List
+                // variable rows + full-bleed system highlight.
+                .listRowInsets(EdgeInsets(top: 1, leading: DS.Space.md, bottom: 1, trailing: DS.Space.sm))
+                .listRowSeparator(.hidden)
+                .listRowBackground(
+                    RoundedRectangle(cornerRadius: DS.Radius.sm)
+                        .fill(ItemRowFill.color(
+                            isActive: item.id == document.model.activeItemID,
+                            selection: DS.Color.selection
+                        ))
+                        .padding(.horizontal, DS.Space.xs)
+                )
             }
             .onMove(perform: move)
             .onDelete(perform: deleteAtOffsets)
         }
+        .listStyle(.plain)
         .onDeleteCommand { deleteSelected() }
         .scrollContentBackground(.hidden)
     }

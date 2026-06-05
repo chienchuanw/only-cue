@@ -16,6 +16,8 @@ struct ItemRowView: View {
                 .frame(width: 16)
             VStack(alignment: .leading, spacing: DS.Space.xs / 2) {
                 Text(item.resolvedName)
+                    .font(DS.Text.body)
+                    .foregroundStyle(DS.Color.textPrimary)
                     .lineLimit(1)
                     .truncationMode(.middle)
                 // The sidebar shows the clip *length* (a duration), so it uses

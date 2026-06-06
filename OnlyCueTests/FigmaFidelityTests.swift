@@ -62,6 +62,19 @@ final class FigmaFidelityTests: XCTestCase {
         XCTAssertEqual(TimeFormat.compactDuration(3700), "1:01:40")
     }
 
+    /// Cue markers are colored pin badges (Figma 318:1303 — 18×20 pin with the
+    /// number centered inside), not a number stacked above a small cap.
+    func test_cueMarkerPinSizeMatchesFigma() {
+        XCTAssertEqual(CueMarkerView.MarkerStyle.normal.pinWidth, 18)
+        XCTAssertEqual(CueMarkerView.MarkerStyle.normal.pinHeight, 20)
+        XCTAssertEqual(CueMarkerView.markerNumberFontSize, 10)
+        // Selected markers grow the pin, keeping the number legible.
+        XCTAssertGreaterThan(
+            CueMarkerView.MarkerStyle.selected.pinWidth,
+            CueMarkerView.MarkerStyle.normal.pinWidth
+        )
+    }
+
     /// Cue/Lyric/Show switcher is left-aligned with a 16pt leading inset
     /// (Figma 318:1250 — EditorModeSwitcher at x=16), not centered.
     func test_switcherLeadingInsetMatchesFigma() {

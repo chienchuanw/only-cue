@@ -18,7 +18,7 @@ struct EditorModeSwitcher: View {
             }
         }
         .padding(DS.Space.xs / 2)
-        .background(RoundedRectangle(cornerRadius: DS.Radius.sm + 1).fill(DS.Color.surfaceSunken))
+        .background(RoundedRectangle(cornerRadius: DS.Radius.md).fill(DS.Color.surfaceSunken))
         .fixedSize()
         // `.contain` keeps the switcher itself queryable AND lets XCUITest walk
         // to the individual segment buttons.
@@ -33,15 +33,15 @@ struct EditorModeSwitcher: View {
         } label: {
             HStack(spacing: DS.Space.xs) {
                 Image(systemName: candidate.symbolName)
-                    .font(.system(size: 10, weight: .medium)) // off-grid: SF Symbol glyph size
+                    .font(.system(size: 13, weight: .medium)) // off-grid: Figma icon size-[13px]
                 Text(candidate.title)
                     .font(DS.Text.body)
-                    .fontWeight(isActive ? .semibold : .regular)
+                    .fontWeight(.semibold) // Figma: semibold labels throughout
             }
             .padding(.horizontal, DS.Space.md)
             .padding(.vertical, DS.Space.xs)
             .background(
-                RoundedRectangle(cornerRadius: DS.Radius.sm - 1)
+                RoundedRectangle(cornerRadius: DS.Radius.sm)
                     .fill(isActive ? DS.Color.ink : Color.clear)
             )
             .foregroundStyle(isActive ? DS.Color.inkOn : DS.Color.textSecondary)

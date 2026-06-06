@@ -28,7 +28,9 @@ struct ItemListPane: View {
                 itemList
             }
         }
-        .frame(minWidth: 200)
+        // Figma 318:1238: the sidebar is a fixed 240pt column (was minWidth 200,
+        // which let it collapse below the design width).
+        .frame(minWidth: 240)
         .background(DS.Color.panel)
         .accessibilityIdentifier("itemListPane")
         .dropDestination(for: URL.self) { urls, _ in

@@ -25,7 +25,7 @@ struct DocumentView: View {
     @ObservedObject var ltcRoutingStore = LTCRoutingStore.shared
     @Environment(\.undoManager) private var undoManager
 
-    private func shortcut(_ action: KeymapAction) -> KeyboardShortcut {
+    func shortcut(_ action: KeymapAction) -> KeyboardShortcut {
         keymapStore.keymap.chord(for: action).keyboardShortcut
             ?? Keymap.default.chord(for: action).keyboardShortcut
             ?? KeyboardShortcut(KeyEquivalent("/"), modifiers: .command)
@@ -132,21 +132,28 @@ struct DocumentView: View {
                     .fixedSize(horizontal: false, vertical: true)
                     .padding(.top, DS.Space.xs)
             }
-
-            transportShortcuts
-            digitShortcuts
-            lyricTapAlongShortcut
-            PlayheadStepShortcuts(
-                onStepPrev: { stepPlayhead(.previous) },
-                onStepNext: { stepPlayhead(.next) },
-                isEnabled: document.model.activeItem != nil,
-                shortcutFor: shortcut
-            )
-            PlaybackRateShortcuts(
-                engine: engine,
-                ltcEnabled: ltcRoutingStore.settings.isEnabled,
-                shortcutFor: shortcut
-            )
+        }
+        // Invisible keyboard-shortcut hosts live in `.background`, NOT the VStack
+        // — as 0×0 children they still earned the VStack's 12pt spacing, which
+        // stacked up and pushed the transport ~60pt off the bottom (#514).
+        .background {
+            ZStack {
+                transportShortcuts
+                digitShortcuts
+                lyricTapAlongShortcut
+                PlayheadStepShortcuts(
+                    onStepPrev: { stepPlayhead(.previous) },
+                    onStepNext: { stepPlayhead(.next) },
+                    isEnabled: document.model.activeItem != nil,
+                    shortcutFor: shortcut
+                )
+                PlaybackRateShortcuts(
+                    engine: engine,
+                    ltcEnabled: ltcRoutingStore.settings.isEnabled,
+                    shortcutFor: shortcut
+                )
+            }
+            .frame(width: 0, height: 0)
         }
         // Fill the detail column so the flexible PreviewPane can expand and the
         // transport bar sits at the bottom (Figma 318:1252), instead of the
@@ -241,36 +248,6 @@ struct DocumentView: View {
             : "These files weren't supported and were skipped: \(list)"
     }
 
-    private var transportShortcuts: some View {
-        ZStack {
-            Button("Play/Pause") { engine.toggle() }
-                .keyboardShortcut(shortcut(.playPause))
-            Button("Back 1s") { jump(by: -1) }
-                .keyboardShortcut(shortcut(.jumpBack))
-            Button("Forward 1s") { jump(by: 1) }
-                .keyboardShortcut(shortcut(.jumpForward))
-            Button("Add Cue") { addCueAtPlayhead() }
-                .keyboardShortcut(shortcut(.addCue))
-                .disabled(document.model.activeItem == nil)
-        }
-        .frame(width: 0, height: 0)
-        .opacity(0)
-        .accessibilityHidden(true)
-    }
-
-    private var digitShortcuts: some View {
-        ZStack {
-            ForEach(0...9, id: \.self) { digit in
-                Button("Cue Type \(digit)") { triggerHotkey(digit) }
-                    .keyboardShortcut(shortcut(KeymapAction.addCueOfType(digit) ?? .addCueOfType0))
-            }
-        }
-        .frame(width: 0, height: 0)
-        .opacity(0)
-        .accessibilityHidden(true)
-        .disabled(document.model.activeItem == nil)
-    }
-
 }
 
 /// Playhead / cue-creation actions. Split into an extension so the main
@@ -307,7 +284,7 @@ extension DocumentView {
         )
     }
 
-    fileprivate func triggerHotkey(_ digit: Int) {
+    func triggerHotkey(_ digit: Int) {
         guard let type = document.model.cuePointType(forHotkey: digit) else { return }
         CueCommands.addCueAtPlayhead(
             time: engine.currentTime,
@@ -325,13 +302,13 @@ extension DocumentView {
         seekTask = Task { await engine.seek(to: target.time) }
     }
 
-    fileprivate func jump(by seconds: TimeInterval) {
+    func jump(by seconds: TimeInterval) {
         let target = max(0, engine.currentTime + seconds)
         seekTask?.cancel()
         seekTask = Task { await engine.seek(to: target) }
     }
 
-    fileprivate func addCueAtPlayhead() {
+    func addCueAtPlayhead() {
         CueCommands.addCueAtPlayhead(
             time: engine.currentTime,
             document: document,

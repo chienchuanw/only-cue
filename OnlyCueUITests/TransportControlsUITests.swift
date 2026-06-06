@@ -37,4 +37,21 @@ final class TransportControlsUITests: XCTestCase {
         XCTAssertTrue(play.isHittable, "play/pause control should be clickable")
         play.click()
     }
+
+    /// Figma 318:1309/318:1249: the transport is a thin row pinned to the bottom
+    /// of the center pane. It previously floated ~60pt above the bottom because
+    /// invisible keyboard-shortcut hosts added VStack spacing below it (#514).
+    func test_transportPinnedToBottom() throws {
+        let app = launchSeeded()
+        let transport = app.descendants(matching: .any)
+            .matching(identifier: "transportControls").firstMatch
+        XCTAssertTrue(transport.waitForExistence(timeout: 15), "transport bar should render")
+        let gapBelow = app.windows.firstMatch.frame.maxY - transport.frame.maxY
+        XCTAssertLessThan(
+            gapBelow,
+            transport.frame.height,
+            "transport should sit at the bottom of the window, not float above it "
+                + "(gapBelow=\(gapBelow), barHeight=\(transport.frame.height))"
+        )
+    }
 }

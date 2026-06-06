@@ -36,7 +36,7 @@ struct DocumentView: View {
     var body: some View {
         NavigationSplitView {
             ItemListPane(document: document, onDropURLs: importURLs)
-                .navigationSplitViewColumnWidth(min: 200, ideal: 240, max: 320)
+                .navigationSplitViewColumnWidth(min: 240, ideal: 240, max: 320)
         } detail: {
             mainPane
                 .inspector(isPresented: .constant(true)) {

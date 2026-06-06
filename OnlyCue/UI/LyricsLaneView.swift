@@ -71,7 +71,15 @@ struct LyricsLaneView: View {
         let effective = lyrics.effectiveTime(of: line) ?? 0
         let baseX = CueMarkersGeometry.position(forTime: effective, width: width, duration: duration)
         let dx = dragLineID == line.id ? dragDX : 0
-        chip(for: line, collapsed: collapsed)
+        // Cap each compact chip to its slot so a long line can't overrun the
+        // next chip (Figma 318:1263). Editing chips show full text.
+        let maxWidth = isEditing ? nil : LyricsLaneLayout.chipMaxWidth(
+            forTime: effective,
+            allTimes: lyrics.placedLines.compactMap { lyrics.effectiveTime(of: $0) },
+            duration: duration,
+            contentWidth: width
+        )
+        chip(for: line, collapsed: collapsed, maxWidth: maxWidth)
             .offset(x: baseX + dx)
             .gesture(dragGesture(line: line, effective: effective, width: width))
             .onTapGesture { onSeek(effective) }
@@ -80,15 +88,17 @@ struct LyricsLaneView: View {
     }
 
     @ViewBuilder
-    private func chip(for line: LyricLine, collapsed: Bool) -> some View {
+    private func chip(for line: LyricLine, collapsed: Bool, maxWidth: CGFloat?) -> some View {
         if collapsed {
             Rectangle().fill(DS.Color.cueIndigo.opacity(0.7)).frame(width: 1.5, height: 12)
         } else {
             Text(line.text.isEmpty ? "\u{266A}" : line.text)
                 .font(.system(size: 11))
                 .lineLimit(1)
+                .truncationMode(.tail)
                 .padding(.horizontal, 6)
                 .padding(.vertical, isEditing ? 5 : 2)
+                .frame(maxWidth: maxWidth, alignment: .leading)
                 .background(RoundedRectangle(cornerRadius: 4).fill(DS.Color.cueIndigo.opacity(isEditing ? 0.85 : 0.18)))
                 .foregroundStyle(isEditing ? Color.white : Color.primary)
         }

@@ -177,6 +177,9 @@ private struct LyricsInspectorRow: View {
             Text(LyricsTimeFormat.clockString(line.time ?? 0))
                 .font(.caption.monospacedDigit())
                 .foregroundStyle(isCurrent ? DS.Color.cueIndigo : DS.Color.textSecondary)
+                // Fixed timestamp column so every lyric text shares one left
+                // edge (Figma 318:1490 — timestamp ~61pt, text at x=81).
+                .frame(width: 62, alignment: .leading)
             TextField("lyric line", text: $text)
                 .focused($focused)
                 .font(isCurrent ? DS.Text.body.weight(.semibold) : DS.Text.body)

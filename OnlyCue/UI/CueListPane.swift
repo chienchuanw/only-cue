@@ -8,20 +8,31 @@ enum CueListLayout {
     static let rowHorizontalPadding: CGFloat = 8
     static let rowTintOpacity: Double = 0.18
 
+    /// The cue-type color-swatch diameter leading every `CueRowView`
+    /// (Figma `318:1241`).
+    static let swatchDiameter: CGFloat = 8
+
+    /// The leading offset of a row's first column (Time): the row's leading
+    /// padding (`DS.Space.xs / 2`) + the swatch + the swatch-to-content gap
+    /// (`DS.Space.xs`). The header reserves the same gutter (Figma's empty
+    /// swatch slot, `318:1320`) so its TIME/#/NAME/FADE labels align with the
+    /// row columns.
+    static let rowLeadingGutter: CGFloat = DS.Space.xs / 2 + swatchDiameter + DS.Space.xs
+
     /// Non-column horizontal cost of the header row: the 3 inter-column gaps
-    /// (`rowHorizontalSpacing` each) plus `rowHorizontalPadding` on both
-    /// edges. The Name column is flexible with no enforced intrinsic
-    /// minimum, so it compresses to ~0 and contributes nothing to the floor.
+    /// (`rowHorizontalSpacing` each) plus the leading swatch gutter and the
+    /// trailing edge padding. The Name column is flexible with no enforced
+    /// intrinsic minimum, so it compresses to ~0 and contributes nothing.
     static let headerHorizontalChrome: CGFloat =
-        3 * rowHorizontalSpacing + 2 * rowHorizontalPadding
+        3 * rowHorizontalSpacing + rowLeadingGutter + rowHorizontalPadding
 
     /// The cue-list header's guaranteed-compressible minimum width — the
     /// value the outer `NSSplitView` sees as the pane's hard floor. Issue
     /// #297: this must never exceed `CueListInspectorMetrics.minWidth`, or
     /// the splitter cannot reach the 240 column minimum without the content
-    /// demanding more and feeding the constraint-update loop. `CueRowView`
-    /// rows carry a leading color swatch (~14pt of leading chrome) but stay
-    /// inside the same 40pt slack, so the header is the binding floor.
+    /// demanding more and feeding the constraint-update loop. Header and rows
+    /// now share the same leading swatch gutter (`rowLeadingGutter`), so the
+    /// header is the binding floor; the floor stays ≤ 240 (92+40+56+46 = 234).
     static var headerMinimumWidth: CGFloat {
         CueListColumnWidths.timeRange.lowerBound
             + CueListColumnWidths.numberRange.lowerBound
@@ -251,7 +262,10 @@ struct CueListPane: View {
         // Uppercase, tracked, tertiary micro-labels — the shared section-header
         // treatment, matching the Figma column header `TIME · # · NAME · FADE`.
         .dsSectionHeader()
-        .padding(.horizontal, CueListLayout.rowHorizontalPadding)
+        // Reserve the same leading swatch gutter the rows carry so the columns
+        // align (Figma 318:1320); trailing keeps the row edge padding.
+        .padding(.leading, CueListLayout.rowLeadingGutter)
+        .padding(.trailing, CueListLayout.rowHorizontalPadding)
         .padding(.vertical, DS.Space.sm)
         .accessibilityIdentifier(Self.headerAccessibilityIdentifier)
         .disabled(isReadOnly)

@@ -179,16 +179,21 @@ struct CueMarkerView: View {
 
     struct MarkerStyle: Equatable {
         let lineWidth: CGFloat
-        let capWidth: CGFloat
-        let capHeight: CGFloat
+        /// Pin-badge box (Figma 318:1303 — a rounded top with a downward
+        /// pointer). The cue number sits centered inside the badge.
+        let pinWidth: CGFloat
+        let pinHeight: CGFloat
 
-        static let normal = Self(lineWidth: 2, capWidth: 10, capHeight: 8)
-        static let selected = Self(lineWidth: 3, capWidth: 14, capHeight: 12)
+        static let normal = Self(lineWidth: 2, pinWidth: 18, pinHeight: 20)
+        static let selected = Self(lineWidth: 3, pinWidth: 22, pinHeight: 24)
 
         static func style(isSelected: Bool) -> Self {
             isSelected ? .selected : .normal
         }
     }
+
+    /// Inset cue-number type size — Inter Semi Bold 10 in Figma 318:1303.
+    static let markerNumberFontSize: CGFloat = 10
 
     /// Whether to render the hover halo behind the cap. Selected markers
     /// suppress the halo: the selected style (thicker line + larger cap)
@@ -206,10 +211,12 @@ struct CueMarkerView: View {
     var onDragEnded: (_ translationWidth: CGFloat) -> Void = { _ in }
 
     private static let hitWidth: CGFloat = 14
-    private static let labelGap: CGFloat = 1
     private static let haloPadding: CGFloat = 8
     private static let haloOpacity: Double = 0.35
     private static let haloBlurRadius: CGFloat = 2
+    /// Pin pointer (the downward tip) and corner radius (Figma 318:1303).
+    static let pinPointerHeight: CGFloat = 4
+    static let pinCornerRadius: CGFloat = 4
 
     @State private var isHovered: Bool = false
 
@@ -219,48 +226,40 @@ struct CueMarkerView: View {
         Self.showHalo(isHovered: isHovered, isSelected: isSelected)
     }
 
+    private var frameWidth: CGFloat { max(Self.hitWidth, style.pinWidth) }
+
     var body: some View {
-        VStack(spacing: Self.labelGap) {
-            if let number = cue.cueNumber {
-                Text(FadeTime.formatNumber(number))
-                    .font(.caption2)
-                    .foregroundStyle(.secondary)
-                    .fixedSize()
-                    .accessibilityIdentifier("cueMarkerLabel-\(cue.id.uuidString)")
-            }
-            ZStack(alignment: .top) {
-                Circle()
-                    .fill(markerColor)
-                    .frame(
-                        width: style.capWidth + Self.haloPadding,
-                        height: style.capWidth + Self.haloPadding
-                    )
-                    .opacity(haloVisible ? Self.haloOpacity : 0)
-                    .blur(radius: Self.haloBlurRadius)
-                    .animation(.easeOut(duration: 0.12), value: haloVisible)
-                    .allowsHitTesting(false)
-                Capsule()
-                    .fill(.clear)
-                    .frame(width: Self.hitWidth)
-                    .onHover { inside in
-                        isHovered = inside
-                        if inside {
-                            NSCursor.resizeLeftRight.push()
-                        } else {
-                            NSCursor.pop()
-                        }
+        ZStack(alignment: .top) {
+            // Full-height cue line — the flexible Rectangle accepts the well's
+            // proposed height, so the line spans the waveform.
+            Rectangle()
+                .fill(markerColor)
+                .frame(width: style.lineWidth)
+                .opacity(0.85)
+            // Full-height invisible hit target for drag / seek.
+            Capsule()
+                .fill(.clear)
+                .frame(width: Self.hitWidth)
+                .onHover { inside in
+                    isHovered = inside
+                    if inside {
+                        NSCursor.resizeLeftRight.push()
+                    } else {
+                        NSCursor.pop()
                     }
-                Rectangle()
-                    .fill(markerColor)
-                    .frame(width: style.lineWidth)
-                    .opacity(0.85)
-                Capsule()
-                    .fill(markerColor)
-                    .frame(width: style.capWidth, height: style.capHeight)
-            }
+                }
+            // Hover halo behind the pin badge.
+            CuePinShape(pointerHeight: Self.pinPointerHeight, cornerRadius: Self.pinCornerRadius)
+                .fill(markerColor)
+                .frame(width: style.pinWidth + Self.haloPadding, height: style.pinHeight + Self.haloPadding)
+                .opacity(haloVisible ? Self.haloOpacity : 0)
+                .blur(radius: Self.haloBlurRadius)
+                .animation(.easeOut(duration: 0.12), value: haloVisible)
+                .allowsHitTesting(false)
+            pinBadge
         }
-        .frame(width: Self.hitWidth)
-        .offset(x: baseX + visualOffset - Self.hitWidth / 2)
+        .frame(width: frameWidth)
+        .offset(x: baseX + visualOffset - frameWidth / 2)
         .gesture(
             DragGesture(minimumDistance: 0)
                 .onChanged { value in onDragChanged(value.translation.width) }
@@ -273,8 +272,78 @@ struct CueMarkerView: View {
         .accessibilityAddTraits(isSelected ? .isSelected : [])
     }
 
+    /// The colored pin badge (Figma 318:1303) with the cue number centered
+    /// inside it; the number color flips to stay legible on light vs dark fills.
+    private var pinBadge: some View {
+        ZStack {
+            CuePinShape(pointerHeight: Self.pinPointerHeight, cornerRadius: Self.pinCornerRadius)
+                .fill(markerColor)
+            if let number = cue.cueNumber {
+                Text(FadeTime.formatNumber(number))
+                    .font(.system(size: Self.markerNumberFontSize, weight: .semibold))
+                    .foregroundStyle(numberColor)
+                    .fixedSize()
+                    // Center within the rounded body, above the pointer tip.
+                    .offset(y: -Self.pinPointerHeight / 2)
+                    .accessibilityIdentifier("cueMarkerLabel-\(cue.id.uuidString)")
+            }
+        }
+        .frame(width: style.pinWidth, height: style.pinHeight)
+        .allowsHitTesting(false)
+    }
+
     private var markerColor: Color {
         guard let hex = resolvedColorHex else { return .accentColor }
         return Color(hex: hex) ?? .accentColor
+    }
+
+    private var numberColor: Color {
+        Self.numberColor(forHex: resolvedColorHex)
+    }
+
+    /// Dark glyph on a light fill, light glyph on a dark fill — matches Figma's
+    /// dark `#1f1c1a` number for the bright cue colors while staying legible on
+    /// dark cue colors (e.g. indigo).
+    static func numberColor(forHex hex: String?) -> Color {
+        guard let hex, let luminance = relativeLuminance(hex: hex) else {
+            return Color(red: 0.122, green: 0.110, blue: 0.102) // Figma #1f1c1a
+        }
+        return luminance > 0.5
+            ? Color(red: 0.122, green: 0.110, blue: 0.102)
+            : .white
+    }
+
+    /// Approximate relative luminance (0…1) from a `#RRGGBB` hex; nil if unparsable.
+    static func relativeLuminance(hex: String) -> Double? {
+        var clean = hex.trimmingCharacters(in: .whitespacesAndNewlines)
+        if clean.hasPrefix("#") { clean.removeFirst() }
+        guard clean.count == 6, let value = UInt32(clean, radix: 16) else { return nil }
+        let red = Double((value >> 16) & 0xFF) / 255
+        let green = Double((value >> 8) & 0xFF) / 255
+        let blue = Double(value & 0xFF) / 255
+        return 0.2126 * red + 0.7152 * green + 0.0722 * blue
+    }
+}
+
+/// A map-pin badge: a rounded rectangle body with a centered downward pointer
+/// at the bottom (Figma 318:1303 CueMarker pin).
+struct CuePinShape: Shape {
+
+    var pointerHeight: CGFloat = 4
+    var cornerRadius: CGFloat = 4
+
+    func path(in rect: CGRect) -> Path {
+        let bodyHeight = max(0, rect.height - pointerHeight)
+        var path = Path()
+        path.addRoundedRect(
+            in: CGRect(x: rect.minX, y: rect.minY, width: rect.width, height: bodyHeight),
+            cornerSize: CGSize(width: cornerRadius, height: cornerRadius)
+        )
+        // Downward pointer centered on the body's bottom edge.
+        path.move(to: CGPoint(x: rect.midX - pointerHeight, y: bodyHeight))
+        path.addLine(to: CGPoint(x: rect.midX, y: rect.maxY))
+        path.addLine(to: CGPoint(x: rect.midX + pointerHeight, y: bodyHeight))
+        path.closeSubpath()
+        return path
     }
 }

@@ -32,7 +32,7 @@ struct CueRowView: View {
         HStack(spacing: DS.Space.xs) {
             // The cue-type color as a leading swatch — the same component the
             // inspector's Type picker uses. (Replaces the old 3pt side-stripe.)
-            CueColorSwatch(hex: resolvedColorHex, diameter: 8, fallback: DS.Color.border)
+            CueColorSwatch(hex: resolvedColorHex, diameter: CueListLayout.swatchDiameter, fallback: DS.Color.border)
                 .accessibilityIdentifier("cueRowSwatch-\(cue.id)")
             VStack(alignment: .leading, spacing: 0) {
                 HStack(spacing: CueListLayout.rowHorizontalSpacing) {

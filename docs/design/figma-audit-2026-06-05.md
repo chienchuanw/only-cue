@@ -171,6 +171,8 @@ _The LTC strip is structurally faithful — 34pt height, 150pt panel header, sun
 
 _The transport zones, fonts, and readout structure are close, but the app renders the bar as a fully-bordered rounded card with full-height dividers and a right-pushed next-cue zone, whereas Figma is a flat strip with only a top hairline, fixed 26pt dividers, and the next-cue group sitting immediately after the readout on a uniform 16pt gap; button sizes/styling also diverge._
 
+> **Resolved (issue #506):** prev/next skip buttons are now box-less glyphs (only the primary play/pause keeps its filled `DS.Color.ink` button), the inter-zone hairline dividers are vertically inset, and the next-cue value drops its redundant `Next:` prefix (the zone's `NEXT CUE` caps header already names it). **Intentional divergence:** the main readout and total stay SMPTE `HH:MM:SS:FF` rather than Figma's decimal `00:01:30.470 / 03:24.0` — frame precision is required for a timecode/lighting tool (per ADR-028, SMPTE-vs-decimal).
+
 - **[HIGH] TransportControls container (318:1310)** (layout)
   - Figma: Flat bar: top border ONLY (border-t, color/border), background color/panel, NO corner radius, NO side/bottom borders. Padding px-16 py-10. Height 50.
   - App: Wrapped in a rounded card: .background(panel) + .overlay(RoundedRectangle(cornerRadius: DS.Radius.md=8).strokeBorder(border)) + .clipShape(RoundedRectangle md) at TransportControls.swift:39-41. Full border on all four sides + 8pt rounded corners.

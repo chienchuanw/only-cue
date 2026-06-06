@@ -1,7 +1,7 @@
 import AppKit
 import XCTest
 
-/// Click-to-toggle for the transport bar's "Next: …" readout.
+/// Click-to-toggle for the transport bar's next-cue countdown readout.
 /// Spec: `docs/superpowers/specs/2026-05-15-beat-tempo-countdown-design.md`.
 ///
 /// The seeded document `three-cues-1-3-6-with-120bpm-tempo` places a tempo'd
@@ -103,8 +103,8 @@ final class BeatCountdownToggleUITests: XCTestCase {
     }
 
     private func isTimeFormat(_ label: String) -> Bool {
-        // "Next: 4.2", "Next: 1:00.0", "Next: 4.2 ⓘ" (beat-mode fallback)
-        label.range(of: #"^Next: \d"#, options: .regularExpression) != nil
+        // No "Next:" prefix anymore — "04:06", "1:00:00", "04:06 ⓘ" (beat fallback)
+        label.range(of: #"^\d"#, options: .regularExpression) != nil
             && !label.contains(" · ")
     }
 
@@ -117,7 +117,7 @@ final class BeatCountdownToggleUITests: XCTestCase {
     }
 
     private func isBeatFormat(_ label: String) -> Bool {
-        let isBars = label.range(of: #"^Next: ~\d+ bars?$"#, options: .regularExpression) != nil
+        let isBars = label.range(of: #"^~\d+ bars?$"#, options: .regularExpression) != nil
         let isPulse = label.contains(" · ")
         return isBars || isPulse
     }

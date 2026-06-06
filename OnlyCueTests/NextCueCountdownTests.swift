@@ -165,7 +165,7 @@ final class NextCueCountdownTests: XCTestCase {
             rate: .fps30
         )
         // 4.2s @ 30fps = 4 sec, 6 frames
-        XCTAssertEqual(label, "Next: 04:06")
+        XCTAssertEqual(label, "04:06")
     }
 
     func test_countdownLabel_beatsMode_underOneBar_formatsAsPulse() {
@@ -178,7 +178,7 @@ final class NextCueCountdownTests: XCTestCase {
             activeTempo: (bpm: 120, beatsPerBar: 4),
             rate: .fps30
         )
-        XCTAssertEqual(label, "Next: 4 · 3 · 2 · 1")
+        XCTAssertEqual(label, "4 · 3 · 2 · 1")
     }
 
     func test_countdownLabel_beatsMode_overOneBar_formatsAsBars() {
@@ -188,7 +188,7 @@ final class NextCueCountdownTests: XCTestCase {
             activeTempo: (bpm: 120, beatsPerBar: 4),
             rate: .fps30
         )
-        XCTAssertEqual(label, "Next: ~2 bars")
+        XCTAssertEqual(label, "~2 bars")
     }
 
     func test_countdownLabel_beatsMode_singleBar_pluralization() {
@@ -199,7 +199,7 @@ final class NextCueCountdownTests: XCTestCase {
             activeTempo: (bpm: 60, beatsPerBar: 4),
             rate: .fps30
         )
-        XCTAssertEqual(label, "Next: ~1 bar")
+        XCTAssertEqual(label, "~1 bar")
     }
 
     func test_countdownLabel_beatsMode_noActiveTempo_fallsBackToTimePlusHintGlyph() {
@@ -210,7 +210,7 @@ final class NextCueCountdownTests: XCTestCase {
             rate: .fps30
         )
         // 4.2s @ 30fps = 4 sec, 6 frames
-        XCTAssertEqual(label, "Next: 04:06 ⓘ")
+        XCTAssertEqual(label, "04:06 ⓘ")
     }
 
     private func makeCue(

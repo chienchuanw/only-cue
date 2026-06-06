@@ -63,23 +63,24 @@ enum TransportBar {
         activeTempo: (bpm: Double, beatsPerBar: Int)?,
         rate: SMPTEFramerate
     ) -> String {
+        // No "Next:" prefix — the zone's "NEXT CUE" caps header already names
+        // it; the value stands alone (Figma 318:1310).
         let timeBody = TimeFormat.smpteCountdown(interval, rate: rate)
         switch mode {
         case .time:
-            return "Next: \(timeBody)"
+            return timeBody
         case .beats:
             guard let tempo = activeTempo else {
-                return "Next: \(timeBody) ⓘ"
+                return "\(timeBody) ⓘ"
             }
             switch beatCountdown(interval: interval, bpm: tempo.bpm, beatsPerBar: tempo.beatsPerBar) {
             case .bars(let bars):
-                return "Next: ~\(bars) bar\(bars == 1 ? "" : "s")"
+                return "~\(bars) bar\(bars == 1 ? "" : "s")"
             case .pulse:
-                let dots = (1...tempo.beatsPerBar)
+                return (1...tempo.beatsPerBar)
                     .reversed()
                     .map(String.init)
                     .joined(separator: " · ")
-                return "Next: \(dots)"
             }
         }
     }

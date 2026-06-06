@@ -49,8 +49,14 @@ struct TransportControls: View {
         .accessibilityIdentifier("transportControls")
     }
 
+    /// Figma 318:1310: only the primary play/pause control carries a filled
+    /// button; prev/next skip controls are plain box-less glyphs.
+    static func buttonShowsChrome(primary: Bool) -> Bool { primary }
+
     private var divider: some View {
-        DS.Color.border.frame(width: 1).frame(maxHeight: .infinity)
+        // Inset hairline — a shorter, vertically-centered divider (Figma
+        // 318:1310) rather than one spanning the full bar height.
+        DS.Color.border.frame(width: 1).frame(maxHeight: .infinity).padding(.vertical, DS.Space.md)
     }
 
     // MARK: - Control zone
@@ -79,17 +85,15 @@ struct TransportControls: View {
         primary: Bool = false,
         action: @escaping () -> Void
     ) -> some View {
-        Button(action: action) {
+        let showsChrome = Self.buttonShowsChrome(primary: primary)
+        return Button(action: action) {
             Image(systemName: symbol)
                 .font(.system(size: primary ? 15 : 12, weight: .medium)) // off-grid: SF Symbol glyph size
                 .frame(width: primary ? 34 : 30, height: primary ? 34 : 30)
-                .background(primary ? DS.Color.ink : DS.Color.surface)
-                .foregroundStyle(primary ? DS.Color.inkOn : DS.Color.textPrimary)
-                .overlay(
-                    RoundedRectangle(cornerRadius: DS.Radius.sm)
-                        .strokeBorder(DS.Color.border)
-                        .opacity(primary ? 0 : 1)
-                )
+                // Primary: filled ink button. Skip controls: box-less glyph —
+                // no background, no border (Figma 318:1310).
+                .background(showsChrome ? DS.Color.ink : Color.clear)
+                .foregroundStyle(showsChrome ? DS.Color.inkOn : DS.Color.textPrimary)
                 .clipShape(RoundedRectangle(cornerRadius: DS.Radius.sm))
         }
         .buttonStyle(.plain)

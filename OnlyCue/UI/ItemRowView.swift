@@ -9,27 +9,29 @@ struct ItemRowView: View {
     /// so users get a discoverable affordance. Audit §13.
     var onEdit: (() -> Void)?
 
+    @State private var isHovered = false
+
     var body: some View {
+        // Single horizontal line (Figma 318:1238 / component 77:43): leading
+        // kind icon · file name (fills, tail-truncates) · clip length · the
+        // hover-only edit pencil — never a stacked name-over-duration column.
         HStack(spacing: DS.Space.sm) {
             Image(systemName: icon)
                 .foregroundStyle(DS.Color.textSecondary)
-                .frame(width: 16)
-            VStack(alignment: .leading, spacing: DS.Space.xs / 2) {
-                Text(item.resolvedName)
-                    .font(DS.Text.body)
-                    .foregroundStyle(DS.Color.textPrimary)
-                    .lineLimit(1)
-                    .truncationMode(.middle)
-                // The sidebar shows the clip *length* (a duration), so it uses
-                // the compact m:ss form, not framerate SMPTE (ADR-028 amendment;
-                // Figma 318:1238). The per-media start timecode (a position)
-                // stays SMPTE in MediaTimecodeRow / the TC editor.
-                Text(TimeFormat.compactDuration(item.media.duration))
-                    .font(DS.Text.label)
-                    .foregroundStyle(DS.Color.textTertiary)
-                    .monospacedDigit()
-            }
-            Spacer(minLength: DS.Space.xs)
+                .frame(width: ItemRowMetrics.iconSize)
+            Text(item.resolvedName)
+                .font(DS.Text.body)
+                .foregroundStyle(DS.Color.textPrimary)
+                .lineLimit(1)
+                .truncationMode(.tail)
+                .frame(maxWidth: .infinity, alignment: .leading)
+            // The sidebar shows the clip *length* (a duration), so it uses the
+            // compact m:ss form, not framerate SMPTE (ADR-028 amendment; Figma
+            // 318:1238). The per-media start timecode (a position) stays SMPTE
+            // in MediaTimecodeRow / the TC editor.
+            Text(TimeFormat.compactDuration(item.media.duration))
+                .font(DS.Text.monoLabel)
+                .foregroundStyle(DS.Color.textTertiary)
             if let onEdit {
                 Button(action: onEdit) {
                     Image(systemName: "pencil")
@@ -48,8 +50,13 @@ struct ItemRowView: View {
                 .help("Edit Media…")
                 .accessibilityLabel("Edit Media")
                 .accessibilityIdentifier("inlineEditMedia-\(item.id.uuidString)")
+                // Hidden at rest, fades in on hover (Figma Hovered variant).
+                // Opacity — not `if`/`.hidden()` — keeps the row from reflowing
+                // and keeps the AX element reachable for the existing UI tests.
+                .opacity(ItemRowMetrics.pencilOpacity(isHovered: isHovered))
             }
         }
+        .onHover { isHovered = $0 }
         // SwiftUI's `List { ForEach { … .tag(item.id) } }` wraps every row
         // in an accessibility container that, with a single
         // `.accessibilityIdentifier` on the HStack, collapses the children

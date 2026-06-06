@@ -61,4 +61,14 @@ final class FigmaFidelityTests: XCTestCase {
         XCTAssertEqual(TimeFormat.compactDuration(222), "3:42")
         XCTAssertEqual(TimeFormat.compactDuration(3700), "1:01:40")
     }
+
+    /// Sidebar row is a single line (Figma 318:1238 / component 77:43): 14pt
+    /// kind icon, 10pt mono clip length, and the edit pencil is hidden at rest
+    /// (it fades in only on hover).
+    func test_sidebarRowSingleLineMetrics() {
+        XCTAssertEqual(ItemRowMetrics.iconSize, 14)
+        XCTAssertEqual(ItemRowMetrics.durationFontSize, 10)
+        XCTAssertEqual(ItemRowMetrics.pencilOpacity(isHovered: false), 0)
+        XCTAssertEqual(ItemRowMetrics.pencilOpacity(isHovered: true), 1)
+    }
 }

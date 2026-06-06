@@ -21,7 +21,13 @@ struct PreviewPane: View {
 
     var body: some View {
         VStack(spacing: DS.Space.sm) {
-            EditorModeSwitcher(mode: editorMode, setMode: setEditorMode)
+            // Left-aligned switcher bar (Figma 318:1250 — EditorModeSwitcher at
+            // x=16), not centered.
+            HStack(spacing: 0) {
+                EditorModeSwitcher(mode: editorMode, setMode: setEditorMode)
+                Spacer(minLength: 0)
+            }
+            .padding(.leading, PreviewLayout.switcherLeadingInset)
             ZStack {
                 DS.Color.surfaceSunken
                 content

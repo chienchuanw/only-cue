@@ -62,6 +62,12 @@ final class FigmaFidelityTests: XCTestCase {
         XCTAssertEqual(TimeFormat.compactDuration(3700), "1:01:40")
     }
 
+    /// Cue/Lyric/Show switcher is left-aligned with a 16pt leading inset
+    /// (Figma 318:1250 — EditorModeSwitcher at x=16), not centered.
+    func test_switcherLeadingInsetMatchesFigma() {
+        XCTAssertEqual(PreviewLayout.switcherLeadingInset, 16)
+    }
+
     /// Sidebar row is a single line (Figma 318:1238 / component 77:43): 14pt
     /// kind icon, 10pt mono clip length, and the edit pencil is hidden at rest
     /// (it fades in only on hover).

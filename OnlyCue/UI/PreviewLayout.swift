@@ -6,6 +6,11 @@ import CoreGraphics
 /// the proportions are unit-tested without a view.
 enum PreviewLayout {
 
+    /// Leading inset of the Cue/Lyric/Show switcher (Figma 318:1250 —
+    /// EditorModeSwitcher at x=16). The switcher bar is left-aligned, not
+    /// centered.
+    static let switcherLeadingInset: CGFloat = 16
+
     /// Height of the timeline/waveform band beneath the video, for a preview of
     /// `totalHeight`. ~26% normally (~40% for the taller breakdown lanes), with
     /// a readable floor, and never more than half (the video stays dominant).

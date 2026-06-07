@@ -38,7 +38,25 @@ final class LTCRoutingStore: ObservableObject {
         settings = Self.decode(defaults.data(forKey: Self.storageKey))
     }
 
+    #if DEBUG
+    /// When true, `persist()` is a no-op — the whole session runs in memory.
+    /// Set by `UITestLTCHandler` so screenshot captures can enable LTC (which
+    /// the settings pane would otherwise persist on appear via
+    /// `reconcileChannelCount`) without touching the user's `ltcRouting.v1`.
+    nonisolated(unsafe) static var suppressPersistenceForUITests = false
+
+    /// Sets routing in memory only. A UI-test hook (see `UITestLTCHandler`) so
+    /// the Audio settings pane can be captured configured without writing the
+    /// persisted default, leaving no side effect for other tests.
+    func applyEphemeralForUITests(_ newSettings: LTCRoutingSettings) {
+        settings = newSettings
+    }
+    #endif
+
     private func persist() {
+        #if DEBUG
+        if Self.suppressPersistenceForUITests { return }
+        #endif
         guard let data = try? JSONEncoder().encode(settings) else { return }
         defaults.set(data, forKey: Self.storageKey)
     }

@@ -13,6 +13,7 @@ struct OnlyCueApp: App {
             // override (e.g. the Light visual baseline) can still take effect.
             UITestAppearanceHandler.applyAppearanceOverrideIfRequested()
             UITestFirstLaunchHandler.applyFirstLaunchOverrideIfRequested()
+            UITestLTCHandler.applyIfRequested()
             UITestSeedHandler.openSeededDocumentIfRequested()
             #endif
         }

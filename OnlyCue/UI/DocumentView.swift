@@ -100,6 +100,7 @@ struct DocumentView: View {
         return VStack(spacing: 12) {
             if activeItem == nil {
                 DocumentEmptyState(onImport: { showImporter = true })
+                    .padding()
             } else {
                 PreviewPane(
                     document: document,
@@ -159,7 +160,10 @@ struct DocumentView: View {
         // transport bar sits at the bottom (Figma 318:1252), instead of the
         // content sizing to ~480pt and floating in a taller column.
         .frame(minWidth: 560, maxWidth: .infinity, minHeight: 480, maxHeight: .infinity)
-        .padding()
+        // No outer padding: Figma 318:1228's Body is edge-to-edge, so the
+        // transport and LTC strip are full-bleed (flush to the column's left /
+        // right and the window bottom). Content insets live inside each section
+        // (switcher 16 leading, waveform well 16 horizontal).
         .fileImporter(
             isPresented: $showImporter,
             allowedContentTypes: MediaImporter.allowedContentTypes,

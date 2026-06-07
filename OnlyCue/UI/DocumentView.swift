@@ -113,25 +113,30 @@ struct DocumentView: View {
                     lyricsCursor: $lyricsCursor
                 )
 
-                ltcStripIfEnabled(activeItem)
+                // The LTC strip + transport are the bottom control group and sit
+                // flush together (Figma 318:1308/318:1309 stack contiguously);
+                // the outer VStack's gap stays above the group, separating it
+                // from the waveform well rather than from the transport.
+                VStack(spacing: 0) {
+                    ltcStripIfEnabled(activeItem)
 
-                TransportControls(
-                    engine: engine,
-                    cues: activeItem?.cues ?? [],
-                    mediaDuration: activeItem?.media.duration ?? 0,
-                    timecodeSettings: document.model.timecodeSettings,
-                    activeItem: activeItem,
-                    playbackMode: document.model.playbackMode,
-                    onStepPrevCue: { stepPlayhead(.previous) },
-                    onStepNextCue: { stepPlayhead(.next) }
-                )
+                    TransportControls(
+                        engine: engine,
+                        cues: activeItem?.cues ?? [],
+                        mediaDuration: activeItem?.media.duration ?? 0,
+                        timecodeSettings: document.model.timecodeSettings,
+                        activeItem: activeItem,
+                        playbackMode: document.model.playbackMode,
+                        onStepPrevCue: { stepPlayhead(.previous) },
+                        onStepNextCue: { stepPlayhead(.next) }
+                    )
                     // Pin the transport to its natural height: its internal
                     // full-height divider (.frame(maxHeight: .infinity)) would
                     // otherwise make the whole bar greedy and split the column
                     // with the preview, leaving a large empty box (Figma 318:1309
                     // is a thin ~50pt row). fixedSize lets PreviewPane fill.
                     .fixedSize(horizontal: false, vertical: true)
-                    .padding(.top, DS.Space.xs)
+                }
             }
         }
         // Invisible keyboard-shortcut hosts live in `.background`, NOT the VStack

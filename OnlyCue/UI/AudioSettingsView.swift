@@ -4,7 +4,9 @@ import SwiftUI
 /// when off (the default) OnlyCue emits no timecode and the routing UI is hidden;
 /// when on, pick the Core Audio output device the LTC generator uses and assign a
 /// role (`LTC` / `Track L` / `Track R` / `Silent`) to each of its output
-/// channels. Bound to `LTCRoutingStore.shared`.
+/// channels. Bound to `LTCRoutingStore.shared`. Laid out to Figma 321:2200:
+/// full-width cards with in-card dividers, inline row labels with right-aligned
+/// controls, and each section's explanatory footnote *below* its card.
 struct AudioSettingsView: View {
 
     @ObservedObject private var store = LTCRoutingStore.shared
@@ -29,16 +31,16 @@ struct AudioSettingsView: View {
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: DS.Space.lg) {
-                enableCard
+                enableSection
                 if settings.isEnabled {
-                    deviceCard
-                    channelCard
+                    deviceSection
+                    channelSection
                     routingStatusCard
                 }
             }
             .padding(DS.Space.xl)
         }
-        .frame(width: 600, height: 420)
+        .frame(width: 520, height: 540)
         .accessibilityIdentifier("audioSettings")
         .onAppear {
             refreshDevices()
@@ -46,68 +48,83 @@ struct AudioSettingsView: View {
         }
     }
 
-    // MARK: Cards
+    // MARK: Sections
 
-    private var enableCard: some View {
+    private var enableSection: some View {
         VStack(alignment: .leading, spacing: DS.Space.sm) {
-            Toggle("Enable LTC output", isOn: enabledSelection)
-                .accessibilityIdentifier("enableLTCOutputToggle")
-            Text(
+            settingsCard {
+                settingsRow {
+                    Text("Enable LTC output").font(DS.Text.body)
+                    Spacer(minLength: DS.Space.sm)
+                    Toggle("Enable LTC output", isOn: enabledSelection)
+                        .labelsHidden()
+                        .toggleStyle(.switch)
+                        .tint(DS.Color.cueIndigo)
+                        .accessibilityIdentifier("enableLTCOutputToggle")
+                }
+            }
+            footnote(
                 "When on, OnlyCue generates SMPTE LTC and sends it — plus the media’s audio on the "
                 + "Track channels — to the chosen output device. The media’s normal audio output is "
                 + "muted while LTC is on."
             )
-            .font(.caption)
-            .foregroundStyle(DS.Color.textSecondary)
         }
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .dsCard()
     }
 
-    private var deviceCard: some View {
+    private var deviceSection: some View {
         VStack(alignment: .leading, spacing: DS.Space.sm) {
-            Text("Output Device").dsSectionHeader()
-            Picker("Output device", selection: deviceSelection) {
-                Text("System Default").tag(String?.none)
-                ForEach(devices) { device in
-                    Text("\(device.name) — \(device.outputChannelCount) ch").tag(String?.some(device.uid))
+            settingsCard {
+                settingsRow {
+                    Text("Output device").font(DS.Text.body)
+                    Spacer(minLength: DS.Space.sm)
+                    Picker("Output device", selection: deviceSelection) {
+                        Text("System Default").tag(String?.none)
+                        ForEach(devices) { device in
+                            Text("\(device.name) — \(device.outputChannelCount) ch").tag(String?.some(device.uid))
+                        }
+                    }
+                    .labelsHidden()
+                    .frame(width: 230)
+                    .accessibilityIdentifier("audioOutputDevicePicker")
                 }
+                cardDivider
+                HStack(spacing: DS.Space.sm) {
+                    Button("Refresh Devices") { refreshDevices() }
+                    Spacer()
+                    Button("Reset Routing") { resetRouting() }
+                }
+                .buttonStyle(.bordered)
+                .padding(.horizontal, rowHorizontalPadding)
+                .padding(.vertical, DS.Space.sm)
             }
-            .labelsHidden()
-            .frame(maxWidth: .infinity, alignment: .leading)
-            .accessibilityIdentifier("audioOutputDevicePicker")
-
-            HStack {
-                Button("Refresh Devices") { refreshDevices() }
-                Spacer()
-                Button("Reset Routing") { resetRouting() }
-            }
-
-            Text(
+            footnote(
                 "The LTC generator plays onto the channel assigned “LTC”. "
                 + "A 4-channel interface can carry LTC on one channel and stereo track audio on two others."
             )
-            .font(.caption)
-            .foregroundStyle(DS.Color.textSecondary)
         }
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .dsCard()
     }
 
-    private var channelCard: some View {
+    private var channelSection: some View {
         VStack(alignment: .leading, spacing: DS.Space.sm) {
             Text("Channel Assignment").dsSectionHeader()
-            ForEach(0..<channelCount, id: \.self) { channel in
-                Picker("Channel \(channel + 1)", selection: roleSelection(forChannel: channel)) {
-                    ForEach(ChannelRole.allCases, id: \.self) { role in
-                        Text(role.displayName).tag(role)
+            settingsCard {
+                ForEach(0..<channelCount, id: \.self) { channel in
+                    if channel > 0 { cardDivider }
+                    settingsRow {
+                        Text("Channel \(channel + 1)").font(DS.Text.body)
+                        Spacer(minLength: DS.Space.sm)
+                        Picker("Channel \(channel + 1)", selection: roleSelection(forChannel: channel)) {
+                            ForEach(ChannelRole.allCases, id: \.self) { role in
+                                Text(role.displayName).tag(role)
+                            }
+                        }
+                        .labelsHidden()
+                        .frame(width: 150)
+                        .accessibilityIdentifier("audioChannelRolePicker.\(channel)")
                     }
                 }
-                .accessibilityIdentifier("audioChannelRolePicker.\(channel)")
             }
         }
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .dsCard()
     }
 
     @ViewBuilder
@@ -131,6 +148,38 @@ struct AudioSettingsView: View {
             .dsCard()
             .accessibilityIdentifier("audioNoTrackChannelsHint")
         }
+    }
+
+    // MARK: Building blocks
+
+    private let rowHorizontalPadding: CGFloat = DS.Space.md
+
+    /// A full-width sectioned card whose rows manage their own insets so the
+    /// in-card dividers span edge to edge (Figma 321:2200).
+    private func settingsCard<Content: View>(@ViewBuilder _ content: () -> Content) -> some View {
+        VStack(spacing: 0) { content() }
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .background(RoundedRectangle(cornerRadius: DS.Radius.xl, style: .continuous).fill(DS.Color.panel))
+            .overlay(RoundedRectangle(cornerRadius: DS.Radius.xl, style: .continuous).strokeBorder(DS.Color.border, lineWidth: 1))
+            .clipShape(RoundedRectangle(cornerRadius: DS.Radius.xl, style: .continuous))
+    }
+
+    private func settingsRow<Content: View>(@ViewBuilder _ content: () -> Content) -> some View {
+        HStack(spacing: DS.Space.sm) { content() }
+            .padding(.horizontal, rowHorizontalPadding)
+            .padding(.vertical, DS.Space.sm)
+            .frame(maxWidth: .infinity, alignment: .leading)
+    }
+
+    private var cardDivider: some View {
+        DS.Color.border.frame(height: 1)
+    }
+
+    private func footnote(_ text: String) -> some View {
+        Text(text)
+            .font(.caption)
+            .foregroundStyle(DS.Color.textSecondary)
+            .frame(maxWidth: .infinity, alignment: .leading)
     }
 
     // MARK: Bindings

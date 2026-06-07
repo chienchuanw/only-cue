@@ -30,6 +30,10 @@ final class AudioSettingsScreenshotTests: XCTestCase {
     private func runAudioSettingsCapture(appearance: String?, screenshotName: String) throws {
         let app = XCUIApplication()
         app.launchArguments += ["-ApplePersistenceIgnoreState", "YES"]
+        // Start with LTC enabled (in memory only — never persisted) so the
+        // capture shows the configured device + channel cards, matching Figma
+        // 321:2200. See UITestLTCHandler.
+        app.launchArguments += ["--ui-test-ltc-enabled"]
         if let appearance {
             app.launchArguments += ["--ui-test-appearance=\(appearance)"]
         }
@@ -55,25 +59,12 @@ final class AudioSettingsScreenshotTests: XCTestCase {
             _ = app.otherElements["audioSettings"].waitForExistence(timeout: 3)
         }
 
-        // Enable LTC so the output-device + channel-assignment cards render —
-        // the capture then matches the configured state in Figma 321:2200.
-        let toggle = app.switches["enableLTCOutputToggle"].exists
-            ? app.switches["enableLTCOutputToggle"]
-            : app.checkBoxes["enableLTCOutputToggle"]
-        let enabledForCapture = toggle.waitForExistence(timeout: 3) && (toggle.value as? String) != "1"
-        if enabledForCapture {
-            toggle.click()
-            _ = app.popUpButtons["audioChannelRolePicker.0"].waitForExistence(timeout: 3)
-        }
+        // LTC is enabled in memory via --ui-test-ltc-enabled, so the device +
+        // channel cards are already present — wait for one before capturing.
+        _ = app.popUpButtons["audioChannelRolePicker.0"].waitForExistence(timeout: 3)
 
         Thread.sleep(forTimeInterval: 0.9)
         try captureScreenshot(named: screenshotName, window: SettingsWindowFinder.window(in: app))
-
-        // Restore the LTC-off default so this capture leaves no persisted side
-        // effect for other tests (e.g. the SMPTE-gating test) or the user's app.
-        if enabledForCapture, (toggle.value as? String) == "1" {
-            toggle.click()
-        }
         app.terminate()
     }
 

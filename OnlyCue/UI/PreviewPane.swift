@@ -60,7 +60,14 @@ struct PreviewPane: View {
                         .padding(overlayPadding, DS.Space.md)
                 }
             }
+            // The waveform well is inset 16pt inside the full-width preview area
+            // (Figma 318:1252/318:1253); the pane itself is edge-to-edge now that
+            // mainPane drops its outer padding.
+            .padding(.horizontal, DS.Space.lg)
         }
+        // Top breathing for the switcher bar (Figma 318:1250 centers it in a
+        // 62pt bar) — needed now that mainPane has no outer padding.
+        .padding(.top, DS.Space.md)
     }
 
     private var activeCue: Cue? {

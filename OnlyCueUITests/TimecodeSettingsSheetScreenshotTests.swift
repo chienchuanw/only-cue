@@ -29,27 +29,30 @@ final class TimecodeSettingsSheetScreenshotTests: XCTestCase {
 
     private func runTimecodeSettingsCapture(appearance: String?, screenshotName: String) throws {
         let app = XCUIApplication()
-        app.launchArguments += ["-ApplePersistenceIgnoreState", "YES"]
+        // Seed a document with media so the sheet shows its "Media start
+        // timecodes" card (Figma 321:2279) — the handler opens the doc, so no ⌘N.
+        app.launchArguments += ["-ApplePersistenceIgnoreState", "YES", SeedKey.setListActI.launchArgument]
         if let appearance {
             app.launchArguments += ["--ui-test-appearance=\(appearance)"]
         }
         app.launch()
-        app.typeKey("n", modifierFlags: .command)
 
         XCTAssertTrue(
-            app.buttons["importMediaButton"].waitForExistence(timeout: 10),
-            "a document window should open within 10 seconds"
+            app.descendants(matching: .any).matching(identifier: "itemRow").firstMatch.waitForExistence(timeout: 15),
+            "the seeded document's media should load within 15 seconds"
         )
 
         Foregrounding.activateRobustly(app)
 
         let toolsMenu = app.menuBars.menuBarItems["Tools"]
-        XCTAssertTrue(toolsMenu.waitForExistence(timeout: 2))
+        XCTAssertTrue(toolsMenu.waitForExistence(timeout: 3))
         toolsMenu.click()
         let item = app.menuItems["Timecode Settings…"]
-        XCTAssertTrue(item.waitForExistence(timeout: 2))
+        XCTAssertTrue(item.waitForExistence(timeout: 3))
         item.click()
 
+        let mediaCard = app.descendants(matching: .any).matching(identifier: "timecodeSheetItemList").firstMatch
+        _ = mediaCard.waitForExistence(timeout: 3)
         // Fixed delay so the sheet animates in before the screenshot fires.
         Thread.sleep(forTimeInterval: 1.2)
 

@@ -19,46 +19,75 @@ struct TimecodeSettingsSheet: View {
     }
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 14) {
+        VStack(alignment: .leading, spacing: 0) {
             Text("Timecode Settings")
                 .font(.headline)
-            Divider()
-            Form {
-                Picker("Framerate", selection: $framerate) {
-                    ForEach(SMPTEFramerate.allCases) { rate in
-                        Text(rate.displayName).tag(rate)
-                    }
-                }
-                .accessibilityIdentifier("timecodeFrameratePicker")
-                .onChange(of: framerate) { _, _ in commitFramerate() }
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .padding(.horizontal, DS.Space.lg)
+                .padding(.vertical, DS.Space.md)
 
+            VStack(alignment: .leading, spacing: DS.Space.lg) {
+                framerateRow
                 if !document.model.items.isEmpty {
-                    Section("Media start timecodes") {
-                        ForEach(document.model.items) { item in
-                            MediaTimecodeRow(
-                                item: item,
-                                framerate: framerate,
-                                onCommit: { frames in commitStartTimecode(itemID: item.id, frames: frames) }
-                            )
-                        }
-                    }
+                    mediaSection
                 }
             }
-            .formStyle(.grouped)
-            .accessibilityIdentifier("timecodeSheetItemList")
+            .padding(.horizontal, DS.Space.lg)
+            .padding(.bottom, DS.Space.lg)
 
-            Divider()
-            HStack {
-                Spacer()
-                Button("Done") {
-                    dismiss()
-                }
-                .keyboardShortcut(.defaultAction)
-            }
+            footer
         }
-        .padding()
         .frame(width: 460)
         .accessibilityIdentifier("timecodeSettingsSheet")
+    }
+
+    private var framerateRow: some View {
+        HStack(spacing: DS.Space.sm) {
+            Text("Framerate").font(DS.Text.body)
+            Picker("Framerate", selection: $framerate) {
+                ForEach(SMPTEFramerate.allCases) { rate in
+                    Text(rate.displayName).tag(rate)
+                }
+            }
+            .labelsHidden()
+            .frame(width: 150)
+            .accessibilityIdentifier("timecodeFrameratePicker")
+            .onChange(of: framerate) { _, _ in commitFramerate() }
+            Spacer()
+        }
+    }
+
+    private var mediaSection: some View {
+        VStack(alignment: .leading, spacing: DS.Space.sm) {
+            Text("Media Start Timecodes").dsSectionHeader()
+            VStack(spacing: 0) {
+                ForEach(Array(document.model.items.enumerated()), id: \.element.id) { index, item in
+                    if index > 0 { DS.Color.border.frame(height: 1) }
+                    MediaTimecodeRow(
+                        item: item,
+                        framerate: framerate,
+                        onCommit: { frames in commitStartTimecode(itemID: item.id, frames: frames) }
+                    )
+                }
+            }
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .background(RoundedRectangle(cornerRadius: DS.Radius.xl, style: .continuous).fill(DS.Color.panel))
+            .overlay(RoundedRectangle(cornerRadius: DS.Radius.xl, style: .continuous).strokeBorder(DS.Color.border, lineWidth: 1))
+            .clipShape(RoundedRectangle(cornerRadius: DS.Radius.xl, style: .continuous))
+            .accessibilityIdentifier("timecodeSheetItemList")
+        }
+    }
+
+    private var footer: some View {
+        HStack {
+            Spacer()
+            Button("Done") { dismiss() }
+                .buttonStyle(.borderedProminent)
+                .tint(DS.Color.cueIndigo)
+                .keyboardShortcut(.defaultAction)
+        }
+        .padding(.horizontal, DS.Space.lg)
+        .padding(.vertical, DS.Space.md)
     }
 
     private func commitFramerate() {

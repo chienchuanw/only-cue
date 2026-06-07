@@ -16,24 +16,31 @@ struct MediaTimecodeRow: View {
     @State private var isInvalid: Bool = false
 
     var body: some View {
-        HStack(spacing: 8) {
-            Image(systemName: item.media.kind == .video ? "video" : "music.note")
-                .foregroundStyle(.secondary)
+        HStack(spacing: DS.Space.sm) {
             Text(item.resolvedName)
+                .font(DS.Text.body)
                 .lineLimit(1)
                 .truncationMode(.middle)
-            Spacer()
+            Spacer(minLength: DS.Space.sm)
+            // Bordered HH:MM:SS:FF field (Figma 321:2292) — a sunken box with a
+            // hairline border that turns red on invalid input.
             TextField("HH:MM:SS:FF", text: $draft)
+                .textFieldStyle(.plain)
                 .font(.body.monospaced())
-                .frame(width: 110)
                 .multilineTextAlignment(.trailing)
+                .padding(.horizontal, DS.Space.sm)
+                .padding(.vertical, DS.Space.xs)
+                .frame(width: 110)
+                .background(RoundedRectangle(cornerRadius: DS.Radius.sm).fill(DS.Color.surfaceSunken))
                 .overlay(
-                    RoundedRectangle(cornerRadius: 4)
-                        .stroke(isInvalid ? Color.red : Color.clear, lineWidth: 1)
+                    RoundedRectangle(cornerRadius: DS.Radius.sm)
+                        .stroke(isInvalid ? Color.red : DS.Color.border, lineWidth: 1)
                 )
                 .onSubmit { commit() }
                 .accessibilityIdentifier("startTimecodeField")
         }
+        .padding(.horizontal, DS.Space.md)
+        .padding(.vertical, DS.Space.sm)
         .onAppear { syncDraftFromItem() }
         .onChange(of: item.startTimecodeFrames) { _, _ in syncDraftFromItem() }
         .onChange(of: framerate) { _, _ in syncDraftFromItem() }

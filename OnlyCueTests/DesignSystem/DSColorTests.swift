@@ -47,4 +47,15 @@ final class DSColorTests: XCTestCase {
         let inkOn = try sRGBComponents(of: DS.Color.inkOn, appearance: .aqua)
         XCTAssertGreaterThan(abs(ink[0] - inkOn[0]), 0.6, "ink and inkOn must contrast")
     }
+
+    /// Lyric elements use systemPurple `#AF52DE` (Figma 318:1424/318:1426),
+    /// distinct from the indigo cue accent.
+    func testLyricIsSystemPurple() throws {
+        let rgb = try sRGBComponents(of: DS.Color.lyric, appearance: .darkAqua)
+        XCTAssertEqual(rgb[0], 0.686, accuracy: 0.02, "lyric R ≈ 0.686")
+        XCTAssertEqual(rgb[1], 0.322, accuracy: 0.02, "lyric G ≈ 0.322")
+        XCTAssertEqual(rgb[2], 0.871, accuracy: 0.02, "lyric B ≈ 0.871")
+        let indigo = try sRGBComponents(of: DS.Color.cueIndigo, appearance: .darkAqua)
+        XCTAssertGreaterThan(rgb[0] - indigo[0], 0.2, "lyric purple is distinct from cue indigo")
+    }
 }

@@ -55,8 +55,25 @@ final class AudioSettingsScreenshotTests: XCTestCase {
             _ = app.otherElements["audioSettings"].waitForExistence(timeout: 3)
         }
 
+        // Enable LTC so the output-device + channel-assignment cards render —
+        // the capture then matches the configured state in Figma 321:2200.
+        let toggle = app.switches["enableLTCOutputToggle"].exists
+            ? app.switches["enableLTCOutputToggle"]
+            : app.checkBoxes["enableLTCOutputToggle"]
+        let enabledForCapture = toggle.waitForExistence(timeout: 3) && (toggle.value as? String) != "1"
+        if enabledForCapture {
+            toggle.click()
+            _ = app.popUpButtons["audioChannelRolePicker.0"].waitForExistence(timeout: 3)
+        }
+
         Thread.sleep(forTimeInterval: 0.9)
         try captureScreenshot(named: screenshotName, window: SettingsWindowFinder.window(in: app))
+
+        // Restore the LTC-off default so this capture leaves no persisted side
+        // effect for other tests (e.g. the SMPTE-gating test) or the user's app.
+        if enabledForCapture, (toggle.value as? String) == "1" {
+            toggle.click()
+        }
         app.terminate()
     }
 

@@ -42,6 +42,12 @@ extension DS {
         // fill). Always white for AA contrast in both appearances.
         static let onCueIndigo = dynamic(light: 0xFFFFFF, dark: 0xFFFFFF)
 
+        /// Lyric accent — systemPurple (`#AF52DE`), the Figma design system's
+        /// colour for every lyric element: the editing-lane band, the placed
+        /// chips, and the ghost (cursor) chip. Distinct from `cueIndigo` so
+        /// lyrics read as their own layer over the cue timeline.
+        static let lyric = dynamic(light: 0xAF52DE, dark: 0xAF52DE)
+
         /// Builds a dark-only token (ADR-029): always resolves to `dark`,
         /// independent of the system appearance. `light` is ignored — kept in
         /// the call site purely as a record of the retired light palette.

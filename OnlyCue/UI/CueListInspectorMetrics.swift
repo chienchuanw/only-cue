@@ -8,7 +8,9 @@ import SwiftUI
 /// resolve to these values so they can never diverge.
 enum CueListInspectorMetrics {
     static let minWidth: CGFloat = 240
-    static let idealWidth: CGFloat = 300
+    // 360 matches Figma 318:1311 (sidebar 240 + center 680 + inspector 360 =
+    // 1280), so the cue NAME column gets its full width instead of truncating.
+    static let idealWidth: CGFloat = 360
     static let maxWidth: CGFloat = 400
 }
 

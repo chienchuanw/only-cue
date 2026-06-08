@@ -17,9 +17,14 @@ enum CueListColumnWidths {
     static let numberRange: ClosedRange<CGFloat> = 40...120
     static let fadeRange: ClosedRange<CGFloat> = 56...160
 
-    static let timeDefault: CGFloat = 108
-    static let numberDefault: CGFloat = 56
-    static let fadeDefault: CGFloat = 72
+    // Defaults sit just above the compressible floors so the flexible Name
+    // column gets the most room (closer to Figma 318:1326, where Time/#/Fade
+    // are tight and the name fills), while staying strictly wider than the
+    // floors so columns retain compression headroom under width pressure
+    // (#297). Floors/ranges and the header-floor budget are unchanged.
+    static let timeDefault: CGFloat = 96
+    static let numberDefault: CGFloat = 44
+    static let fadeDefault: CGFloat = 60
 
     static let timeStorageKey = "cueList.timeColumnWidth"
     static let numberStorageKey = "cueList.numberColumnWidth"

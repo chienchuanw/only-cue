@@ -77,6 +77,8 @@ ADR template:
 
 **Cue-list amendment (2026-06-05, #474)**: the achromatic-selection rule has one deliberate carve-out in the cue list. Following the Figma Cue frame (`318:1228`), the **selected** cue row is filled with its own **cue-type tint** (via `CueRowFill`), not the achromatic `DS.Color.selection` — unselected rows are clean. This keeps the carve-out consistent with "cue-type color is the only chroma": the chroma now appears only on the row the operator selected, rather than on every row (the prior all-rows tint) or as a neutral bar. Show mode's playhead-current row still uses the achromatic highlight. The waveform body stays achromatic (`DS.Color.textSecondary`, #481).
 
+**Type-stripe amendment (2026-06-08, #528)**: a cue row's resting cue-type chroma is a **5pt full-height stripe on the row's left edge** (Figma `318:1326` TypeBar), not the leading dot the #500 pass used. The selected-row cue-type tint above is unchanged — stripe (every row, at rest) and tint (selected row) coexist. Row TIME/#/FADE drop to 11pt monospaced and the inspector column defaults sit at their floors with a 360pt inspector (Figma sidebar 240 + center 680 + inspector 360), so NAME fills instead of truncating. The #297 header-floor budget (≤ 240) is untouched.
+
 ---
 
 ## ADR-023 — Editing is gated by a per-window editor mode (Cue / Lyric / Show); lyrics are authored on the waveform (schema v14)

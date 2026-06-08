@@ -8,9 +8,13 @@ enum CueListLayout {
     static let rowHorizontalPadding: CGFloat = 8
     static let rowTintOpacity: Double = 0.18
 
-    /// The cue-type color-swatch diameter leading every `CueRowView`
-    /// (Figma `318:1241`).
+    /// Basis for `rowLeadingGutter` — kept so the header/row column alignment
+    /// and the #297 floor are unchanged after the swatch became a stripe.
     static let swatchDiameter: CGFloat = 8
+
+    /// Cue-type colour stripe on a row's left edge (Figma `318:1326` TypeBar);
+    /// sits inside `rowLeadingGutter`, so it doesn't affect the header floor.
+    static let typeStripeWidth: CGFloat = 5
 
     /// The leading offset of a row's first column (Time): the row's leading
     /// padding (`DS.Space.xs / 2`) + the swatch + the swatch-to-content gap

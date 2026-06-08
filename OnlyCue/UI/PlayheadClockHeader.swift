@@ -15,7 +15,7 @@ struct PlayheadClockHeader: View {
     var body: some View {
         VStack(spacing: 2) {
             Text(TimeFormat.smpte(engine.currentTime, rate: framerate))
-                .font(.system(size: 30, weight: .semibold, design: .monospaced))
+                .font(.system(size: 34, weight: .semibold, design: .monospaced))
                 .monospacedDigit()
                 .foregroundStyle(.primary)
                 // Issue #297: a fixed 30pt monospaced timecode reports a

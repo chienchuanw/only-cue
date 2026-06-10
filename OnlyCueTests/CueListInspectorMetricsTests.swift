@@ -22,8 +22,10 @@ final class CueListInspectorMetricsTests: XCTestCase {
     }
 
     func test_minWidth_matchesDocumentedContract() {
-        // The documented inspector minimum (data-model/UI spec) is 240.
-        XCTAssertEqual(CueListInspectorMetrics.minWidth, 240)
+        // The inspector minimum is 340 — wide enough that the greedy center
+        // pane can't starve the clock/columns into clipping (#530), while still
+        // above the cue-list header floor (234) for the #297 guard.
+        XCTAssertEqual(CueListInspectorMetrics.minWidth, 340)
         // 360 = Figma 318:1311 inspector (sidebar 240 + center 680 + 360 = 1280).
         XCTAssertEqual(CueListInspectorMetrics.idealWidth, 360)
         XCTAssertEqual(CueListInspectorMetrics.maxWidth, 400)

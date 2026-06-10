@@ -7,7 +7,13 @@ import SwiftUI
 /// loop. Both the `.inspector` modifier and `CueListPane.minPaneWidth`
 /// resolve to these values so they can never diverge.
 enum CueListInspectorMetrics {
-    static let minWidth: CGFloat = 240
+    // 340 (was 240): the detail/center column is `maxWidth: .infinity` (greedy,
+    // #516), so at the default window it pins the inspector at this minimum.
+    // 340 keeps the inspector wide enough that the playhead clock and the
+    // TIME/#/NAME/FADE columns fit without clipping past the window edge (Figma
+    // 318:1311/318:1312, ~360). Still > the header floor (234), so the #297
+    // constraint-loop guard (`headerMinimumWidth ≤ minWidth`) holds.
+    static let minWidth: CGFloat = 340
     // 360 matches Figma 318:1311 (sidebar 240 + center 680 + inspector 360 =
     // 1280), so the cue NAME column gets its full width instead of truncating.
     static let idealWidth: CGFloat = 360

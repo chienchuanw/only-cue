@@ -38,18 +38,6 @@ struct WaveformContainer: View {
     // media load (which resets zoom/offset) can't silently flip it back on.
     @AppStorage("autoScrollWaveform") var autoScrollWaveform = true
 
-    // scrollOffset and viewportWidth are stored on the `zoom` controller (an
-    // @Observable reference type) so they survive SwiftUI struct copies and are
-    // directly mutable in tests without going through the @State wrapper's
-    // SwiftUI-only nonmutating-set path.
-    var scrollOffset: CGFloat {
-        get { zoom.scrollOffset }
-        nonmutating set { zoom.scrollOffset = newValue }
-    }
-    var viewportWidth: CGFloat {
-        get { zoom.viewportWidth }
-        nonmutating set { zoom.viewportWidth = newValue }
-    }
     @State var pinchBaseline: CGFloat = 1
     @State private var isProgrammaticAnchor = false
     @State var isHoveringWaveform = false
@@ -298,6 +286,20 @@ struct WaveformContainer: View {
 }
 
 extension WaveformContainer {
+    // scrollOffset and viewportWidth are stored on the `zoom` controller (an
+    // @Observable reference type) so they survive SwiftUI struct copies and are
+    // directly mutable in tests without going through the @State wrapper's
+    // SwiftUI-only nonmutating-set path. Kept in this extension (not the main
+    // struct body) so `WaveformContainer` stays under the `type_body_length` cap.
+    var scrollOffset: CGFloat {
+        get { zoom.scrollOffset }
+        nonmutating set { zoom.scrollOffset = newValue }
+    }
+    var viewportWidth: CGFloat {
+        get { zoom.viewportWidth }
+        nonmutating set { zoom.viewportWidth = newValue }
+    }
+
     /// The number of anchor segments for the scroll-position rail. Split into an
     /// extension so the main struct body stays under the `type_body_length` cap.
     fileprivate func anchorCount() -> Int {

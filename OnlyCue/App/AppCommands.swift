@@ -8,6 +8,7 @@ struct AppCommands: Commands {
     @AppStorage("showTempoGrid") private var showTempoGrid = false
     @AppStorage("showLyricsOverlay") private var showLyricsOverlay = false
     @AppStorage("pauseAtEachCue") private var pauseAtEachCue = false
+    @AppStorage("autoScrollWaveform") private var autoScrollWaveform = true
     @ObservedObject private var keymapStore = KeymapStore.shared
     @ObservedObject private var ltcRoutingStore = LTCRoutingStore.shared
     @FocusedValue(\.currentPlaybackMode) private var currentPlaybackMode
@@ -151,6 +152,22 @@ struct AppCommands: Commands {
                 showTempoGrid.toggle()
             }
             .keyboardShortcut(shortcut(.toggleTempoGrid))
+
+            Divider()
+
+            // Persistent behavior toggle (#532): a leading checkmark when on,
+            // mirroring the Playback-mode items, rather than a Show/Hide
+            // verb-flip — the macOS-standard affordance for an on/off setting.
+            Button {
+                autoScrollWaveform.toggle()
+            } label: {
+                if autoScrollWaveform {
+                    Label("Auto-Scroll Waveform", systemImage: "checkmark")
+                } else {
+                    Text("Auto-Scroll Waveform")
+                }
+            }
+            .accessibilityIdentifier("toggleAutoScrollWaveformMenuItem")
         }
 
         CommandMenu("Cue") {

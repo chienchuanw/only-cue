@@ -84,10 +84,14 @@ final class WaveformZoomController {
         )
     }
 
+    /// Restores 1× zoom and a zero scroll offset, e.g. on media load. Does NOT
+    /// touch `followsPlayhead`: that is the persisted "Auto-Scroll Waveform"
+    /// user preference (issue #532), driven from `@AppStorage`, not transient
+    /// view state — clobbering it here would silently re-enable auto-scroll on
+    /// the next clip after the user disabled it.
     func reset(scrollOffset: inout CGFloat) {
-        if zoom == 1 && followsPlayhead && scrollOffset == 0 { return }
+        if zoom == 1 && scrollOffset == 0 { return }
         zoom = 1
-        followsPlayhead = true
         scrollOffset = 0
     }
 

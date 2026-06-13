@@ -33,6 +33,10 @@ struct WaveformContainer: View {
     @State var verticalZoom = WaveformVerticalZoomController()
     @State private var leadingAnchor: Int? = 0
     @AppStorage("showTempoGrid") var showTempoGrid = false
+    // Persisted "Auto-Scroll Waveform" preference (#532), default on. Drives the
+    // zoom controller's auto-follow gate; synced on appear and on change so a
+    // media load (which resets zoom/offset) can't silently flip it back on.
+    @AppStorage("autoScrollWaveform") var autoScrollWaveform = true
 
     // scrollOffset and viewportWidth are stored on the `zoom` controller (an
     // @Observable reference type) so they survive SwiftUI struct copies and are
@@ -68,6 +72,8 @@ struct WaveformContainer: View {
             }
         }
         .task(id: asset.url) { await load() }
+        .onAppear { zoom.followsPlayhead = autoScrollWaveform }
+        .onChange(of: autoScrollWaveform) { _, enabled in zoom.followsPlayhead = enabled }
         .onReceive(NotificationCenter.default.publisher(for: .waveformZoomIn)) { _ in applyZoomIn() }
         .onReceive(NotificationCenter.default.publisher(for: .waveformZoomOut)) { _ in applyZoomOut() }
         .onReceive(NotificationCenter.default.publisher(for: .waveformZoomReset)) { _ in applyZoomReset() }

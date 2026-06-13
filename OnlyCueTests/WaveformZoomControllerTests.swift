@@ -71,15 +71,29 @@ final class WaveformZoomControllerTests: XCTestCase {
         XCTAssertEqual(zoom.zoom, 1, accuracy: 0.0001)
     }
 
-    func test_reset_restoresOneXFollowAndZeroOffset() {
+    func test_reset_restoresOneXAndZeroOffset() {
+        let zoom = WaveformZoomController()
+        var offset: CGFloat = 0
+        zoom.setZoom(8, anchorFraction: 0.5, viewportWidth: 100, scrollOffset: &offset)
+        zoom.reset(scrollOffset: &offset)
+        XCTAssertEqual(zoom.zoom, 1, accuracy: 0.0001)
+        XCTAssertEqual(offset, 0, accuracy: 0.001)
+    }
+
+    /// `followsPlayhead` is the persisted "Auto-Scroll Waveform" user
+    /// preference (issue #532), not transient view state. A media load resets
+    /// zoom + scroll offset but must NOT flip the user's auto-scroll choice
+    /// back on — otherwise disabling it would silently re-enable on the next
+    /// clip.
+    func test_reset_preservesFollowsPlayheadPreference() {
         let zoom = WaveformZoomController()
         var offset: CGFloat = 0
         zoom.setZoom(8, anchorFraction: 0.5, viewportWidth: 100, scrollOffset: &offset)
         zoom.followsPlayhead = false
         zoom.reset(scrollOffset: &offset)
         XCTAssertEqual(zoom.zoom, 1, accuracy: 0.0001)
-        XCTAssertTrue(zoom.followsPlayhead)
         XCTAssertEqual(offset, 0, accuracy: 0.001)
+        XCTAssertFalse(zoom.followsPlayhead, "reset must preserve the auto-scroll preference")
     }
 
     // MARK: - Auto-follow

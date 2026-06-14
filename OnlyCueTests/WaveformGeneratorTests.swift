@@ -44,6 +44,19 @@ final class WaveformGeneratorTests: XCTestCase {
         XCTAssertEqual(peaks.max() ?? 1, 0, accuracy: 0.001)
     }
 
+    func test_peaks_quietInput_isNormalizedToOwnMax() async throws {
+        // #538: a quiet file must be normalized to its own maximum so its shape
+        // is visible, instead of rendering as a tiny flat envelope (and, by the
+        // same token, loud files no longer saturate to a solid block).
+        let url = try SilentAudioFixture.makeSineWAV(duration: 1, frequency: 440, amplitude: 0.2)
+        defer { try? FileManager.default.removeItem(at: url) }
+        let asset = AVURLAsset(url: url)
+
+        let peaks = try await WaveformGenerator.peaks(for: asset, resolution: 64)
+
+        XCTAssertEqual(peaks.max() ?? 0, 1.0, accuracy: 0.02)
+    }
+
     func test_peaks_normalizedTo01() async throws {
         let url = try SilentAudioFixture.makeSineWAV(duration: 1, frequency: 440)
         defer { try? FileManager.default.removeItem(at: url) }

@@ -33,8 +33,13 @@ struct WaveformCache {
         try data.write(to: entryURL(assetHash: assetHash, resolution: resolution), options: .atomic)
     }
 
+    /// Bumped to v2 when peaks became per-file normalized (issue #538). The
+    /// version is part of the cache key so previously-cached un-normalized peaks
+    /// are ignored and regenerated rather than served stale.
+    private static let formatVersion = 2
+
     private func entryURL(assetHash: String, resolution: Int) -> URL {
-        directory.appendingPathComponent("\(assetHash)-\(resolution).peaks")
+        directory.appendingPathComponent("\(assetHash)-\(resolution)-v\(Self.formatVersion).peaks")
     }
 
     static func fileHash(_ url: URL) throws -> String {

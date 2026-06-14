@@ -37,10 +37,22 @@ enum WaveformGenerator {
             throw WaveformError.readerFailed
         }
 
-        return accumulator.finalize()
+        return normalized(accumulator.finalize())
     }
 
     private static let outputSampleRate: Double = 44100
+
+    /// Below this peak (≈ −80 dBFS) the file is treated as silence and left
+    /// flat — this keeps truly-silent input at zero and avoids amplifying the
+    /// noise floor (and dividing by zero). Any audible content is scaled so its
+    /// loudest bucket reaches 1.0, so quiet files reveal their shape and loud
+    /// files stop saturating into a solid block (issue #538).
+    private static let silenceFloor: Float = 1e-4
+
+    private static func normalized(_ peaks: [Float]) -> [Float] {
+        guard let maxPeak = peaks.max(), maxPeak > silenceFloor else { return peaks }
+        return peaks.map { $0 / maxPeak }
+    }
 
     private static func makeReader(asset: AVAsset, track: AVAssetTrack) throws -> AVAssetReader {
         let reader = try AVAssetReader(asset: asset)

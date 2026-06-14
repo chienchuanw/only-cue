@@ -38,7 +38,9 @@ struct WaveformCache {
     /// are ignored and regenerated rather than served stale.
     private static let formatVersion = 2
 
-    private func entryURL(assetHash: String, resolution: Int) -> URL {
+    /// Internal (not private) so tests can locate a specific cache entry without
+    /// hard-coding the on-disk filename format (which embeds `formatVersion`).
+    func entryURL(assetHash: String, resolution: Int) -> URL {
         directory.appendingPathComponent("\(assetHash)-\(resolution)-v\(Self.formatVersion).peaks")
     }
 

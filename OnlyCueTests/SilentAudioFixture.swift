@@ -12,13 +12,14 @@ enum SilentAudioFixture {
     static func makeSineWAV(
         duration: TimeInterval,
         frequency: Double,
+        amplitude: Double = 1.0,
         file: StaticString = #file,
         line: UInt = #line
     ) throws -> URL {
         try writeWAV(
             duration: duration,
             fill: { frame, sr in
-                sin(2 * .pi * frequency * Double(frame) / sr)
+                amplitude * sin(2 * .pi * frequency * Double(frame) / sr)
             },
             file: file,
             line: line

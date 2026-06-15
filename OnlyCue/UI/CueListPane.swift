@@ -349,6 +349,10 @@ struct CueListPane: View {
             Button("Tempo…") { activeCueSheet = .tempo(cue.id) }
                 .keyboardShortcut("t", modifiers: [.command, .option])
                 .accessibilityIdentifier("cueRowContextTempo")
+            if selection.count >= 2 {
+                Button("Renumber Selected…") { activeCueSheet = .renumber }
+                    .accessibilityIdentifier("cueRowContextRenumberSelected")
+            }
             Menu("Change Type") {
                 ForEach(document.model.cuePointTypes) { type in
                     Button {

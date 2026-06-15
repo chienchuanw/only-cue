@@ -11,17 +11,24 @@ import SwiftUI
 enum CueSheetKind: Identifiable, Equatable {
     case notes(Cue.ID)
     case tempo(Cue.ID)
+    /// Resequence the current multi-selection's cue numbers (#535). Carries no
+    /// single cue id — it operates on `CueListPane.selection`.
+    case renumber
 
     var id: String {
         switch self {
         case .notes(let id): return "notes-\(id.uuidString)"
         case .tempo(let id): return "tempo-\(id.uuidString)"
+        case .renumber: return "renumber"
         }
     }
 
-    var cueID: Cue.ID {
+    /// The target cue for the single-cue sheets; nil for `.renumber`, which
+    /// works on the whole selection.
+    var cueID: Cue.ID? {
         switch self {
         case .notes(let id), .tempo(let id): return id
+        case .renumber: return nil
         }
     }
 }
@@ -33,8 +40,25 @@ extension CueListPane {
     /// deleted between menu click and sheet presentation.
     @ViewBuilder
     func cueSheetContent(for sheet: CueSheetKind) -> some View {
-        if let cue = cues.first(where: { $0.id == sheet.cueID }) {
+        if case .renumber = sheet {
+            RenumberCuesSheet(
+                cueCount: selection.count,
+                onRenumber: { start, interval in
+                    CueCommands.renumberSelected(
+                        selection,
+                        start: start,
+                        interval: interval,
+                        document: document,
+                        undoManager: undoManager
+                    )
+                    activeCueSheet = nil
+                },
+                onCancel: { activeCueSheet = nil }
+            )
+        } else if let cueID = sheet.cueID, let cue = cues.first(where: { $0.id == cueID }) {
             switch sheet {
+            case .renumber:
+                EmptyView() // handled above
             case .notes:
                 CueNotesSheet(
                     cueLabel: cueSheetLabel(for: cue),

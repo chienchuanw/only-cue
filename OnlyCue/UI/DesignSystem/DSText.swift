@@ -10,6 +10,9 @@ extension DS {
         static let body      = Font.body
         static let label     = Font.caption
         static let caption   = Font.system(size: 10, weight: .semibold)
+        /// 11 pt sans — small secondary body text (e.g. the LTC strip clip-name
+        /// header, Figma Inter Regular 11; #553). Sans, NOT monospaced.
+        static let small     = Font.system(size: 11)
         static let monoHero  = Font.system(size: 21, weight: .semibold, design: .monospaced)
         static let mono      = Font.system(size: 13, design: .monospaced)
         static let monoSmall = Font.system(size: 11, design: .monospaced)

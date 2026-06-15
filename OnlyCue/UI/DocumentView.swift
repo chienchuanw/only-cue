@@ -16,6 +16,9 @@ struct DocumentView: View {
     @AppStorage(FirstLaunchFlag.key) var didShowFirstLaunch = false
     @AppStorage(NotesOverlayPreferences.storageKey) var overlayPrefsData = NotesOverlayPreferences.defaultEncoded
     @AppStorage("pauseAtEachCue") var pauseAtEachCue = false
+    /// Floating sidebar visibility (#539). The sidebar overlays the content
+    /// rather than tiling a column, so toggling it never reflows the waveform.
+    @AppStorage("sidebarVisible") var sidebarVisible = true
     /// The editor mode — per-window working state, restored across relaunch.
     @SceneStorage("onlycue.editorMode") private var editorModeRaw = EditorMode.cue.rawValue
     @ObservedObject private var keymapStore = KeymapStore.shared
@@ -34,10 +37,7 @@ struct DocumentView: View {
     private var editorMode: EditorMode { EditorMode(rawValue: editorModeRaw) ?? .cue }
 
     var body: some View {
-        NavigationSplitView {
-            ItemListPane(document: document, onDropURLs: importURLs)
-                .navigationSplitViewColumnWidth(min: 240, ideal: 240, max: 320)
-        } detail: {
+        NavigationStack {
             mainPane
                 .inspector(isPresented: .constant(true)) {
                     ModeAwareInspector(
@@ -49,11 +49,25 @@ struct DocumentView: View {
                     )
                     .cueListInspectorColumnWidth()
                 }
+                // #539: the sidebar floats over the content (leading overlay)
+                // instead of tiling a NavigationSplitView column, so showing or
+                // hiding it never reflows / compresses the waveform pane.
+                .overlay(alignment: .leading) { floatingSidebar }
+                // Figma 318:1236: titlebar subtitle is the editor mode.
+                .navigationSubtitle("\(editorMode.title) Mode")
+                .toolbar {
+                    ToolbarItem(placement: .navigation) {
+                        Button {
+                            withAnimation(.easeInOut(duration: 0.18)) { sidebarVisible.toggle() }
+                        } label: {
+                            Image(systemName: "sidebar.left")
+                        }
+                        .help("Toggle Sidebar")
+                        .keyboardShortcut("s", modifiers: [.command, .control])
+                        .accessibilityIdentifier("toggleSidebarButton")
+                    }
+                }
         }
-        // Figma 318:1236: the titlebar subtitle is the editor mode, not the
-        // active media item name (the active clip is already shown in the
-        // sidebar / preview).
-        .navigationSubtitle("\(editorMode.title) Mode")
         .sheet(isPresented: firstLaunchBinding) {
             FirstLaunchSheet { didShowFirstLaunch = true }
         }
@@ -233,7 +247,7 @@ struct DocumentView: View {
         }
     }
 
-    private func importURLs(_ urls: [URL]) {
+    func importURLs(_ urls: [URL]) {
         Task { @MainActor in
             do {
                 try await MediaImporter.importMedia(

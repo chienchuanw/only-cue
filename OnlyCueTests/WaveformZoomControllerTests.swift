@@ -181,4 +181,70 @@ final class WaveformZoomControllerTests: XCTestCase {
         )
         XCTAssertNil(result)
     }
+
+    // MARK: - Scroll-to-reveal (selected cue, #536)
+
+    func test_scrollToReveal_returnsNil_atOneX() {
+        let zoom = WaveformZoomController()
+        let result = zoom.scrollToRevealAdjustment(
+            targetTime: 50, duration: 100, viewportWidth: 100, currentScrollOffset: 0
+        )
+        XCTAssertNil(result)
+    }
+
+    func test_scrollToReveal_returnsNil_whenTargetAlreadyVisible() {
+        // zoom=2, viewport=100, content=200. target t=40 → contentX=80, scroll=0 → visible [0,100].
+        let zoom = WaveformZoomController()
+        var offset: CGFloat = 0
+        zoom.setZoom(2, anchorFraction: 0.5, viewportWidth: 100, scrollOffset: &offset)
+        let result = zoom.scrollToRevealAdjustment(
+            targetTime: 40, duration: 100, viewportWidth: 100, currentScrollOffset: 0
+        )
+        XCTAssertNil(result)
+    }
+
+    func test_scrollToReveal_centersTarget_whenOffScreenRight() {
+        // zoom=4, viewport=100, content=400. target t=50 → contentX=200, visible [0,100] → off-screen.
+        // Centered: 200 - 50 = 150. maxOffset = 300 → 150.
+        let zoom = WaveformZoomController()
+        var offset: CGFloat = 0
+        zoom.setZoom(4, anchorFraction: 0.5, viewportWidth: 100, scrollOffset: &offset)
+        let result = zoom.scrollToRevealAdjustment(
+            targetTime: 50, duration: 100, viewportWidth: 100, currentScrollOffset: 0
+        )
+        XCTAssertEqual(result ?? .nan, 150, accuracy: 0.001)
+    }
+
+    func test_scrollToReveal_clampsAtStart() {
+        // zoom=4, viewport=100, content=400. target t=5 → contentX=20. Centered = 20-50 = -30 → clamp 0.
+        // Need it off-screen: scroll=200 → visible [200,300], contentX 20 not visible.
+        let zoom = WaveformZoomController()
+        var offset: CGFloat = 0
+        zoom.setZoom(4, anchorFraction: 0.5, viewportWidth: 100, scrollOffset: &offset)
+        let result = zoom.scrollToRevealAdjustment(
+            targetTime: 5, duration: 100, viewportWidth: 100, currentScrollOffset: 200
+        )
+        XCTAssertEqual(result ?? .nan, 0, accuracy: 0.001)
+    }
+
+    func test_scrollToReveal_clampsAtEnd() {
+        // zoom=4, viewport=100, content=400. target t=98 → contentX=392. Centered = 392-50 = 342 → clamp maxOffset 300.
+        let zoom = WaveformZoomController()
+        var offset: CGFloat = 0
+        zoom.setZoom(4, anchorFraction: 0.5, viewportWidth: 100, scrollOffset: &offset)
+        let result = zoom.scrollToRevealAdjustment(
+            targetTime: 98, duration: 100, viewportWidth: 100, currentScrollOffset: 0
+        )
+        XCTAssertEqual(result ?? .nan, 300, accuracy: 0.001)
+    }
+
+    func test_scrollToReveal_returnsNil_whenZeroDuration() {
+        let zoom = WaveformZoomController()
+        var offset: CGFloat = 0
+        zoom.setZoom(4, anchorFraction: 0.5, viewportWidth: 100, scrollOffset: &offset)
+        let result = zoom.scrollToRevealAdjustment(
+            targetTime: 1, duration: 0, viewportWidth: 100, currentScrollOffset: 0
+        )
+        XCTAssertNil(result)
+    }
 }

@@ -210,7 +210,15 @@ struct CueMarkerView: View {
     var onDragChanged: (_ translationWidth: CGFloat) -> Void = { _ in }
     var onDragEnded: (_ translationWidth: CGFloat) -> Void = { _ in }
 
-    private static let hitWidth: CGFloat = 14
+    /// Minimum grab-zone width. The visible pin is 18–22pt; a 14pt zone (the old
+    /// value) left the pin's edges undraggable so presses there fell through to
+    /// the seek surface (#534). 24 covers the selected pin with a little margin.
+    private static let minHitWidth: CGFloat = 24
+    /// The draggable hit-zone width — always at least the visible pin width so a
+    /// press anywhere on the pin starts a marker drag instead of a seek (#534).
+    static func draggableWidth(isSelected: Bool) -> CGFloat {
+        max(minHitWidth, MarkerStyle.style(isSelected: isSelected).pinWidth)
+    }
     private static let haloPadding: CGFloat = 8
     private static let haloOpacity: Double = 0.35
     private static let haloBlurRadius: CGFloat = 2
@@ -226,7 +234,7 @@ struct CueMarkerView: View {
         Self.showHalo(isHovered: isHovered, isSelected: isSelected)
     }
 
-    private var frameWidth: CGFloat { max(Self.hitWidth, style.pinWidth) }
+    private var frameWidth: CGFloat { Self.draggableWidth(isSelected: isSelected) }
 
     var body: some View {
         ZStack(alignment: .top) {
@@ -236,10 +244,11 @@ struct CueMarkerView: View {
                 .fill(markerColor)
                 .frame(width: style.lineWidth)
                 .opacity(0.85)
-            // Full-height invisible hit target for drag / seek.
+            // Full-height invisible hit target for drag / seek. Spans the whole
+            // frame so the visible pin's edges are draggable too (#534).
             Capsule()
                 .fill(.clear)
-                .frame(width: Self.hitWidth)
+                .frame(width: frameWidth)
                 .onHover { inside in
                     isHovered = inside
                     if inside {
@@ -260,7 +269,10 @@ struct CueMarkerView: View {
         }
         .frame(width: frameWidth)
         .offset(x: baseX + visualOffset - frameWidth / 2)
-        .gesture(
+        // High priority so a press landing on the marker wins over the
+        // full-bleed seek surface beneath it and the horizontal scroll gesture
+        // (#534) — the marker is front-most, so this only fires within its zone.
+        .highPriorityGesture(
             DragGesture(minimumDistance: 0)
                 .onChanged { value in onDragChanged(value.translation.width) }
                 .onEnded { value in onDragEnded(value.translation.width) }

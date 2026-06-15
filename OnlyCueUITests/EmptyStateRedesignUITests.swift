@@ -33,43 +33,8 @@ final class EmptyStateRedesignUITests: XCTestCase {
         )
     }
 
-    func test_shortcutReferenceButton_isPresentAndHittable() throws {
-        // CI flake: button.isHittable intermittently returns false on the
-        // self-hosted runner even after the empty-state view has clearly
-        // rendered. The same hit-test pattern works reliably during local
-        // development. Track as known tech debt — fix root cause separately.
-        try XCTSkipIf(
-            CIRuntime.isGitHubActions,
-            "Flaky on self-hosted runner: shortcutReferenceButton.isHittable race."
-        )
-        let app = launchEmptyDocument()
-        let help = app.buttons["shortcutReferenceButton"]
-        XCTAssertTrue(
-            help.waitForExistence(timeout: 15),
-            "the shortcut-reference button should appear in the empty state"
-        )
-        XCTAssertTrue(help.isHittable, "the shortcut-reference button should be clickable")
-        help.click()
-    }
-
-    /// The cue-list inspector's empty-state copy was clipped before the Quiet
-    /// Pro redesign (spec §6 item 4); `.fixedSize(horizontal: false, vertical:
-    /// true)` in `CueListPane.emptyState` now lets it wrap to full height.
-    ///
-    /// Screenshot-smoke: the empty-state icon+text VStack merges unpredictably
-    /// in the macOS AX tree, so the wrapped copy is not cleanly queryable. The
-    /// `.fixedSize` modifier guarantees the wrap in code; this test captures
-    /// the window for visual review and asserts only that the document opened.
-    func test_inspectorEmptyState_screenshotSmoke() throws {
-        let app = launchEmptyDocument()
-        XCTAssertTrue(
-            app.buttons["importMediaButton"].waitForExistence(timeout: 15),
-            "the document should open"
-        )
-        let shot = app.windows.firstMatch.screenshot()
-        let attachment = XCTAttachment(screenshot: shot)
-        attachment.name = "inspector-empty-state"
-        attachment.lifetime = .keepAlways
-        add(attachment)
-    }
+    // Removed (#548): `test_shortcutReferenceButton_isPresentAndHittable` was
+    // CIRuntime-gated (always skipped on the runner), and
+    // `test_inspectorEmptyState_screenshotSmoke` was a screenshot that asserted
+    // only that the document opened — neither was a CI regression gate.
 }

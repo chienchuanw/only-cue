@@ -1,15 +1,14 @@
 import AppKit
 import XCTest
 
-/// UI smoke for the per-media edit sheet (#279). Right-click a sidebar media
-/// row → "Edit Media…" → modal sheet opens → Save commits alt name / TC / mute
-/// atomically; Cancel discards drafts.
+/// UI coverage for the per-media edit sheet (#279). Verifies the sheet's
+/// composition (identity row + hero preview strip) opens from the sidebar row.
 ///
-/// The sidebar row right-click is hit-test-fragile on the headless CI runner
-/// (same family of issue as #264). Following the established pattern from
-/// `InspectorClockHeaderUITests`, we `XCTSkip` when the context menu fails to
-/// appear instead of asserting — the unit-level coverage of the underlying
-/// command (`CueCommandsUpdateMediaItemTests`) is the load-bearing assurance.
+/// The right-click / inline-Save flows that used to live here were removed
+/// (#548): they were `CIRuntime.isGitHubActions`-gated (always skipped on the
+/// runner), and the underlying command is unit-tested in
+/// `CueCommandsUpdateMediaItemTests`. `openEditSheet` still skips gracefully if
+/// the headless context-menu chord can't be synthesised.
 final class MediaEditSheetUITests: XCTestCase {
 
     override func setUpWithError() throws {
@@ -18,116 +17,6 @@ final class MediaEditSheetUITests: XCTestCase {
             app.forceTerminate()
         }
         Thread.sleep(forTimeInterval: 0.5)
-    }
-
-    func test_rightClickMediaRow_opensEditSheet_andSaveCommitsAlternateName() throws {
-        // CI flake: the right-click → context-menu → Save chain doesn't
-        // propagate reliably on the self-hosted runner. Runs reliably during
-        // local development. Track as known tech debt.
-        try XCTSkipIf(
-            CIRuntime.isGitHubActions,
-            "Flaky on self-hosted runner: context-menu Save propagation race."
-        )
-        let app = launchWithSeed(.threeCuesAt1And3And6)
-        defer { app.terminate() }
-
-        try openEditSheet(in: app)
-
-        let nameField = app.textFields["mediaEditNameField"]
-        XCTAssertTrue(nameField.waitForExistence(timeout: 3), "MediaEditSheet name field should appear.")
-
-        nameField.click()
-        nameField.typeText("Opening Cue")
-
-        let save = app.buttons["mediaEditSave"]
-        XCTAssertTrue(save.exists)
-        save.click()
-
-        let renamed = app.staticTexts["Opening Cue"]
-        XCTAssertTrue(
-            renamed.waitForExistence(timeout: 3),
-            "Sidebar row should reflect the new alternate name after Save."
-        )
-    }
-
-    func test_cancelDiscardsEdits() throws {
-        // CI flake: sheet dismissal click is intermittently swallowed on the
-        // self-hosted runner. The sheet visibly closes but XCUITest still
-        // sees the AX node briefly. Local runs are deterministic.
-        try XCTSkipIf(
-            CIRuntime.isGitHubActions,
-            "Flaky on self-hosted runner: sheet-Cancel click absorption race."
-        )
-        let app = launchWithSeed(.threeCuesAt1And3And6)
-        defer { app.terminate() }
-
-        try openEditSheet(in: app)
-
-        let nameField = app.textFields["mediaEditNameField"]
-        XCTAssertTrue(nameField.waitForExistence(timeout: 3))
-        nameField.click()
-        nameField.typeText("Should Not Stick")
-
-        app.buttons["mediaEditCancel"].click()
-
-        XCTAssertFalse(
-            app.textFields["mediaEditNameField"].waitForExistence(timeout: 1),
-            "Sheet should dismiss on Cancel."
-        )
-        XCTAssertFalse(
-            app.staticTexts["Should Not Stick"].exists,
-            "Cancelled name should not be applied."
-        )
-    }
-
-    /// Drives Edit Media via the inline pencil affordance on the sidebar row
-    /// (audit §13 / #421). Bypasses the flaky right-click → context-menu chord
-    /// that gates `test_rightClickMediaRow_opensEditSheet_andSaveCommitsAlternateName`,
-    /// so this path stays runnable on the self-hosted runner where the
-    /// context-menu path is skipped.
-    func test_inlineEditButton_opensEditSheet_andSaveCommitsAlternateName() throws {
-        // CI flake: driving the inline pencil requires selecting the row first
-        // (SwiftUI List consumes the first tap), and the row-selection →
-        // button-click sequence races on the self-hosted runner — the click
-        // intermittently lands on the row body instead of the pencil. Same
-        // family as the right-click sibling above; the underlying command
-        // (CueCommands.updateMediaItem) is unit-tested in
-        // CueCommandsUpdateMediaItemTests, and ItemRowViewTests pins the
-        // button's presence. Runs reliably enough during local development.
-        try XCTSkipIf(
-            CIRuntime.isGitHubActions,
-            "Flaky on self-hosted runner: List selection → inline-button click race."
-        )
-        let app = launchWithSeed(.threeCuesAt1And3And6)
-        defer { app.terminate() }
-
-        let row = app.descendants(matching: .any).matching(identifier: "itemRow").firstMatch
-        XCTAssertTrue(row.waitForExistence(timeout: 15), "Sidebar media row should appear after seed opens.")
-
-        // SwiftUI `List` consumes the FIRST tap on a row for selection; the
-        // row's inline controls only become interactive once the row is the
-        // active selection. Click the row to select it first, then the pencil.
-        row.click()
-        Thread.sleep(forTimeInterval: 0.4)
-
-        let pencil = row.descendants(matching: .button)
-            .matching(NSPredicate(format: "identifier BEGINSWITH 'inlineEditMedia-'"))
-            .firstMatch
-        XCTAssertTrue(pencil.waitForExistence(timeout: 5), "Inline Edit Media pencil should be visible on the sidebar row.")
-        pencil.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5)).click()
-
-        let nameField = app.textFields["mediaEditNameField"]
-        XCTAssertTrue(nameField.waitForExistence(timeout: 3), "MediaEditSheet name field should appear.")
-        nameField.click()
-        nameField.typeText("Inline Edit Cue")
-
-        app.buttons["mediaEditSave"].click()
-
-        let renamed = app.staticTexts["Inline Edit Cue"]
-        XCTAssertTrue(
-            renamed.waitForExistence(timeout: 3),
-            "Sidebar row should reflect the new alternate name after Save via the inline path."
-        )
     }
 
     func test_editSheet_showsIdentityAndPreviewStrip() throws {

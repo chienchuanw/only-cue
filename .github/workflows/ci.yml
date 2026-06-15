@@ -18,6 +18,10 @@ on:
     branches:
       - main
       - dev
+  # Manual trigger for the screenshot / Figma-baseline UI tests (#548). These
+  # are doc/baseline generators, not regression gates, so they are kept off the
+  # automatic PR/push path and run on demand when refreshing baselines.
+  workflow_dispatch:
 
 concurrency:
   group: ci-${{ github.ref }}
@@ -133,7 +137,11 @@ jobs:
       # the push-only gate stays. Per-test XCTSkipIf guards still apply when
       # UI tests do run; they just no longer sit behind a 90-min flake budget
       # on every PR.
-      - name: UI tests
+      # Behavioral UI tests only (#548): the screenshot / Figma-baseline classes
+      # are excluded here and run via the manual "UI baseline screenshots" step
+      # below. This keeps the push path to the UI tests that actually gate
+      # behavior (menus, mode/inspector swaps, layout geometry, hit-testing).
+      - name: UI tests (behavioral)
         if: github.event_name == 'push'
         run: |
           set -o pipefail
@@ -142,6 +150,44 @@ jobs:
             -scheme OnlyCue \
             -destination 'platform=macOS' \
             -only-testing:OnlyCueUITests \
+            -skip-testing:OnlyCueUITests/AudioSettingsScreenshotTests \
+            -skip-testing:OnlyCueUITests/DocumentViewModeScreenshotTests \
+            -skip-testing:OnlyCueUITests/ExportSheetScreenshotTests \
+            -skip-testing:OnlyCueUITests/KeyboardSettingsScreenshotTests \
+            -skip-testing:OnlyCueUITests/LyricsLaneEditingUITests \
+            -skip-testing:OnlyCueUITests/OSCMonitorScreenshotTests \
+            -skip-testing:OnlyCueUITests/OSCSettingsScreenshotTests \
+            -skip-testing:OnlyCueUITests/Phase3ScreenshotTests \
+            -skip-testing:OnlyCueUITests/ShowModeUITests \
+            -skip-testing:OnlyCueUITests/TempoGridOverlayScreenshotTests \
+            -skip-testing:OnlyCueUITests/TimecodeSettingsSheetScreenshotTests \
+            -skip-testing:OnlyCueUITests/TransportBarScreenshotTests \
+            -parallel-testing-enabled NO \
+            -test-iterations 2 \
+            -retry-tests-on-failure \
+            | xcbeautify --renderer github-actions
+
+      # Screenshot / Figma-baseline generators — manual only (#548).
+      - name: UI baseline screenshots
+        if: github.event_name == 'workflow_dispatch'
+        run: |
+          set -o pipefail
+          xcodebuild test-without-building \
+            -project OnlyCue.xcodeproj \
+            -scheme OnlyCue \
+            -destination 'platform=macOS' \
+            -only-testing:OnlyCueUITests/AudioSettingsScreenshotTests \
+            -only-testing:OnlyCueUITests/DocumentViewModeScreenshotTests \
+            -only-testing:OnlyCueUITests/ExportSheetScreenshotTests \
+            -only-testing:OnlyCueUITests/KeyboardSettingsScreenshotTests \
+            -only-testing:OnlyCueUITests/LyricsLaneEditingUITests \
+            -only-testing:OnlyCueUITests/OSCMonitorScreenshotTests \
+            -only-testing:OnlyCueUITests/OSCSettingsScreenshotTests \
+            -only-testing:OnlyCueUITests/Phase3ScreenshotTests \
+            -only-testing:OnlyCueUITests/ShowModeUITests \
+            -only-testing:OnlyCueUITests/TempoGridOverlayScreenshotTests \
+            -only-testing:OnlyCueUITests/TimecodeSettingsSheetScreenshotTests \
+            -only-testing:OnlyCueUITests/TransportBarScreenshotTests \
             -parallel-testing-enabled NO \
             -test-iterations 2 \
             -retry-tests-on-failure \

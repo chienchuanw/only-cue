@@ -31,6 +31,22 @@ final class CueMarkerStyleTests: XCTestCase {
         XCTAssertGreaterThan(selected.pinHeight, normal.pinHeight)
     }
 
+    // MARK: - Drag hit zone (#534)
+
+    func test_draggableWidth_coversVisiblePin_forEasyGrab() {
+        // The grab zone must be at least as wide as the visible pin, so a press
+        // anywhere on the pin (including its edges) starts a marker drag instead
+        // of falling through to the full-bleed seek surface below (#534).
+        for selected in [false, true] {
+            let pin = CueMarkerView.MarkerStyle.style(isSelected: selected).pinWidth
+            XCTAssertGreaterThanOrEqual(
+                CueMarkerView.draggableWidth(isSelected: selected),
+                pin,
+                "marker grab zone must cover its visible pin (isSelected=\(selected))"
+            )
+        }
+    }
+
     // MARK: - Number color contrast (Figma #1f1c1a on bright fills, white on dark)
 
     func test_numberColor_lightFill_isDark() {

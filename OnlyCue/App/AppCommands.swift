@@ -9,6 +9,7 @@ struct AppCommands: Commands {
     @AppStorage("showLyricsOverlay") private var showLyricsOverlay = false
     @AppStorage("pauseAtEachCue") private var pauseAtEachCue = false
     @AppStorage("autoScrollWaveform") private var autoScrollWaveform = true
+    @AppStorage("sidebarVisible") private var sidebarVisible = true
     @ObservedObject private var keymapStore = KeymapStore.shared
     @ObservedObject private var ltcRoutingStore = LTCRoutingStore.shared
     @FocusedValue(\.currentPlaybackMode) private var currentPlaybackMode
@@ -80,6 +81,12 @@ struct AppCommands: Commands {
         }
 
         CommandGroup(after: .sidebar) {
+            Button(sidebarVisible ? "Hide Sidebar" : "Show Sidebar") {
+                sidebarVisible.toggle()
+            }
+            .keyboardShortcut(shortcut(.toggleSidebar))
+            .accessibilityIdentifier("toggleSidebarMenuItem")
+
             Divider()
 
             Button("Zoom In Horizontally") {

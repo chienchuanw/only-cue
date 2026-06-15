@@ -28,6 +28,15 @@ final class KeymapTests: XCTestCase {
         XCTAssertEqual(Keymap.default.chord(for: .addCueOfType3), KeyChord(key: "3"))
     }
 
+    func test_toggleSidebar_defaultsToControlCommandS() {
+        // #539: the floating-sidebar toggle is a rebindable action; its default
+        // is the macOS-standard control-command-S.
+        XCTAssertEqual(
+            Keymap.default.chord(for: .toggleSidebar),
+            KeyChord(key: "s", modifiers: [.command, .control])
+        )
+    }
+
     // MARK: - JSON round-trip
 
     func test_jsonRoundTrip_preservesEveryBinding() throws {

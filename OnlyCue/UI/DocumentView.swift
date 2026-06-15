@@ -53,17 +53,17 @@ struct DocumentView: View {
                 // instead of tiling a NavigationSplitView column, so showing or
                 // hiding it never reflows / compresses the waveform pane.
                 .overlay(alignment: .leading) { floatingSidebar }
+                // Animate regardless of toggle source (toolbar / View menu / shortcut).
+                .animation(.easeInOut(duration: 0.18), value: sidebarVisible)
                 // Figma 318:1236: titlebar subtitle is the editor mode.
                 .navigationSubtitle("\(editorMode.title) Mode")
                 .toolbar {
                     ToolbarItem(placement: .navigation) {
-                        Button {
-                            withAnimation(.easeInOut(duration: 0.18)) { sidebarVisible.toggle() }
-                        } label: {
+                        Button { sidebarVisible.toggle() } label: {
                             Image(systemName: "sidebar.left")
                         }
                         .help("Toggle Sidebar")
-                        .keyboardShortcut("s", modifiers: [.command, .control])
+                        .keyboardShortcut(shortcut(.toggleSidebar))
                         .accessibilityIdentifier("toggleSidebarButton")
                     }
                 }

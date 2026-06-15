@@ -11,6 +11,23 @@ final class PlayerEngineTests: XCTestCase {
         XCTAssertEqual(engine.rate, 1.0, accuracy: 0.001)
     }
 
+    func test_play_reAnchorsObservedAt_forSmoothResume() async throws {
+        // #537: on resume, play() must re-anchor currentTimeObservedAt to "now".
+        // Otherwise PlayheadInterpolator extrapolates currentTime forward by the
+        // whole paused gap (rate * (now - staleObservedAt)) until the next
+        // observer tick, producing a visible jump-then-snap-back.
+        let engine = PlayerEngine()
+        // Let the anchor (set at construction) age, simulating a paused gap.
+        try await Task.sleep(for: .milliseconds(60))
+        let resumeInstant = CACurrentMediaTime()
+        engine.play()
+        XCTAssertGreaterThanOrEqual(
+            engine.currentTimeObservedAt,
+            resumeInstant - 0.005,
+            "play() must re-anchor the time observation to ~now, not leave it stale"
+        )
+    }
+
     func test_pause_resetsRateToZero() {
         let engine = PlayerEngine()
         engine.play()

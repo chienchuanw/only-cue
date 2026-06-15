@@ -140,4 +140,31 @@ final class WaveformZoomController {
         let maxOffset = max(contentWidth - viewportWidth, 0)
         return min(max(targetOffset, 0), maxOffset)
     }
+
+    /// Returns a new scroll offset that brings `targetTime` into view, centered
+    /// in the viewport, when zoomed in and the target is currently off-screen;
+    /// nil if there's nothing to scroll (1× zoom, zero duration) or the target
+    /// is already visible. Used to focus the selected cue (#536). Unlike
+    /// `autoFollowAdjustment`, this is NOT gated on `followsPlayhead` — selecting
+    /// a cue should reveal it regardless of the auto-scroll preference.
+    func scrollToRevealAdjustment(
+        targetTime: TimeInterval,
+        duration: TimeInterval,
+        viewportWidth: CGFloat,
+        currentScrollOffset: CGFloat
+    ) -> CGFloat? {
+        guard zoom > 1, duration > 0, viewportWidth > 0 else { return nil }
+        let contentWidth = viewportWidth * zoom
+        let targetX = CueMarkersGeometry.position(
+            forTime: targetTime,
+            width: contentWidth,
+            duration: duration
+        )
+        if targetX >= currentScrollOffset && targetX <= currentScrollOffset + viewportWidth {
+            return nil // already visible — don't yank the view
+        }
+        let centered = targetX - viewportWidth / 2
+        let maxOffset = max(contentWidth - viewportWidth, 0)
+        return min(max(centered, 0), maxOffset)
+    }
 }

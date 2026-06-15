@@ -62,6 +62,7 @@ struct WaveformContainer: View {
         .task(id: asset.url) { await load() }
         .onAppear { zoom.followsPlayhead = autoScrollWaveform }
         .onChange(of: autoScrollWaveform) { _, enabled in zoom.followsPlayhead = enabled }
+        .onChange(of: selectedCueIDs) { _, _ in scrollToSelectedCue() }
         .onReceive(NotificationCenter.default.publisher(for: .waveformZoomIn)) { _ in applyZoomIn() }
         .onReceive(NotificationCenter.default.publisher(for: .waveformZoomOut)) { _ in applyZoomOut() }
         .onReceive(NotificationCenter.default.publisher(for: .waveformZoomReset)) { _ in applyZoomReset() }
@@ -298,6 +299,23 @@ extension WaveformContainer {
     var viewportWidth: CGFloat {
         get { zoom.viewportWidth }
         nonmutating set { zoom.viewportWidth = newValue }
+    }
+
+    /// Scrolls the waveform to reveal the sole-selected cue's marker (#536).
+    /// No-op when zoomed out, the cue is already visible, or selection isn't a
+    /// single cue. Reuses the auto-follow apply path (offset + anchor sync). In
+    /// this extension so the main struct body stays under `type_body_length`.
+    func scrollToSelectedCue() {
+        guard selectedCueIDs.count == 1,
+              let id = selectedCueIDs.first,
+              let cue = cues.first(where: { $0.id == id }) else { return }
+        guard let target = zoom.scrollToRevealAdjustment(
+            targetTime: cue.time,
+            duration: loadedDuration,
+            viewportWidth: viewportWidth,
+            currentScrollOffset: scrollOffset
+        ) else { return }
+        applyAutoFollow(targetOffset: target, viewportWidth: viewportWidth)
     }
 
     /// The number of anchor segments for the scroll-position rail. Split into an

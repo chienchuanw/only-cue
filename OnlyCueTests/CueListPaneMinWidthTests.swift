@@ -18,10 +18,11 @@ import XCTest
 ///
 /// The invariant that makes the loop impossible: the cue-list content's
 /// guaranteed-compressible minimum width must never exceed the inspector
-/// column minimum. This is the deterministic, CI-stable guard
-/// (`SplitDividerCrashUITests` is the behavioural guard but is hit-test
-/// fragile headless). If a future change reintroduces a rigid floor wider
-/// than the column minimum, this fails fast.
+/// column minimum. This is the deterministic, CI-stable guard for the
+/// invariant. (The former `SplitDividerCrashUITests` UI stress test was
+/// removed in #548 as hit-test-fragile headless dead weight.) If a future
+/// change reintroduces a rigid floor wider than the column minimum, this
+/// fails fast.
 final class CueListPaneMinWidthTests: XCTestCase {
 
     func test_headerMinimumWidth_doesNotExceedInspectorColumnMinimum() {

@@ -10,10 +10,10 @@ import XCTest
 /// truth used by the `.inspector` modifier, and `CueListPane` no longer
 /// declares its own conflicting fixed min width.
 ///
-/// This test is the deterministic, CI-stable guard (the UI stress test in
-/// `SplitDividerCrashUITests` is the behavioural guard but is hit-test
-/// fragile headless). If a future change reintroduces a divergent literal,
-/// these assertions fail fast.
+/// This test is the deterministic, CI-stable guard for the invariant. (The
+/// former `SplitDividerCrashUITests` UI stress test was removed in #548 as
+/// hit-test-fragile headless dead weight.) If a future change reintroduces a
+/// divergent literal, these assertions fail fast.
 final class CueListInspectorMetricsTests: XCTestCase {
 
     func test_metrics_areOrdered() {

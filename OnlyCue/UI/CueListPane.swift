@@ -45,7 +45,6 @@ enum CueListLayout {
     }
 }
 
-// swiftlint:disable:next type_body_length
 struct CueListPane: View {
 
     static let headerAccessibilityIdentifier = "cueListHeader"
@@ -336,47 +335,6 @@ struct CueListPane: View {
             },
             isReadOnly: isReadOnly
         )
-    }
-
-    /// The per-row right-click menu — empty (no menu) when the list is
-    /// read-only (Show mode).
-    @ViewBuilder
-    private func cueContextMenu(for cue: Cue) -> some View {
-        if !isReadOnly {
-            Button("Edit Notes…") { activeCueSheet = .notes(cue.id) }
-                .keyboardShortcut("n", modifiers: [.command, .option])
-                .accessibilityIdentifier("cueRowContextEditNotes")
-            Button("Tempo…") { activeCueSheet = .tempo(cue.id) }
-                .keyboardShortcut("t", modifiers: [.command, .option])
-                .accessibilityIdentifier("cueRowContextTempo")
-            if selection.count >= 2 {
-                Button("Renumber Selected…") { activeCueSheet = .renumber }
-                    .accessibilityIdentifier("cueRowContextRenumberSelected")
-            }
-            Menu("Change Type") {
-                ForEach(document.model.cuePointTypes) { type in
-                    Button {
-                        guard type.id != cue.typeID else { return }
-                        CueCommands.setType(
-                            cueId: cue.id,
-                            to: type.id,
-                            document: document,
-                            undoManager: undoManager
-                        )
-                    } label: {
-                        Label {
-                            Text(type.name)
-                        } icon: {
-                            if type.id == cue.typeID {
-                                Image(systemName: "checkmark")
-                            }
-                        }
-                    }
-                    .accessibilityIdentifier("cueRowContextChangeType-\(type.id)")
-                }
-            }
-            .accessibilityIdentifier("cueRowContextChangeType")
-        }
     }
 
     func deleteAtOffsets(_ offsets: IndexSet) {

@@ -41,20 +41,7 @@ extension CueListPane {
     @ViewBuilder
     func cueSheetContent(for sheet: CueSheetKind) -> some View {
         if case .renumber = sheet {
-            RenumberCuesSheet(
-                cueCount: selection.count,
-                onRenumber: { start, interval in
-                    CueCommands.renumberSelected(
-                        selection,
-                        start: start,
-                        interval: interval,
-                        document: document,
-                        undoManager: undoManager
-                    )
-                    activeCueSheet = nil
-                },
-                onCancel: { activeCueSheet = nil }
-            )
+            renumberSheet()
         } else if let cueID = sheet.cueID, let cue = cues.first(where: { $0.id == cueID }) {
             switch sheet {
             case .renumber:
@@ -100,6 +87,68 @@ extension CueListPane {
             }
         } else {
             Color.clear.onAppear { activeCueSheet = nil }
+        }
+    }
+
+    /// The "Renumber Selected…" sheet (#535), extracted so `cueSheetContent`
+    /// stays within SwiftLint's `function_body_length`.
+    @ViewBuilder
+    func renumberSheet() -> some View {
+        RenumberCuesSheet(
+            cueCount: selection.count,
+            onRenumber: { start, interval in
+                CueCommands.renumberSelected(
+                    selection,
+                    start: start,
+                    interval: interval,
+                    document: document,
+                    undoManager: undoManager
+                )
+                activeCueSheet = nil
+            },
+            onCancel: { activeCueSheet = nil }
+        )
+    }
+
+    /// The per-row right-click menu — empty (no menu) when the list is
+    /// read-only (Show mode). Lives here (not in the main struct) so
+    /// `CueListPane.swift` stays under SwiftLint's `file_length`.
+    @ViewBuilder
+    func cueContextMenu(for cue: Cue) -> some View {
+        if !isReadOnly {
+            Button("Edit Notes…") { activeCueSheet = .notes(cue.id) }
+                .keyboardShortcut("n", modifiers: [.command, .option])
+                .accessibilityIdentifier("cueRowContextEditNotes")
+            Button("Tempo…") { activeCueSheet = .tempo(cue.id) }
+                .keyboardShortcut("t", modifiers: [.command, .option])
+                .accessibilityIdentifier("cueRowContextTempo")
+            if selection.count >= 2 {
+                Button("Renumber Selected…") { activeCueSheet = .renumber }
+                    .accessibilityIdentifier("cueRowContextRenumberSelected")
+            }
+            Menu("Change Type") {
+                ForEach(document.model.cuePointTypes) { type in
+                    Button {
+                        guard type.id != cue.typeID else { return }
+                        CueCommands.setType(
+                            cueId: cue.id,
+                            to: type.id,
+                            document: document,
+                            undoManager: undoManager
+                        )
+                    } label: {
+                        Label {
+                            Text(type.name)
+                        } icon: {
+                            if type.id == cue.typeID {
+                                Image(systemName: "checkmark")
+                            }
+                        }
+                    }
+                    .accessibilityIdentifier("cueRowContextChangeType-\(type.id)")
+                }
+            }
+            .accessibilityIdentifier("cueRowContextChangeType")
         }
     }
 

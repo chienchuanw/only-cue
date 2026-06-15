@@ -96,6 +96,12 @@ final class PlayerEngine {
         // it can snap rate back to 1.0.
         player.rate = playbackRate
         rate = player.rate
+        // Re-anchor the time observation to "now" at the instant rate flips >0
+        // (#537). While paused, `currentTimeObservedAt` ages; without this the
+        // interpolator would extrapolate currentTime forward by the whole paused
+        // gap on resume (jump) until the next observer tick snaps it back. This
+        // also covers the scrub-resume path, which calls play() after seek().
+        currentTimeObservedAt = CACurrentMediaTime()
     }
 
     func pause() {

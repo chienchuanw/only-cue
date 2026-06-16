@@ -27,12 +27,27 @@ struct TransportControls: View {
         TransportBar.CountdownMode(rawValue: countdownModeRaw) ?? .time
     }
 
+    /// Transport-bar geometry pinned to Figma 318:1310 (#555, audit
+    /// `## transport-bar`). Off-grid (no DS token); `TransportControlsMetricsTests`
+    /// guards them.
+    enum Metrics {
+        static let containerHPadding: CGFloat = 16  // Figma px-16
+        static let containerVPadding: CGFloat = 10  // Figma py-10
+        static let zoneGap: CGFloat = 16            // Figma gap-16 between zones/dividers
+        static let dividerHeight: CGFloat = 26      // Figma h-26 (not full-bar)
+        static let buttonGap: CGFloat = 6           // Figma gap-6 between transport buttons
+        static let primaryButtonWidth: CGFloat = 34
+        static let primaryButtonHeight: CGFloat = 28 // Figma 34×28
+        static let sideButtonWidth: CGFloat = 28
+        static let sideButtonHeight: CGFloat = 26    // Figma 28×26
+    }
+
     var body: some View {
-        // Flat bottom bar (Figma 318:1309): panel background with a single top
-        // hairline — no rounded card, no side/bottom borders. Zones are
-        // left-grouped on a uniform divider gap (the trailing Spacer leaves the
-        // empty space on the right), not pushed apart by a flexible spacer.
-        HStack(spacing: 0) {
+        // Flat bottom bar (Figma 318:1309/1310): panel background with a single
+        // top hairline — no rounded card, no side/bottom borders. A single
+        // container padding (px-16 / py-10) and a uniform 16pt gap separate the
+        // zones (and their dividers); the trailing Spacer left-groups them.
+        HStack(spacing: Metrics.zoneGap) {
             controlZone
             divider
             readoutZone
@@ -40,6 +55,8 @@ struct TransportControls: View {
             nextCueZone
             Spacer(minLength: 0)
         }
+        .padding(.horizontal, Metrics.containerHPadding)
+        .padding(.vertical, Metrics.containerVPadding)
         .background(DS.Color.panel)
         .overlay(alignment: .top) { DS.Color.border.frame(height: 1) }
         // `.contain` keeps the bar itself queryable AND lets XCUITest walk to
@@ -54,15 +71,17 @@ struct TransportControls: View {
     static func buttonShowsChrome(primary: Bool) -> Bool { primary }
 
     private var divider: some View {
-        // Inset hairline — a shorter, vertically-centered divider (Figma
-        // 318:1310) rather than one spanning the full bar height.
-        DS.Color.border.frame(width: 1).frame(maxHeight: .infinity).padding(.vertical, DS.Space.md)
+        // Fixed 26pt inset hairline (Figma 318:1310 h-26), vertically centered
+        // by the row, rather than spanning the full bar height.
+        DS.Color.border.frame(width: 1, height: Metrics.dividerHeight)
     }
 
     // MARK: - Control zone
 
     private var controlZone: some View {
-        HStack(spacing: DS.Space.sm) {
+        // No per-zone padding — the bar's container padding + 16pt zone gap
+        // handle separation (Figma flat layout, #555).
+        HStack(spacing: Metrics.buttonGap) {
             iconButton("backward.end.fill", id: "transportPrevCue", help: "Previous cue", action: onStepPrevCue)
             iconButton(
                 engine.isPlaying ? "pause.fill" : "play.fill",
@@ -74,8 +93,6 @@ struct TransportControls: View {
             }
             iconButton("forward.end.fill", id: "transportNextCue", help: "Next cue", action: onStepNextCue)
         }
-        .padding(.horizontal, DS.Space.lg)
-        .padding(.vertical, DS.Space.md)
     }
 
     private func iconButton(
@@ -89,7 +106,10 @@ struct TransportControls: View {
         return Button(action: action) {
             Image(systemName: symbol)
                 .font(.system(size: primary ? 15 : 12, weight: .medium)) // off-grid: SF Symbol glyph size
-                .frame(width: primary ? 34 : 30, height: primary ? 34 : 30)
+                .frame(
+                    width: primary ? Metrics.primaryButtonWidth : Metrics.sideButtonWidth,
+                    height: primary ? Metrics.primaryButtonHeight : Metrics.sideButtonHeight
+                )
                 // Primary: filled ink button. Skip controls: box-less glyph —
                 // no background, no border (Figma 318:1310).
                 .background(showsChrome ? DS.Color.ink : Color.clear)
@@ -124,7 +144,6 @@ struct TransportControls: View {
                     .help(smpteReadoutHelp)
             }
         }
-        .padding(.horizontal, DS.Space.lg)
     }
 
     /// The SMPTE timecode at the playhead — the active file's striped LTC when
@@ -175,8 +194,6 @@ struct TransportControls: View {
                   ? "Set a tempo on a cue to enable beat countdown. Click to switch back to time."
                   : "Click to switch between time and beat countdown.")
             .accessibilityIdentifier("nextCueCountdownToggle")
-            .padding(.horizontal, DS.Space.lg)
-            .padding(.vertical, DS.Space.md)
         }
     }
 

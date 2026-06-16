@@ -40,7 +40,7 @@ extension WaveformContainer {
         let ticks = WaveformRulerTicks.ticks(duration: loadedDuration, contentWidth: size.width)
         let strokeColor = GraphicsContext.Shading.color(DS.Color.borderStrong)
         for tick in ticks {
-            let tickHeight: CGFloat = tick.isMajor ? 8 : 4
+            let tickHeight: CGFloat = tick.isMajor ? 9 : 5 // off-grid: Figma major 9 / minor 5
             var path = Path()
             path.move(to: CGPoint(x: tick.x, y: topInset))
             path.addLine(to: CGPoint(x: tick.x, y: topInset + tickHeight))

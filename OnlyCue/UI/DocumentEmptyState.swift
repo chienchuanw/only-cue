@@ -10,7 +10,7 @@ struct DocumentEmptyState: View {
 
     var body: some View {
         VStack(spacing: DS.Space.md) {
-            Image(systemName: "square.and.arrow.down")
+            Image(systemName: "tray.and.arrow.down") // Figma ic-import: tray, not box-arrow
                 .font(.system(size: 30)) // off-grid: empty-state glyph size
                 .foregroundStyle(DS.Color.textTertiary)
             Text("No media imported")
@@ -48,7 +48,7 @@ struct DocumentEmptyState: View {
                 .foregroundStyle(DS.Color.textTertiary)
         }
         .buttonStyle(.plain)
-        .padding(DS.Space.md)
+        .padding(6) // off-grid: Figma help-button tucked ~6pt into the well corner
         .help("Keyboard shortcuts")
         .accessibilityIdentifier("shortcutReferenceButton")
         .popover(isPresented: $showShortcuts) { ShortcutReferencePopover() }

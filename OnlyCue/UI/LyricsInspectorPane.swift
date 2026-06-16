@@ -18,11 +18,9 @@ struct LyricsInspectorPane: View {
             header
             if let item {
                 offsetControl(item: item)
-                Divider()
                 ScrollView {
                     VStack(alignment: .leading, spacing: 10) {
                         queueSection(item: item)
-                        Divider()
                         placedSection(item: item)
                     }
                 }
@@ -175,7 +173,7 @@ private struct LyricsInspectorRow: View {
     var body: some View {
         HStack(spacing: 6) {
             Text(LyricsTimeFormat.clockString(line.time ?? 0))
-                .font(.caption.monospacedDigit())
+                .font(DS.Text.monoSmall) // Figma 318:1490 — DS mono token for timecode consistency
                 .foregroundStyle(isCurrent ? DS.Color.cueIndigo : DS.Color.textSecondary)
                 // Fixed timestamp column so every lyric text shares one left
                 // edge (Figma 318:1490 — timestamp ~61pt, text at x=81).

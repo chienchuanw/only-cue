@@ -158,6 +158,10 @@ struct AppCommands: Commands {
             // Persistent behavior toggle (#532): a leading checkmark when on,
             // mirroring the Playback-mode items, rather than a Show/Hide
             // verb-flip — the macOS-standard affordance for an on/off setting.
+            // Note: the checkmark (and a SwiftUI Toggle's state) is NOT exposed
+            // to XCUITest — neither `value` nor `isSelected` reflects it — so the
+            // menu UI test only smoke-checks presence/clickability; the flip and
+            // gating are unit-tested in `WaveformZoomControllerTests`.
             Button {
                 autoScrollWaveform.toggle()
             } label: {

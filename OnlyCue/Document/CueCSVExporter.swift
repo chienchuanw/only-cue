@@ -3,10 +3,13 @@ import Foundation
 /// Exports a list of cues to delimiter-separated text (CSV or TSV).
 ///
 /// Schema (one row per cue, plus a header row):
-///     id,number,name,time,fadeIn,fadeOut,type,notes
+///     number,name,time,fadeIn,fadeOut,type,notes
 ///
-/// `id` is the cue's stable UUID; `number` is the user-facing `Cue.cueNumber`
-/// (empty when the cue is unnumbered), formatted like the cue list / console.
+/// `number` is the user-facing `Cue.cueNumber` (empty when the cue is
+/// unnumbered), formatted like the cue list / console. The cue's stable UUID
+/// is deliberately omitted from the generic CSV/TSV output — it is internal
+/// noise for spreadsheet / console-operator consumers (#571). The grandMA
+/// variant still carries it as the `GUID` column (see `maCSV`).
 ///
 /// `time` / `fadeIn` / `fadeOut` are written as decimal seconds matching the
 /// in-memory `Cue.time` and `FadeTime.fadeIn` / `.fadeOut` storage. `type` is
@@ -20,11 +23,11 @@ import Foundation
 /// aren't column separators in TSV.
 enum CueCSVExporter {
 
-    static let columns = ["id", "number", "name", "time", "fadeIn", "fadeOut", "type", "notes"]
-    /// grandMA-conventional column labels — best-effort rename of the generic
-    /// schema. See ADR-014 for the rationale + the validate-against-console
-    /// caveat. The data shape is identical; only the header row differs — so
-    /// `Cue` maps to the cue *number* column and the UUID is labelled `GUID`.
+    static let columns = ["number", "name", "time", "fadeIn", "fadeOut", "type", "notes"]
+    /// grandMA-conventional column labels. See ADR-014 for the rationale + the
+    /// validate-against-console caveat. Unlike the generic schema, the grandMA
+    /// variant keeps the cue's UUID as the leading `GUID` column — consoles use
+    /// it to preserve cue identity across a re-import (#571).
     static let maColumns = ["GUID", "Cue", "Name", "Trig Time", "Fade In", "Fade Out", "Type", "Note"]
 
     static func csv(cues: [Cue], typeNamesByID: [UUID: String]) -> String {
@@ -35,24 +38,26 @@ enum CueCSVExporter {
         format(cues: cues, typeNamesByID: typeNamesByID, delimiter: "\t", columns: columns)
     }
 
-    /// grandMA3 / grandMA2 best-effort CSV — same shape as `csv`, but with
-    /// grandMA-conventional column labels. MA3 and MA2 both accept CSV
-    /// import; the format here is a single shared variant. ADR-014.
+    /// grandMA3 / grandMA2 best-effort CSV — same fields as `csv` plus the
+    /// leading `GUID` column. MA3 and MA2 both accept CSV import; the format
+    /// here is a single shared variant. ADR-014.
     static func maCSV(cues: [Cue], typeNamesByID: [UUID: String]) -> String {
-        format(cues: cues, typeNamesByID: typeNamesByID, delimiter: ",", columns: maColumns)
+        format(cues: cues, typeNamesByID: typeNamesByID, delimiter: ",", columns: maColumns, includeID: true)
     }
 
     private static func format(
         cues: [Cue],
         typeNamesByID: [UUID: String],
         delimiter: String,
-        columns: [String]
+        columns: [String],
+        includeID: Bool = false
     ) -> String {
         var out = columns.joined(separator: delimiter) + "\n"
         for cue in cues {
             let typeName = typeNamesByID[cue.typeID] ?? ""
-            let row: [String] = [
-                cue.id.uuidString,
+            var row: [String] = []
+            if includeID { row.append(cue.id.uuidString) }
+            row += [
                 cue.cueNumber.map(FadeTime.formatNumber) ?? "",
                 escape(cue.name, delimiter: delimiter),
                 String(cue.time),
@@ -77,5 +82,5 @@ enum CueCSVExporter {
 
     // Legacy header (kept so tests pinning the exact CSV header continue to
     // pass without churn). Equivalent to `columns.joined(separator: ",")`.
-    static let header = "id,number,name,time,fadeIn,fadeOut,type,notes"
+    static let header = "number,name,time,fadeIn,fadeOut,type,notes"
 }

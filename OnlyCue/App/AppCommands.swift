@@ -41,6 +41,12 @@ struct AppCommands: Commands {
     var body: some Commands {
         CommandGroup(replacing: .appInfo) {
             Button("About OnlyCue") { Self.showAboutPanel() }
+            Divider()
+            // App-global, stateless — call the presenter directly (#565).
+            Button("Check for Updates…") {
+                Task { await UpdateCheckPresenter.shared.run() }
+            }
+            .accessibilityIdentifier("checkForUpdatesMenuItem")
         }
 
         CommandGroup(after: .newItem) {

@@ -79,8 +79,4 @@ enum CueCSVExporter {
         let doubled = value.replacingOccurrences(of: "\"", with: "\"\"")
         return "\"\(doubled)\""
     }
-
-    // Legacy header (kept so tests pinning the exact CSV header continue to
-    // pass without churn). Equivalent to `columns.joined(separator: ",")`.
-    static let header = "number,name,time,fadeIn,fadeOut,type,notes"
 }

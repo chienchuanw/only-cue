@@ -27,10 +27,20 @@ enum CueCSVExportAction {
 
         let panel = NSSavePanel()
         panel.allowedContentTypes = [target.contentType]
-        panel.nameFieldStringValue = "\(item.resolvedName).\(target.fileExtension)"
+        panel.nameFieldStringValue = suggestedFilename(forItemName: item.resolvedName, target: target)
         panel.canCreateDirectories = true
 
         guard panel.runModal() == .OK, let url = panel.url else { return }
         try body.write(to: url, atomically: true, encoding: .utf8)
+    }
+
+    /// Suggested save-panel filename: the media item's name with its own
+    /// extension stripped, plus the export extension — so "abc.mp3" → "abc.csv",
+    /// not "abc.mp3.csv" (#569). Falls back to the raw name if stripping leaves
+    /// it empty (e.g. a dotfile-style name).
+    static func suggestedFilename(forItemName name: String, target: ExportTarget) -> String {
+        let base = (name as NSString).deletingPathExtension
+        let stem = base.isEmpty ? name : base
+        return "\(stem).\(target.fileExtension)"
     }
 }

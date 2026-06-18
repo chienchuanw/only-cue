@@ -18,10 +18,10 @@ final class CueExportGoldenFileTests: XCTestCase {
             typeNamesByID: Self.typeNames
         )
         XCTAssertEqual(output, """
-        id,number,name,time,fadeIn,fadeOut,type,notes
-        00000000-0000-0000-0000-000000000001,1,Open,0.0,0.0,0.0,Lighting,
-        00000000-0000-0000-0000-000000000002,2,Bridge,12.5,0.5,1.25,Lighting,key change
-        00000000-0000-0000-0000-000000000003,,FX hit,30.0,0.0,0.0,Sound,"watch the cue, it's tight"
+        number,name,time,fadeIn,fadeOut,type,notes
+        1,Open,0.0,0.0,0.0,Lighting,
+        2,Bridge,12.5,0.5,1.25,Lighting,key change
+        ,FX hit,30.0,0.0,0.0,Sound,"watch the cue, it's tight"
 
         """)
     }
@@ -33,10 +33,10 @@ final class CueExportGoldenFileTests: XCTestCase {
         )
         // Comma in notes pass through unescaped in TSV.
         XCTAssertEqual(output, """
-        id\tnumber\tname\ttime\tfadeIn\tfadeOut\ttype\tnotes
-        00000000-0000-0000-0000-000000000001\t1\tOpen\t0.0\t0.0\t0.0\tLighting\t
-        00000000-0000-0000-0000-000000000002\t2\tBridge\t12.5\t0.5\t1.25\tLighting\tkey change
-        00000000-0000-0000-0000-000000000003\t\tFX hit\t30.0\t0.0\t0.0\tSound\twatch the cue, it's tight
+        number\tname\ttime\tfadeIn\tfadeOut\ttype\tnotes
+        1\tOpen\t0.0\t0.0\t0.0\tLighting\t
+        2\tBridge\t12.5\t0.5\t1.25\tLighting\tkey change
+        \tFX hit\t30.0\t0.0\t0.0\tSound\twatch the cue, it's tight
 
         """)
     }

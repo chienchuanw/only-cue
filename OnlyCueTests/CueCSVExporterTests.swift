@@ -8,7 +8,7 @@ final class CueCSVExporterTests: XCTestCase {
 
     func test_emptyList_returnsHeaderOnly() {
         let csv = CueCSVExporter.csv(cues: [], typeNamesByID: [:])
-        XCTAssertEqual(csv, "id,name,time,fadeIn,fadeOut,type,notes\n")
+        XCTAssertEqual(csv, "id,number,name,time,fadeIn,fadeOut,type,notes\n")
     }
 
     func test_singleCue_writesAllFields() throws {
@@ -28,8 +28,8 @@ final class CueCSVExporterTests: XCTestCase {
             typeNamesByID: [typeID: "Lighting"]
         )
         XCTAssertEqual(csv, """
-        id,name,time,fadeIn,fadeOut,type,notes
-        00000000-0000-0000-0000-000000000002,Bridge Hit,12.5,0.5,1.25,Lighting,key change
+        id,number,name,time,fadeIn,fadeOut,type,notes
+        00000000-0000-0000-0000-000000000002,1,Bridge Hit,12.5,0.5,1.25,Lighting,key change
 
         """)
     }

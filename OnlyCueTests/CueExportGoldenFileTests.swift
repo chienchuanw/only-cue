@@ -18,10 +18,10 @@ final class CueExportGoldenFileTests: XCTestCase {
             typeNamesByID: Self.typeNames
         )
         XCTAssertEqual(output, """
-        id,name,time,fadeIn,fadeOut,type,notes
-        00000000-0000-0000-0000-000000000001,Open,0.0,0.0,0.0,Lighting,
-        00000000-0000-0000-0000-000000000002,Bridge,12.5,0.5,1.25,Lighting,key change
-        00000000-0000-0000-0000-000000000003,FX hit,30.0,0.0,0.0,Sound,"watch the cue, it's tight"
+        id,number,name,time,fadeIn,fadeOut,type,notes
+        00000000-0000-0000-0000-000000000001,1,Open,0.0,0.0,0.0,Lighting,
+        00000000-0000-0000-0000-000000000002,2,Bridge,12.5,0.5,1.25,Lighting,key change
+        00000000-0000-0000-0000-000000000003,,FX hit,30.0,0.0,0.0,Sound,"watch the cue, it's tight"
 
         """)
     }
@@ -33,10 +33,10 @@ final class CueExportGoldenFileTests: XCTestCase {
         )
         // Comma in notes pass through unescaped in TSV.
         XCTAssertEqual(output, """
-        id\tname\ttime\tfadeIn\tfadeOut\ttype\tnotes
-        00000000-0000-0000-0000-000000000001\tOpen\t0.0\t0.0\t0.0\tLighting\t
-        00000000-0000-0000-0000-000000000002\tBridge\t12.5\t0.5\t1.25\tLighting\tkey change
-        00000000-0000-0000-0000-000000000003\tFX hit\t30.0\t0.0\t0.0\tSound\twatch the cue, it's tight
+        id\tnumber\tname\ttime\tfadeIn\tfadeOut\ttype\tnotes
+        00000000-0000-0000-0000-000000000001\t1\tOpen\t0.0\t0.0\t0.0\tLighting\t
+        00000000-0000-0000-0000-000000000002\t2\tBridge\t12.5\t0.5\t1.25\tLighting\tkey change
+        00000000-0000-0000-0000-000000000003\t\tFX hit\t30.0\t0.0\t0.0\tSound\twatch the cue, it's tight
 
         """)
     }
@@ -47,10 +47,10 @@ final class CueExportGoldenFileTests: XCTestCase {
             typeNamesByID: Self.typeNames
         )
         XCTAssertEqual(output, """
-        Cue,Name,Trig Time,Fade In,Fade Out,Type,Note
-        00000000-0000-0000-0000-000000000001,Open,0.0,0.0,0.0,Lighting,
-        00000000-0000-0000-0000-000000000002,Bridge,12.5,0.5,1.25,Lighting,key change
-        00000000-0000-0000-0000-000000000003,FX hit,30.0,0.0,0.0,Sound,"watch the cue, it's tight"
+        GUID,Cue,Name,Trig Time,Fade In,Fade Out,Type,Note
+        00000000-0000-0000-0000-000000000001,1,Open,0.0,0.0,0.0,Lighting,
+        00000000-0000-0000-0000-000000000002,2,Bridge,12.5,0.5,1.25,Lighting,key change
+        00000000-0000-0000-0000-000000000003,,FX hit,30.0,0.0,0.0,Sound,"watch the cue, it's tight"
 
         """)
     }
@@ -85,6 +85,7 @@ final class CueExportGoldenFileTests: XCTestCase {
             try makeCue(
                 idString: "00000000-0000-0000-0000-000000000001",
                 typeID: lighting,
+                cueNumber: 1,
                 name: "Open",
                 time: 0.0,
                 notes: ""
@@ -92,14 +93,17 @@ final class CueExportGoldenFileTests: XCTestCase {
             try makeCue(
                 idString: "00000000-0000-0000-0000-000000000002",
                 typeID: lighting,
+                cueNumber: 2,
                 name: "Bridge",
                 time: 12.5,
                 notes: "key change",
                 fade: FadeTime(fadeIn: 0.5, fadeOut: 1.25)
             ),
             try makeCue(
+                // Unnumbered cue — exercises the empty number column.
                 idString: "00000000-0000-0000-0000-000000000003",
                 typeID: sound,
+                cueNumber: nil,
                 name: "FX hit",
                 time: 30.0,
                 notes: "watch the cue, it's tight"
@@ -110,6 +114,7 @@ final class CueExportGoldenFileTests: XCTestCase {
     private static func makeCue(
         idString: String,
         typeID: UUID,
+        cueNumber: Double? = nil,
         name: String,
         time: TimeInterval,
         notes: String,
@@ -118,7 +123,7 @@ final class CueExportGoldenFileTests: XCTestCase {
         Cue(
             id: try XCTUnwrap(UUID(uuidString: idString)),
             typeID: typeID,
-            cueNumber: 1,
+            cueNumber: cueNumber,
             name: name,
             time: time,
             notes: notes,

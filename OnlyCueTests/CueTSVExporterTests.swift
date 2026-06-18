@@ -9,7 +9,7 @@ final class CueTSVExporterTests: XCTestCase {
 
     func test_tsv_emptyList_returnsTabDelimitedHeaderOnly() {
         let tsv = CueCSVExporter.tsv(cues: [], typeNamesByID: [:])
-        XCTAssertEqual(tsv, "id\tname\ttime\tfadeIn\tfadeOut\ttype\tnotes\n")
+        XCTAssertEqual(tsv, "id\tnumber\tname\ttime\tfadeIn\tfadeOut\ttype\tnotes\n")
     }
 
     func test_tsv_singleCue_usesTabsBetweenColumns() throws {
@@ -26,8 +26,8 @@ final class CueTSVExporterTests: XCTestCase {
         )
         let tsv = CueCSVExporter.tsv(cues: [cue], typeNamesByID: [typeID: "Lighting"])
         XCTAssertEqual(tsv, """
-        id\tname\ttime\tfadeIn\tfadeOut\ttype\tnotes
-        \(cueID.uuidString)\tBridge\t1.0\t0.0\t0.0\tLighting\t
+        id\tnumber\tname\ttime\tfadeIn\tfadeOut\ttype\tnotes
+        \(cueID.uuidString)\t1\tBridge\t1.0\t0.0\t0.0\tLighting\t
 
         """)
     }

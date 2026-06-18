@@ -3,7 +3,10 @@ import Foundation
 /// Exports a list of cues to delimiter-separated text (CSV or TSV).
 ///
 /// Schema (one row per cue, plus a header row):
-///     id,name,time,fadeIn,fadeOut,type,notes
+///     id,number,name,time,fadeIn,fadeOut,type,notes
+///
+/// `id` is the cue's stable UUID; `number` is the user-facing `Cue.cueNumber`
+/// (empty when the cue is unnumbered), formatted like the cue list / console.
 ///
 /// `time` / `fadeIn` / `fadeOut` are written as decimal seconds matching the
 /// in-memory `Cue.time` and `FadeTime.fadeIn` / `.fadeOut` storage. `type` is
@@ -17,11 +20,12 @@ import Foundation
 /// aren't column separators in TSV.
 enum CueCSVExporter {
 
-    static let columns = ["id", "name", "time", "fadeIn", "fadeOut", "type", "notes"]
+    static let columns = ["id", "number", "name", "time", "fadeIn", "fadeOut", "type", "notes"]
     /// grandMA-conventional column labels — best-effort rename of the generic
     /// schema. See ADR-014 for the rationale + the validate-against-console
-    /// caveat. The data shape is identical; only the header row differs.
-    static let maColumns = ["Cue", "Name", "Trig Time", "Fade In", "Fade Out", "Type", "Note"]
+    /// caveat. The data shape is identical; only the header row differs — so
+    /// `Cue` maps to the cue *number* column and the UUID is labelled `GUID`.
+    static let maColumns = ["GUID", "Cue", "Name", "Trig Time", "Fade In", "Fade Out", "Type", "Note"]
 
     static func csv(cues: [Cue], typeNamesByID: [UUID: String]) -> String {
         format(cues: cues, typeNamesByID: typeNamesByID, delimiter: ",", columns: columns)
@@ -49,6 +53,7 @@ enum CueCSVExporter {
             let typeName = typeNamesByID[cue.typeID] ?? ""
             let row: [String] = [
                 cue.id.uuidString,
+                cue.cueNumber.map(FadeTime.formatNumber) ?? "",
                 escape(cue.name, delimiter: delimiter),
                 String(cue.time),
                 String(cue.fadeTime.fadeIn),
@@ -72,5 +77,5 @@ enum CueCSVExporter {
 
     // Legacy header (kept so tests pinning the exact CSV header continue to
     // pass without churn). Equivalent to `columns.joined(separator: ",")`.
-    static let header = "id,name,time,fadeIn,fadeOut,type,notes"
+    static let header = "id,number,name,time,fadeIn,fadeOut,type,notes"
 }

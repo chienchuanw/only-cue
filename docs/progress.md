@@ -4,6 +4,15 @@ Append-only session log. Newer entries on top.
 
 ---
 
+## 2026-06-19 — Cue inspector shows active media filename (#575)
+
+**Shipped to `dev` (PR #576, admin-merged as `ad08a9d`, closes #575):**
+
+- `feat(ui)`: the previously-empty strip at the top of the Cue inspector (above the big SMPTE playhead clock) now shows the active media item's filename. New `ActiveMediaNameHeader` view, mounted as the first child of `CueListPane.body` above `PlayheadClockHeader`; reads `document.model.activeItem?.resolvedName` (no new plumbing — `CueListPane` already observes `document`). Centered single line, `DS.Text.small` + `DS.Color.textSecondary`, `.lineLimit(1)` + tail truncation, matching the LTC strip's clip-name treatment (#553); muted "No media" placeholder (`textTertiary`) keeps the strip height stable when nothing is loaded.
+- Pure `displayText(for:)` / `isPlaceholder(for:)` helpers (unit-tested in `ActiveMediaNameHeaderTests`: present / nil / empty). TDD red→green; SwiftLint strict clean; build green; verified by a manual app run. Autonomous review round 1 = approve (nits only). Admin-merged because the test-daemon wedge (below) keeps unit-test CI red.
+
+---
+
 ## 2026-06-19 — Export refinements + arrow-key editing fix; v0.6.1 cut
 
 **Shipped to `dev` (all via PRs, rebase-merged):**

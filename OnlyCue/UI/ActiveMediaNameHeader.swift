@@ -1,12 +1,12 @@
 import SwiftUI
 
-/// The currently-active media item's filename, shown as a quiet centered line
-/// at the very top of the `CueListPane`, above the SMPTE playhead clock (#575).
+/// The currently-active media item's filename, shown as a quiet label in the
+/// inspector's top toolbar band (#575, relocated there in #579 to mirror the
+/// document title on the window's leading side).
 ///
 /// Matches the LTC strip's clip-name treatment (`DS.Text.small`, sans 11pt —
 /// #553) so the two clip-name labels read consistently. A muted placeholder is
-/// rendered when no media is loaded so the strip keeps a stable height instead
-/// of collapsing.
+/// rendered when no media is loaded.
 struct ActiveMediaNameHeader: View {
 
     /// `MediaItem.resolvedName` of the active item, or `nil` when none is loaded.
@@ -32,9 +32,6 @@ struct ActiveMediaNameHeader: View {
             .foregroundStyle(Self.isPlaceholder(for: name) ? DS.Color.textTertiary : DS.Color.textSecondary)
             .lineLimit(1)
             .truncationMode(.tail)
-            .frame(maxWidth: .infinity, alignment: .center)
-            .padding(.horizontal, DS.Space.md)
-            .padding(.top, DS.Space.sm)
             .accessibilityIdentifier("activeMediaNameHeader")
     }
 }

@@ -4,6 +4,14 @@ Append-only session log. Newer entries on top.
 
 ---
 
+## 2026-06-19 — Relink media repoints the existing item (#577)
+
+**Shipped to `dev` (PR #578, admin-merged as `b888d86`, closes #577):**
+
+- `fix(media)`: "Relink media…" was structurally an import — there was no relink code path. The missing-media alert button only set `showImporter = true`, reusing the generic import picker, so a picked file became a brand-new `MediaItem` (new UUID, empty cues) appended via `addItems`, orphaning the original item and its cues. The alert carried only a display `String`, not the item id.
+- Fix builds the real relink path: `DocumentAlert.relink` now carries `MediaItem.ID`; a new `relinkTarget` state drives a dedicated single-selection `.fileImporter`; `MediaImporter.relinkMedia(from:itemID:into:engine:undoManager:)` mints a fresh security-scoped bookmark + loads duration/kind and calls the new **undoable** `CueCommands.relinkMedia(itemID:to:in:undoManager:)`, which overwrites `model.items[index].media` in place — preserving `id`, `cues`, lyrics, and timecode — then reloads the active item. Unsupported selection → existing unsupported-file alert. No schema change (ADR-006 security-scoped bookmarks). Picker handlers extracted to `DocumentView+MediaPicker.swift` to stay under the file-length lint cap.
+- TDD: `CueCommandsRelinkTests` pins repoint (id + cues + timecode/mute/alternate-name preserved), no-new-item, undo-restores, unknown-id no-op. SwiftLint strict clean; build green; verified by manual run. Autonomous review round 1 = approve (nits only; one nit applied — seeded non-default fields in the preservation test). Admin-merged because the testmanagerd wedge keeps unit-test CI red.
+
 ## 2026-06-19 — Cue inspector shows active media filename (#575)
 
 **Shipped to `dev` (PR #576, admin-merged as `ad08a9d`, closes #575):**

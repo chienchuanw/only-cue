@@ -101,6 +101,7 @@ struct CueRowView: View {
                 }
                 .onChange(of: numberDraft) { _, _ in numberError = nil }
                 .onAppear { numberFieldFocused = true }
+                .focusedValue(\.editingCueField, true)
         } else {
             Text(cue.cueNumber.map(FadeTime.formatNumber) ?? "")
                 .font(DS.Text.monoSmall)
@@ -120,6 +121,7 @@ struct CueRowView: View {
                 .onSubmit { commitRename() }
                 .onExitCommand { cancelRename() }
                 .onAppear { nameFieldFocused = true }
+                .focusedValue(\.editingCueField, true)
         } else {
             Text(cue.name.isEmpty ? "Untitled" : cue.name)
                 .font(DS.Text.body)
@@ -143,6 +145,7 @@ struct CueRowView: View {
                     if !isFocused { commitFade() }
                 }
                 .onAppear { fadeFieldFocused = true }
+                .focusedValue(\.editingCueField, true)
         } else {
             // Glance-only display carries the `" s"` unit (Figma 318:1228); the
             // edit draft still uses `format()` so it round-trips through parse.

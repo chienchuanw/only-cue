@@ -193,14 +193,14 @@ struct DocumentView: View {
             allowsMultipleSelection: true,
             onCompletion: handlePickerResult
         )
-        // Relink uses its own single-selection picker so the chosen file repoints
-        // the missing item instead of importing a new one (#577).
-        .fileImporter(
-            isPresented: relinkPickerPresented,
-            allowedContentTypes: MediaImporter.allowedContentTypes,
-            allowsMultipleSelection: false,
-            onCompletion: handleRelinkResult
-        )
+        // Relink uses an AppKit NSOpenPanel (not a second .fileImporter): two
+        // SwiftUI importers on one view are unreliable, and the dismissal
+        // binding raced the completion handler so relink silently no-op'd
+        // (#583). The panel is driven off `relinkTarget`.
+        .onChange(of: relinkTarget) { _, newValue in
+            guard let itemID = newValue else { return }
+            presentRelinkPanel(itemID: itemID)
+        }
         .dropDestination(for: URL.self) { urls, _ in
             guard !urls.isEmpty else { return false }
             importURLs(urls)

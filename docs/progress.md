@@ -4,6 +4,18 @@ Append-only session log. Newer entries on top.
 
 ---
 
+## 2026-06-19 — Export refinements + arrow-key editing fix; v0.6.1 cut
+
+**Shipped to `dev` (all via PRs, rebase-merged):**
+
+- **#569 / PR #570** — `fix(export)`: the Export Cues save panel suggests `<media>.csv` instead of `<media>.<ext>.csv` (e.g. `abc.mp3` → `abc.csv`). New pure `CueCSVExportAction.suggestedFilename(forItemName:target:)` strips the media extension; `CueExportFilenameTests` pins it.
+- **#571 / PR #572** — `feat(export)`: the generic CSV/TSV exports drop the internal UUID `id` column (the meaningful `number,name,time,…` columns now lead); the grandMA MA2/MA3 export keeps its `GUID` column for console re-import identity. `CueCSVExporter.format` gained an `includeID` flag (false for csv/tsv, true for maCSV); dead legacy `header` constant removed. Golden-file + exporter tests updated; MA goldens kept as the guard that grandMA is unaffected.
+- **#573 / PR #574** — `fix(ui)`: while editing an inline cue field (name/number/fade), the bare arrow-key transport/step shortcuts (`jumpBack`/`jumpForward`, `stepPrevCue`/`stepNextCue`) hijacked the keys so the text caret couldn't move. Fix surfaces editing focus via a SwiftUI `FocusedValue` (`editingCueField`) published by `CueRowView`'s `TextField`s and read by `DocumentView` to disable the arrow-bearing shortcut hosts while editing. Pure `InlineEditGate` helper holds the gating logic (unit-tested in `InlineEditGateTests`); printable-key shortcuts left untouched (the field editor already consumes them). Autonomous review round 1 = approve.
+
+**Released:** **v0.6.1** (tag at `0899be4`, GitHub release marked Latest, ad-hoc-signed DMG attached via `scripts/build-release.sh` + hand-rolled `hdiutil` DMG since `create-dmg` isn't installed). Bundles #569 + #571. The #573 fix is on `dev`, queued for the next release. (v0.6.0 — #565 Check for Updates + #567 cue-number column — was cut earlier in the same overall session.)
+
+**Environment caveat (recurring):** the self-hosted Mac mini's test daemon was wedged this session — `xcodebuild` fails with "Timed out … initiating control session with daemon" / "test runner hung before establishing connection", and even CI's own daemon-reset-and-retry (#471) and a manual `sudo killall -9 testmanagerd automationmode-writer` did not hold. Unit-test CI could not go green, so #570/#572/#574 were **admin-merged** (build + SwiftLint green; changes build-verified locally; #574 also manually run). A reboot is the reliable fix; `dev`'s own push CI will keep failing on this until cleared.
+
 ## 2026-05-19 — Bypass-mode session: issue #297 — `NSSplitView` constraint-loop crash on the cue-list divider (PR #306, merged to `dev`)
 
 **Shipped (PR [#306](https://github.com/chienchuanw/only-cue/pull/306), merged to `dev` as `c7566c5`…`9e69e3c`, closes [#297](https://github.com/chienchuanw/only-cue/issues/297)):**

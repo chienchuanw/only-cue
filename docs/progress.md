@@ -4,6 +4,15 @@ Append-only session log. Newer entries on top.
 
 ---
 
+## 2026-06-19 — Auto-relink media + fix relink panel (#587); v0.6.5
+
+**Shipped to `dev` (PR #588, admin-merged as `4938e38`, closes #587):**
+
+- `fix(media)`: two problems. (A) The manual "Relink media…" panel never opened — `NSOpenPanel.runModal()` ran from `.onChange(of: relinkTarget)` inside the SwiftUI alert-dismiss transaction, so the nested modal never became key. Fixed by deferring the panel with `DispatchQueue.main.async` (opens after the alert dismisses). (B) Media that's still on disk (project saved by an older OnlyCue / opened on another install, file in its original directory) forced a manual relink because the `.withSecurityScope` bookmark can fail to resolve across installs.
+- Elegant fix for (B), **no schema change, retroactive to all saved projects**: the original absolute path is already cached inside every bookmark blob. New pure `MediaRelocator` reads it via `URL.resourceValues(forKeys: [.pathKey], fromBookmarkData:)` (no resolve, file need not exist) and finds the first still-existing candidate (saved path, or its directory + known filename). `MediaImporter.loadActive` is now do/catch: on failure it calls `autoRelinkActive` (verify-load → re-mint bookmark via `Bookmarks.create` → `refreshBookmark` → load), only rethrowing the original error (→ manual relink alert) when nothing is found. ADR-006 security-scoped bookmarks kept.
+- TDD: `MediaRelocatorTests` (cached-path extraction from a real bookmark, candidate shape, existence lookup, nil on garbage). loadActive integration + panel timing verified by manual run (auto-load with media in place; manual panel opens for genuine moves). Review round 1 = approve. Admin-merged (testmanagerd wedge keeps unit-test CI red).
+- Note: this fixes the relink that was still non-functional in v0.6.3/v0.6.4 → cut v0.6.5.
+
 ## 2026-06-19 — Center inspector filename on panel background (#585); v0.6.4
 
 **Shipped to `dev` (PR #586, admin-merged as `c8b74ee`, closes #585):**

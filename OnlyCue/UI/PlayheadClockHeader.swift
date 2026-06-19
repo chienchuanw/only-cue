@@ -35,6 +35,7 @@ struct PlayheadClockHeader: View {
                     Text(framerate.shortDisplayName)
                         .font(DS.Text.label)
                         .foregroundStyle(DS.Color.textTertiary)
+                        .padding(.trailing, DS.Space.sm)
                         .accessibilityIdentifier("playheadFramerateCaption")
                 }
             Divider()

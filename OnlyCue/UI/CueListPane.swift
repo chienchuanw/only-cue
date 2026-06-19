@@ -119,6 +119,7 @@ struct CueListPane: View {
 
     var body: some View {
         VStack(spacing: 0) {
+            ActiveMediaNameHeader(name: document.model.activeItem?.resolvedName)
             PlayheadClockHeader(engine: engine)
             Group {
                 if cues.isEmpty {

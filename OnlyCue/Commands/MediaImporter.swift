@@ -78,13 +78,45 @@ enum MediaImporter {
             await engine.unload()
             return
         }
-        let resolution = try Bookmarks.resolve(item.media.bookmarkData)
-        let asset = AVURLAsset(url: resolution.url)
-        _ = try await asset.load(.duration)
-        if resolution.isStale {
-            let refreshed = try Bookmarks.create(for: resolution.url)
-            CueCommands.refreshBookmark(itemID: item.id, to: refreshed, in: document)
+        do {
+            let resolution = try Bookmarks.resolve(item.media.bookmarkData)
+            let asset = AVURLAsset(url: resolution.url)
+            _ = try await asset.load(.duration)
+            if resolution.isStale {
+                let refreshed = try Bookmarks.create(for: resolution.url)
+                CueCommands.refreshBookmark(itemID: item.id, to: refreshed, in: document)
+            }
+            await engine.load(asset: asset)
+        } catch {
+            // The bookmark wouldn't resolve (moved file, or a project opened on
+            // another install/version where the security-scoped bookmark is
+            // invalid). Before bothering the user, try to re-locate the file at
+            // its saved path — which is cached in the bookmark blob (#587). Only
+            // rethrow (→ manual relink alert) if that fails too.
+            try await autoRelinkActive(item: item, into: document, engine: engine, original: error)
         }
+    }
+
+    /// Best-effort silent relink: if the media is still at its saved path (or the
+    /// same directory under its known name), re-mint the bookmark and load it.
+    /// Rethrows `original` when the file genuinely can't be found.
+    @MainActor
+    private static func autoRelinkActive(
+        item: MediaItem,
+        into document: CueListDocument,
+        engine: PlayerEngine,
+        original: Error
+    ) async throws {
+        let candidates = MediaRelocator.candidateURLs(
+            bookmark: item.media.bookmarkData,
+            displayName: item.media.displayName
+        )
+        guard let url = MediaRelocator.firstExisting(candidates) else { throw original }
+
+        let asset = AVURLAsset(url: url)
+        _ = try await asset.load(.duration)
+        let refreshed = try Bookmarks.create(for: url)
+        CueCommands.refreshBookmark(itemID: item.id, to: refreshed, in: document)
         await engine.load(asset: asset)
     }
 

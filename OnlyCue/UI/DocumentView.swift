@@ -7,6 +7,8 @@ struct DocumentView: View {
     @ObservedObject var document: CueListDocument
     @State var engine = PlayerEngine()
     @State private var showImporter = false
+    /// The id of the media item awaiting a relink file selection (#577).
+    @State var relinkTarget: MediaItem.ID?
     @State var pendingAlert: DocumentAlert?
     @State private var seekTask: Task<Void, Never>?
     @State private var showOverlayAppearance = false
@@ -23,7 +25,7 @@ struct DocumentView: View {
     /// routing is enabled. Observing the singleton here means flipping the
     /// switch in Preferences updates the strip in real time.
     @ObservedObject var ltcRoutingStore = LTCRoutingStore.shared
-    @Environment(\.undoManager) private var undoManager
+    @Environment(\.undoManager) var undoManager
     /// True while an inline cue field (name/number/fade) is being edited, so the
     /// bare arrow-key transport/step shortcuts yield to the text field (#573).
     @FocusedValue(\.editingCueField) private var editingCueField
@@ -184,6 +186,14 @@ struct DocumentView: View {
             allowsMultipleSelection: true,
             onCompletion: handlePickerResult
         )
+        // Relink uses its own single-selection picker so the chosen file repoints
+        // the missing item instead of importing a new one (#577).
+        .fileImporter(
+            isPresented: relinkPickerPresented,
+            allowedContentTypes: MediaImporter.allowedContentTypes,
+            allowsMultipleSelection: false,
+            onCompletion: handleRelinkResult
+        )
         .dropDestination(for: URL.self) { urls, _ in
             guard !urls.isEmpty else { return false }
             importURLs(urls)
@@ -210,11 +220,11 @@ struct DocumentView: View {
                 message: Text(message),
                 dismissButton: .default(Text("OK"))
             )
-        case .relink(let displayName):
+        case let .relink(itemID, displayName):
             return Alert(
                 title: Text("Missing media"),
                 message: Text("\(displayName) couldn't be opened from its saved location."),
-                primaryButton: .default(Text("Relink media…")) { showImporter = true },
+                primaryButton: .default(Text("Relink media…")) { relinkTarget = itemID },
                 secondaryButton: .cancel(Text("Continue without media"))
             )
         }
@@ -228,42 +238,9 @@ struct DocumentView: View {
         do {
             try await MediaImporter.loadActive(into: document, engine: engine)
         } catch {
-            pendingAlert = .relink(document.model.activeItem?.media.displayName ?? "The media file")
+            guard let item = document.model.activeItem else { return }
+            pendingAlert = .relink(itemID: item.id, displayName: item.media.displayName)
         }
-    }
-
-    private func handlePickerResult(_ result: Result<[URL], Error>) {
-        switch result {
-        case .success(let urls):
-            guard !urls.isEmpty else { return }
-            importURLs(urls)
-        case .failure(let error):
-            pendingAlert = .unsupported(error.localizedDescription)
-        }
-    }
-
-    private func importURLs(_ urls: [URL]) {
-        Task { @MainActor in
-            do {
-                try await MediaImporter.importMedia(
-                    from: urls,
-                    into: document,
-                    engine: engine,
-                    undoManager: undoManager
-                )
-            } catch let MediaImportError.batch(unsupported) {
-                pendingAlert = .unsupported(unsupportedMessage(unsupported))
-            } catch {
-                pendingAlert = .unsupported(error.localizedDescription)
-            }
-        }
-    }
-
-    private func unsupportedMessage(_ filenames: [String]) -> String {
-        let list = filenames.joined(separator: ", ")
-        return filenames.count == 1
-            ? "\(list) isn't a supported audio or video file."
-            : "These files weren't supported and were skipped: \(list)"
     }
 
 }
@@ -357,12 +334,12 @@ extension Notification.Name {
 
 enum DocumentAlert: Identifiable {
     case unsupported(String)
-    case relink(String)
+    case relink(itemID: MediaItem.ID, displayName: String)
 
     var id: String {
         switch self {
         case .unsupported(let message): "unsupported:\(message)"
-        case .relink(let name): "relink:\(name)"
+        case let .relink(itemID, _): "relink:\(itemID.uuidString)"
         }
     }
 }

@@ -114,6 +114,31 @@ extension CueCommands {
         document.model.items[index].media.bookmarkData = data
     }
 
+    /// User-initiated relink: repoint an existing item at a newly chosen file by
+    /// overwriting its `media` reference in place. The item's `id`, `cues`,
+    /// lyrics, and timecode are preserved — unlike import, which appends a new
+    /// item with empty cues (#577). Undoable, unlike `refreshBookmark`.
+    static func relinkMedia(
+        itemID: MediaItem.ID,
+        to media: MediaReference,
+        in document: CueListDocument,
+        undoManager: UndoManager?
+    ) {
+        guard let index = document.model.items.firstIndex(where: { $0.id == itemID }) else { return }
+        let beforeItems = document.model.items
+        let beforeActive = document.model.activeItemID
+
+        document.model.items[index].media = media
+
+        registerItemUndo(
+            document: document,
+            undoManager: undoManager,
+            actionName: "Relink Media",
+            beforeItems: beforeItems,
+            beforeActive: beforeActive
+        )
+    }
+
     // MARK: - Internals
 
     fileprivate static func registerItemUndo(

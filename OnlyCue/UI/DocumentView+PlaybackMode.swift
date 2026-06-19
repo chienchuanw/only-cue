@@ -42,9 +42,9 @@ extension DocumentView {
                             try await MediaImporter.loadActive(into: document, engine: engine)
                             engine.play()
                         } catch {
-                            pendingAlert = .relink(
-                                document.model.activeItem?.media.displayName ?? "The media file"
-                            )
+                            if let item = document.model.activeItem {
+                                pendingAlert = .relink(itemID: item.id, displayName: item.media.displayName)
+                            }
                         }
                     }
                 )

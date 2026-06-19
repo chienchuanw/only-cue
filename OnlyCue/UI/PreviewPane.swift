@@ -1,6 +1,16 @@
 import AVFoundation
 import SwiftUI
 
+/// Identity for the waveform-resolve task. Keyed on the active item id AND its
+/// bookmark so a relink — which mutates `media.bookmarkData` in place on the
+/// same item id — still re-fires the resolve and refreshes the waveform,
+/// instead of leaving it stuck on the spinner until the user toggles media
+/// (#589).
+struct WaveformSourceKey: Equatable {
+    let itemID: MediaItem.ID?
+    let bookmark: Data?
+}
+
 struct PreviewPane: View {
 
     @ObservedObject var document: CueListDocument
@@ -18,6 +28,15 @@ struct PreviewPane: View {
     @AppStorage("showLyricsOverlay") private var showLyricsOverlay = false
     @AppStorage("showTimelineBreakdown") private var showTimelineBreakdown = false
     @AppStorage(NotesOverlayPreferences.storageKey) private var overlayPrefsData = NotesOverlayPreferences.defaultEncoded
+
+    /// Re-resolves the waveform whenever the active item or its bookmark changes
+    /// (the latter covers relink — same id, new bookmark) (#589).
+    private var waveformSourceKey: WaveformSourceKey {
+        WaveformSourceKey(
+            itemID: document.model.activeItemID,
+            bookmark: document.model.activeItem?.media.bookmarkData
+        )
+    }
 
     var body: some View {
         VStack(spacing: DS.Space.sm) {
@@ -39,7 +58,7 @@ struct PreviewPane: View {
             .frame(maxWidth: .infinity, minHeight: 180, maxHeight: .infinity)
             .clipShape(RoundedRectangle(cornerRadius: DS.Radius.sm))
             .accessibilityIdentifier("previewPane")
-            .task(id: document.model.activeItemID) { await resolveWaveformURL() }
+            .task(id: waveformSourceKey) { await resolveWaveformURL() }
             // Bottom stack — the Notes Overlay (when its position is bottom)
             // above the Lyrics HUD. The spec stacks notes above lyrics;
             // non-bottom Notes Overlay positions keep their own overlay below.

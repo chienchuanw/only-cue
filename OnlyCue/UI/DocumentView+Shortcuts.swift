@@ -22,6 +22,9 @@ extension DocumentView {
         .frame(width: 0, height: 0)
         .opacity(0)
         .accessibilityHidden(true)
+        // While an inline cue field is being edited, the bare left/right arrows
+        // (jumpBack/jumpForward) must move the text caret, not seek (#573).
+        .disabled(isEditingCueField)
     }
 
     var digitShortcuts: some View {

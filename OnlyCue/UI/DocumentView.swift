@@ -24,6 +24,12 @@ struct DocumentView: View {
     /// switch in Preferences updates the strip in real time.
     @ObservedObject var ltcRoutingStore = LTCRoutingStore.shared
     @Environment(\.undoManager) private var undoManager
+    /// True while an inline cue field (name/number/fade) is being edited, so the
+    /// bare arrow-key transport/step shortcuts yield to the text field (#573).
+    @FocusedValue(\.editingCueField) private var editingCueField
+
+    /// Whether an inline cue field is currently being edited.
+    var isEditingCueField: Bool { InlineEditGate.isEditing(editingCueField) }
 
     func shortcut(_ action: KeymapAction) -> KeyboardShortcut {
         keymapStore.keymap.chord(for: action).keyboardShortcut
@@ -150,7 +156,10 @@ struct DocumentView: View {
                 PlayheadStepShortcuts(
                     onStepPrev: { stepPlayhead(.previous) },
                     onStepNext: { stepPlayhead(.next) },
-                    isEnabled: document.model.activeItem != nil,
+                    isEnabled: InlineEditGate.stepShortcutsEnabled(
+                        hasActiveItem: document.model.activeItem != nil,
+                        isEditingCueField: isEditingCueField
+                    ),
                     shortcutFor: shortcut
                 )
                 PlaybackRateShortcuts(

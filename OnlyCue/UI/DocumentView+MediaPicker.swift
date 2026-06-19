@@ -1,9 +1,10 @@
+import AppKit
 import SwiftUI
 
-/// Media file-picker handlers for `DocumentView`: import (new items) and relink
-/// (repoint an existing item, #577). Split into an extension so the main
-/// `DocumentView` body stays under the SwiftLint `file_length` /
-/// `type_body_length` caps.
+/// Media file-picker handlers for `DocumentView`: import (new items, SwiftUI
+/// `.fileImporter`) and relink (repoint an existing item via an AppKit
+/// `NSOpenPanel`, #577/#583). Split into an extension so the main `DocumentView`
+/// body stays under the SwiftLint `file_length` / `type_body_length` caps.
 extension DocumentView {
 
     func handlePickerResult(_ result: Result<[URL], Error>) {
@@ -16,24 +17,22 @@ extension DocumentView {
         }
     }
 
-    /// Binding that presents the relink picker while a target item is pending.
-    var relinkPickerPresented: Binding<Bool> {
-        Binding(
-            get: { relinkTarget != nil },
-            set: { if !$0 { relinkTarget = nil } }
-        )
-    }
-
-    func handleRelinkResult(_ result: Result<[URL], Error>) {
-        guard let itemID = relinkTarget else { return }
+    /// Open a single-file panel to relink `itemID`, then repoint it. Uses
+    /// `NSOpenPanel` rather than a second SwiftUI `.fileImporter` because the
+    /// importer's dismissal binding raced the completion handler — the target
+    /// id was cleared before the result arrived, so relink silently did nothing
+    /// (#583). `relinkTarget` is cleared unconditionally so a later relink of
+    /// the same item re-triggers the `onChange` that calls this.
+    func presentRelinkPanel(itemID: MediaItem.ID) {
+        let panel = NSOpenPanel()
+        panel.allowedContentTypes = MediaImporter.allowedContentTypes
+        panel.allowsMultipleSelection = false
+        panel.canChooseDirectories = false
+        panel.canChooseFiles = true
+        let response = panel.runModal()
         relinkTarget = nil
-        switch result {
-        case .success(let urls):
-            guard let url = urls.first else { return }
-            relinkURL(url, itemID: itemID)
-        case .failure(let error):
-            pendingAlert = .unsupported(error.localizedDescription)
-        }
+        guard response == .OK, let url = panel.url else { return }
+        relinkURL(url, itemID: itemID)
     }
 
     private func relinkURL(_ url: URL, itemID: MediaItem.ID) {

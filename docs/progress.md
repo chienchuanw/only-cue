@@ -4,6 +4,14 @@ Append-only session log. Newer entries on top.
 
 ---
 
+## 2026-06-19 — Relink picker fix: NSOpenPanel (#583)
+
+**Shipped to `dev` (PR #584, admin-merged as `f169d2c`, closes #583):**
+
+- `fix(media)`: the relink flow from #577 (in v0.6.3) silently did nothing — picking a file never relinked and the audio never loaded. Root cause was a SwiftUI binding race: the relink `.fileImporter`'s `isPresented` binding getter was `relinkTarget != nil` and its setter cleared `relinkTarget` on dismissal; SwiftUI flips `isPresented` false (clearing the target) *before* calling `onCompletion`, so `handleRelinkResult`'s `guard let itemID = relinkTarget` bailed. Two `.fileImporter` on one view is also unreliable.
+- Fix: relink now uses an AppKit `NSOpenPanel` (single-selection), triggered via `.onChange(of: relinkTarget)` → `presentRelinkPanel(itemID:)`, which captures the id before opening the panel, runs it modally, clears `relinkTarget`, and on OK calls the existing `MediaImporter.relinkMedia`. Removed `relinkPickerPresented` + `handleRelinkResult` + the second `.fileImporter`; the import `.fileImporter` stays the only SwiftUI importer. Model-level relink stays covered by `CueCommandsRelinkTests`; picker wiring verified by manual run (audio loads, cues preserved, undo works). Autonomous review round 1 = approve. Admin-merged (testmanagerd wedge keeps unit-test CI red).
+- Note: the original #577 relink (shipped in v0.6.3) was effectively non-functional due to this; v0.6.3's release notes/README mention relink — a follow-up release is needed for the working version.
+
 ## 2026-06-19 — Save-on-close prompt restored (#580)
 
 **Shipped to `dev` (PR #581, admin-merged as `09db3f3`, closes #580):**

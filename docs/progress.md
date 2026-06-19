@@ -4,6 +4,12 @@ Append-only session log. Newer entries on top.
 
 ---
 
+## 2026-06-19 — Waveform refresh after relink (#589); v0.6.6
+
+**Shipped to `dev` (PR #590, admin-merged as `b735ca8`, closes #589):**
+
+- `fix(waveform)`: after a relink the waveform stayed on the "Loading…" spinner until the user toggled media. Root cause: `PreviewPane.resolveWaveformURL()` was triggered by `.task(id: document.model.activeItemID)`; a relink mutates `media.bookmarkData` in place under the same item id, so the task never re-fired and `waveformURL` kept the `nil` it got while the file was missing. Fix: new `WaveformSourceKey { itemID; bookmark }`, used as the `.task(id:)` (built from activeItemID + the active item's bookmarkData), so the resolve re-fires when the bookmark changes (relink) — waveform refreshes with no media toggle. `WaveformSourceKeyTests` covers the equality contract; behavior verified by manual run. Review round 1 = approve (non-blocking note: DocumentView's `reloadActive` still keys on activeItemID alone — fine, relink calls loadActive directly). Admin-merged (testmanagerd wedge).
+
 ## 2026-06-19 — Auto-relink media + fix relink panel (#587); v0.6.5
 
 **Shipped to `dev` (PR #588, admin-merged as `4938e38`, closes #587):**

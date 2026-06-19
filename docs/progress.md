@@ -4,6 +4,12 @@ Append-only session log. Newer entries on top.
 
 ---
 
+## 2026-06-19 — Center inspector filename on panel background (#585); v0.6.4
+
+**Shipped to `dev` (PR #586, admin-merged as `c8b74ee`, closes #585):**
+
+- `fix(ui)`: the active-media filename (moved to a toolbar item in #579) rendered right-aligned on the toolbar material. Reverted to inspector **content** — `ActiveMediaNameHeader` is again the first child of `CueListPane.body`, centered (`frame(maxWidth:.infinity, alignment:.center)` + `DS.Space` padding) on the `DS.Color.panel` background. macOS constraint that drove this: a `ToolbarItem` can't be centered over just the inspector column and always sits on toolbar material, so it can't be "centered + plain background." Tradeoff: the label sits just below the title-bar line (content), not literally inside the title bar — true title-bar placement would need a full-size-content-view window change (deferred follow-up). `displayText` stays unit-tested. Review round 1 = approve. Admin-merged (testmanagerd wedge).
+
 ## 2026-06-19 — Relink picker fix: NSOpenPanel (#583)
 
 **Shipped to `dev` (PR #584, admin-merged as `f169d2c`, closes #583):**

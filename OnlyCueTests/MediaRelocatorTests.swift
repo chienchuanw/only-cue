@@ -43,9 +43,9 @@ final class MediaRelocatorTests: XCTestCase {
     }
 
     func test_firstExisting_nilWhenNoneExist() {
-        let a = URL(fileURLWithPath: "/no/such/path/a.wav")
-        let b = URL(fileURLWithPath: "/no/such/path/b.wav")
-        XCTAssertNil(MediaRelocator.firstExisting([a, b]))
+        let missingA = URL(fileURLWithPath: "/no/such/path/a.wav")
+        let missingB = URL(fileURLWithPath: "/no/such/path/b.wav")
+        XCTAssertNil(MediaRelocator.firstExisting([missingA, missingB]))
     }
 
     func test_cachedPath_nilForGarbageData() {

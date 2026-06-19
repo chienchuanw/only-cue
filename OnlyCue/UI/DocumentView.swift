@@ -192,7 +192,10 @@ struct DocumentView: View {
         // (#583). The panel is driven off `relinkTarget`.
         .onChange(of: relinkTarget) { _, newValue in
             guard let itemID = newValue else { return }
-            presentRelinkPanel(itemID: itemID)
+            // Defer so the "Missing media" alert finishes dismissing before the
+            // open panel runs — a nested modal started inside the alert-dismiss
+            // transaction never becomes key and the panel never appears (#587).
+            DispatchQueue.main.async { presentRelinkPanel(itemID: itemID) }
         }
         .dropDestination(for: URL.self) { urls, _ in
             guard !urls.isEmpty else { return false }

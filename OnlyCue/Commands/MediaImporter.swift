@@ -38,6 +38,37 @@ enum MediaImporter {
         }
     }
 
+    /// Repoint an existing media item at a user-chosen file (relink), preserving
+    /// its cues. Mints a fresh security-scoped bookmark + reads the new file's
+    /// duration/kind, replaces the item's `media` in place via the undoable
+    /// `CueCommands.relinkMedia`, then reloads the transport if it's active
+    /// (#577). Throws `unsupportedType` for a non-media selection.
+    @MainActor
+    static func relinkMedia(
+        from url: URL,
+        itemID: MediaItem.ID,
+        into document: CueListDocument,
+        engine: PlayerEngine,
+        undoManager: UndoManager? = nil
+    ) async throws {
+        guard let kind = mediaKind(for: url) else {
+            throw MediaImportError.unsupportedType(filename: url.lastPathComponent)
+        }
+        let bookmark = try Bookmarks.create(for: url)
+        let asset = AVURLAsset(url: url)
+        let duration = CMTimeGetSeconds(try await asset.load(.duration))
+        let media = MediaReference(
+            displayName: url.lastPathComponent,
+            kind: kind,
+            duration: duration,
+            bookmarkData: bookmark
+        )
+        CueCommands.relinkMedia(itemID: itemID, to: media, in: document, undoManager: undoManager)
+        if document.model.activeItemID == itemID {
+            try await loadActive(into: document, engine: engine)
+        }
+    }
+
     @MainActor
     static func loadActive(
         into document: CueListDocument,

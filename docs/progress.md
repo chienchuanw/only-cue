@@ -4,6 +4,16 @@ Append-only session log. Newer entries on top.
 
 ---
 
+## 2026-06-19 — Save-on-close prompt restored (#580)
+
+**Shipped to `dev` (PR #581, admin-merged as `09db3f3`, closes #580):**
+
+- `fix(document)`: closing an edited document fell silently — no "Do you want to save the changes?" sheet — so edits were lost. Root cause: OnlyCue is a SwiftUI `DocumentGroup` + `ReferenceFileDocument` app (which provides the close-review sheet for free), but the hand-written `Info.plist` declared `NSDocumentClass = $(PRODUCT_MODULE_NAME).CueListDocument` inside `CFBundleDocumentTypes`. That key handed document ownership to AppKit's `NSDocumentController` (which can't manage a `ReferenceFileDocument`), bypassing the SwiftUI close-review; the "Edited" dot still showed because the UndoManager change-count is independent.
+- Fix: removed the `NSDocumentClass` key (kept the rest of `CFBundleDocumentTypes` for Finder association; open/new/save stay owned by `DocumentGroup` via `readableContentTypes` + the existing `UTExportedTypeDeclarations`). Regenerated the xcodeproj per the Info.plist bootstrap rule.
+- TDD: `InfoPlistDocumentTypesTests` reads the source `Info.plist` (via `#filePath`) and asserts no `CFBundleDocumentTypes` entry declares `NSDocumentClass` (red→green). Behavior (save-sheet on ⌘W/⌘Q, plus ⌘S / ⌘N / double-click open) was **manually verified by the maintainer** — the close-review is OS-driven and not automatable here. `plutil -lint` OK; built app confirmed free of the key; build green. Autonomous review round 1 = approve (one non-blocking nit). Admin-merged (testmanagerd wedge keeps unit-test CI red).
+
+**Still parked:** `issues/579` (filename → inspector toolbar band + fps trailing padding) is committed at `49dc795` but its PR is on hold pending a visual confirm of the toolbar placement.
+
 ## 2026-06-19 — Relink media repoints the existing item (#577)
 
 **Shipped to `dev` (PR #578, admin-merged as `b888d86`, closes #577):**

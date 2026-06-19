@@ -56,13 +56,6 @@ struct DocumentView: View {
                         lyricsCursor: $lyricsCursor
                     )
                     .cueListInspectorColumnWidth()
-                    // The active clip's filename in the inspector's top band,
-                    // mirroring the document title on the leading side (#579).
-                    .toolbar {
-                        ToolbarItem(placement: .automatic) {
-                            ActiveMediaNameHeader(name: document.model.activeItem?.resolvedName)
-                        }
-                    }
                 }
         }
         // Figma 318:1236: the titlebar subtitle is the editor mode, not the

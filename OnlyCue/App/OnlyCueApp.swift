@@ -3,6 +3,10 @@ import SwiftUI
 @main
 struct OnlyCueApp: App {
 
+    // Suppresses the default auto-untitled document at launch so the welcome
+    // window is what the user sees (#591).
+    @NSApplicationDelegateAdaptor(AppDelegate.self) private var appDelegate
+
     init() {
         Task { @MainActor in
             // Dark-only main window (ADR-029): pin system chrome to Dark Aqua
@@ -29,6 +33,15 @@ struct OnlyCueApp: App {
         // still resize.
         .defaultSize(width: 1280, height: 820)
         .commands { AppCommands() }
+
+        // The start page (#591): recent projects + New / New from Template… /
+        // Open Other…. Shown at launch (the app delegate suppresses the default
+        // blank document) and reopenable via File → Welcome to OnlyCue.
+        Window("Welcome to OnlyCue", id: "welcome") {
+            StartView()
+        }
+        .defaultSize(width: 720, height: 460)
+        .windowResizability(.contentSize)
 
         Settings {
             // Canonical Settings-tab order per the figma↔app audit (§1.1):

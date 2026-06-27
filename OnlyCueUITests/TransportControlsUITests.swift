@@ -3,20 +3,10 @@ import XCTest
 /// Verifies the B+ `TransportControls` renders visible playback controls when
 /// media is loaded — the gap the Quiet Pro redesign closes (the old
 /// `TransportBar` had no on-screen play/step controls).
-final class TransportControlsUITests: XCTestCase {
-
-    override func setUpWithError() throws {
-        continueAfterFailure = false
-    }
+final class TransportControlsUITests: OnlyCueUITestCase {
 
     private func launchSeeded() -> XCUIApplication {
-        let app = XCUIApplication()
-        app.launchArguments += [
-            "-ApplePersistenceIgnoreState", "YES",
-            SeedKey.threeCuesAt1And3And6.launchArgument
-        ]
-        app.launch()
-        return app
+        launchApp(seed: .threeCuesAt1And3And6)
     }
 
     func test_transportShowsControlsWhenMediaLoaded() throws {

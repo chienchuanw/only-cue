@@ -16,15 +16,7 @@ import XCTest
 ///   1. The menu surfaces after a right-click (the regression check).
 ///   2. The expected menu identifiers are present (catches accidental
 ///      renames or omissions).
-final class CueRowContextMenuUITests: XCTestCase {
-
-    override func setUp() {
-        super.setUp()
-        continueAfterFailure = false
-        for app in NSRunningApplication.runningApplications(withBundleIdentifier: "chienchuanw.OnlyCue") {
-            app.forceTerminate()
-        }
-    }
+final class CueRowContextMenuUITests: OnlyCueUITestCase {
 
     func test_rightClickCueRow_revealsExpectedMenuItems() throws {
         // The right-click is anchored to the row element's own bounds
@@ -75,22 +67,7 @@ final class CueRowContextMenuUITests: XCTestCase {
     // MARK: - Helpers
 
     private func launchWithSeed(_ key: SeedKey) -> XCUIApplication {
-        let app = XCUIApplication()
-        app.launchArguments += [key.launchArgument]
-        app.launch()
-        return app
-    }
-
-    private func waitForSeedWindow(in app: XCUIApplication, timeout: TimeInterval = 15) throws -> XCUIElement {
-        let deadline = Date().addingTimeInterval(timeout)
-        while Date() < deadline {
-            let windows = app.windows.allElementsBoundByIndex
-            if let match = windows.first(where: { $0.title.hasPrefix("seed-") }) {
-                return match
-            }
-            Thread.sleep(forTimeInterval: 0.3)
-        }
-        throw XCTestError(.failureWhileWaiting)
+        launchApp(seed: key)
     }
 
     private func firstCueRow(in window: XCUIElement) throws -> XCUIElement {

@@ -4,11 +4,7 @@ import XCTest
 /// that already carries lyrics, toggles the overlay, and asserts the HUD shows
 /// the active line. The HUD is a main-window overlay (not sheet content), so
 /// its rendered text is reliably queryable on the CI runner.
-final class LyricsOverlayUITests: XCTestCase {
-
-    override func setUpWithError() throws {
-        continueAfterFailure = false
-    }
+final class LyricsOverlayUITests: OnlyCueUITestCase {
 
     /// One-call-per-line element lookup by identifier.
     private func element(_ identifier: String, in app: XCUIApplication) -> XCUIElement {
@@ -22,16 +18,12 @@ final class LyricsOverlayUITests: XCTestCase {
     /// When the user enables View -> Show Lyrics Overlay
     /// Then the HUD shows the lyric line active at the playhead.
     func test_showLyricsOverlay_displaysActiveLine() throws {
-        let app = XCUIApplication()
-        app.launchArguments += [SeedKey.songWithLyrics.launchArgument]
-        app.launch()
-        defer { app.terminate() }
+        let app = launchApp(seed: .songWithLyrics)
 
         XCTAssertTrue(
             element("previewPane", in: app).waitForExistence(timeout: 15),
             "seed document should open"
         )
-        Foregrounding.activateRobustly(app)
 
         app.menuBars.menuBarItems["View"].click()
         // The menu item title flips between "Show Lyrics Overlay" and

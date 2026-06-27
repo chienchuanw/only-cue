@@ -1,14 +1,4 @@
-import AppKit
 import XCTest
-
-/// Thin AppKit wrapper because the test target can't import OnlyCue's
-/// internals; we need to enumerate running OnlyCue instances to kill stale
-/// ones before each test.
-enum NSRunningApplicationFinder {
-    static func runningOnlyCueApps() -> [NSRunningApplication] {
-        NSRunningApplication.runningApplications(withBundleIdentifier: "com.chienchuanw.OnlyCue")
-    }
-}
 
 /// Seed-mechanism smoke + the #264 coordinate-tap row-click contract for the
 /// main-pane waveform. The direct-manipulation drag scenarios were removed
@@ -18,18 +8,7 @@ enum NSRunningApplicationFinder {
 /// snap/nudge command tests).
 ///
 /// The seed mechanism is described in `docs/superpowers/specs/2026-05-14-ui-test-seed-mechanism-design.md`.
-final class CueGroupDragUITests: XCTestCase {
-
-    override func setUpWithError() throws {
-        continueAfterFailure = false
-        // Kill any leftover OnlyCue process from a prior test — XCUIApplication
-        // sometimes attaches to the running instance instead of forking a
-        // fresh one, which can leave a stale seeded document in the AX tree.
-        for app in NSRunningApplicationFinder.runningOnlyCueApps() {
-            app.forceTerminate()
-        }
-        Thread.sleep(forTimeInterval: 0.5)
-    }
+final class CueGroupDragUITests: OnlyCueUITestCase {
 
     // MARK: - Smoke
 
@@ -38,7 +17,6 @@ final class CueGroupDragUITests: XCTestCase {
     /// is red, none of the scenarios below can pass — debug here first.
     func test_seedMechanism_opensDocumentAndRendersMarkers() throws {
         let app = launchWithSeed(.threeCuesAt1And3And6)
-        defer { app.terminate() }
 
         let overlay = Self.markersOverlay(in: app)
         XCTAssertTrue(
@@ -60,7 +38,6 @@ final class CueGroupDragUITests: XCTestCase {
     /// below would fail with "Unable to find hit point for ScrollView".
     func test_rowClick_succeedsViaCoordinateTap() throws {
         let app = launchWithSeed(.threeCuesAt1And3And6)
-        defer { app.terminate() }
 
         _ = try Self.waitForMarkers(in: app, count: 3)
         let rows = Self.sortedCueRows(in: app)
@@ -83,10 +60,7 @@ final class CueGroupDragUITests: XCTestCase {
     /// `OnlyCue/App/UITestSeedHandler.swift` for the rationale on why this
     /// indirection is necessary.
     private func launchWithSeed(_ key: SeedKey) -> XCUIApplication {
-        let app = XCUIApplication()
-        app.launchArguments += [key.launchArgument]
-        app.launch()
-        return app
+        launchApp(seed: key)
     }
 
     /// Type-agnostic identifier lookup. `.accessibilityElement(children: .contain)`

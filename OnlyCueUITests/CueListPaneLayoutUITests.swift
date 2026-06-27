@@ -3,15 +3,7 @@ import XCTest
 /// Layout regression for issue #293 — the Cue Inspector pane is gone,
 /// the playhead clock is pinned above the cue list, and nothing in the
 /// window claims the old `cueInspector` identifier.
-final class CueListPaneLayoutUITests: XCTestCase {
-
-    override func setUp() {
-        super.setUp()
-        continueAfterFailure = false
-        for app in NSRunningApplication.runningApplications(withBundleIdentifier: "chienchuanw.OnlyCue") {
-            app.forceTerminate()
-        }
-    }
+final class CueListPaneLayoutUITests: OnlyCueUITestCase {
 
     func test_playheadClockIsPresent() throws {
         let app = launchWithSeed(.threeCuesAt1And3And6)
@@ -77,21 +69,6 @@ final class CueListPaneLayoutUITests: XCTestCase {
     }
 
     private func launchWithSeed(_ key: SeedKey) -> XCUIApplication {
-        let app = XCUIApplication()
-        app.launchArguments += [key.launchArgument]
-        app.launch()
-        return app
-    }
-
-    private func waitForSeedWindow(in app: XCUIApplication, timeout: TimeInterval = 15) throws -> XCUIElement {
-        let deadline = Date().addingTimeInterval(timeout)
-        while Date() < deadline {
-            let windows = app.windows.allElementsBoundByIndex
-            if let match = windows.first(where: { $0.title.hasPrefix("seed-") }) {
-                return match
-            }
-            Thread.sleep(forTimeInterval: 0.3)
-        }
-        throw XCTestError(.failureWhileWaiting)
+        launchApp(seed: key)
     }
 }

@@ -4,9 +4,7 @@ import XCTest
 /// and current-cue emphasis are not directly XCUITest-queryable, so this
 /// switches to Show mode via the View ▸ Mode menu and captures the result.
 /// `EditorModeTests` covers `EditorMode.isReadOnly`.
-final class ShowModeUITests: XCTestCase {
-
-    override func setUpWithError() throws { continueAfterFailure = false }
+final class ShowModeUITests: OnlyCueUITestCase {
 
     private func element(_ app: XCUIApplication, _ identifier: String) -> XCUIElement {
         app.descendants(matching: .any).matching(identifier: identifier).firstMatch
@@ -17,10 +15,7 @@ final class ShowModeUITests: XCTestCase {
     /// When the user switches to Show mode
     /// Then the cue list pane is still present (rendered read-only).
     func test_showMode_cueListReadOnly_smoke() throws {
-        let app = XCUIApplication()
-        app.launchArguments += [SeedKey.threeCuesAt1And3And6.launchArgument]
-        app.launch()
-        defer { app.terminate() }
+        let app = launchApp(seed: .threeCuesAt1And3And6)
 
         XCTAssertTrue(element(app, "cueListPane").waitForExistence(timeout: 15))
         app.menuBars.menuBarItems["View"].click()

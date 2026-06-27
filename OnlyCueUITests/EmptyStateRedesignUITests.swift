@@ -3,16 +3,10 @@ import XCTest
 /// Verifies the rebuilt no-media empty state: a single import well, the
 /// shortcut-reference button, and — per spec §6 item 2 — no transport chrome
 /// until media exists.
-final class EmptyStateRedesignUITests: XCTestCase {
-
-    override func setUpWithError() throws {
-        continueAfterFailure = false
-    }
+final class EmptyStateRedesignUITests: OnlyCueUITestCase {
 
     private func launchEmptyDocument() -> XCUIApplication {
-        let app = XCUIApplication()
-        app.launchArguments += ["-ApplePersistenceIgnoreState", "YES"]
-        app.launch()
+        let app = launchApp()
         app.typeKey("n", modifierFlags: .command)
         return app
     }

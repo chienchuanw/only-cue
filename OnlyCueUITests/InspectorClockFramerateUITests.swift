@@ -4,15 +4,7 @@ import XCTest
 /// Tools → Timecode Settings…, the inspector clock re-renders with the new
 /// rate. Proves the `@Environment(\.projectFramerate)` value reaches the
 /// clock view at runtime, not just at first display.
-final class InspectorClockFramerateUITests: XCTestCase {
-
-    override func setUp() {
-        super.setUp()
-        continueAfterFailure = false
-        for app in NSRunningApplication.runningApplications(withBundleIdentifier: "chienchuanw.OnlyCue") {
-            app.forceTerminate()
-        }
-    }
+final class InspectorClockFramerateUITests: OnlyCueUITestCase {
 
     func testClockRerendersWhenFramerateChanges() throws {
         // The `timecodeFrameratePicker` identifier is set in exactly one place
@@ -20,9 +12,7 @@ final class InspectorClockFramerateUITests: XCTestCase {
         // elements found" failure was a stale element left by an earlier test
         // / state-restoration window, not a duplicate identifier. Scoping the
         // picker query to the seeded window (below) excludes those strays.
-        let app = XCUIApplication()
-        app.launchArguments += [SeedKey.threeCuesAt1And3And6.launchArgument]
-        app.launch()
+        let app = launchApp(seed: .threeCuesAt1And3And6)
 
         let window = try waitForSeedWindow(in: app)
 
@@ -74,20 +64,5 @@ final class InspectorClockFramerateUITests: XCTestCase {
             after.range(of: #"^\d{2}:\d{2}:\d{2}[:;]\d{2}$"#, options: .regularExpression),
             "expected SMPTE shape after flip, got label='\(clock.label)' value='\(clock.value ?? "nil")'"
         )
-    }
-
-    /// The seed window title is `seed-<UUID>.cuelist`. State-restoration may
-    /// reopen older docs alongside it, so scoping all queries to the seeded
-    /// window prevents stale-state false negatives.
-    private func waitForSeedWindow(in app: XCUIApplication, timeout: TimeInterval = 15) throws -> XCUIElement {
-        let deadline = Date().addingTimeInterval(timeout)
-        while Date() < deadline {
-            let windows = app.windows.allElementsBoundByIndex
-            if let match = windows.first(where: { $0.title.hasPrefix("seed-") }) {
-                return match
-            }
-            Thread.sleep(forTimeInterval: 0.3)
-        }
-        throw XCTestError(.failureWhileWaiting)
     }
 }

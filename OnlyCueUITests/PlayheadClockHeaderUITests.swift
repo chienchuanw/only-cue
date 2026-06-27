@@ -1,14 +1,6 @@
 import XCTest
 
-final class PlayheadClockHeaderUITests: XCTestCase {
-
-    override func setUp() {
-        super.setUp()
-        continueAfterFailure = false
-        for app in NSRunningApplication.runningApplications(withBundleIdentifier: "chienchuanw.OnlyCue") {
-            app.forceTerminate()
-        }
-    }
+final class PlayheadClockHeaderUITests: OnlyCueUITestCase {
 
     /// With a seeded document open, the playhead clock sits at the top of
     /// the cue list pane and is visible.
@@ -63,24 +55,6 @@ final class PlayheadClockHeaderUITests: XCTestCase {
     }
 
     private func launchWithSeed(_ key: SeedKey) -> XCUIApplication {
-        let app = XCUIApplication()
-        app.launchArguments += [key.launchArgument]
-        app.launch()
-        return app
-    }
-
-    /// The seed window title is `seed-<UUID>.cuelist`. State-restoration may
-    /// reopen older docs alongside it, so scoping all queries to the seeded
-    /// window prevents stale-state false negatives.
-    private func waitForSeedWindow(in app: XCUIApplication, timeout: TimeInterval = 15) throws -> XCUIElement {
-        let deadline = Date().addingTimeInterval(timeout)
-        while Date() < deadline {
-            let windows = app.windows.allElementsBoundByIndex
-            if let match = windows.first(where: { $0.title.hasPrefix("seed-") }) {
-                return match
-            }
-            Thread.sleep(forTimeInterval: 0.3)
-        }
-        throw XCTestError(.failureWhileWaiting)
+        launchApp(seed: key)
     }
 }

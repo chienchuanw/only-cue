@@ -1,4 +1,3 @@
-import AppKit
 import XCTest
 
 /// UI coverage for the per-media edit sheet (#279). Verifies the sheet's
@@ -9,19 +8,10 @@ import XCTest
 /// runner), and the underlying command is unit-tested in
 /// `CueCommandsUpdateMediaItemTests`. `openEditSheet` still skips gracefully if
 /// the headless context-menu chord can't be synthesised.
-final class MediaEditSheetUITests: XCTestCase {
-
-    override func setUpWithError() throws {
-        continueAfterFailure = false
-        for app in NSRunningApplication.runningApplications(withBundleIdentifier: "com.chienchuanw.OnlyCue") {
-            app.forceTerminate()
-        }
-        Thread.sleep(forTimeInterval: 0.5)
-    }
+final class MediaEditSheetUITests: OnlyCueUITestCase {
 
     func test_editSheet_showsIdentityAndPreviewStrip() throws {
         let app = launchWithSeed(.threeCuesAt1And3And6)
-        defer { app.terminate() }
 
         try openEditSheet(in: app)
 
@@ -72,9 +62,6 @@ final class MediaEditSheetUITests: XCTestCase {
     }
 
     private func launchWithSeed(_ key: SeedKey) -> XCUIApplication {
-        let app = XCUIApplication()
-        app.launchArguments += [key.launchArgument]
-        app.launch()
-        return app
+        launchApp(seed: key)
     }
 }

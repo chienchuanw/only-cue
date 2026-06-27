@@ -4,21 +4,12 @@ import XCTest
 /// disabled in Settings (the fresh-launch default). The companion `LTC-on`
 /// path is covered manually — toggling LTCRoutingStore from a UI test would
 /// require driving Settings, which is out of scope for this gating check.
-final class TransportBarSMPTEGatingUITests: XCTestCase {
-
-    override func setUpWithError() throws {
-        continueAfterFailure = false
-    }
+final class TransportBarSMPTEGatingUITests: OnlyCueUITestCase {
 
     func test_smpteReadout_hiddenByDefault_whenLTCOutputDisabled() throws {
-        let app = XCUIApplication()
         // A seeded document (media present) so the transport — and its SMPTE
         // readout — render; the transport is hidden in the no-media state.
-        app.launchArguments += [
-            "-ApplePersistenceIgnoreState", "YES",
-            "--ui-test-seed=three-cues-1-3-6"
-        ]
-        app.launch()
+        let app = launchApp(seed: .threeCuesAt1And3And6)
 
         // Sanity: the seeded document opened and the transport rendered.
         XCTAssertTrue(

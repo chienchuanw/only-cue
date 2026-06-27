@@ -4,6 +4,15 @@ Append-only session log. Newer entries on top.
 
 ---
 
+## 2026-06-28 — Start-window polish (#597); v0.7.0 shipped earlier today
+
+**Shipped to `dev` (PR #598, rebase-merged as `e3a5c45`, closes #597):**
+
+- `refactor(welcome)`: deduped the `720×460` welcome-window size into a shared top-level `StartWindowMetrics`, read by both `StartView` (content frame) and `AppDelegate` (NSWindow size) so they can't drift. Behavior identical. First PR this session merged on **green CI** (no admin) since the #595 daemon-reset fix.
+- **Dropped from #597:** the proposed welcome-window UI test. Implemented + iterated, but XCUITest doesn't reliably surface the programmatically-created AppKit `NSWindow` to its accessibility tree in-test (menu fires; window never enters the query tree, even with `Foregrounding.activateRobustly`). Landing it would reintroduce flaky CI right after stabilizing it, so it was dropped; the welcome window stays covered by unit-tested `RecentProjectsModel` + programmatic launch verification. The OSC show-mode test was also skipped as redundant (its `CueCreationGate` predicate is already unit-tested).
+
+**Next (per roadmap / suggestion):** Phase 3 Option A's next leaf — **AI-assisted cue suggestion** (onsets/transients → suggested cues; reuses `SpectralFluxTempoAnalyzer`/`AudioSampleReader`, generalizes to a `CueSuggester`). Starts with brainstorm → spec when picked up.
+
 ## 2026-06-28 — CI green again: real test-daemon reset (#595)
 
 **Shipped to `dev` (PR #596, rebase-merged as `1b71c47`, closes #595):**

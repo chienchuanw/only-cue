@@ -3,15 +3,10 @@ import XCTest
 /// Cue markers are interactive only in Cue mode. In Lyric mode the cue-markers
 /// overlay is rendered dimmed and stops hit-testing. Uses the existing three-cue
 /// seed.
-final class EditorModeGatingUITests: XCTestCase {
-
-    override func setUpWithError() throws { continueAfterFailure = false }
+final class EditorModeGatingUITests: OnlyCueUITestCase {
 
     private func launchSeeded() -> XCUIApplication {
-        let app = XCUIApplication()
-        app.launchArguments += [SeedKey.threeCuesAt1And3And6.launchArgument]
-        app.launch()
-        return app
+        launchApp(seed: .threeCuesAt1And3And6)
     }
 
     private func firstMarker(_ app: XCUIApplication) -> XCUIElement {
@@ -25,7 +20,6 @@ final class EditorModeGatingUITests: XCTestCase {
     /// Then the cue markers overlay is present and on screen.
     func test_cueMode_markersOverlayPresent() throws {
         let app = launchSeeded()
-        defer { app.terminate() }
         XCTAssertTrue(firstMarker(app).waitForExistence(timeout: 15))
     }
 

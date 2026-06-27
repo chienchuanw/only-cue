@@ -1,10 +1,6 @@
 import XCTest
 
-final class PlaybackSpeedUITests: XCTestCase {
-
-    override func setUpWithError() throws {
-        continueAfterFailure = false
-    }
+final class PlaybackSpeedUITests: OnlyCueUITestCase {
 
     func test_playbackMenu_hasSpeedItems() throws {
         let app = launchSeeded()
@@ -49,24 +45,6 @@ final class PlaybackSpeedUITests: XCTestCase {
     }
 
     private func launchSeeded() -> XCUIApplication {
-        let app = XCUIApplication()
-        app.launchArguments += [
-            "-ApplePersistenceIgnoreState", "YES",
-            SeedKey.threeCuesAt1And3And6.launchArgument
-        ]
-        app.launch()
-        return app
-    }
-
-    private func waitForSeedWindow(in app: XCUIApplication, timeout: TimeInterval = 15) throws -> XCUIElement {
-        let deadline = Date().addingTimeInterval(timeout)
-        while Date() < deadline {
-            let windows = app.windows.allElementsBoundByIndex
-            if let match = windows.first(where: { $0.title.hasPrefix("seed-") }) {
-                return match
-            }
-            Thread.sleep(forTimeInterval: 0.3)
-        }
-        throw XCTestError(.failureWhileWaiting)
+        launchApp(seed: .threeCuesAt1And3And6)
     }
 }

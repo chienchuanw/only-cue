@@ -3,15 +3,10 @@ import XCTest
 /// Behaviour of the Settings → Audio pane's "Enable LTC output" master toggle:
 /// off by default with the channel-routing table hidden; toggling it on reveals
 /// the device picker and per-channel role table; toggling it off hides them again.
-final class AudioSettingsUITests: XCTestCase {
-
-    override func setUpWithError() throws {
-        continueAfterFailure = false
-    }
+final class AudioSettingsUITests: OnlyCueUITestCase {
 
     func test_enableToggle_revealsAndHidesChannelTable() throws {
-        let app = XCUIApplication()
-        app.launch()
+        let app = launchApp()
         app.typeKey("n", modifierFlags: .command)
         XCTAssertTrue(
             app.buttons["importMediaButton"].waitForExistence(timeout: 15),
@@ -49,8 +44,6 @@ final class AudioSettingsUITests: XCTestCase {
         let gone = NSPredicate(format: "exists == false")
         expectation(for: gone, evaluatedWith: app.popUpButtons["audioChannelRolePicker.0"], handler: nil)
         waitForExpectations(timeout: 3)
-
-        app.terminate()
     }
 
     /// The "Enable LTC output" control — a SwiftUI `Toggle`, which surfaces as a

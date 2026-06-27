@@ -4,11 +4,7 @@ import XCTest
 /// retired with the editor-mode system — the lane is now shown automatically
 /// for a document that carries placed lyrics (and always in Lyric mode). The
 /// lane is a main-window overlay, reliably queryable on the CI runner.
-final class LyricsLaneUITests: XCTestCase {
-
-    override func setUpWithError() throws {
-        continueAfterFailure = false
-    }
+final class LyricsLaneUITests: OnlyCueUITestCase {
 
     /// One-call-per-line element lookup by identifier.
     private func element(_ identifier: String, in app: XCUIApplication) -> XCUIElement {
@@ -21,10 +17,7 @@ final class LyricsLaneUITests: XCTestCase {
     /// Given a seeded document carrying placed lyrics is open
     /// Then the lyric lane appears in the waveform pane without any toggle.
     func test_lyricLane_displaysForDocumentWithPlacedLyrics() throws {
-        let app = XCUIApplication()
-        app.launchArguments += [SeedKey.songWithLyrics.launchArgument]
-        app.launch()
-        defer { app.terminate() }
+        let app = launchApp(seed: .songWithLyrics)
 
         XCTAssertTrue(
             element("cueMarkersOverlay", in: app).waitForExistence(timeout: 20),

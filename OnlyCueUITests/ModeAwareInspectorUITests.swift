@@ -1,15 +1,10 @@
 import XCTest
 
 /// The right inspector swaps content with the editor mode.
-final class ModeAwareInspectorUITests: XCTestCase {
-
-    override func setUpWithError() throws { continueAfterFailure = false }
+final class ModeAwareInspectorUITests: OnlyCueUITestCase {
 
     private func launchSeeded() -> XCUIApplication {
-        let app = XCUIApplication()
-        app.launchArguments += [SeedKey.lyricsWithPlacedLines.launchArgument]
-        app.launch()
-        return app
+        launchApp(seed: .lyricsWithPlacedLines)
     }
 
     private func element(_ app: XCUIApplication, _ identifier: String) -> XCUIElement {
@@ -28,7 +23,6 @@ final class ModeAwareInspectorUITests: XCTestCase {
     /// Then the cue list inspector is present.
     func test_cueMode_showsCueListInspector() throws {
         let app = launchSeeded()
-        defer { app.terminate() }
         XCTAssertTrue(element(app, "cueListPane").waitForExistence(timeout: 15))
     }
 
@@ -38,7 +32,6 @@ final class ModeAwareInspectorUITests: XCTestCase {
     /// Then the lyrics inspector pane is present.
     func test_lyricMode_showsLyricsInspector() throws {
         let app = launchSeeded()
-        defer { app.terminate() }
         XCTAssertTrue(element(app, "cueListPane").waitForExistence(timeout: 15))
         selectMode(app, "Lyric Mode")
         XCTAssertTrue(

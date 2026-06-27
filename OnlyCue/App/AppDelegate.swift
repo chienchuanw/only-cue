@@ -21,12 +21,20 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     func applicationShouldOpenUntitledFile(_ sender: NSApplication) -> Bool { false }
 
     func applicationDidFinishLaunching(_ notification: Notification) {
+        // UI tests open their own seeded document — don't race them with the
+        // welcome window.
+        guard !Self.isUITestLaunch else { return }
         // Defer so any state-restored document loads first; only show the
         // welcome window when launch produced no open document.
         DispatchQueue.main.async { [weak self] in
             guard NSDocumentController.shared.documents.isEmpty else { return }
             self?.showWelcomeWindow()
         }
+    }
+
+    /// True when launched by a UI test (which seeds its own document).
+    private static var isUITestLaunch: Bool {
+        CommandLine.arguments.contains { $0.hasPrefix("--ui-test") }
     }
 
     // Dock-icon click / reopen with no visible windows → show the welcome window.

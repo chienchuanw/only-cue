@@ -19,6 +19,8 @@ Give OnlyCue a dedicated "Welcome to OnlyCue" window that lists recent projects 
 
 A thin AppKit boundary around a pure-SwiftUI view, with the recents logic factored into a testable pure type.
 
+> **Implementation note (#591):** the SwiftUI `Window("welcome")` scene sketched below did **not** reliably auto-open at launch inside the `DocumentGroup` app on macOS 14 (confirmed at runtime). It was implemented as the documented fallback instead: an AppKit `NSWindow` hosting `StartView` via `NSHostingController`, owned by `AppDelegate`, shown in `applicationDidFinishLaunching` (when no document is open) and on `applicationShouldHandleReopen`; the menu command reopens it via `AppDelegate.showWelcomeWindow()`.
+
 ```
 OnlyCueApp (Scene)
 ├── DocumentGroup            (unchanged — the editor)

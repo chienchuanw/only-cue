@@ -17,7 +17,8 @@ extension DocumentView {
                 .keyboardShortcut(shortcut(.jumpForward))
             Button("Add Cue") { addCueAtPlayhead() }
                 .keyboardShortcut(shortcut(.addCue))
-                .disabled(document.model.activeItem == nil)
+                // No media, or Show mode is read-only — no cue creation (#592).
+                .disabled(!canCreateCue)
         }
         .frame(width: 0, height: 0)
         .opacity(0)
@@ -37,6 +38,7 @@ extension DocumentView {
         .frame(width: 0, height: 0)
         .opacity(0)
         .accessibilityHidden(true)
-        .disabled(document.model.activeItem == nil)
+        // Digit add-cue-of-type: no media, or Show mode is read-only (#592).
+        .disabled(!canCreateCue)
     }
 }

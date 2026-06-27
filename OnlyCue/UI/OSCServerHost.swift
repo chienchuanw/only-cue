@@ -19,6 +19,9 @@ struct OSCServerHost: ViewModifier {
     let engine: PlayerEngine
     @ObservedObject var document: CueListDocument
     var undoManager: UndoManager?
+    /// Current editor mode, so `/cue/add` can be ignored in read-only Show mode
+    /// while transport + cue navigation stay live (#592).
+    var editorMode: EditorMode
 
     @AppStorage(OSCServerSettings.enabledKey) private var enabled = false
     @AppStorage(OSCServerSettings.portKey) private var port = OSCServerSettings.defaultPort
@@ -31,6 +34,10 @@ struct OSCServerHost: ViewModifier {
             .onAppear { syncServer() }
             .onChange(of: enabled) { _, _ in syncServer() }
             .onChange(of: port) { _, _ in syncServer() }
+            // Rebind the command handler so it captures the current editor mode
+            // (the closure snapshots `self`); otherwise the Show-mode guard
+            // would use the mode at server-start time (#592).
+            .onChange(of: editorMode) { _, _ in syncServer() }
             .onDisappear { server.stop() }
             .onReceive(NotificationCenter.default.publisher(for: .oscMonitorRequested)) { _ in
                 showMonitor = true
@@ -59,6 +66,8 @@ struct OSCServerHost: ViewModifier {
         case .play: engine.play()
         case .pause: engine.pause()
         case .cueAdd:
+            // Read-only Show mode forbids cue creation by any means (#592).
+            guard CueCreationGate.allows(editorMode: editorMode, hasActiveItem: document.model.activeItem != nil) else { break }
             CueCommands.addCueAtPlayhead(time: engine.currentTime, document: document, undoManager: undoManager)
         case .cueNext: step(.next)
         case .cuePrev: step(.previous)
@@ -96,8 +105,9 @@ extension View {
     func oscServerHost(
         engine: PlayerEngine,
         document: CueListDocument,
-        undoManager: UndoManager?
+        undoManager: UndoManager?,
+        editorMode: EditorMode
     ) -> some View {
-        modifier(OSCServerHost(engine: engine, document: document, undoManager: undoManager))
+        modifier(OSCServerHost(engine: engine, document: document, undoManager: undoManager, editorMode: editorMode))
     }
 }

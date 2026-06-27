@@ -41,6 +41,13 @@ struct DocumentView: View {
 
     private var editorMode: EditorMode { EditorMode(rawValue: editorModeRaw) ?? .cue }
 
+    /// Whether a cue may be created right now: a media item is loaded and the
+    /// document is not in read-only Show mode (#592). Consulted by the keyboard
+    /// shortcut hosts and the add-cue actions.
+    var canCreateCue: Bool {
+        CueCreationGate.allows(editorMode: editorMode, hasActiveItem: document.model.activeItem != nil)
+    }
+
     var body: some View {
         NavigationSplitView {
             ItemListPane(document: document, onDropURLs: importURLs)
@@ -98,7 +105,7 @@ struct DocumentView: View {
             handleMediaDidReachEnd()
         }
         .exportSheet(model: document.model, pendingErrorMessage: pendingAlertMessageBinding)
-        .oscServerHost(engine: engine, document: document, undoManager: undoManager)
+        .oscServerHost(engine: engine, document: document, undoManager: undoManager, editorMode: editorMode)
         .ltcOutput(engine: engine, document: document)
         .environment(\.projectFramerate, document.model.timecodeSettings.framerate)
     }
@@ -283,6 +290,7 @@ extension DocumentView {
     }
 
     func triggerHotkey(_ digit: Int) {
+        guard canCreateCue else { return } // no cue creation in Show mode (#592)
         guard let type = document.model.cuePointType(forHotkey: digit) else { return }
         CueCommands.addCueAtPlayhead(
             time: engine.currentTime,
@@ -307,6 +315,7 @@ extension DocumentView {
     }
 
     func addCueAtPlayhead() {
+        guard canCreateCue else { return } // no cue creation in Show mode (#592)
         CueCommands.addCueAtPlayhead(
             time: engine.currentTime,
             document: document,

@@ -35,3 +35,13 @@ enum EditorMode: String, CaseIterable, Codable {
         }
     }
 }
+
+/// The single predicate every cue-creation entry point consults (keyboard
+/// Add Cue, the digit Add-Cue-of-Type host, OSC `/cue/add`): a cue may only be
+/// created when a media item is loaded and the document is not in read-only
+/// Show mode (#592).
+enum CueCreationGate {
+    static func allows(editorMode: EditorMode, hasActiveItem: Bool) -> Bool {
+        hasActiveItem && !editorMode.isReadOnly
+    }
+}

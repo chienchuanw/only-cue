@@ -4,6 +4,14 @@ Append-only session log. Newer entries on top.
 
 ---
 
+## 2026-06-28 — CI green again: real test-daemon reset (#595)
+
+**Shipped to `dev` (PR #596, rebase-merged as `1b71c47`, closes #595):**
+
+- `ci`: CI had been red for the whole session on the `testmanagerd` control-session wedge ("Timed out … initiating control session with daemon" → test runner hung). Root cause: `.github/workflows/ci.yml` reset the daemon with `sudo -n killall testmanagerd`, a silent no-op without passwordless sudo — so the reset (and the retry's reset) never fired. `testmanagerd` runs as the **runner user**, so a plain `killall -9 testmanagerd` kills it and a fresh one respawns clean. Changed both the "Reset stale test state" step and the unit-test retry to plain `killall` (+ best-effort `sudo -n killall automationmode-writer` for the root one, + settle delay).
+- Verified: full local unit suite **1053 tests, 0 failures** after a plain `killall testmanagerd`; **PR #596 CI green** (lint+build+unit); **dev push run `28296179077` fully green** — Build, SwiftLint, Unit tests, AND UI tests (behavioral) all passed. The months-long daemon-wedge red is resolved at the CI level (no reboot needed).
+- This also confirms all the session's prior admin-merged work (relink/auto-relink, waveform refresh, save-on-close, show-mode lock, start window, export fixes) passes the full suite — nothing was hiding behind the wedge.
+
 ## 2026-06-27 — Welcome / start window (#591)
 
 **Shipped to `dev` (PR #594, admin rebase-merged as `375cb28`, closes #591):**

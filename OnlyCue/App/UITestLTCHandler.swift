@@ -1,31 +1,43 @@
 #if DEBUG
 import Foundation
 
-/// `#if DEBUG`-only launch handler: pass `--ui-test-ltc-enabled` to start the
-/// session with LTC routing enabled (a 4-channel LTC / Track L / Track R /
-/// Silent assignment), applied **in memory only**. It never writes the
-/// persisted `ltcRouting.v1` default, so it leaves no side effect for other
-/// tests or the user's app — unlike clicking the toggle, which would persist.
+/// `#if DEBUG`-only launch handler that makes LTC routing **hermetic** for UI
+/// tests. Any `--ui-test*` launch runs LTC routing fully in memory (persistence
+/// suppressed) so a test can neither read a polluted `ltcRouting.v1` nor write
+/// one for the next run / the user's real app:
 ///
-/// This lets the Audio settings screenshot test capture the configured pane
-/// (device + channel cards) deterministically. Production builds skip this file.
+/// - `--ui-test-ltc-enabled` → start enabled (4-channel LTC / Track L / Track R
+///   / Silent), e.g. for the Audio-settings screenshot capture.
+/// - any other `--ui-test*` launch → start at the disabled default, so tests
+///   that assume "LTC off by default" are deterministic regardless of whatever
+///   `ltcRouting.v1` an earlier (possibly aborted) run left behind (#599).
+///
+/// Production builds skip this file.
 enum UITestLTCHandler {
 
-    private static let argument = "--ui-test-ltc-enabled"
+    private static let enableArgument = "--ui-test-ltc-enabled"
+    private static let enabledSettings = LTCRoutingSettings(
+        isEnabled: true,
+        deviceUID: nil,
+        channelRoles: [.ltc, .trackLeft, .trackRight, .silent]
+    )
+
+    /// Marker the CI workflow `touch`es for the duration of the UI-tests step
+    /// (`CIRuntime.isSelfHostedRunner`). Lets plain-`launch()` UI tests (no
+    /// `--ui-test*` arg) still run LTC hermetically on the runner.
+    private static let ciMarkerPath = "/tmp/.onlycue-ci-active"
 
     @MainActor
     static func applyIfRequested() {
-        guard CommandLine.arguments.contains(argument) else { return }
-        // Run the whole session in memory so the pane's own on-appear
-        // reconcile can't write the persisted default.
+        let arguments = CommandLine.arguments
+        let isUITestLaunch = arguments.contains { $0.hasPrefix("--ui-test") }
+            || FileManager.default.fileExists(atPath: ciMarkerPath)
+        guard isUITestLaunch else { return }
+        // Run the whole session in memory so neither this handler nor the
+        // settings pane's on-appear reconcile touches the persisted default.
         LTCRoutingStore.suppressPersistenceForUITests = true
-        LTCRoutingStore.shared.applyEphemeralForUITests(
-            LTCRoutingSettings(
-                isEnabled: true,
-                deviceUID: nil,
-                channelRoles: [.ltc, .trackLeft, .trackRight, .silent]
-            )
-        )
+        let settings = arguments.contains(enableArgument) ? enabledSettings : .default
+        LTCRoutingStore.shared.applyEphemeralForUITests(settings)
     }
 }
 #endif

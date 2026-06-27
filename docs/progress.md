@@ -4,6 +4,14 @@ Append-only session log. Newer entries on top.
 
 ---
 
+## 2026-06-28 — UI tests green: hermetic LTC state (#599)
+
+**Shipped to `dev` (PR #600, rebase-merged as `16c528f`, closes #599):**
+
+- `fix(test)`: once unit-test CI was unblocked (#595), the behavioral UI-test step surfaced 3 deterministic failures (`TransportBarSMPTEGatingUITests` SMPTE gating, `AudioSettingsUITests` enable-toggle, `PlaybackSpeedUITests` speed badge). Root cause: the shared `UserDefaults` had `ltcRouting.v1: isEnabled=true` — a UI test that enabled LTC and aborted on the foregrounding flake left it persisted, so "LTC off by default" tests failed, and the speed test failed because the LTC interlock blocked the rate change.
+- Fix: `UITestLTCHandler` now runs LTC fully in memory (persistence suppressed) for any UI-test launch — detected by a `--ui-test*` arg **or** the CI marker `/tmp/.onlycue-ci-active` (so plain-`launch()` tests like AudioSettings are covered) — applying `enabledSettings` for `--ui-test-ltc-enabled` else `LTCRoutingSettings.default` (disabled). UI tests can no longer read or write the persisted default. Verified locally (all 3 pass) and on the **dev push run `28297949939` — fully green incl. UI tests (behavioral)**.
+- Note: the intermittent XCUITest foregrounding/activation flake is separate and environmental (absorbed by the existing `-test-iterations 2 -retry-tests-on-failure`); it is not a code defect.
+
 ## 2026-06-28 — Start-window polish (#597); v0.7.0 shipped earlier today
 
 **Shipped to `dev` (PR #598, rebase-merged as `e3a5c45`, closes #597):**

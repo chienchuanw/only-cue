@@ -4,6 +4,14 @@ Append-only session log. Newer entries on top.
 
 ---
 
+## 2026-06-27 — Lock cue creation in Show mode (#592)
+
+**Shipped to `dev` (PR #593, admin-merged as `6488e7f`, closes #592):**
+
+- `fix(ui)`: Show mode (read-only `EditorMode.show`) still let the user CREATE cues via the keyboard Add Cue (`m`), the digit Add-Cue-of-Type (`0–9`), and OSC `/cue/add` — mutating the cuelist. (Everything else — delete/rename/number/fade/change-type/snap/nudge/duplicate and waveform marker drags — was already gated.) Added one pure predicate `CueCreationGate.allows(editorMode:hasActiveItem:) = hasActiveItem && !editorMode.isReadOnly` consulted by every creation path: `DocumentView.canCreateCue` drives `.disabled(!canCreateCue)` on the Add Cue button + digit host and early `guard`s in `addCueAtPlayhead()`/`triggerHotkey()`; `editorMode` was threaded into `OSCServerHost` (rebound via `.onChange(of: editorMode)` so the captured command handler reads the current mode) and the `.cueAdd` case now guards on the gate. Transport, seek, and `/cue/next` `/cue/prev` stay live in Show. `CueCreationGateTests` covers the predicate; wiring verified by manual run. Review round 1 = approve. Admin-merged (testmanagerd wedge).
+
+**Still parked:** `issues/591` (start page / welcome window) — fully implemented + pushed, awaiting the user's launch/layout verification before PR.
+
 ## 2026-06-19 — Waveform refresh after relink (#589); v0.6.6
 
 **Shipped to `dev` (PR #590, admin-merged as `b735ca8`, closes #589):**

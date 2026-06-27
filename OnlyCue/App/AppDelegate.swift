@@ -12,11 +12,6 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
     private var welcomeWindow: NSWindow?
 
-    private enum Metrics {
-        static let width: CGFloat = 720
-        static let height: CGFloat = 460
-    }
-
     // Stop macOS from auto-creating a blank untitled document at launch/reopen.
     func applicationShouldOpenUntitledFile(_ sender: NSApplication) -> Bool { false }
 
@@ -56,7 +51,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         let window = NSWindow(contentViewController: hosting)
         window.title = "Welcome to OnlyCue"
         window.styleMask = [.titled, .closable]
-        window.setContentSize(NSSize(width: Metrics.width, height: Metrics.height))
+        window.setContentSize(NSSize(width: StartWindowMetrics.width, height: StartWindowMetrics.height))
         window.center()
         window.isReleasedWhenClosed = false
         welcomeWindow = window

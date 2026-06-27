@@ -1,6 +1,14 @@
 import AppKit
 import SwiftUI
 
+/// The welcome window's content size — single source of truth shared by the
+/// SwiftUI content (`StartView`) and the AppKit host window (`AppDelegate`),
+/// so the two can't drift (#591/#597).
+enum StartWindowMetrics {
+    static let width: CGFloat = 720
+    static let height: CGFloat = 460
+}
+
 /// The welcome window's content (#591): brand + actions on the left, the recent
 /// projects list on the right. Dark DS styling matching `FirstLaunchSheet`.
 struct StartView: View {
@@ -12,8 +20,6 @@ struct StartView: View {
     @State private var recents: [RecentProject] = []
 
     private enum Metrics {
-        static let windowWidth: CGFloat = 720
-        static let windowHeight: CGFloat = 460
         static let actionsPaneWidth: CGFloat = 288
         static let heroSize: CGFloat = 96
     }
@@ -28,7 +34,7 @@ struct StartView: View {
                 .frame(maxWidth: .infinity, alignment: .leading)
                 .padding(DS.Space.lg)
         }
-        .frame(width: Metrics.windowWidth, height: Metrics.windowHeight)
+        .frame(width: StartWindowMetrics.width, height: StartWindowMetrics.height)
         .background(DS.Color.panel)
         .task { recents = RecentProjectsModel.load() }
         .accessibilityIdentifier("startView")

@@ -4,6 +4,16 @@ Append-only session log. Newer entries on top.
 
 ---
 
+## 2026-06-27 — Welcome / start window (#591)
+
+**Shipped to `dev` (PR #594, admin rebase-merged as `375cb28`, closes #591):**
+
+- `feat`: a "Welcome to OnlyCue" start window — recent projects (open; missing entries greyed + removable) plus New Project / New from Template… / Open Other… — shown at launch and reopenable via File → Welcome to OnlyCue. Full brainstorm → spec (`docs/superpowers/specs/2026-06-22-start-page-design.md`) → plan (`docs/superpowers/plans/2026-06-22-start-page.md`) → TDD.
+- **Key implementation pivot:** the planned SwiftUI `Window("welcome")` scene did **not** auto-open at launch inside the `DocumentGroup` app on macOS 14 (caught at runtime during review — the welcome window never appeared). Reimplemented as the documented fallback: an AppKit `NSWindow` hosting `StartView` via `NSHostingController`, owned by `AppDelegate` (shown in `applicationDidFinishLaunching` when `NSDocumentController.documents` is empty, and on `applicationShouldHandleReopen`; `applicationShouldOpenUntitledFile=false`). Menu command → `AppDelegate.showWelcomeWindow()`. UI-test launches (`--ui-test*`) skip the welcome window so they don't race the seeded-document open (reviewer-flagged).
+- `RecentProjectsModel` (pure: `recents(from:)` / `removing(_:from:)` / `load()`) is unit-tested (`RecentProjectsModelTests`); recents removal = clear + re-note survivors reversed (no public single-URL removal API). Window/visual verified programmatically (`isVisible=true`, in `NSApp.windows` at launch) — screen capture/Accessibility are unavailable in this environment, so the on-screen cosmetic pass is the user's to confirm. Autonomous review = approve (non-blocking notes; the launch-race one was fixed). Admin-merged (testmanagerd wedge).
+
+**Note:** `issues/591` was rebased onto current `dev` before merge (it predated #589/#583/#585/#592). No release cut yet — `dev` is ahead of v0.6.6 by #592 and #591.
+
 ## 2026-06-27 — Lock cue creation in Show mode (#592)
 
 **Shipped to `dev` (PR #593, admin-merged as `6488e7f`, closes #592):**

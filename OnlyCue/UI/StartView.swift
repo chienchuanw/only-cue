@@ -5,6 +5,10 @@ import SwiftUI
 /// projects list on the right. Dark DS styling matching `FirstLaunchSheet`.
 struct StartView: View {
 
+    /// Called after the user opens/creates a project, so the host can dismiss
+    /// the welcome window (#591).
+    var onOpenProject: () -> Void = {}
+
     @State private var recents: [RecentProject] = []
 
     private enum Metrics {
@@ -92,22 +96,22 @@ struct StartView: View {
     private func open(_ project: RecentProject) {
         guard project.exists else { return }
         NSDocumentController.shared.openDocument(withContentsOf: project.url, display: true) { _, _, _ in }
-        closeWelcomeWindow()
+        onOpenProject()
     }
 
     private func newDocument() {
         NSDocumentController.shared.newDocument(nil)
-        closeWelcomeWindow()
+        onOpenProject()
     }
 
     private func newFromTemplate() {
         try? TemplateAction.newDocument()
-        closeWelcomeWindow()
+        onOpenProject()
     }
 
     private func openOther() {
         NSDocumentController.shared.openDocument(nil)
-        closeWelcomeWindow()
+        onOpenProject()
     }
 
     private func remove(_ project: RecentProject) {
@@ -117,13 +121,6 @@ struct StartView: View {
         // Re-note oldest → newest so the rebuilt list keeps its newest-first order.
         for url in survivors.reversed() { controller.noteNewRecentDocumentURL(url) }
         recents = RecentProjectsModel.load()
-    }
-
-    /// The welcome window steps aside once a project opens. Closing the key
-    /// window (the welcome window at the moment of action) keeps the launch flow
-    /// clean. Verified by manual run.
-    private func closeWelcomeWindow() {
-        NSApp.keyWindow?.close()
     }
 }
 

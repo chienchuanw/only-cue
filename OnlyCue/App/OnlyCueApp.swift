@@ -34,14 +34,10 @@ struct OnlyCueApp: App {
         .defaultSize(width: 1280, height: 820)
         .commands { AppCommands() }
 
-        // The start page (#591): recent projects + New / New from Template… /
-        // Open Other…. Shown at launch (the app delegate suppresses the default
-        // blank document) and reopenable via File → Welcome to OnlyCue.
-        Window("Welcome to OnlyCue", id: "welcome") {
-            StartView()
-        }
-        .defaultSize(width: 720, height: 460)
-        .windowResizability(.contentSize)
+        // The start page (#591) is an AppKit window owned by `AppDelegate`
+        // (`StartView` in an NSHostingController), because a SwiftUI `Window`
+        // scene doesn't reliably auto-open at launch inside a DocumentGroup app
+        // on macOS 14. Reopen via File → Welcome to OnlyCue.
 
         Settings {
             // Canonical Settings-tab order per the figma↔app audit (§1.1):

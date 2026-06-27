@@ -12,7 +12,6 @@ struct AppCommands: Commands {
     @ObservedObject private var keymapStore = KeymapStore.shared
     @ObservedObject private var ltcRoutingStore = LTCRoutingStore.shared
     @FocusedValue(\.currentPlaybackMode) private var currentPlaybackMode
-    @Environment(\.openWindow) private var openWindow
 
     private func shortcut(_ action: KeymapAction) -> KeyboardShortcut {
         keymapStore.keymap.chord(for: action).keyboardShortcut
@@ -51,9 +50,11 @@ struct AppCommands: Commands {
         }
 
         CommandGroup(after: .newItem) {
-            // Reopen the start page (#591).
-            Button("Welcome to OnlyCue") { openWindow(id: "welcome") }
-                .accessibilityIdentifier("welcomeMenuItem")
+            // Reopen the start page (#591) — the AppKit window owned by AppDelegate.
+            Button("Welcome to OnlyCue") {
+                (NSApp.delegate as? AppDelegate)?.showWelcomeWindow()
+            }
+            .accessibilityIdentifier("welcomeMenuItem")
 
             Divider()
 

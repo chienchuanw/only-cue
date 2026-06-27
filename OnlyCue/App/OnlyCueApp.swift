@@ -15,6 +15,9 @@ struct OnlyCueApp: App {
             #if DEBUG
             // Test hooks run after the dark-only pin so a `--ui-test-appearance`
             // override (e.g. the Light visual baseline) can still take effect.
+            // The defaults reset runs first so the handlers below re-establish
+            // their deterministic state on a clean persistent domain (#603).
+            UITestDefaultsResetHandler.applyIfRequested()
             UITestAppearanceHandler.applyAppearanceOverrideIfRequested()
             UITestFirstLaunchHandler.applyFirstLaunchOverrideIfRequested()
             UITestLTCHandler.applyIfRequested()

@@ -4,6 +4,13 @@ Append-only session log. Newer entries on top.
 
 ---
 
+## 2026-06-28 — Launch shows only the welcome window (#601)
+
+**Shipped to `dev` (PR #602, rebase-merged as `25b9b8a`, closes #601):**
+
+- `fix(ui)`: v0.7.0 showed the macOS **Open panel** next to the welcome window at launch. Root cause: the Open panel is SwiftUI `DocumentGroup`'s own no-document launch behavior on macOS 14 — `applicationShouldOpenUntitledFile=false` only blocks the blank untitled doc, and forcing `NSShowAppCentricOpenPanelInsteadOfUntitledFile=false` merely swaps the panel for a blank Untitled document (SwiftUI always produces one of the two; no built-in "show nothing" on the 14 floor, ADR-001). `applicationOpenUntitledFile` isn't honored by the DocumentGroup launch path.
+- Fix: `AppDelegate.resolveLaunchPresentation` polls (~0.1s ticks, ≤2.5s) for the launch `NSOpenPanel`, cancels it, then shows the welcome window; bails (neither panel nor welcome) when a real document (`fileURL != nil`) was restored/opened; UI-test launches skipped. Verified at runtime via window enumeration — only "Welcome to OnlyCue" remains (no "Open", no "Untitled"). There's an inherent brief panel flash on the 14 floor. Review round 1 = approve.
+
 ## 2026-06-28 — UI tests green: hermetic LTC state (#599)
 
 **Shipped to `dev` (PR #600, rebase-merged as `16c528f`, closes #599):**

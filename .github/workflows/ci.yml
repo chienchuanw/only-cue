@@ -151,12 +151,10 @@ jobs:
         if: github.event_name == 'push'
         run: |
           set -o pipefail
-          # Keep the machine awake for the whole UI run — idle display/disk
-          # sleep on the runner starves XCUITest and surfaces as "Lost
-          # connection to the application" (#603).
-          caffeinate -dimsu &
-          caffeinate_pid=$!
-          trap 'kill "$caffeinate_pid" 2>/dev/null || true' EXIT
+          # NOTE: a caffeinate wrapper and -test-timeouts-enabled were tried in
+          # #603 but reverted (#605) — both correlated with the UI runner
+          # failing to enable automation mode at init, deterministically, on
+          # every push. The pre-#603 invocation below is the known-good one.
 
           # Drop stale XCUITest daemons. The UI runner's init can time out with
           # "The test runner failed to initialize for UI testing … Timed out
@@ -195,9 +193,6 @@ jobs:
               -skip-testing:OnlyCueUITests/TimecodeSettingsSheetScreenshotTests \
               -skip-testing:OnlyCueUITests/TransportBarScreenshotTests \
               -parallel-testing-enabled NO \
-              -test-timeouts-enabled YES \
-              -default-test-execution-time-allowance 120 \
-              -maximum-test-execution-time-allowance 300 \
               -test-iterations 2 \
               -retry-tests-on-failure \
               | xcbeautify --renderer github-actions
@@ -216,12 +211,6 @@ jobs:
         if: github.event_name == 'workflow_dispatch'
         run: |
           set -o pipefail
-          # Keep the machine awake for the whole UI run — idle display/disk
-          # sleep on the runner starves XCUITest and surfaces as "Lost
-          # connection to the application" (#603).
-          caffeinate -dimsu &
-          caffeinate_pid=$!
-          trap 'kill "$caffeinate_pid" 2>/dev/null || true' EXIT
           xcodebuild test-without-building \
             -project OnlyCue.xcodeproj \
             -scheme OnlyCue \
@@ -239,9 +228,6 @@ jobs:
             -only-testing:OnlyCueUITests/TimecodeSettingsSheetScreenshotTests \
             -only-testing:OnlyCueUITests/TransportBarScreenshotTests \
             -parallel-testing-enabled NO \
-            -test-timeouts-enabled YES \
-            -default-test-execution-time-allowance 120 \
-            -maximum-test-execution-time-allowance 300 \
             -test-iterations 2 \
             -retry-tests-on-failure \
             | xcbeautify --renderer github-actions

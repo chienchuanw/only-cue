@@ -71,7 +71,8 @@ jobs:
       # plain `killall` (no sudo) kills it and a fresh one respawns clean — the
       # previous `sudo -n killall testmanagerd` was a silent no-op without
       # passwordless sudo, so the reset never actually fired. `automationmode-
-      # writer` is root-owned, so that one stays best-effort `sudo -n`.
+      # writer` ownership is uncertain, so try both a no-sudo `killall` and a
+      # best-effort `sudo -n` (#605).
       - name: Reset stale test state
         run: |
           pkill -9 -x OnlyCue 2>/dev/null || true
@@ -79,6 +80,7 @@ jobs:
           pkill -9 -f XCTRunner 2>/dev/null || true
           pkill -9 -f AutomationModeUI 2>/dev/null || true
           killall -9 testmanagerd 2>/dev/null || true
+          killall -9 automationmode-writer 2>/dev/null || true
           sudo -n killall -9 automationmode-writer 2>/dev/null || true
           sleep 3
 
@@ -103,6 +105,7 @@ jobs:
             pkill -9 -f XCTRunner 2>/dev/null || true
             pkill -9 -f AutomationModeUI 2>/dev/null || true
             killall -9 testmanagerd 2>/dev/null || true
+            killall -9 automationmode-writer 2>/dev/null || true
             sudo -n killall -9 automationmode-writer 2>/dev/null || true
             sleep 5
             run_unit_tests
@@ -154,30 +157,59 @@ jobs:
           caffeinate -dimsu &
           caffeinate_pid=$!
           trap 'kill "$caffeinate_pid" 2>/dev/null || true' EXIT
-          xcodebuild test-without-building \
-            -project OnlyCue.xcodeproj \
-            -scheme OnlyCue \
-            -destination 'platform=macOS' \
-            -only-testing:OnlyCueUITests \
-            -skip-testing:OnlyCueUITests/AudioSettingsScreenshotTests \
-            -skip-testing:OnlyCueUITests/DocumentViewModeScreenshotTests \
-            -skip-testing:OnlyCueUITests/ExportSheetScreenshotTests \
-            -skip-testing:OnlyCueUITests/KeyboardSettingsScreenshotTests \
-            -skip-testing:OnlyCueUITests/LyricsLaneEditingUITests \
-            -skip-testing:OnlyCueUITests/OSCMonitorScreenshotTests \
-            -skip-testing:OnlyCueUITests/OSCSettingsScreenshotTests \
-            -skip-testing:OnlyCueUITests/Phase3ScreenshotTests \
-            -skip-testing:OnlyCueUITests/ShowModeUITests \
-            -skip-testing:OnlyCueUITests/TempoGridOverlayScreenshotTests \
-            -skip-testing:OnlyCueUITests/TimecodeSettingsSheetScreenshotTests \
-            -skip-testing:OnlyCueUITests/TransportBarScreenshotTests \
-            -parallel-testing-enabled NO \
-            -test-timeouts-enabled YES \
-            -default-test-execution-time-allowance 120 \
-            -maximum-test-execution-time-allowance 300 \
-            -test-iterations 2 \
-            -retry-tests-on-failure \
-            | xcbeautify --renderer github-actions
+
+          # Drop stale XCUITest daemons. The UI runner's init can time out with
+          # "The test runner failed to initialize for UI testing … Timed out
+          # while enabling automation mode." — a runner-INIT flake that fails
+          # the whole job before any test runs, so -retry-tests-on-failure (a
+          # per-test retry) can't catch it (#605). testmanagerd is runner-user
+          # owned (plain killall works, #595); automationmode-writer ownership
+          # is uncertain, so try both no-sudo and best-effort sudo.
+          reset_ui_daemons() {
+            pkill -9 -x OnlyCue 2>/dev/null || true
+            pkill -9 -f 'OnlyCue.app/Contents/MacOS/OnlyCue' 2>/dev/null || true
+            pkill -9 -f XCTRunner 2>/dev/null || true
+            pkill -9 -f AutomationModeUI 2>/dev/null || true
+            killall -9 testmanagerd 2>/dev/null || true
+            killall -9 automationmode-writer 2>/dev/null || true
+            sudo -n killall -9 automationmode-writer 2>/dev/null || true
+            sleep 5
+          }
+
+          run_ui_tests() {
+            xcodebuild test-without-building \
+              -project OnlyCue.xcodeproj \
+              -scheme OnlyCue \
+              -destination 'platform=macOS' \
+              -only-testing:OnlyCueUITests \
+              -skip-testing:OnlyCueUITests/AudioSettingsScreenshotTests \
+              -skip-testing:OnlyCueUITests/DocumentViewModeScreenshotTests \
+              -skip-testing:OnlyCueUITests/ExportSheetScreenshotTests \
+              -skip-testing:OnlyCueUITests/KeyboardSettingsScreenshotTests \
+              -skip-testing:OnlyCueUITests/LyricsLaneEditingUITests \
+              -skip-testing:OnlyCueUITests/OSCMonitorScreenshotTests \
+              -skip-testing:OnlyCueUITests/OSCSettingsScreenshotTests \
+              -skip-testing:OnlyCueUITests/Phase3ScreenshotTests \
+              -skip-testing:OnlyCueUITests/ShowModeUITests \
+              -skip-testing:OnlyCueUITests/TempoGridOverlayScreenshotTests \
+              -skip-testing:OnlyCueUITests/TimecodeSettingsSheetScreenshotTests \
+              -skip-testing:OnlyCueUITests/TransportBarScreenshotTests \
+              -parallel-testing-enabled NO \
+              -test-timeouts-enabled YES \
+              -default-test-execution-time-allowance 120 \
+              -maximum-test-execution-time-allowance 300 \
+              -test-iterations 2 \
+              -retry-tests-on-failure \
+              | xcbeautify --renderer github-actions
+          }
+
+          # One-shot whole-step retry: absorbs the runner-init flake without
+          # hiding regressions (a genuine failure still fails twice).
+          run_ui_tests || {
+            echo "::warning::UI tests failed once — resetting XCUITest daemons and retrying once (absorbs the automation-mode init flake; see #605, #595)."
+            reset_ui_daemons
+            run_ui_tests
+          }
 
       # Screenshot / Figma-baseline generators — manual only (#548).
       - name: UI baseline screenshots

@@ -65,5 +65,35 @@ final class UITestFirstLaunchHandlerTests: XCTestCase {
             UITestFirstLaunchHandler.shouldSuppressForSeed(arguments: ["OnlyCue"])
         )
     }
+
+    func test_shouldSuppress_withSuppressArgument_returnsTrue() {
+        XCTAssertTrue(
+            UITestFirstLaunchHandler.shouldSuppress(
+                arguments: ["OnlyCue", "--ui-test-first-launch=suppress"]
+            )
+        )
+    }
+
+    func test_shouldSuppress_withSeed_returnsTrue() {
+        XCTAssertTrue(
+            UITestFirstLaunchHandler.shouldSuppress(
+                arguments: ["OnlyCue", "--ui-test-seed=three-cues-1-3-6"]
+            )
+        )
+    }
+
+    func test_shouldSuppress_withSeedButForced_returnsFalse() {
+        XCTAssertFalse(
+            UITestFirstLaunchHandler.shouldSuppress(
+                arguments: ["OnlyCue", "--ui-test-seed=three-cues-1-3-6", "--ui-test-first-launch=force"]
+            )
+        )
+    }
+
+    func test_shouldSuppress_withNoSuppressSignal_returnsFalse() {
+        XCTAssertFalse(
+            UITestFirstLaunchHandler.shouldSuppress(arguments: ["OnlyCue"])
+        )
+    }
 }
 #endif

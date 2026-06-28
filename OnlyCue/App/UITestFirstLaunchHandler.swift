@@ -12,9 +12,11 @@ import Foundation
 ///
 /// This handler clears the AppStorage flag at launch when the force argument is
 /// present, so the sheet renders on the next document-window appearance. The
-/// `--ui-test-first-launch=suppress` value is reserved (and explicitly returns
-/// `false` from `shouldForceFirstLaunch`) so future tests can keep the sheet
-/// hidden without relying on whatever the runner's defaults happen to hold.
+/// `--ui-test-first-launch=suppress` value (which the UI-test base case passes
+/// on every launch) keeps the sheet hidden regardless of the saved flag — vital
+/// now that `UITestDefaultsResetHandler` wipes the persisted flag to its
+/// show-the-sheet default before this runs (#603); a seeded launch is suppressed
+/// the same way (#476).
 ///
 /// Production builds skip this file entirely (`#if DEBUG`).
 enum UITestFirstLaunchHandler {
@@ -24,16 +26,27 @@ enum UITestFirstLaunchHandler {
     private static let seedPrefix = "--ui-test-seed="
 
     /// Called at app launch. Forces the sheet to render when `=force` is set;
-    /// otherwise suppresses it for any seeded launch so the welcome sheet never
-    /// overlays a deterministic screenshot capture (#476).
+    /// otherwise suppresses it for any seeded or explicitly `=suppress`ed launch
+    /// so the welcome sheet never overlays a deterministic test (#476, #603).
     @MainActor
     static func applyFirstLaunchOverrideIfRequested() {
         let arguments = CommandLine.arguments
         if shouldForceFirstLaunch(arguments: arguments) {
             UserDefaults.standard.set(false, forKey: FirstLaunchFlag.key)
-        } else if shouldSuppressForSeed(arguments: arguments) {
+        } else if shouldSuppress(arguments: arguments) {
             UserDefaults.standard.set(true, forKey: FirstLaunchFlag.key)
         }
+    }
+
+    /// True when the first-launch sheet should be hidden for this launch: an
+    /// explicit `--ui-test-first-launch=suppress` (passed by the UI-test base
+    /// case on every launch) or any seeded launch — unless `=force` explicitly
+    /// asked for the sheet. Pure so the precedence is unit-tested without
+    /// launching the app.
+    static func shouldSuppress(arguments: [String]) -> Bool {
+        guard !shouldForceFirstLaunch(arguments: arguments) else { return false }
+        if arguments.contains(argumentPrefix + "suppress") { return true }
+        return arguments.contains { $0.hasPrefix(seedPrefix) }
     }
 
     /// Parses the launch arguments for `--ui-test-first-launch=<value>` and

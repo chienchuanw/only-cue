@@ -57,7 +57,14 @@ class OnlyCueUITestCase: XCTestCase {
         extraArguments: [String] = []
     ) -> XCUIApplication {
         let app = XCUIApplication()
-        app.launchArguments += ["--ui-test-reset", "-ApplePersistenceIgnoreState", "YES"]
+        // --ui-test-reset wipes persisted defaults to a clean slate; that resets
+        // the first-launch flag to its show-the-sheet default, so suppress the
+        // sheet explicitly or it covers the document under test (#603).
+        app.launchArguments += [
+            "--ui-test-reset",
+            "--ui-test-first-launch=suppress",
+            "-ApplePersistenceIgnoreState", "YES"
+        ]
         if let seed {
             app.launchArguments.append(seed.launchArgument)
         }

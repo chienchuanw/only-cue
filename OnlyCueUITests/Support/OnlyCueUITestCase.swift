@@ -70,7 +70,18 @@ class OnlyCueUITestCase: XCTestCase {
         }
         app.launchArguments += extraArguments
         app.launch()
-        Foregrounding.activateRobustly(app)
+        // Best-effort foreground nudge via AppKit. We deliberately do NOT call
+        // XCUIApplication.activate() here: on the self-hosted runner it records a
+        // hard "Failed to activate application" failure whenever the GUI session
+        // can't foreground (e.g. a locked screen), and with
+        // continueAfterFailure=false that aborts the test before any retry.
+        // NSRunningApplication.activate is best-effort and never fails the test;
+        // launch() already foregrounds in a healthy, unlocked session (#605).
+        for running in NSRunningApplication.runningApplications(
+            withBundleIdentifier: Self.bundleIdentifier
+        ) {
+            running.activate(options: [.activateAllWindows])
+        }
         self.app = app
         return app
     }

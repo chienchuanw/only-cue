@@ -147,8 +147,15 @@ jobs:
       # are excluded here and run via the manual "UI baseline screenshots" step
       # below. This keeps the push path to the UI tests that actually gate
       # behavior (menus, mode/inspector swaps, layout geometry, hit-testing).
+      # TEMPORARY (#608): non-blocking while the self-hosted Mac mini's root
+      # automation subsystem is wedged — every push fails at runner init with
+      # "Timed out while enabling automation mode", which survives a daemon
+      # SIGKILL and needs a machine reboot (#605). The step still runs and
+      # reports; it just won't fail the job. REMOVE continue-on-error once the
+      # runner is rebooted and the UI suite initializes again.
       - name: UI tests (behavioral)
         if: github.event_name == 'push'
+        continue-on-error: true
         run: |
           set -o pipefail
           # NOTE: a caffeinate wrapper and -test-timeouts-enabled were tried in

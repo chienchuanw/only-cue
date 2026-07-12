@@ -4,6 +4,22 @@ Non-obvious things learned during development. Things you'd want to remember nex
 
 ---
 
+## AV-sync bug reports: distrust the perceived direction, instrument before fixing
+
+#611: "the waveform seems a little late compared to the real audio." The truth was the exact opposite — the playhead *leads* the audio, because `AVPlayer.currentTime()` reports what has been *queued* into the output pipeline, not what is coming out of the speaker. Perceived direction of AV-sync errors is notoriously unreliable; a flawed pause-then-compare test even "confirmed" the wrong direction mid-investigation (play-start latency confounds it).
+
+What actually settled it: deterministic instrumentation. A synthesized WAV with a 2ms click at exactly 10.000s pushed through the *real* pipeline (peaks → bucketer → columnX) and compared against the playhead's x-mapping proved every static stage clean to within one rendered column — leaving only the currentTime-vs-audible gap. Rule: for any "X looks out of sync with Y" report, build a fixture with a known-position landmark and measure, before touching either side.
+
+Related: macOS has **no** `AVAudioSession.outputLatency`. Total output latency must be assembled from four CoreAudio properties — `kAudioDevicePropertyLatency` + `kAudioDevicePropertySafetyOffset` + `kAudioDevicePropertyBufferFrameSize` (output scope) + the first output stream's `kAudioStreamPropertyLatency` — divided by the nominal sample rate. Wired ≈ 13ms at 48k on the dev Mac; Bluetooth is where it gets perceptible. Compensate at *render* time only (subtract while `rate != 0`), never in the clock itself, or every consumer of playback time (seek, undo, LTC, cues) inherits the offset.
+
+---
+
+## `echo >> file` corrupts the last line when the file has no trailing newline
+
+Appending `.claude/settings.local.json` to `.gitignore` with `echo "…" >>` produced `ci-strategy.md.claude/settings.local.json` — one concatenated pattern that both un-ignored `ci-strategy.md` and failed to ignore the new path. The pre-existing file simply had no trailing newline, and nothing failed loudly; a review subagent caught it in the PR diff. When appending to files you didn't create, verify with `tail -1` first (or use Edit-style tools that see the file content), and check the result with `git check-ignore`/equivalent rather than trusting the diffstat.
+
+---
+
 ## `.id(input)` only helps if the input itself is fresh
 
 Multi-item sidebar landed. User reports: "the waveform is inconsistent. It will become some other waveform for some reasons." We had already added `.id(asset.url)` on `WaveformContainer` — supposedly belt-and-suspenders against `@State` carrying over between item switches.

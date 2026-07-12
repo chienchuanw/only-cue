@@ -4,6 +4,16 @@ Append-only session log. Newer entries on top.
 
 ---
 
+## 2026-07-13 — Playhead AV-sync: output-latency compensation (#611)
+
+**Shipped to `dev` (PR #612, rebase-merged as `b7dfe21` head, closes #611):**
+
+- `fix(waveform)`: user-reported "waveform seems late vs. real audio" in v0.7.1. A grilling session narrowed it (WAV+MP3 both reproduce → not priming; wired → not Bluetooth; fixed offset, persists after pause), then deterministic click-track instrumentation (`SilentAudioFixture.makeClickWAV`, click at exactly 10.000s) proved the whole static pipeline clean — generate → `WaveformPeakBucketer` → `columnX` lands within one column of `CueMarkersGeometry.position` (`WaveformClickAlignmentTests`). Root cause: `AVPlayer.currentTime()` reports *queued* audio, not *audible* audio — the playhead actually **leads** the sound (perceived direction was inverted, common in AV-sync reports).
+- Fix: new `AudioOutputLatency` CoreAudio seam (device latency + safety offset + IO buffer + first-stream latency over the nominal sample rate, clamped to [0, 0.5s]); `PlayerEngine.outputLatency` refreshed on each `play()` from an injectable provider; `PlayheadInterpolator.renderedTime` subtracts it **only while playing** (paused/seek stay exact, clamped at 0); `WaveformPlayheadVisual` wires it through. Measured on the dev machine: 60+48+512 frames @ 48k ≈ 12.9ms (+stream).
+- Honest caveat (also in the PR's Understanding section): 13-15ms wired latency is *below* the ~50ms perception threshold — compensation direction/mechanics are verified by tests, but the "no longer perceivable" criterion still needs the maintainer's post-merge listening check; biggest real-world win is Bluetooth outputs.
+- Review loop: round 1 caught a real bug — appending to `.gitignore` without a trailing newline mangled the last line (`ci-strategy.md.claude/settings.local.json`); fixed and verified with `git check-ignore`. Round 2 + independent merge-gate review: approve. CI green.
+- Deferred (noted in review, file follow-ups if reported): rate-scaled compensation at high playback rates; pause snap-forward on high-latency devices; the generator tail-loss / `ceil`-stretch audit items from #611.
+
 ## 2026-06-28 — Launch shows only the welcome window (#601)
 
 **Shipped to `dev` (PR #602, rebase-merged as `25b9b8a`, closes #601):**

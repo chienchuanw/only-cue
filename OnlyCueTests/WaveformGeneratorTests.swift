@@ -57,6 +57,50 @@ final class WaveformGeneratorTests: XCTestCase {
         XCTAssertEqual(peaks.max() ?? 0, 1.0, accuracy: 0.02)
     }
 
+    // MARK: - Click placement instrumentation (#611)
+
+    /// A click at exactly 10.000s in a 20s file must land in the bucket
+    /// covering 10.000s — bucket 100 of 200 (±1 for bucket-edge rounding).
+    /// This is the deterministic ruler for the reported audio↔visual offset.
+    func test_peaks_clickAt10s_landsInCorrectBucket() async throws {
+        let url = try SilentAudioFixture.makeClickWAV(duration: 20, clickAt: 10)
+        defer { try? FileManager.default.removeItem(at: url) }
+        let asset = AVURLAsset(url: url)
+
+        let peaks = try await WaveformGenerator.peaks(for: asset, resolution: 200)
+
+        let argmax = try XCTUnwrap(peaks.indices.max(by: { peaks[$0] < peaks[$1] }))
+        XCTAssertEqual(argmax, 100, accuracy: 1, "click at 10.000s of 20s must land at bucket ~100/200")
+    }
+
+    /// Same ruler through the 48 kHz → 44.1 kHz resample path: a sample-rate
+    /// conversion bug would shift or stretch the click's bucket position.
+    func test_peaks_clickAt10s_48kSource_landsInCorrectBucket() async throws {
+        let url = try SilentAudioFixture.makeClickWAV(duration: 20, clickAt: 10, sampleRate: 48_000)
+        defer { try? FileManager.default.removeItem(at: url) }
+        let asset = AVURLAsset(url: url)
+
+        let peaks = try await WaveformGenerator.peaks(for: asset, resolution: 200)
+
+        let argmax = try XCTUnwrap(peaks.indices.max(by: { peaks[$0] < peaks[$1] }))
+        XCTAssertEqual(argmax, 100, accuracy: 1, "48k source resampled to 44.1k must not shift the click")
+    }
+
+    /// A click near the end of the file must not be dropped or displaced —
+    /// guards the accumulator's tail behavior when the decoded sample count
+    /// differs from the duration-based estimate.
+    func test_peaks_clickNearEnd_landsInLastBuckets() async throws {
+        let url = try SilentAudioFixture.makeClickWAV(duration: 20, clickAt: 19.9)
+        defer { try? FileManager.default.removeItem(at: url) }
+        let asset = AVURLAsset(url: url)
+
+        let peaks = try await WaveformGenerator.peaks(for: asset, resolution: 200)
+
+        let argmax = try XCTUnwrap(peaks.indices.max(by: { peaks[$0] < peaks[$1] }))
+        XCTAssertEqual(argmax, 199, accuracy: 1, "click at 19.9s of 20s must land at bucket ~199/200")
+        XCTAssertGreaterThan(peaks[argmax], 0.9, "the tail click must survive, not be silently dropped")
+    }
+
     func test_peaks_normalizedTo01() async throws {
         let url = try SilentAudioFixture.makeSineWAV(duration: 1, frequency: 440)
         defer { try? FileManager.default.removeItem(at: url) }

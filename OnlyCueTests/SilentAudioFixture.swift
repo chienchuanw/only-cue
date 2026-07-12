@@ -26,8 +26,32 @@ enum SilentAudioFixture {
         )
     }
 
+    /// A file that is silent everywhere except a 2 ms full-scale click whose
+    /// onset is at exactly `clickAt` seconds — a deterministic ruler for
+    /// audio↔visual alignment measurements (#611).
+    static func makeClickWAV(
+        duration: TimeInterval,
+        clickAt: TimeInterval,
+        sampleRate: Double = Self.sampleRate,
+        file: StaticString = #file,
+        line: UInt = #line
+    ) throws -> URL {
+        let clickStart = Int(clickAt * sampleRate)
+        let clickEnd = clickStart + Int(0.002 * sampleRate)
+        return try writeWAV(
+            duration: duration,
+            sampleRate: sampleRate,
+            fill: { frame, _ in
+                (clickStart..<clickEnd).contains(frame) ? 1.0 : 0.0
+            },
+            file: file,
+            line: line
+        )
+    }
+
     private static func writeWAV(
         duration: TimeInterval,
+        sampleRate: Double = Self.sampleRate,
         fill: ((Int, Double) -> Double)?,
         file: StaticString,
         line: UInt

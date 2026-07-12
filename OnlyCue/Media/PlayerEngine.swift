@@ -22,6 +22,16 @@ final class PlayerEngine {
 
     var isPlaying: Bool { rate > 0 }
 
+    /// Audio-output pipeline latency (seconds) of the current default output
+    /// device, refreshed on each `play()`. `PlayheadInterpolator` subtracts it
+    /// so the rendered playhead tracks what is *audible now* (#611). Refreshed
+    /// at play-time (not init) because the output device can change between
+    /// playback sessions.
+    private(set) var outputLatency: TimeInterval = 0
+
+    @ObservationIgnored
+    private let outputLatencyProvider: () -> TimeInterval
+
     @ObservationIgnored
     let player: AVPlayer
 
@@ -44,8 +54,12 @@ final class PlayerEngine {
     @ObservationIgnored
     private var wantsToPlay = false
 
-    init(player: AVPlayer = AVPlayer()) {
+    init(
+        player: AVPlayer = AVPlayer(),
+        outputLatencyProvider: @escaping () -> TimeInterval = { AudioOutputLatency.currentSeconds() }
+    ) {
         self.player = player
+        self.outputLatencyProvider = outputLatencyProvider
         observeTime()
     }
 
@@ -91,6 +105,7 @@ final class PlayerEngine {
 
     func play() {
         wantsToPlay = true
+        outputLatency = outputLatencyProvider()
         player.play()
         // Set after play() so AVPlayer's timeControlStatus flips first; otherwise
         // it can snap rate back to 1.0.

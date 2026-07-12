@@ -39,7 +39,8 @@ struct WaveformPlayheadVisual: View {
             observedAt: engine.currentTimeObservedAt,
             now: CACurrentMediaTime(),
             rate: Double(engine.rate),
-            duration: duration
+            duration: duration,
+            outputLatency: engine.outputLatency
         )
     }
 

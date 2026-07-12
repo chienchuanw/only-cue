@@ -46,7 +46,8 @@ final class WaveformClickAlignmentTests: XCTestCase {
             clickX,
             playheadX,
             accuracy: columnWidth,
-            "click drawn at x=\(clickX) but playhead for 10.000s at x=\(playheadX) — measured offset \((clickX - playheadX) / width * CGFloat(duration))s"
+            "click drawn at x=\(clickX) but playhead for 10.000s at x=\(playheadX)"
+                + " — measured offset \((clickX - playheadX) / width * CGFloat(duration))s"
         )
     }
 }

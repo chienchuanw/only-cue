@@ -69,4 +69,7 @@ logs/
 actions-runner/
 
 # Local planning notes (not part of the public docs set)
-ci-strategy.md.claude/settings.local.json
+ci-strategy.md
+
+# Claude Code local permission settings — per-machine
+.claude/settings.local.json

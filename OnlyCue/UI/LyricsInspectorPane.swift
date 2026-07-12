@@ -176,8 +176,10 @@ private struct LyricsInspectorRow: View {
                 .font(DS.Text.monoSmall) // Figma 318:1490 — DS mono token for timecode consistency
                 .foregroundStyle(isCurrent ? DS.Color.cueIndigo : DS.Color.textSecondary)
                 // Fixed timestamp column so every lyric text shares one left
-                // edge (Figma 318:1490 — timestamp ~61pt, text at x=81).
-                .frame(width: 62, alignment: .leading)
+                // edge (Figma 318:1490). Width comes from the shared metric —
+                // a 62pt literal was narrower than the rendered 10-glyph
+                // clock string, wrapping every timestamp to two lines (#615).
+                .frame(width: LyricsInspectorMetrics.timestampColumnWidth, alignment: .leading)
             TextField("lyric line", text: $text)
                 .focused($focused)
                 .font(isCurrent ? DS.Text.body.weight(.semibold) : DS.Text.body)

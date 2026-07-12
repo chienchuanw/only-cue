@@ -46,6 +46,28 @@ final class PlayerEngineTests: XCTestCase {
         XCTAssertEqual(engine.currentTime, 2.5, accuracy: 0.05)
     }
 
+    // MARK: - Output-latency compensation (#611)
+
+    /// play() must refresh `outputLatency` from the injected provider so the
+    /// rendered playhead can subtract the audio pipeline's in-flight delay.
+    /// Queried at play-time (not init) because the user can switch output
+    /// devices between sessions of playback.
+    func test_play_refreshesOutputLatencyFromProvider() {
+        let engine = PlayerEngine(outputLatencyProvider: { 0.123 })
+        XCTAssertEqual(engine.outputLatency, 0, accuracy: 1e-9, "no latency before first play")
+        engine.play()
+        XCTAssertEqual(engine.outputLatency, 0.123, accuracy: 1e-9)
+    }
+
+    func test_defaultProvider_yieldsSaneLatency() {
+        // Default wiring goes to AudioOutputLatency.currentSeconds(), which
+        // clamps to [0, 0.5] — the engine must inherit that sanity range.
+        let engine = PlayerEngine()
+        engine.play()
+        XCTAssertGreaterThanOrEqual(engine.outputLatency, 0)
+        XCTAssertLessThanOrEqual(engine.outputLatency, 0.5)
+    }
+
     func test_load_populatesDuration() async throws {
         let url = try SilentAudioFixture.makeWAV(duration: 3)
         defer { try? FileManager.default.removeItem(at: url) }

@@ -44,7 +44,11 @@ final class PlayheadInterpolatorTests: XCTestCase {
     /// not what the player has already queued: rendered = interpolated − latency.
     func test_playing_subtractsOutputLatency() {
         let result = PlayheadInterpolator.renderedTime(
-            observedTime: 12.0, observedAt: 100.0, now: 100.25, rate: 1, duration: 200,
+            observedTime: 12.0,
+            observedAt: 100.0,
+            now: 100.25,
+            rate: 1,
+            duration: 200,
             outputLatency: 0.15
         )
         XCTAssertEqual(result, 12.10, accuracy: 1e-9)
@@ -54,7 +58,11 @@ final class PlayheadInterpolatorTests: XCTestCase {
     /// the true position so seeks/edits stay exact.
     func test_paused_ignoresOutputLatency() {
         let result = PlayheadInterpolator.renderedTime(
-            observedTime: 12.0, observedAt: 100.0, now: 105.0, rate: 0, duration: 200,
+            observedTime: 12.0,
+            observedAt: 100.0,
+            now: 105.0,
+            rate: 0,
+            duration: 200,
             outputLatency: 0.15
         )
         XCTAssertEqual(result, 12.0, accuracy: 1e-9)
@@ -63,7 +71,11 @@ final class PlayheadInterpolatorTests: XCTestCase {
     /// Latency larger than the interpolated time must clamp at 0, not go negative.
     func test_latencyLargerThanPosition_clampsToZero() {
         let result = PlayheadInterpolator.renderedTime(
-            observedTime: 0.05, observedAt: 100.0, now: 100.0, rate: 1, duration: 200,
+            observedTime: 0.05,
+            observedAt: 100.0,
+            now: 100.0,
+            rate: 1,
+            duration: 200,
             outputLatency: 0.3
         )
         XCTAssertEqual(result, 0.0, accuracy: 1e-9)

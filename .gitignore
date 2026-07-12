@@ -69,4 +69,4 @@ logs/
 actions-runner/
 
 # Local planning notes (not part of the public docs set)
-ci-strategy.md
+ci-strategy.md.claude/settings.local.json

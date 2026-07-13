@@ -21,6 +21,9 @@ struct OnlyCueApp: App {
             UITestAppearanceHandler.applyAppearanceOverrideIfRequested()
             UITestFirstLaunchHandler.applyFirstLaunchOverrideIfRequested()
             UITestLTCHandler.applyIfRequested()
+            // Register the window-frame pin BEFORE opening the seed document so
+            // the didBecomeKey observer is live when the window appears (#614).
+            UITestWindowFrameHandler.applyIfRequested()
             UITestSeedHandler.openSeededDocumentIfRequested()
             #endif
         }

@@ -117,6 +117,11 @@ final class DocumentViewModeScreenshotTests: XCTestCase {
         if let seed {
             app.launchArguments += ["--ui-test-seed=\(seed)"]
         }
+        if ltcEnabled {
+            // Enable LTC routing hermetically (4-channel, in-memory, no real
+            // output) so the LTC strip renders for the capture (#616).
+            app.launchArguments += ["--ui-test-ltc-enabled"]
+        }
         app.launch()
 
         // The seed handler opens a document on its own; otherwise drive ⌘N

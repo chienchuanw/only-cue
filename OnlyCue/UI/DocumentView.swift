@@ -53,17 +53,29 @@ struct DocumentView: View {
             ItemListPane(document: document, onDropURLs: importURLs)
                 .navigationSplitViewColumnWidth(min: 240, ideal: 240, max: 320)
         } detail: {
-            mainPane
-                .inspector(isPresented: .constant(true)) {
-                    ModeAwareInspector(
-                        document: document,
-                        engine: engine,
-                        editorMode: editorMode,
-                        cueSelection: $cueSelection,
-                        lyricsCursor: $lyricsCursor
-                    )
-                    .cueListInspectorColumnWidth()
-                }
+            // Plain HStack, NOT `.inspector` or `HSplitView` (#617): any
+            // NSSplitView-backed split inside the detail column double-counts
+            // the sidebar into the window's minimum width (~+249pt) and holds
+            // the inspector at its ideal/max instead of its minimum, pinning
+            // the populated window at 1416pt — past the 1280pt design width —
+            // so it could never fit 1280-class displays. Verified empirically
+            // by bisecting all pane content to `Color.clear`: the floor only
+            // fell when the inner split view was gone. The inspector is
+            // permanently visible, so the only split feature lost is dragging
+            // the 340–400pt divider; the frame contract below still lets the
+            // inspector compress 360 → 340 before the editor gives up width.
+            HStack(spacing: 0) {
+                mainPane
+                Divider()
+                ModeAwareInspector(
+                    document: document,
+                    engine: engine,
+                    editorMode: editorMode,
+                    cueSelection: $cueSelection,
+                    lyricsCursor: $lyricsCursor
+                )
+                .cueListInspectorPaneWidth()
+            }
         }
         // Figma 318:1236: the titlebar subtitle is the editor mode, not the
         // active media item name (the active clip is already shown in the

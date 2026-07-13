@@ -21,16 +21,18 @@ enum CueListInspectorMetrics {
 }
 
 extension View {
-    /// Applies the cue-list `.inspector` column width contract from the
-    /// single source of truth. Using this instead of a literal
-    /// `.inspectorColumnWidth(min:ideal:max:)` at the call site makes a
-    /// divergent contract (the issue #297 constraint-loop precursor)
-    /// impossible to introduce.
-    func cueListInspectorColumnWidth() -> some View {
-        inspectorColumnWidth(
-            min: CueListInspectorMetrics.minWidth,
-            ideal: CueListInspectorMetrics.idealWidth,
-            max: CueListInspectorMetrics.maxWidth
+    /// Applies the cue-list inspector pane's width contract from the single
+    /// source of truth. Using this instead of literal widths at the call site
+    /// makes a divergent contract (the issue #297 constraint-loop precursor)
+    /// impossible to introduce. Frame-based (not `.inspectorColumnWidth`)
+    /// because the inspector now lives in an `HSplitView` — the `.inspector`
+    /// modifier inflated the window's minimum width past the 1280pt design
+    /// width (#617).
+    func cueListInspectorPaneWidth() -> some View {
+        frame(
+            minWidth: CueListInspectorMetrics.minWidth,
+            idealWidth: CueListInspectorMetrics.idealWidth,
+            maxWidth: CueListInspectorMetrics.maxWidth
         )
     }
 }

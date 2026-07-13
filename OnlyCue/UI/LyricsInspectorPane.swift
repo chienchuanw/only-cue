@@ -175,6 +175,10 @@ private struct LyricsInspectorRow: View {
             Text(LyricsTimeFormat.clockString(line.time ?? 0))
                 .font(DS.Text.monoSmall) // Figma 318:1490 — DS mono token for timecode consistency
                 .foregroundStyle(isCurrent ? DS.Color.cueIndigo : DS.Color.textSecondary)
+                // Single line, always: the width metric fits the rendered clock
+                // string but with sub-pixel slack, so lineLimit(1) makes the
+                // no-wrap invariant hold regardless of font-metric rounding (#615).
+                .lineLimit(1)
                 // Fixed timestamp column so every lyric text shares one left
                 // edge (Figma 318:1490). Width comes from the shared metric —
                 // a 62pt literal was narrower than the rendered 10-glyph

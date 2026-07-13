@@ -71,6 +71,34 @@ final class KeymapTests: XCTestCase {
         XCTAssertEqual(map.bindings.count, KeymapAction.allCases.count)
     }
 
+    // MARK: - Vertical zoom removal (#622)
+
+    func test_keymapActions_exposeNoVerticalZoomActions() {
+        let leftovers = KeymapAction.allCases.filter {
+            $0.rawValue.localizedCaseInsensitiveContains("vertical")
+        }
+        XCTAssertTrue(leftovers.isEmpty, "vertical-zoom actions still present: \(leftovers)")
+    }
+
+    func test_decode_legacyVerticalZoomBindings_areDroppedCleanly() {
+        // A keymap persisted before #622 still carries the three vertical-zoom
+        // bindings. After removal they are unknown action keys and must be
+        // dropped by the lenient decode — no crash, no leaked binding.
+        let json = """
+        { "waveformVerticalZoomIn": { "key": "=", "modifiers": ["command", "option"] },
+          "waveformVerticalZoomOut": { "key": "-", "modifiers": ["command", "option"] },
+          "waveformVerticalZoomReset": { "key": "0", "modifiers": ["command", "option"] },
+          "importMedia": { "key": "i", "modifiers": ["command"] } }
+        """
+        let map = Keymap.decode(Data(json.utf8))
+        XCTAssertEqual(map.chord(for: .importMedia), KeyChord(key: "i", modifiers: [.command]))
+        XCTAssertEqual(map.bindings.count, KeymapAction.allCases.count)
+        XCTAssertTrue(
+            map.bindings.keys.allSatisfy { !$0.rawValue.localizedCaseInsensitiveContains("vertical") },
+            "legacy vertical-zoom bindings must decode away, not survive as live actions"
+        )
+    }
+
     // MARK: - Conflict detection
 
     func test_actionsConflicting_predictsACollisionBeforeRebinding() {

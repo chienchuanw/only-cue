@@ -71,11 +71,15 @@ final class DocumentViewModeScreenshotTests: XCTestCase {
     /// 8 mixed video/audio media items, 6 named/faded/colored cues, and a
     /// 12-line lyric sheet. Captures the populated Cue-mode document for the
     /// 1:1 audit against Figma's populated frames (§7.1/§7.5/§8.4/§9.2, #416).
+    /// LTC routing is enabled (`ltcEnabled: true`) so the LTC strip renders
+    /// between the waveform and transport bar, matching the mock's composition
+    /// (Figma 318:1228 §7.8, #616). The committed twin is `app-main-populated-dark.png`.
     func test_setListActI_darkMode_visualBaseline() throws {
         try runDocumentCapture(
             seed: "set-list-act-i",
             modeSwitch: nil,
-            screenshotName: "main-setlist-cue-dark"
+            screenshotName: "main-setlist-cue-dark",
+            ltcEnabled: true
         )
     }
 
@@ -98,7 +102,12 @@ final class DocumentViewModeScreenshotTests: XCTestCase {
     /// captured regardless of the capture display's size/orientation (#614).
     private static let captureWindowSize = CGSize(width: 1280, height: 820)
 
-    private func runDocumentCapture(seed: String?, modeSwitch: String?, screenshotName: String) throws {
+    private func runDocumentCapture(
+        seed: String?,
+        modeSwitch: String?,
+        screenshotName: String,
+        ltcEnabled: Bool = false
+    ) throws {
         let app = XCUIApplication()
         app.launchArguments += [
             "-ApplePersistenceIgnoreState", "YES",
@@ -151,6 +160,18 @@ final class DocumentViewModeScreenshotTests: XCTestCase {
             "window frame \(window.frame.size) was not pinned to \(Self.captureWindowSize) — "
                 + "the capture would clip (a min-width clamp regressed #617)"
         )
+
+        // When LTC routing is enabled the LTC strip must render between the
+        // waveform and transport bar, or the baseline would silently miss the
+        // region the fidelity gate is meant to guard (Figma 318:1228 §7.8, #616).
+        if ltcEnabled {
+            let ltcStrip = window.descendants(matching: .any)["ltcStrip"]
+            XCTAssertTrue(
+                ltcStrip.waitForExistence(timeout: 3),
+                "LTC strip did not render — the populated baseline would not exercise the LTC region (#616)"
+            )
+        }
+
         try captureScreenshot(named: screenshotName, window: window)
         app.terminate()
     }

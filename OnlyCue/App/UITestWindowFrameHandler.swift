@@ -23,8 +23,10 @@ enum UITestWindowFrameHandler {
 
     /// Retained observer token so the frame is pinned as soon as a document
     /// window becomes key (the seed handler opens the window asynchronously,
-    /// after this runs at launch).
-    private static var observer: NSObjectProtocol?
+    /// after this runs at launch). `nonisolated(unsafe)` matches the sibling
+    /// `UITestSeedHandler.didOpen`: mutation is serialized on the main queue
+    /// (the observer is registered with `queue: .main`), so it is race-free.
+    private nonisolated(unsafe) static var observer: NSObjectProtocol?
 
     /// Called at app launch. If a `--ui-test-window` arg is present and valid,
     /// registers a one-shot observer that pins the first document window's frame

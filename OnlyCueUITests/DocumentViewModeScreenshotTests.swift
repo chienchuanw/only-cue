@@ -92,9 +92,19 @@ final class DocumentViewModeScreenshotTests: XCTestCase {
 
     // MARK: - Helpers
 
+    /// The deterministic capture frame: Figma's 1280x812 design frame rounded to
+    /// the app's `defaultSize` height. `UITestWindowFrameHandler` pins the
+    /// document window to this, anchored on-screen, so the full inspector is
+    /// captured regardless of the capture display's size/orientation (#614).
+    private static let captureWindowSize = CGSize(width: 1280, height: 820)
+
     private func runDocumentCapture(seed: String?, modeSwitch: String?, screenshotName: String) throws {
         let app = XCUIApplication()
-        app.launchArguments += ["-ApplePersistenceIgnoreState", "YES", "--ui-test-appearance=dark"]
+        app.launchArguments += [
+            "-ApplePersistenceIgnoreState", "YES",
+            "--ui-test-appearance=dark",
+            "--ui-test-window=\(Int(Self.captureWindowSize.width))x\(Int(Self.captureWindowSize.height))"
+        ]
         if let seed {
             app.launchArguments += ["--ui-test-seed=\(seed)"]
         }
@@ -128,7 +138,20 @@ final class DocumentViewModeScreenshotTests: XCTestCase {
 
         Foregrounding.activateRobustly(app)
         Thread.sleep(forTimeInterval: 0.8)
-        try captureScreenshot(named: screenshotName, window: app.windows.firstMatch)
+
+        // The capture is only meaningful if the window is exactly the requested
+        // frame — a silent clamp (the #617 symptom) would otherwise produce yet
+        // another clipped baseline that looks fine to the test. Assert the
+        // achieved size before capturing so a clamp fails loudly (#614).
+        let window = app.windows.firstMatch
+        XCTAssertTrue(window.waitForExistence(timeout: 5), "the document window should exist")
+        XCTAssertEqual(
+            window.frame.size,
+            Self.captureWindowSize,
+            "window frame \(window.frame.size) was not pinned to \(Self.captureWindowSize) — "
+                + "the capture would clip (a min-width clamp regressed #617)"
+        )
+        try captureScreenshot(named: screenshotName, window: window)
         app.terminate()
     }
 

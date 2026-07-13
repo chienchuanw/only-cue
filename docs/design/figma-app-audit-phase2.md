@@ -75,6 +75,16 @@ To avoid filing 30+ no-op issues for surface gaps that are really seed gaps, thi
 |---|---|
 | ![Figma](audit-screenshots/figma-main-cue-dark.png) | ![App](audit-screenshots/app-main-cue-dark.png) |
 
+> The App column above is the sparse `three-cues-1-3-6` capture. For the populated
+> 1:1 comparison against this frame — 8 media items, 6 named/faded cues, and the
+> LTC strip — see the `set-list-act-i` pair below (`figma-main-populated-dark.png`
+> / `app-main-populated-dark.png`, #616). The seed-limited deltas (7.1, 7.5, 7.7,
+> 7.8) are resolved there.
+>
+> | Figma (populated) | App (populated) |
+> |---|---|
+> | ![Figma](audit-screenshots/figma-main-populated-dark.png) | ![App](audit-screenshots/app-main-populated-dark.png) |
+
 ### Deltas
 
 | # | Severity | Area | Figma | App | Issue? |
@@ -86,7 +96,7 @@ To avoid filing 30+ no-op issues for surface gaps that are really seed gaps, thi
 | 7.5 | seed | Cue list (right pane) | 6 named cues (Lights Up, Verse 1, Chorus Hit, Bridge, Final Chorus, Blackout) with colored leading bars + Time / # / Name / Fade columns | 3 `Untitled` rows, no names, no fade values, only Time + Cue # — limited by seed | seed |
 | 7.6 | structural | Cue list column header | `CUES` caption at top + `6 cues` count badge, then `TIME / # / NAME / FADE` column row in `color/text-tertiary` uppercase | App shows `Time / Cue # / Name` headers (no FADE column visible, no count badge, no overall `CUES` caption) | yes — missing CUES header + count + FADE column |
 | 7.7 | structural | Waveform | Filled waveform with 5 cue markers (colored bars with numeric badges anchored to the waveform top), playhead tooltip readout `00:01:30:14` | App shows a sparse waveform stem with 3 dots at the cue times; no numeric badges, no per-cue color, no playhead-tooltip readout in this capture | yes / partial — the colored numeric badges are missing |
-| 7.8 | structural | LTC strip | A persistent LTC strip pinned to the bottom of the waveform editor showing `LTC · master.wav` | App does **not** show an LTC strip in this seed (LTC is disabled by default) | seed/state |
+| 7.8 | structural | LTC strip | A persistent LTC strip pinned to the bottom of the waveform editor showing `LTC · master.wav` | Absent in the three-cues capture (LTC off by default); **rendered in the populated `app-main-populated-dark.png` baseline** with LTC routing enabled (#616) | resolved — captured in the populated pair |
 | 7.9 | structural | Lyric ribbons | 4 truncated lyric ribbons placed under the waveform, indigo-tinted backgrounds | Not visible in this capture — Cue mode hides them | partial — verify whether they should render in Cue mode |
 | 7.10 | structural | Timecode badge (top-right) | `00:01:30:14` HMS + `30 fps` framerate caption | App shows `00:00:00:00` HMS (correct format), but framerate caption is **not** present | yes — surface framerate caption next to the HMS readout |
 | 7.11 | structural | Transport bar | Bottom-left transport: prev/play/next + HMS / total + `NEXT CUE 00:01:14.5` | App transport in this capture shows the prev/play/next + HMS, but no `NEXT CUE` widget (capture happened before TransportBar's playback-mode badge was lit) | partial |

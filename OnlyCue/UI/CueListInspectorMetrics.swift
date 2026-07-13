@@ -1,11 +1,13 @@
 import SwiftUI
 
-/// Single source of truth for the cue-list `.inspector` column's width
-/// contract. Issue #297: `CueListPane` previously also declared its own
-/// `.frame(minWidth: 240)`, a second contract that could disagree with
-/// `.inspectorColumnWidth` mid-drag and feed the `NSSplitView` constraint
-/// loop. Both the `.inspector` modifier and `CueListPane.minPaneWidth`
-/// resolve to these values so they can never diverge.
+/// Single source of truth for the cue-list inspector pane's width contract.
+/// Issue #297: `CueListPane` previously also declared its own
+/// `.frame(minWidth: 240)`, a second contract that could disagree with the
+/// inspector's own width mid-drag and feed the `NSSplitView` constraint loop.
+/// Both the pane-width modifier and `CueListPane.minPaneWidth` resolve to
+/// these values so they can never diverge. (The inspector is now an `HStack`
+/// child rather than an `.inspector` column — see #617 — but the divergent-
+/// contract guard is unchanged.)
 enum CueListInspectorMetrics {
     // 340 (was 240): the detail/center column is `maxWidth: .infinity` (greedy,
     // #516), so at the default window it pins the inspector at this minimum.
@@ -25,9 +27,10 @@ extension View {
     /// source of truth. Using this instead of literal widths at the call site
     /// makes a divergent contract (the issue #297 constraint-loop precursor)
     /// impossible to introduce. Frame-based (not `.inspectorColumnWidth`)
-    /// because the inspector now lives in an `HSplitView` — the `.inspector`
-    /// modifier inflated the window's minimum width past the 1280pt design
-    /// width (#617).
+    /// because the inspector now lives in a plain `HStack` — any
+    /// NSSplitView-backed split in the detail column (`.inspector` /
+    /// `HSplitView`) inflated the window's minimum width past the 1280pt
+    /// design width (#617).
     func cueListInspectorPaneWidth() -> some View {
         frame(
             minWidth: CueListInspectorMetrics.minWidth,

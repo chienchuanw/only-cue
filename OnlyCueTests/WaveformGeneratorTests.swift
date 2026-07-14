@@ -57,6 +57,36 @@ final class WaveformGeneratorTests: XCTestCase {
         XCTAssertEqual(peaks.max() ?? 0, 1.0, accuracy: 0.02)
     }
 
+    // MARK: - RMS energy rendering (#632)
+
+    /// Two regions with the SAME peak (full scale) but different energy: the
+    /// first is a continuous full-scale square (RMS 1.0); the second fires a
+    /// full-scale sample only every 4th frame (peak 1.0, RMS 0.5). A peak
+    /// envelope renders both regions at the same height; an RMS envelope renders
+    /// the low-energy region at roughly half height. This is the guard for the
+    /// "loud master looks like a solid block" report.
+    func test_peaks_equalPeakDifferentEnergy_rendersByRMSNotPeak() async throws {
+        let url = try SilentAudioFixture.makeCustomWAV(duration: 4) { frame, sr in
+            let firstHalf = Double(frame) < sr * 2
+            if firstHalf {
+                return frame % 2 == 0 ? 1.0 : -1.0     // full-scale square → RMS 1.0
+            } else {
+                return frame % 4 == 0 ? 1.0 : 0.0       // sparse full-scale → peak 1.0, RMS 0.5
+            }
+        }
+        defer { try? FileManager.default.removeItem(at: url) }
+        let asset = AVURLAsset(url: url)
+
+        let peaks = try await WaveformGenerator.peaks(for: asset, resolution: 4)
+
+        // Buckets 0-1 cover the loud region, 2-3 the low-energy region.
+        let loud = (peaks[0] + peaks[1]) / 2
+        let quiet = (peaks[2] + peaks[3]) / 2
+        XCTAssertEqual(loud, 1.0, accuracy: 0.05, "loud region normalizes to full height")
+        XCTAssertEqual(quiet, 0.5, accuracy: 0.1, "equal-peak but half-energy region must render at ~half height (RMS, not peak)")
+        XCTAssertLessThan(quiet, loud * 0.75, "peak rendering would make these equal — RMS must separate them")
+    }
+
     // MARK: - Click placement instrumentation (#611)
 
     /// A click at exactly 10.000s in a 20s file must land in the bucket

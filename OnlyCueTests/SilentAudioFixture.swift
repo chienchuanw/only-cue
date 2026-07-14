@@ -49,6 +49,18 @@ enum SilentAudioFixture {
         )
     }
 
+    /// Arbitrary mono signal from a `fill(frame, sampleRate) -> amplitude`
+    /// closure (amplitude in -1…1). Lets a test craft signals like constant-peak
+    /// but varying-energy to distinguish RMS from peak rendering (#632).
+    static func makeCustomWAV(
+        duration: TimeInterval,
+        fill: @escaping (Int, Double) -> Double,
+        file: StaticString = #file,
+        line: UInt = #line
+    ) throws -> URL {
+        try writeWAV(duration: duration, fill: fill, file: file, line: line)
+    }
+
     private static func writeWAV(
         duration: TimeInterval,
         sampleRate: Double = Self.sampleRate,

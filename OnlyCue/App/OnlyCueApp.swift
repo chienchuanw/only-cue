@@ -43,7 +43,8 @@ struct OnlyCueApp: App {
         // The start page (#591) is an AppKit window owned by `AppDelegate`
         // (`StartView` in an NSHostingController), because a SwiftUI `Window`
         // scene doesn't reliably auto-open at launch inside a DocumentGroup app
-        // on macOS 14. Reopen via File → Welcome to OnlyCue.
+        // on macOS 14. It reopens on a no-document launch and on dock-icon
+        // reopen (`AppDelegate.applicationShouldHandleReopen`).
 
         Settings {
             // Canonical Settings-tab order per the figma↔app audit (§1.1):

@@ -8,7 +8,7 @@ The repo supports two distribution modes:
 
 | Mode | Membership | First-launch UX | When to use |
 |---|---|---|---|
-| **Unsigned** (default) | Free Apple ID | Gatekeeper blocks; user right-clicks → Open once, or runs `xattr` | Every release while we're on the free tier |
+| **Unsigned** (default) | Free Apple ID | Gatekeeper blocks; user clears it once via System Settings → Privacy & Security → Open Anyway, or `xattr` | Every release while we're on the free tier |
 | **Signed + notarized** | Paid Apple Developer Program ($99/yr) | Silent, no Gatekeeper prompt | Once we upgrade |
 
 Both produce a perfectly legal DMG. The difference is only what end users see on first launch.
@@ -50,9 +50,9 @@ That's it. No Apple Developer Program enrollment, no certificates, no notarizati
 5. Smoke-test on a Mac that has never seen the app:
    - Mount the DMG, drag `OnlyCue.app` into `/Applications`.
    - Eject the DMG.
-   - **First launch:** double-clicking will show "OnlyCue cannot be opened because the developer cannot be verified." That's expected for an unsigned build.
-   - **Right-click → Open** on `/Applications/OnlyCue.app`, then click "Open" in the dialog. The app launches and the system remembers the override for future launches.
-   - Alternatively, one-shot bypass via Terminal:
+   - **First launch:** double-clicking shows *"Apple could not verify 'OnlyCue' is free of malware…"* (macOS 15) or *"…the developer cannot be verified"* (macOS 14). That's expected for an unsigned build.
+   - **System Settings → Privacy & Security → Security → Open Anyway** (next to the OnlyCue notice), then confirm and authenticate. The system remembers the override for future launches. On macOS 15 this is the required path — the old Control-click → Open no longer clears this dialog.
+   - Alternatively, one-shot bypass via Terminal (any macOS version):
 
      ```bash
      xattr -dr com.apple.quarantine /Applications/OnlyCue.app
@@ -64,9 +64,9 @@ Add an `## Install` section to the GitHub release notes (and to the README's ins
 
 > 1. Download `OnlyCue-x.y.z.dmg`.
 > 2. Open the DMG and drag **OnlyCue** into your Applications folder.
-> 3. **First launch:** right-click on `OnlyCue.app` and choose **Open**. macOS will warn that the developer can't be verified — click **Open** anyway. Future launches are silent.
+> 3. **First launch:** macOS blocks the app (*"Apple could not verify 'OnlyCue' is free of malware…"*). Open **System Settings → Privacy & Security**, scroll to **Security**, and click **Open Anyway** next to the OnlyCue notice; confirm and authenticate. (Or run `xattr -dr com.apple.quarantine /Applications/OnlyCue.app` in Terminal.) Future launches are silent.
 >
-> *Why the right-click step?* OnlyCue is currently distributed without a paid Apple Developer ID signature. The app and DMG are unsigned but otherwise unmodified. If you're uncomfortable with the right-click step, you can build from source ([instructions](../README.md#build)).
+> *Why the extra step?* OnlyCue is currently distributed without a paid Apple Developer ID signature. The app and DMG are unsigned but otherwise unmodified. If you're uncomfortable with it, you can build from source ([instructions](../README.md#build)).
 
 ## Paid-membership release (signed + notarized)
 

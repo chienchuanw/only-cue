@@ -113,23 +113,6 @@ struct AppCommands: Commands {
 
             Divider()
 
-            Button("Zoom In Vertically") {
-                NotificationCenter.default.post(name: .waveformVerticalZoomIn, object: nil)
-            }
-            .keyboardShortcut(shortcut(.waveformVerticalZoomIn))
-
-            Button("Zoom Out Vertically") {
-                NotificationCenter.default.post(name: .waveformVerticalZoomOut, object: nil)
-            }
-            .keyboardShortcut(shortcut(.waveformVerticalZoomOut))
-
-            Button("Actual Vertical Size") {
-                NotificationCenter.default.post(name: .waveformVerticalZoomReset, object: nil)
-            }
-            .keyboardShortcut(shortcut(.waveformVerticalZoomReset))
-
-            Divider()
-
             Button("Cue Mode") {
                 NotificationCenter.default.post(name: .editorModeChangeRequested, object: EditorMode.cue)
             }

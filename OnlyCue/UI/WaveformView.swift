@@ -10,7 +10,6 @@ struct WaveformView: View {
     /// The waveform is achromatic chrome (ADR-024; Figma 318:1228) — a neutral
     /// grey, not the cue/indigo accent (chroma is reserved for cue-type color).
     var color: Color = DS.Color.textSecondary
-    var verticalZoom: CGFloat = 1
 
     private static let minHairline: CGFloat = 0.5
 
@@ -39,7 +38,7 @@ struct WaveformView: View {
             let count = columns.count
 
             func halfHeight(_ peak: Float) -> CGFloat {
-                min(max(CGFloat(peak) * midY * verticalZoom, Self.minHairline), midY)
+                min(max(CGFloat(peak) * midY, Self.minHairline), midY)
             }
 
             var path = Path()

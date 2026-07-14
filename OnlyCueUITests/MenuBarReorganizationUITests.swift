@@ -111,7 +111,10 @@ final class MenuBarReorganizationUITests: OnlyCueUITestCase {
         let viewMenu = viewBarItem.menus.firstMatch
         XCTAssertTrue(viewMenu.waitForExistence(timeout: 3))
         XCTAssertTrue(viewMenu.menuItems["Zoom In Horizontally"].exists)
-        XCTAssertTrue(viewMenu.menuItems["Zoom In Vertically"].exists)
+        // Vertical zoom removed in #622 — on normalized peaks it only clipped
+        // the envelope flat; the menu must no longer offer it.
+        XCTAssertFalse(viewMenu.menuItems["Zoom In Vertically"].exists)
+        XCTAssertFalse(viewMenu.menuItems["Actual Vertical Size"].exists)
         XCTAssertFalse(viewMenu.menuItems["Zoom In"].exists)
         XCTAssertFalse(viewMenu.menuItems["Snap to Playhead"].exists)
         XCTAssertFalse(viewMenu.menuItems["Snap Selected Cue to Playhead"].exists)

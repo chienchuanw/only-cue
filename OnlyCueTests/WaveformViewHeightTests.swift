@@ -11,23 +11,23 @@ final class WaveformViewHeightTests: XCTestCase {
 
     func test_halfHeight_loudestPeak_leavesVerticalHeadroom() {
         let midY: CGFloat = 60
-        let h = WaveformView.halfHeight(peak: 1.0, midY: midY)
-        XCTAssertLessThan(h, midY, "the loudest peak must not reach the full half-height (no headroom = touches the edge)")
-        XCTAssertEqual(h, midY * WaveformView.verticalFillRatio, accuracy: 0.001)
+        let height = WaveformView.halfHeight(peak: 1.0, midY: midY)
+        XCTAssertLessThan(height, midY, "the loudest peak must not reach the full half-height (no headroom = touches the edge)")
+        XCTAssertEqual(height, midY * WaveformView.verticalFillRatio, accuracy: 0.001)
     }
 
     func test_halfHeight_isClampedToTheUsableBand_soItNeverTouchesTheEdge() {
         let midY: CGFloat = 60
         // A peak beyond 1.0 (defensive — normalization caps at 1.0) still must
         // not exceed the usable band.
-        let h = WaveformView.halfHeight(peak: 5.0, midY: midY)
-        XCTAssertLessThanOrEqual(h, midY * WaveformView.verticalFillRatio + 0.001)
-        XCTAssertLessThan(h, midY)
+        let height = WaveformView.halfHeight(peak: 5.0, midY: midY)
+        XCTAssertLessThanOrEqual(height, midY * WaveformView.verticalFillRatio + 0.001)
+        XCTAssertLessThan(height, midY)
     }
 
     func test_halfHeight_silence_rendersMinHairline() {
-        let h = WaveformView.halfHeight(peak: 0, midY: 60)
-        XCTAssertEqual(h, WaveformView.minHairline, accuracy: 0.001)
+        let height = WaveformView.halfHeight(peak: 0, midY: 60)
+        XCTAssertEqual(height, WaveformView.minHairline, accuracy: 0.001)
     }
 
     func test_verticalFillRatio_isBelowOne() {

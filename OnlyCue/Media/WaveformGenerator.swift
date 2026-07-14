@@ -22,7 +22,7 @@ enum WaveformGenerator {
         }
 
         let totalSamples = try await estimatedSampleCount(asset: asset, resolution: resolution)
-        var accumulator = PeakAccumulator(
+        var accumulator = RMSAccumulator(
             resolution: resolution,
             samplesPerBucket: max(totalSamples / resolution, 1)
         )
@@ -78,14 +78,18 @@ enum WaveformGenerator {
     }
 }
 
-private struct PeakAccumulator {
+/// Accumulates per-bucket **RMS** (root-mean-square energy), not peak. A loud,
+/// brickwall-limited master pins almost every bucket's peak at full scale, so a
+/// peak envelope collapses into a flat block with no visible dynamics; RMS
+/// tracks audible loudness and keeps the song's structure legible (#632).
+private struct RMSAccumulator {
 
     let resolution: Int
     let samplesPerBucket: Int
     private(set) var peaks: [Float]
     private var bucketIndex = 0
     private var samplesInBucket = 0
-    private var bucketPeak: Int16 = 0
+    private var bucketSumSq: Float = 0
 
     init(resolution: Int, samplesPerBucket: Int) {
         self.resolution = resolution
@@ -107,24 +111,22 @@ private struct PeakAccumulator {
     }
 
     mutating func finalize() -> [Float] {
-        if bucketIndex < resolution {
-            peaks[bucketIndex] = Float(bucketPeak) / Float(Int16.max)
+        if bucketIndex < resolution && samplesInBucket > 0 {
+            peaks[bucketIndex] = (bucketSumSq / Float(samplesInBucket)).squareRoot()
         }
         return peaks
     }
 
     private mutating func ingest(samples: UnsafeBufferPointer<Int16>) {
         for sample in samples {
-            let absSample = Int16(clamping: abs(Int32(sample)))
-            if absSample > bucketPeak {
-                bucketPeak = absSample
-            }
+            let value = Float(sample) / Float(Int16.max)
+            bucketSumSq += value * value
             samplesInBucket += 1
             if samplesInBucket >= samplesPerBucket && bucketIndex < resolution {
-                peaks[bucketIndex] = Float(bucketPeak) / Float(Int16.max)
+                peaks[bucketIndex] = (bucketSumSq / Float(samplesInBucket)).squareRoot()
                 bucketIndex += 1
                 samplesInBucket = 0
-                bucketPeak = 0
+                bucketSumSq = 0
             }
         }
     }

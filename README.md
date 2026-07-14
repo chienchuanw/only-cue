@@ -57,9 +57,11 @@ Download the latest DMG from the [releases page](https://github.com/chienchuanw/
 
 1. Open `OnlyCue-x.y.z.dmg` and drag **OnlyCue** into your Applications folder.
 2. Eject the DMG.
-3. **First launch:** in Finder, right-click (or Control-click) `OnlyCue.app` and choose **Open**. macOS will warn that the developer can't be verified — click **Open** anyway. Future launches are silent.
+3. **First launch:** OnlyCue isn't signed with a paid Apple Developer ID, so macOS Gatekeeper blocks the first launch with *"Apple could not verify 'OnlyCue' is free of malware…"*. Clear it once — either way works, then future launches are silent:
+   - **System Settings (macOS 13+):** double-click OnlyCue (it gets blocked — click **Done**), then open **System Settings → Privacy & Security**, scroll to the **Security** section, and click **Open Anyway** next to the OnlyCue notice; confirm and authenticate. On **macOS 15 (Sequoia)** this is required — the old Control-click → Open no longer clears this particular dialog.
+   - **Terminal (any macOS version):** run `xattr -dr com.apple.quarantine /Applications/OnlyCue.app`, then open OnlyCue normally.
 
-Why the right-click step? OnlyCue is currently distributed without a paid Apple Developer ID signature. The `.app` is ad-hoc signed and unmodified; right-clicking → Open is the standard macOS bypass. If you'd rather avoid that step, [build from source](#build).
+Why the extra step? OnlyCue is currently distributed without a paid Apple Developer ID signature. The `.app` is ad-hoc signed and unmodified; clearing the quarantine flag once is the standard macOS bypass. If you'd rather avoid it, [build from source](#build).
 
 System requirements: macOS 14 (Sonoma) or later, Apple silicon or Intel.
 

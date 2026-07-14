@@ -33,10 +33,11 @@ struct WaveformCache {
         try data.write(to: entryURL(assetHash: assetHash, resolution: resolution), options: .atomic)
     }
 
-    /// Bumped to v2 when peaks became per-file normalized (issue #538). The
-    /// version is part of the cache key so previously-cached un-normalized peaks
-    /// are ignored and regenerated rather than served stale.
-    private static let formatVersion = 2
+    /// Bumped to v2 when peaks became per-file normalized (issue #538), and to
+    /// v3 when the envelope became per-bucket RMS energy rather than peak (issue
+    /// #632). The version is part of the cache key so previously-cached peak
+    /// arrays are ignored and regenerated as RMS rather than served stale.
+    private static let formatVersion = 3
 
     /// Internal (not private) so tests can locate a specific cache entry without
     /// hard-coding the on-disk filename format (which embeds `formatVersion`).

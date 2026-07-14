@@ -11,7 +11,22 @@ struct WaveformView: View {
     /// grey, not the cue/indigo accent (chroma is reserved for cue-type color).
     var color: Color = DS.Color.textSecondary
 
-    private static let minHairline: CGFloat = 0.5
+    static let minHairline: CGFloat = 0.5
+
+    /// Fraction of the half-height the loudest (normalized 1.0) peak is allowed
+    /// to fill. Below 1 so the envelope leaves a margin and never touches the
+    /// well's top/bottom edge — normalized peaks otherwise slam a loud master
+    /// flush against the boundary (issue #628).
+    static let verticalFillRatio: CGFloat = 0.85
+
+    /// Mirrored half-height (above and below the midline) for a normalized
+    /// `peak` in a well of half-height `midY`. Clamped to a minimum hairline so
+    /// silence still shows a centerline, and to the usable band so the loudest
+    /// peak stops short of the edge.
+    static func halfHeight(peak: Float, midY: CGFloat) -> CGFloat {
+        let usable = midY * verticalFillRatio
+        return min(max(CGFloat(peak) * usable, minHairline), usable)
+    }
 
     /// X position for peak column `index` of `count`, using the same continuous
     /// `fraction * width` mapping the playhead and cue markers use
@@ -38,7 +53,7 @@ struct WaveformView: View {
             let count = columns.count
 
             func halfHeight(_ peak: Float) -> CGFloat {
-                min(max(CGFloat(peak) * midY, Self.minHairline), midY)
+                Self.halfHeight(peak: peak, midY: midY)
             }
 
             var path = Path()

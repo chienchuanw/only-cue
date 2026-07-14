@@ -19,6 +19,26 @@ final class MenuBarReorganizationUITests: OnlyCueUITestCase {
         app.typeKey(.escape, modifierFlags: [])
     }
 
+    func test_fileMenu_noLongerContainsWelcomeItem() throws {
+        let app = launchSeeded()
+        _ = try waitForSeedWindow(in: app)
+
+        let fileBarItem = app.menuBars.menuBarItems["File"]
+        XCTAssertTrue(fileBarItem.waitForExistence(timeout: 5))
+        fileBarItem.click()
+
+        // Scope to the open File dropdown so we don't match menu items hosted
+        // elsewhere. The Welcome window still opens on a no-document launch and
+        // on dock reopen; only the redundant File-menu button was removed (#624).
+        let fileMenu = fileBarItem.menus.firstMatch
+        XCTAssertTrue(fileMenu.waitForExistence(timeout: 3))
+        XCTAssertFalse(
+            fileMenu.menuItems["Welcome to OnlyCue"].exists,
+            "the File menu must no longer offer 'Welcome to OnlyCue' (#624)"
+        )
+        app.typeKey(.escape, modifierFlags: [])
+    }
+
     func test_pauseAtEachCue_isUnderPlaybackMenu() throws {
         let app = launchSeeded()
         _ = try waitForSeedWindow(in: app)

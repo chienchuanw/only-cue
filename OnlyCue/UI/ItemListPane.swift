@@ -1,3 +1,4 @@
+import AppKit
 import SwiftUI
 
 struct ItemListPane: View {
@@ -103,6 +104,14 @@ struct ItemListPane: View {
                 .contextMenu {
                     Button("Edit Media…") { editingItemID = item.id }
                         .accessibilityIdentifier("contextMenuEditMedia")
+                    Button("Show in Finder") {
+                        if let url = MediaReveal.revealURL(for: item.media) {
+                            NSWorkspace.shared.activateFileViewerSelecting([url])
+                        }
+                    }
+                    .disabled(MediaReveal.revealURL(for: item.media) == nil)
+                    .accessibilityIdentifier("contextMenuShowInFinder")
+                    Divider()
                     Button(role: .destructive) {
                         CueCommands.removeItem(id: item.id, document: document, undoManager: undoManager)
                     } label: {

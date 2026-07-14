@@ -13,10 +13,6 @@ enum KeymapAction: String, CaseIterable, Codable, Identifiable, Sendable {
     case waveformZoomIn
     case waveformZoomOut
     case waveformZoomReset
-    // View menu — waveform zoom (vertical)
-    case waveformVerticalZoomIn
-    case waveformVerticalZoomOut
-    case waveformVerticalZoomReset
     // View menu — toggles
     case toggleNotesOverlay
     case toggleTimelineBreakdown
@@ -75,9 +71,6 @@ enum KeymapAction: String, CaseIterable, Codable, Identifiable, Sendable {
         .waveformZoomIn: "Zoom In",
         .waveformZoomOut: "Zoom Out",
         .waveformZoomReset: "Actual Size",
-        .waveformVerticalZoomIn: "Zoom In Vertically",
-        .waveformVerticalZoomOut: "Zoom Out Vertically",
-        .waveformVerticalZoomReset: "Actual Vertical Size",
         .toggleNotesOverlay: "Show Notes Overlay",
         .toggleTimelineBreakdown: "Show Timeline Breakdown",
         .toggleTempoGrid: "Show Tempo Grid",

@@ -30,7 +30,6 @@ struct WaveformContainer: View {
     @State private var scrub = ScrubController()
     @State private var seekTask: Task<Void, Never>?
     @State var zoom = WaveformZoomController()
-    @State var verticalZoom = WaveformVerticalZoomController()
     @State private var leadingAnchor: Int? = 0
     @AppStorage("showTempoGrid") var showTempoGrid = false
     // Persisted "Auto-Scroll Waveform" preference (#532), default on. Drives the
@@ -66,9 +65,6 @@ struct WaveformContainer: View {
         .onReceive(NotificationCenter.default.publisher(for: .waveformZoomIn)) { _ in applyZoomIn() }
         .onReceive(NotificationCenter.default.publisher(for: .waveformZoomOut)) { _ in applyZoomOut() }
         .onReceive(NotificationCenter.default.publisher(for: .waveformZoomReset)) { _ in applyZoomReset() }
-        .onReceive(NotificationCenter.default.publisher(for: .waveformVerticalZoomIn)) { _ in verticalZoom.zoomIn() }
-        .onReceive(NotificationCenter.default.publisher(for: .waveformVerticalZoomOut)) { _ in verticalZoom.zoomOut() }
-        .onReceive(NotificationCenter.default.publisher(for: .waveformVerticalZoomReset)) { _ in verticalZoom.reset() }
     }
 
     @ViewBuilder
@@ -136,7 +132,7 @@ struct WaveformContainer: View {
             // Audit §9.1: Show mode dims the waveform peaks to convey the
             // "show-running" locked state while leaving cue markers, the
             // playhead, and the seek surface at full contrast.
-            WaveformView(peaks: peaks, verticalZoom: verticalZoom.zoom)
+            WaveformView(peaks: peaks)
                 .opacity(editorMode == .show ? 0.45 : 1)
             tempoGridOverlay()
             timeRulerOverlay()
@@ -243,7 +239,6 @@ struct WaveformContainer: View {
         var resetOffset = scrollOffset
         zoom.reset(scrollOffset: &resetOffset)
         scrollOffset = resetOffset
-        verticalZoom.reset()
         if leadingAnchor != 0 {
             isProgrammaticAnchor = true
             leadingAnchor = 0
@@ -351,7 +346,4 @@ extension Notification.Name {
     static let waveformZoomIn = Notification.Name("OnlyCue.waveformZoomIn")
     static let waveformZoomOut = Notification.Name("OnlyCue.waveformZoomOut")
     static let waveformZoomReset = Notification.Name("OnlyCue.waveformZoomReset")
-    static let waveformVerticalZoomIn = Notification.Name("OnlyCue.waveformVerticalZoomIn")
-    static let waveformVerticalZoomOut = Notification.Name("OnlyCue.waveformVerticalZoomOut")
-    static let waveformVerticalZoomReset = Notification.Name("OnlyCue.waveformVerticalZoomReset")
 }

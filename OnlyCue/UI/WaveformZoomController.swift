@@ -99,8 +99,8 @@ final class WaveformZoomController {
     /// anchored on a horizontal cursor fraction so zoom centers on what the user is
     /// pointing at. Positive `translation` = drag right = zoom in; one
     /// `dragPixelsPerStep` of drag in either direction multiplies (or divides) the
-    /// baseline by `zoomStep`. Mirrors `WaveformVerticalZoomController.applyDrag`,
-    /// but routes through `setZoom(...)` so scroll-offset anchoring is preserved.
+    /// baseline by `zoomStep`. Routes through `setZoom(...)` so scroll-offset
+    /// anchoring is preserved.
     func applyDrag(
         translation: CGFloat,
         baseline: CGFloat,

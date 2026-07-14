@@ -31,6 +31,9 @@ targets:
       - path: OnlyCue
         excludes:
           - "Resources/Info.plist"
+          # Test fixtures live under OnlyCue/Tests but must never bundle into the
+          # shipping app (a 49MB WAV once slipped in this way — issue #630).
+          - "Tests"
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.chienchuanw.OnlyCue

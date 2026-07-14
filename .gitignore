@@ -50,6 +50,9 @@ fastlane/test_output/
 notarization.zip
 *.dmg
 
+# Tests
+OnlyCue/Tests/*
+
 # UI test screenshot artifacts (regenerated each run; XCTAttachment in xcresult is canonical)
 screenshots/
 

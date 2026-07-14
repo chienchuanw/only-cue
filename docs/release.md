@@ -131,6 +131,7 @@ Tagging and `gh release create` belong to E10 (#12), which consumes the DMG prod
 - **Notary returns `Invalid` status** — fetch the log: `xcrun notarytool log <submission-id> --keychain-profile OnlyCueNotary`. Most common cause is unsigned embedded resources; the export step's `--options=runtime` flag plus `signingStyle=automatic` in `scripts/export-options.plist` should already cover this.
 - **`spctl --assess` says "rejected"** after staple (signed mode) — the staple may not have completed. Re-run `xcrun stapler staple build/export/OnlyCue.app` and try again.
 - **`create-dmg` complains about volume names** — make sure no DMG with the same volume name is already mounted (`hdiutil info`).
+- **"OnlyCue would like to access files in your Documents folder" on every rebuild** (unsigned mode, #634) — TCC binds the Documents grant to the app's code-signing identity, and every ad-hoc rebuild has a new `cdhash`, so macOS re-prompts per build. The real fix is a stable Developer ID signature (signed mode above). Mitigation on the dev/CI machine: keep the working checkout **outside** the TCC-protected folders (Documents/Desktop/Downloads) — the maintainer's checkout lives in `~/Projects/only-cue` and the self-hosted runner works in `~/github-runner/_work`, so UI-test launches never trip the prompt. A modal TCC dialog left on screen will wedge XCUITest runs on the shared dev/runner machine.
 
 ## Why no sandbox
 

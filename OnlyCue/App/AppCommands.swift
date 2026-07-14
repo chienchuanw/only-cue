@@ -50,12 +50,8 @@ struct AppCommands: Commands {
         }
 
         CommandGroup(after: .newItem) {
-            // Reopen the start page (#591) — the AppKit window owned by AppDelegate.
-            Button("Welcome to OnlyCue") {
-                (NSApp.delegate as? AppDelegate)?.showWelcomeWindow()
-            }
-            .accessibilityIdentifier("welcomeMenuItem")
-
+            // Separate the OS-standard New / Open / Open Recent items from
+            // OnlyCue's Import / Export block.
             Divider()
 
             Button {

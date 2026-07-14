@@ -104,12 +104,13 @@ struct ItemListPane: View {
                 .contextMenu {
                     Button("Edit Media…") { editingItemID = item.id }
                         .accessibilityIdentifier("contextMenuEditMedia")
+                    let revealURL = MediaReveal.revealURL(for: item.media)
                     Button("Show in Finder") {
-                        if let url = MediaReveal.revealURL(for: item.media) {
-                            NSWorkspace.shared.activateFileViewerSelecting([url])
+                        if let revealURL {
+                            NSWorkspace.shared.activateFileViewerSelecting([revealURL])
                         }
                     }
-                    .disabled(MediaReveal.revealURL(for: item.media) == nil)
+                    .disabled(revealURL == nil)
                     .accessibilityIdentifier("contextMenuShowInFinder")
                     Divider()
                     Button(role: .destructive) {

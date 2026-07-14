@@ -27,6 +27,18 @@ final class MediaRevealTests: XCTestCase {
         XCTAssertEqual(url.lastPathComponent, file.lastPathComponent)
     }
 
+    func test_revealURL_tracksMovedFile() throws {
+        let file = try makeTempFile()
+        let media = makeMedia(bookmark: try Bookmarks.create(for: file))
+        let moved = file.deletingLastPathComponent()
+            .appendingPathComponent("reveal-moved-\(UUID().uuidString).wav")
+        try FileManager.default.moveItem(at: file, to: moved)
+        defer { try? FileManager.default.removeItem(at: moved) }
+
+        let url = try XCTUnwrap(MediaReveal.revealURL(for: media))
+        XCTAssertEqual(url.lastPathComponent, moved.lastPathComponent)
+    }
+
     func test_revealURL_isNil_whenFileMissing() throws {
         let file = try makeTempFile()
         let media = makeMedia(bookmark: try Bookmarks.create(for: file))

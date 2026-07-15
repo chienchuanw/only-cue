@@ -59,11 +59,11 @@ struct BundleLayout: Equatable {
         let ns = name as NSString
         let stem = ns.deletingPathExtension
         let ext = ns.pathExtension
-        var n = 2
+        var suffix = 2
         while true {
-            let candidate = ext.isEmpty ? "\(stem)-\(n)" : "\(stem)-\(n).\(ext)"
+            let candidate = ext.isEmpty ? "\(stem)-\(suffix)" : "\(stem)-\(suffix).\(ext)"
             if used.insert(candidate).inserted { return candidate }
-            n += 1
+            suffix += 1
         }
     }
 }

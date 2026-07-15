@@ -14,26 +14,26 @@ final class BundleLayoutTests: XCTestCase {
 
     func test_dedupe_sameSourceCopiedOnce() {
         let shared = URL(fileURLWithPath: "/a/song.wav")
-        let a = src("song.wav", shared)
-        let b = src("song.wav", shared)
+        let itemA = src("song.wav", shared)
+        let itemB = src("song.wav", shared)
 
-        let layout = BundleLayout.plan([a, b])
+        let layout = BundleLayout.plan([itemA, itemB])
 
         XCTAssertEqual(layout.entries.count, 1)
         XCTAssertEqual(layout.entries[0].itemIDs.count, 2)
-        XCTAssertEqual(layout.bundlePathByItem[a.id], "media/song.wav")
-        XCTAssertEqual(layout.bundlePathByItem[b.id], "media/song.wav")
+        XCTAssertEqual(layout.bundlePathByItem[itemA.id], "media/song.wav")
+        XCTAssertEqual(layout.bundlePathByItem[itemB.id], "media/song.wav")
     }
 
     func test_collision_differentSourcesSameNameRenamed() {
-        let a = src("track.wav", URL(fileURLWithPath: "/a/track.wav"))
-        let b = src("track.wav", URL(fileURLWithPath: "/b/track.wav"))
+        let itemA = src("track.wav", URL(fileURLWithPath: "/a/track.wav"))
+        let itemB = src("track.wav", URL(fileURLWithPath: "/b/track.wav"))
 
-        let layout = BundleLayout.plan([a, b])
+        let layout = BundleLayout.plan([itemA, itemB])
 
         XCTAssertEqual(layout.entries.count, 2)
-        XCTAssertEqual(layout.bundlePathByItem[a.id], "media/track.wav")
-        XCTAssertEqual(layout.bundlePathByItem[b.id], "media/track-2.wav")
+        XCTAssertEqual(layout.bundlePathByItem[itemA.id], "media/track.wav")
+        XCTAssertEqual(layout.bundlePathByItem[itemB.id], "media/track-2.wav")
     }
 
     func test_missing_unresolvedItemsListedNotCopied() {

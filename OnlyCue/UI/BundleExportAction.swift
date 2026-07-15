@@ -45,6 +45,8 @@ enum BundleExportAction {
         do {
             try write(layout: layout, model: model, to: destination)
         } catch {
+            // Don't leave a half-written bundle behind on a mid-copy failure.
+            try? FileManager.default.removeItem(at: destination)
             presentError(message: "The bundle could not be exported.")
         }
     }

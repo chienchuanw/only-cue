@@ -17,6 +17,12 @@ enum BundleWriter {
         try fileManager.createDirectory(at: mediaDir, withIntermediateDirectories: true)
 
         for entry in layout.entries {
+            // The source may be a security-scoped bookmark URL; reading its bytes
+            // (copyItem) needs scoped access started, like every other media-read
+            // site (MediaImporter, MediaPreviewStrip, CueTempoDetect). A plain
+            // fallback URL returns false and needs no bracket.
+            let scoped = entry.source.startAccessingSecurityScopedResource()
+            defer { if scoped { entry.source.stopAccessingSecurityScopedResource() } }
             try fileManager.copyItem(at: entry.source, to: mediaDir.appendingPathComponent(entry.destName))
         }
 

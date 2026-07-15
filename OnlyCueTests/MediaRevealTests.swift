@@ -1,10 +1,11 @@
 import XCTest
 @testable import OnlyCue
 
-/// #636 — the media context menu's "Show in Finder" item resolves a media's
-/// security-scoped bookmark to the file's *current* on-disk URL (tracking
-/// moves) and confirms the file still exists. A `nil` return means the file
-/// can't be located, so the menu item is disabled.
+/// #636/#638 — the media context menu's "Show in Finder" item locates a media
+/// the same two ways playback does: resolve its security-scoped bookmark to the
+/// file's *current* on-disk URL (tracking moves), else fall back to the path
+/// cached in the bookmark blob. A `nil` return means neither step found an
+/// existing file, so the menu item is disabled.
 final class MediaRevealTests: XCTestCase {
 
     private func makeTempFile() throws -> URL {

@@ -72,7 +72,8 @@ enum MediaImporter {
     @MainActor
     static func loadActive(
         into document: CueListDocument,
-        engine: PlayerEngine
+        engine: PlayerEngine,
+        documentDirectory: URL? = nil
     ) async throws {
         guard let item = document.model.activeItem else {
             await engine.unload()
@@ -93,7 +94,13 @@ enum MediaImporter {
             // invalid). Before bothering the user, try to re-locate the file at
             // its saved path — which is cached in the bookmark blob (#587). Only
             // rethrow (→ manual relink alert) if that fails too.
-            try await autoRelinkActive(item: item, into: document, engine: engine, original: error)
+            try await autoRelinkActive(
+                item: item,
+                into: document,
+                engine: engine,
+                documentDirectory: documentDirectory,
+                original: error
+            )
         }
     }
 
@@ -105,11 +112,14 @@ enum MediaImporter {
         item: MediaItem,
         into document: CueListDocument,
         engine: PlayerEngine,
+        documentDirectory: URL?,
         original: Error
     ) async throws {
         let candidates = MediaRelocator.candidateURLs(
             bookmark: item.media.bookmarkData,
-            displayName: item.media.displayName
+            displayName: item.media.displayName,
+            bundlePath: item.media.bundlePath,
+            documentDirectory: documentDirectory
         )
         guard let url = MediaRelocator.firstExisting(candidates) else { throw original }
 

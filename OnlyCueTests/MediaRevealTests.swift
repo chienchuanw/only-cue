@@ -18,6 +18,8 @@ final class MediaRevealTests: XCTestCase {
         MediaReference(displayName: "clip.wav", kind: .audio, duration: 0, bookmarkData: bookmark)
     }
 
+    private enum StubError: Error { case resolveFailed }
+
     func test_revealURL_returnsResolvedURL_whenFileExists() throws {
         let file = try makeTempFile()
         defer { try? FileManager.default.removeItem(at: file) }
@@ -37,6 +39,20 @@ final class MediaRevealTests: XCTestCase {
 
         let url = try XCTUnwrap(MediaReveal.revealURL(for: media))
         XCTAssertEqual(url.lastPathComponent, moved.lastPathComponent)
+    }
+
+    func test_revealURL_fallsBackToCachedPath_whenBookmarkUnresolvable() throws {
+        let file = try makeTempFile()
+        defer { try? FileManager.default.removeItem(at: file) }
+        let media = makeMedia(bookmark: try Bookmarks.create(for: file))
+
+        // The bookmark won't resolve here (e.g. project opened on another
+        // install), but the file is still at its cached path — like playback's
+        // silent relink (#638), reveal should still find it.
+        let url = try XCTUnwrap(
+            MediaReveal.revealURL(for: media, resolve: { _ in throw StubError.resolveFailed })
+        )
+        XCTAssertEqual(url.lastPathComponent, file.lastPathComponent)
     }
 
     func test_revealURL_isNil_whenFileMissing() throws {

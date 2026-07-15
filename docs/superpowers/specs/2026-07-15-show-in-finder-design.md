@@ -1,7 +1,7 @@
 # Show in Finder (media context menu) — design
 
 **Date:** 2026-07-15
-**Issue:** #636
+**Issue:** #636, #638 (cached-path fallback)
 **Status:** Approved (grilling)
 
 ## Goal
@@ -21,18 +21,25 @@ media; disabled when the file cannot currently be located.
   abuts `Edit Media…`).
 - **Scope:** operates on the single right-clicked media, like the existing
   `Edit Media…` / `Remove` items. No multi-select reveal.
-- **Locate the file:** resolve the security-scoped bookmark with
-  `Bookmarks.resolve()` to get the file's *current* URL (the bookmark tracks the
-  file across moves), then confirm with `FileManager.fileExists`. Reveal the
-  resolved URL. This is deliberately preferred over `MediaRelocator.cachedPath`
-  (the bookmark's cached path), which would point at the pre-move location.
+- **Locate the file (two steps, matching playback):** first resolve the
+  security-scoped bookmark with `Bookmarks.resolve()` to get the file's *current*
+  URL (the bookmark tracks the file across moves), confirmed with
+  `FileManager.fileExists`. If that fails — the bookmark won't resolve, or the
+  resolved file is gone — fall back to the path cached in the bookmark blob via
+  `MediaRelocator.candidateURLs` + `firstExisting`, exactly as
+  `MediaImporter.loadActive` does when it silently relinks (#587, #638). This
+  keeps reveal consistent with playback: a clip that plays can always be
+  revealed. (Resolve is still preferred *first* over the cached path because it
+  tracks moves; the cached path is only the fallback.)
 - **Reveal action:** `NSWorkspace.shared.activateFileViewerSelecting([url])`.
   Runs in the Finder process — no `startAccessingSecurityScopedResource` needed
   (that is only for reading the file's bytes).
-- **Missing / unresolvable file:** the menu item is **disabled** (greyed out).
-  It does *not* route to the existing "Missing media / Relink media…" flow —
-  that coupling is out of scope. Consistent with Finder/Xcode greying out
-  Show-in-Finder when the target is gone.
+- **File genuinely missing:** only when *both* locate steps fail (bookmark
+  won't resolve *and* no cached-path candidate exists on disk) is the menu item
+  **disabled** (greyed out). It does *not* route to the existing "Missing media /
+  Relink media…" flow — the fallback is a *silent locate*, opening no relink
+  dialog, so this stays within the grilled decision. Consistent with
+  Finder/Xcode greying out Show-in-Finder when the target is truly gone.
 - **No keyboard shortcut** (context-menu-only, per convention).
 
 ## Architecture
@@ -46,13 +53,17 @@ impure boundary, verified by running the app. Reveal does **not** mutate
 ### Component (`OnlyCue/Utilities/`)
 
 - **`MediaReveal`** — `enum` namespace, pure:
-  - `static func revealURL(for media: MediaReference, fileManager: FileManager = .default) -> URL?`
-    - Resolves `media.bookmarkData` via `Bookmarks.resolve`. On throw → `nil`.
-    - If the resolved URL's path does not exist on disk → `nil`.
-    - Otherwise → the resolved `URL`.
+  - `static func revealURL(for media: MediaReference, fileManager: FileManager = .default, resolve: (Data) throws -> Bookmarks.Resolution = Bookmarks.resolve) -> URL?`
+    - Step 1: `resolve(media.bookmarkData)`; if it succeeds *and* the URL exists
+      on disk → return that URL.
+    - Step 2 (on throw, or resolved-but-missing): return
+      `MediaRelocator.firstExisting(MediaRelocator.candidateURLs(bookmark:displayName:))`
+      — the cached-path candidate that still exists, or `nil`.
     - A `nil` return means "cannot reveal" → the menu item is disabled.
-  - A stale-but-present bookmark still returns the URL (reveal still works); only
-    an outright resolve failure or a missing file returns `nil`.
+  - The `resolve` closure is injected (default `Bookmarks.resolve`), per the
+    project's injectable-boundary convention (cf. #565 `UpdateChecker`), so a
+    unit test can force a resolve failure and exercise the fallback.
+  - A stale-but-present bookmark still returns the URL (reveal still works).
 
 ### Wiring (`OnlyCue/UI/ItemListPane.swift`)
 
@@ -78,8 +89,12 @@ and click is a no-op rather than a stale reveal.
 - **Unit (`OnlyCueTests/MediaRevealTests.swift`), TDD red → green:**
   - real temp file + real bookmark (`Bookmarks.create`) → `revealURL` returns
     that file's URL.
-  - bookmark whose file has been deleted → `nil` (file-missing branch).
-  - garbage / non-bookmark `Data` → `nil` (resolve-failure branch).
+  - real bookmark, file moved (same dir) → returns the moved URL (resolve tracks
+    the move).
+  - **resolve forced to throw, but file present at the cached path (injected
+    failing `resolve`) → returns the cached-path URL** (the #638 fallback branch).
+  - bookmark whose file has been deleted → `nil` (both steps fail).
+  - garbage / non-bookmark `Data` → `nil` (neither step can locate it).
 - **Not unit-tested:** the `NSWorkspace.activateFileViewerSelecting` call (thin
   impure shell) — verified by running the app.
 - **Manual verification:** right-click a media whose file exists → Finder opens

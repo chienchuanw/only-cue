@@ -31,8 +31,11 @@ struct OnlyCueApp: App {
 
     var body: some Scene {
         DocumentGroup(newDocument: CueListDocument.init) { file in
-            DocumentView(document: file.document)
-                .tint(DS.Color.cueIndigo)
+            DocumentView(
+                document: file.document,
+                documentDirectory: file.fileURL?.deletingLastPathComponent()
+            )
+            .tint(DS.Color.cueIndigo)
         }
         // Open at the Figma design size (1280×812 frame): sidebar 240 + preview
         // 680 + cue-list inspector 360 = 1280, so all three panes fit. Users can

@@ -5,6 +5,10 @@ import UniformTypeIdentifiers
 struct DocumentView: View {
 
     @ObservedObject var document: CueListDocument
+    /// Directory of the opened `.cuelist` on disk (from the DocumentGroup's
+    /// `FileDocumentConfiguration.fileURL`), used to auto-attach bundled media in
+    /// a sibling `media/` folder (#641). nil for a never-saved document.
+    var documentDirectory: URL?
     @State var engine = PlayerEngine()
     @State private var showImporter = false
     /// The id of the media item awaiting a relink file selection (#577).
@@ -259,7 +263,7 @@ struct DocumentView: View {
             return
         }
         do {
-            try await MediaImporter.loadActive(into: document, engine: engine)
+            try await MediaImporter.loadActive(into: document, engine: engine, documentDirectory: documentDirectory)
         } catch {
             guard let item = document.model.activeItem else { return }
             pendingAlert = .relink(itemID: item.id, displayName: item.media.displayName)

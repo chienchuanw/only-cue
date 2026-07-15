@@ -232,6 +232,7 @@ struct DocumentView: View {
             undoManager: undoManager
         )
         .cueTransferMenuReceiver(document: document, undoManager: undoManager)
+        .bundleExportMenuReceiver(document: document)
     }
 
     private func alertContent(_ alert: DocumentAlert) -> Alert {
@@ -341,6 +342,7 @@ extension Notification.Name {
     static let exportCuesToCSVRequested = Notification.Name("OnlyCue.exportCuesToCSVRequested")
     static let exportCueListRequested = Notification.Name("OnlyCue.exportCueListRequested")
     static let importCueListRequested = Notification.Name("OnlyCue.importCueListRequested")
+    static let exportBundleRequested = Notification.Name("OnlyCue.exportBundleRequested")
     static let saveTemplateRequested = Notification.Name("OnlyCue.saveTemplateRequested")
     static let loadTemplateRequested = Notification.Name("OnlyCue.loadTemplateRequested")
     static let oscMonitorRequested = Notification.Name("OnlyCue.oscMonitorRequested")

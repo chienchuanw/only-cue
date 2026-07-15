@@ -68,6 +68,13 @@ struct AppCommands: Commands {
             }
             .keyboardShortcut(shortcut(.exportCues))
 
+            Button {
+                NotificationCenter.default.post(name: .exportBundleRequested, object: nil)
+            } label: {
+                Label("Export Bundle…", systemImage: "shippingbox")
+            }
+            .accessibilityIdentifier("exportBundleMenuItem")
+
             Divider()
 
             Button {

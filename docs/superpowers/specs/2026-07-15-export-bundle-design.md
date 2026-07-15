@@ -33,9 +33,11 @@ opening the `.cuelist` inside that folder just works — **no relink**.
   directory** to find the file in `media/`, attach it, and re-bookmark to the
   local path (same as today's `autoRelinkActive`). `bundlePath` is the
   authoritative fallback; the stored bookmark is just a cache.
-- **`.cuelist` byte-compatibility:** `bundlePath` is optional and encoded with
-  `encodeIfPresent`, so a normal working `.cuelist` (no bundle) is **unchanged**
-  — the key is simply absent. Only a bundle's `.cuelist` carries it.
+- **`.cuelist` JSON-shape compatibility:** `bundlePath` is optional and encoded
+  with `encodeIfPresent`, so a normal working `.cuelist` (no bundle) keeps the
+  same **plaintext JSON** — the key is simply absent. (On-disk bytes already
+  differ every save: the AES-GCM envelope re-randomises its nonce.) Only a
+  bundle's `.cuelist` carries the key.
 - **Export scope:** the **whole project** (all media items). Single-song export
   is already `.occues`.
 - **Dedupe & collisions:** the same source file referenced by several items is

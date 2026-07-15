@@ -13,8 +13,9 @@ struct MediaReference: Codable, Equatable {
     /// Set only inside an exported bundle's `.cuelist` (#640): the media file's
     /// path relative to the `.cuelist`, e.g. `"media/Intro.wav"`. Optional and
     /// encoded with `encodeIfPresent`, so a normal working `.cuelist` omits the
-    /// key entirely and stays byte-unchanged. Authoritative fallback the open
-    /// end (#641) uses to auto-attach without a relink.
+    /// key entirely — its plaintext JSON is unchanged (the encrypted envelope
+    /// already re-randomises its nonce every save). Authoritative fallback the
+    /// open end (#641) uses to auto-attach without a relink.
     var bundlePath: String?
 
     init(

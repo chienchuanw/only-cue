@@ -39,7 +39,7 @@ extension DocumentView {
                     document: document,
                     reloadAndPlay: { _ in
                         do {
-                            try await MediaImporter.loadActive(into: document, engine: engine)
+                            try await MediaImporter.loadActive(into: document, engine: engine, documentDirectory: documentDirectory)
                             engine.play()
                         } catch {
                             if let item = document.model.activeItem {

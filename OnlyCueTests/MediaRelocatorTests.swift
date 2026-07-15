@@ -51,4 +51,38 @@ final class MediaRelocatorTests: XCTestCase {
     func test_cachedPath_nilForGarbageData() {
         XCTAssertNil(MediaRelocator.cachedPath(fromBookmark: Data([0x00, 0x01, 0x02])))
     }
+
+    // #641 — the open-end auto-attach: a bundle candidate (`<docDir>/<bundlePath>`)
+    // is tried first, ahead of the cached absolute path.
+
+    func test_candidateURLs_bundlePathCandidateComesFirst() throws {
+        let file = try makeTempFile()
+        defer { try? FileManager.default.removeItem(at: file) }
+        let bookmark = try Bookmarks.create(for: file)
+        let docDir = URL(fileURLWithPath: "/Users/someone/My Show")
+
+        let candidates = MediaRelocator.candidateURLs(
+            bookmark: bookmark,
+            displayName: file.lastPathComponent,
+            bundlePath: "media/clip.wav",
+            documentDirectory: docDir
+        )
+
+        XCTAssertEqual(candidates.first, docDir.appendingPathComponent("media/clip.wav"))
+    }
+
+    func test_candidateURLs_ignoresBundlePath_withoutDocumentDirectory() throws {
+        let file = try makeTempFile()
+        defer { try? FileManager.default.removeItem(at: file) }
+        let bookmark = try Bookmarks.create(for: file)
+
+        let candidates = MediaRelocator.candidateURLs(
+            bookmark: bookmark,
+            displayName: file.lastPathComponent,
+            bundlePath: "media/clip.wav",
+            documentDirectory: nil
+        )
+
+        XCTAssertFalse(candidates.contains { $0.path.hasSuffix("media/clip.wav") })
+    }
 }

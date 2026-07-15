@@ -65,13 +65,19 @@ Two PRs, in order. Pure-core TDD; impure I/O verified by running the app.
 
 ## PR 2 — open end (auto-attach)
 
-9. **Spike first:** how the opened document learns its own file URL
-   (`ReferenceFileDocument` → the DocumentGroup open URL). Report if blocked.
-10. **TDD** pure: `(baseDir, bundlePath) -> URL?` returning the existing
-    `media/` file. Wire into the media-locate path (extend the
-    `MediaRelocator`/`loadActive` fallback with the doc-dir + bundlePath
-    candidate), re-bookmark on hit.
-11. Verify by opening an exported bundle from a fresh location; PR; review; merge.
+9. **Spike (done):** the opened document's URL is available as
+   `FileDocumentConfiguration.fileURL` in the `DocumentGroup` content closure
+   (`OnlyCueApp.swift:33`) — no change to `CueListDocument` needed. Thread
+   `file.fileURL?.deletingLastPathComponent()` → `DocumentView` →
+   `MediaImporter.loadActive` → `autoRelinkActive` → `MediaRelocator.candidateURLs`.
+10. **TDD (pure):** extend `MediaRelocator.candidateURLs` with optional
+    `bundlePath` + `documentDirectory`, placing `<docDir>/<bundlePath>` **first**
+    in the candidate list (bundle takes priority over the cached absolute path).
+    Existing call-sites keep working via defaulted params.
+11. **Wire (impure, run-verified):** thread the doc directory from
+    `OnlyCueApp` → `DocumentView.reloadActive` → `loadActive` → `autoRelinkActive`,
+    passing `item.media.bundlePath`; re-bookmark on hit (existing behaviour).
+12. Verify by opening an exported bundle from a fresh location; PR; review; merge.
 
 ## Out of scope
 

@@ -18,14 +18,28 @@ enum MediaRelocator {
         URL.resourceValues(forKeys: [.pathKey], fromBookmarkData: data)?.path
     }
 
-    /// Places to look for the file when the bookmark fails: its exact saved
-    /// path, and the same directory paired with the known display name (covers
-    /// a bookmark whose cached name drifts from `displayName`). De-duplicated.
-    static func candidateURLs(bookmark: Data, displayName: String) -> [URL] {
-        guard let path = cachedPath(fromBookmark: bookmark) else { return [] }
-        let cached = URL(fileURLWithPath: path)
-        let sameDirectory = cached.deletingLastPathComponent().appendingPathComponent(displayName)
-        return cached == sameDirectory ? [cached] : [cached, sameDirectory]
+    /// Places to look for the file when the bookmark fails, in priority order:
+    /// the bundle location `<documentDirectory>/<bundlePath>` when both are known
+    /// (#641 — a bundle's media sits next to its `.cuelist`); then the bookmark's
+    /// exact saved path, and the same directory paired with the known display
+    /// name (covers a cached name that drifts from `displayName`). De-duplicated.
+    static func candidateURLs(
+        bookmark: Data,
+        displayName: String,
+        bundlePath: String? = nil,
+        documentDirectory: URL? = nil
+    ) -> [URL] {
+        var candidates: [URL] = []
+        if let bundlePath, let documentDirectory {
+            candidates.append(documentDirectory.appendingPathComponent(bundlePath))
+        }
+        if let path = cachedPath(fromBookmark: bookmark) {
+            let cached = URL(fileURLWithPath: path)
+            let sameDirectory = cached.deletingLastPathComponent().appendingPathComponent(displayName)
+            candidates.append(cached)
+            if cached != sameDirectory { candidates.append(sameDirectory) }
+        }
+        return candidates
     }
 
     /// The first candidate that exists on disk, or `nil` if none do.

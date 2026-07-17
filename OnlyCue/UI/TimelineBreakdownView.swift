@@ -90,6 +90,10 @@ struct TimelineBreakdownView: View {
             .buttonStyle(.borderless)
             .controlSize(.small)
             .help("Hide the \(lane.name) lane")
+            // Icon-only button — an explicit label gives VoiceOver something to
+            // read, and survives CueListPane/PreviewPane's subtree-identifier
+            // stamping as this control's stable test handle (#659).
+            .accessibilityLabel("Hide the \(lane.name) lane")
         }
         .frame(width: Self.labelWidth, alignment: .leading)
         .accessibilityIdentifier("breakdownLaneLabel.\(lane.typeID)")
@@ -165,6 +169,9 @@ struct TimelineBreakdownView: View {
             .fixedSize()
             .controlSize(.small)
             .help("Show a hidden Type lane")
+            // Stable AX label (the visible title carries a varying count) that
+            // survives the ancestor identifier stamping — see the hide button.
+            .accessibilityLabel("Show hidden lanes")
             Spacer()
         }
         .padding(.top, 4)

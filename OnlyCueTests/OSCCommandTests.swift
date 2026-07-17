@@ -42,6 +42,7 @@ final class OSCCommandTests: XCTestCase {
         XCTAssertEqual(OSCCommand.from(message("/onlycue/cue/add")), .cueAdd)
         XCTAssertEqual(OSCCommand.from(message("/onlycue/cue/next")), .cueNext)
         XCTAssertEqual(OSCCommand.from(message("/onlycue/cue/prev")), .cuePrev)
+        XCTAssertEqual(OSCCommand.from(message("/onlycue/cue/go")), .cueGo)
     }
 
     func test_unknownAddress_returnsNil() {

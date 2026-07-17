@@ -1,45 +1,39 @@
 import CoreGraphics
 import SwiftUI
 
-/// Shared widths for the cue list's Time, Number, and Fade columns.
+/// Shared widths for the cue list's Number and Info columns.
 ///
 /// Persisted globally via `@AppStorage` (keys below) and read by both the
 /// header row and `CueRowView` so they stay aligned during drag-resize.
-/// Name column intentionally has no entry — it absorbs the remaining width.
+/// The Name column intentionally has no entry — it absorbs the remaining width
+/// and stays the widest column (#661).
 enum CueListColumnWidths {
 
-    // The time column shows an 11-char SMPTE string (`HH:MM:SS:FF`, ~86pt at
-    // 13pt monospaced). Its floor must keep the full string on one line even
-    // when the pane is squeezed to its 240pt minimum (Figma 318:1228); the
-    // floor stays within the #297 budget (compressible floor <= 200, asserted
-    // by CueListPaneMinWidthTests).
-    static let timeRange: ClosedRange<CGFloat> = 92...180
+    // The number column shows the (short) cue number. Its floor keeps a
+    // one/two-digit number legible even when the pane is squeezed to its 240pt
+    // minimum; the floor stays within the #297 budget (compressible floor <=
+    // inspector min, asserted by CueListPaneMinWidthTests).
     static let numberRange: ClosedRange<CGFloat> = 40...120
-    static let fadeRange: ClosedRange<CGFloat> = 56...160
+
+    // The Info column previews the cue's notes. Kept narrower than Name so the
+    // name stays the primary, widest column (#661); resizable within range.
+    static let infoRange: ClosedRange<CGFloat> = 72...220
 
     // Defaults sit just above the compressible floors so the flexible Name
-    // column gets the most room (closer to Figma 318:1326, where Time/#/Fade
-    // are tight and the name fills), while staying strictly wider than the
-    // floors so columns retain compression headroom under width pressure
-    // (#297). Floors/ranges and the header-floor budget are unchanged.
-    static let timeDefault: CGFloat = 96
+    // column gets the most room, while staying strictly wider than the floors
+    // so columns retain compression headroom under width pressure (#297).
     static let numberDefault: CGFloat = 44
-    static let fadeDefault: CGFloat = 60
+    static let infoDefault: CGFloat = 110
 
-    static let timeStorageKey = "cueList.timeColumnWidth"
     static let numberStorageKey = "cueList.numberColumnWidth"
-    static let fadeStorageKey = "cueList.fadeColumnWidth"
-
-    static func clampTime(_ width: CGFloat) -> CGFloat {
-        min(max(width, timeRange.lowerBound), timeRange.upperBound)
-    }
+    static let infoStorageKey = "cueList.infoColumnWidth"
 
     static func clampNumber(_ width: CGFloat) -> CGFloat {
         min(max(width, numberRange.lowerBound), numberRange.upperBound)
     }
 
-    static func clampFade(_ width: CGFloat) -> CGFloat {
-        min(max(width, fadeRange.lowerBound), fadeRange.upperBound)
+    static func clampInfo(_ width: CGFloat) -> CGFloat {
+        min(max(width, infoRange.lowerBound), infoRange.upperBound)
     }
 }
 

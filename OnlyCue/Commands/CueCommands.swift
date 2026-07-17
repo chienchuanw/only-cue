@@ -46,7 +46,9 @@ enum CueCommands {
             id: UUID(),
             typeID: typeID,
             cueNumber: nil,
-            name: "Cue",
+            // #661: cues start unnamed (grandMA2-style) — the row shows only a
+            // placeholder until the user types a name.
+            name: "",
             time: clampedTime,
             notes: "",
             fadeTime: .zero

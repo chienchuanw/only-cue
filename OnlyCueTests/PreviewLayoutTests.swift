@@ -29,4 +29,11 @@ final class PreviewLayoutTests: XCTestCase {
         let height = PreviewLayout.videoTimelineHeight(totalHeight: 200, breakdown: false)
         XCTAssertLessThanOrEqual(height, 100)
     }
+
+    /// #663: the single horizontal inset shared by the waveform track and the
+    /// LTC strip ruler, so both map time→x across the same x-range and their
+    /// playheads stay collinear. Pinned to the standard `DS.Space.lg` gutter.
+    func test_trackHorizontalInset_matchesStandardGutter() {
+        XCTAssertEqual(PreviewLayout.trackHorizontalInset, DS.Space.lg)
+    }
 }

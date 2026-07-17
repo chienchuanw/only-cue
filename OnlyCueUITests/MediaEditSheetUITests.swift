@@ -30,6 +30,44 @@ final class MediaEditSheetUITests: OnlyCueUITestCase {
         )
     }
 
+    /// #649 — the Start timecode field must be wide enough to show and enter a
+    /// full `HH:MM:SS:FF` value. Types a full timecode and reads it back, and
+    /// captures a screenshot of the sheet for review.
+    func test_editSheet_startTimecodeField_holdsFullTimecode() throws {
+        let app = launchWithSeed(.threeCuesAt1And3And6)
+        try openEditSheet(in: app)
+
+        let tcField = app.textFields["mediaEditStartTimecodeField"]
+        XCTAssertTrue(tcField.waitForExistence(timeout: 3), "Start timecode field should exist.")
+
+        tcField.click()
+        // Clear then type a full timecode.
+        tcField.typeKey("a", modifierFlags: .command)
+        tcField.typeText("01:23:45:12")
+
+        let value = (tcField.value as? String) ?? ""
+        XCTAssertEqual(value, "01:23:45:12", "the field should hold a full timecode, got \(value)")
+
+        // Regression (#649): the input box must be wide enough to show a full
+        // timecode, not squeezed to a few characters by an external prompt label.
+        print("[tc-field] width = \(tcField.frame.width)")
+        XCTAssertGreaterThan(
+            tcField.frame.width, 100,
+            "the timecode input box should fill its width (was \(tcField.frame.width))"
+        )
+
+        let shot = app.windows.firstMatch.screenshot()
+        let dir = NSTemporaryDirectory() + "screenshots/"
+        try? FileManager.default.createDirectory(atPath: dir, withIntermediateDirectories: true)
+        let path = dir + "media-edit-tc.png"
+        try? shot.pngRepresentation.write(to: URL(fileURLWithPath: path))
+        print("[screenshot] wrote \(path)")
+        let attachment = XCTAttachment(screenshot: shot)
+        attachment.name = "media-edit-tc"
+        attachment.lifetime = .keepAlways
+        add(attachment)
+    }
+
     /// Opens the per-media edit sheet by right-clicking the sidebar row and
     /// activating the "Edit Media…" menu item. Tolerant of CI right-click
     /// hit-test flakiness — falls back to coordinate-based right-click before

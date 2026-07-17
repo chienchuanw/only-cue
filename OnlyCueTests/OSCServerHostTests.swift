@@ -37,5 +37,6 @@ final class OSCServerHostTests: XCTestCase {
         XCTAssertNil(OSCServerHost.resolvedSeekTime(for: .cueAdd, currentTime: 0))
         XCTAssertNil(OSCServerHost.resolvedSeekTime(for: .cueNext, currentTime: 0))
         XCTAssertNil(OSCServerHost.resolvedSeekTime(for: .cuePrev, currentTime: 0))
+        XCTAssertNil(OSCServerHost.resolvedSeekTime(for: .cueGo, currentTime: 0))
     }
 }

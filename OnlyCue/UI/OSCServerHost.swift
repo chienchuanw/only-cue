@@ -83,8 +83,14 @@ struct OSCServerHost: ViewModifier {
         guard let item = document.model.activeItem,
               case .seekAndPlay(let time) = item.showGoDecision(from: engine.currentTime)
         else { return }
-        seek(to: time)
-        engine.play()
+        // Seek *then* play in the same task (matching `DocumentView.performGo`),
+        // so playback doesn't briefly start at the old playhead before the async
+        // seek lands.
+        seekTask?.cancel()
+        seekTask = Task {
+            await engine.seek(to: time)
+            engine.play()
+        }
     }
 
     /// The resolved absolute seek destination for a seek-y command, clamped to

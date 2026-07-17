@@ -21,10 +21,13 @@ only, no "Untitled"), and Info surfaces the existing per-cue notes inline.
   `"Cue"`); an empty name renders **blank** when not editing (no "Untitled");
   the edit `TextField` keeps its `"Cue name"` placeholder.
 - **Fade:** removed from the UI entirely — no per-cue fade editing anywhere.
-  The `Cue.fadeTime` model field stays (created from the cue type's
-  `defaultFadeTime`); exports / LTC are unaffected.
-- **Width split:** `#` stays a narrow fixed/compressible column; **Name** and
-  **Info** are both flexible, Name given the larger share (≈ 6 : 4).
+  The `Cue.fadeTime` model field stays (new cues keep the existing `.zero`
+  default from `appendCue`, unchanged by this work); exports / LTC are
+  unaffected.
+- **Width split:** `#` and **Info** are narrow fixed/compressible, resizable
+  columns; **Name** is the flexible column that absorbs the remaining width and
+  stays the widest (Info default ≈ 110pt keeps Name larger at realistic pane
+  widths).
 
 ## Architecture
 

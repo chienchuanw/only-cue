@@ -387,10 +387,10 @@ extension DocumentView {
                 duration: activeItem.media.duration,
                 engine: engine
             )
-            // Share the waveform's horizontal inset so the LTC playhead is
-            // collinear with the waveform playhead (#663). The transport bar
-            // below stays full-bleed.
-            .padding(.horizontal, PreviewLayout.trackHorizontalInset)
+            // Match the waveform's *total* playhead-track inset (outer gutter +
+            // inner content inset) so the LTC playhead is collinear with the
+            // waveform playhead (#663). The transport bar below stays full-bleed.
+            .padding(.horizontal, PreviewLayout.playheadTrackInset)
         }
     }
 }

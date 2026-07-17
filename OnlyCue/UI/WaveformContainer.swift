@@ -70,7 +70,9 @@ struct WaveformContainer: View {
     @ViewBuilder
     private func loaded(peaks: [Float]) -> some View {
         waveformBody(peaks: peaks)
-            .padding(.horizontal, 8)
+            // The waveform's inner content inset — shared with the LTC strip via
+            // `PreviewLayout` so the two playhead tracks coincide (#663).
+            .padding(.horizontal, PreviewLayout.trackContentInset)
             .overlay(alignment: .trailing) {
                 magnifier.padding(.trailing, 8)
             }

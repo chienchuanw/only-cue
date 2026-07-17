@@ -30,10 +30,19 @@ final class PreviewLayoutTests: XCTestCase {
         XCTAssertLessThanOrEqual(height, 100)
     }
 
-    /// #663: the single horizontal inset shared by the waveform track and the
-    /// LTC strip ruler, so both map time→x across the same x-range and their
-    /// playheads stay collinear. Pinned to the standard `DS.Space.lg` gutter.
-    func test_trackHorizontalInset_matchesStandardGutter() {
+    /// #663: the waveform track and the LTC strip ruler must share the same
+    /// total horizontal inset so both map time→x across the same x-range and
+    /// their playheads stay collinear. The waveform reaches it as the outer
+    /// gutter (`trackHorizontalInset`, PreviewPane) + the inner content inset
+    /// (`trackContentInset`, WaveformContainer); the LTC strip applies
+    /// `playheadTrackInset` directly. Pin all three so a change to one without
+    /// the others is caught.
+    func test_playheadTrackInset_isOuterGutterPlusContentInset() {
         XCTAssertEqual(PreviewLayout.trackHorizontalInset, DS.Space.lg)
+        XCTAssertEqual(PreviewLayout.trackContentInset, DS.Space.sm)
+        XCTAssertEqual(
+            PreviewLayout.playheadTrackInset,
+            PreviewLayout.trackHorizontalInset + PreviewLayout.trackContentInset
+        )
     }
 }

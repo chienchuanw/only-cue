@@ -11,11 +11,6 @@ enum ChannelRole: String, Codable, CaseIterable, Sendable {
     case trackLeft
     case trackRight
 
-    /// Roles that may appear on at most one channel at a time.
-    static let uniqueRoles: [Self] = [.ltc, .trackLeft, .trackRight]
-
-    var isUnique: Bool { Self.uniqueRoles.contains(self) }
-
     var displayName: String {
         switch self {
         case .silent: "Silent"
@@ -101,40 +96,36 @@ struct LTCRoutingSettings: Codable, Equatable, Sendable {
         channelRoles.indices.contains(index) ? channelRoles[index] : .silent
     }
 
-    /// The channel carrying `role`, if any (first match — unique roles only ever
-    /// have one).
-    func channel(for role: ChannelRole) -> Int? {
-        channelRoles.firstIndex(of: role)
+    /// All channels carrying `role`, in channel order. A role may appear on
+    /// several channels (#655).
+    func channels(for role: ChannelRole) -> [Int] {
+        channelRoles.enumerated().compactMap { $0.element == role ? $0.offset : nil }
     }
 
-    var ltcChannel: Int? { channel(for: .ltc) }
+    /// The channels carrying the LTC signal — one signal fanned out to each.
+    var ltcChannels: [Int] { channels(for: .ltc) }
 
-    /// The channel carrying the left / right legs of the program (track) audio,
-    /// if assigned. Track channels are optional — a 1-channel "LTC only" cable is
-    /// valid; without them the program audio is silent while LTC runs.
-    var trackLeftChannel: Int? { channel(for: .trackLeft) }
-    var trackRightChannel: Int? { channel(for: .trackRight) }
+    /// The channels carrying the left / right legs of the program (track) audio.
+    /// Track channels are optional — a 1-channel "LTC only" cable is valid;
+    /// without them the program audio is silent while LTC runs.
+    var trackLeftChannels: [Int] { channels(for: .trackLeft) }
+    var trackRightChannels: [Int] { channels(for: .trackRight) }
 
     /// Whether any channel carries program (track) audio.
-    var hasTrackChannels: Bool { trackLeftChannel != nil || trackRightChannel != nil }
+    var hasTrackChannels: Bool { !trackLeftChannels.isEmpty || !trackRightChannels.isEmpty }
 
-    /// Routing is usable once LTC is enabled and an LTC output channel has been
-    /// assigned. (Track channels are optional — a 1-channel "LTC only" cable is
-    /// valid.)
-    var isComplete: Bool { isEnabled && ltcChannel != nil }
+    /// Routing is usable once LTC is enabled and at least one LTC output channel
+    /// has been assigned. (Track channels are optional.)
+    var isComplete: Bool { isEnabled && !ltcChannels.isEmpty }
 
     // MARK: Transforms (value-returning — callers persist the result)
 
-    /// Assign `role` to `channel`. If `role` is unique, any other channel that
-    /// held it is reset to `.silent` first. Out-of-range channels are ignored.
+    /// Assign `role` to `channel`. A role may sit on several channels at once
+    /// (#655) — this no longer clears the role off other channels. Out-of-range
+    /// channels are ignored.
     func assigning(_ role: ChannelRole, toChannel channel: Int) -> Self {
         guard channelRoles.indices.contains(channel) else { return self }
         var roles = channelRoles
-        if role.isUnique {
-            for index in roles.indices where roles[index] == role {
-                roles[index] = .silent
-            }
-        }
         roles[channel] = role
         return Self(isEnabled: isEnabled, deviceUID: deviceUID, channelRoles: roles, amplitude: amplitude)
     }

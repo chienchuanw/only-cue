@@ -66,6 +66,19 @@ final class LTCAudioOutputTests: XCTestCase {
         XCTAssertEqual(Array(UnsafeBufferPointer(start: data[3], count: 4)), [Float](repeating: 0, count: 4))
     }
 
+    func test_makeBufferMulti_fansSameSamplesToMultipleChannels() throws {
+        // #655 — one LTC signal written to several channels at once.
+        let ltc: [Float] = [0.5, -0.5, 0.5, -0.5]
+        let buffer = try XCTUnwrap(LTCAudioOutput.makeBuffer(
+            channels: [(samples: ltc, channel: 0), (samples: ltc, channel: 2)],
+            format: try format(channels: 4)))
+        let data = try XCTUnwrap(buffer.floatChannelData)
+        XCTAssertEqual(Array(UnsafeBufferPointer(start: data[0], count: 4)), ltc)
+        XCTAssertEqual(Array(UnsafeBufferPointer(start: data[1], count: 4)), [Float](repeating: 0, count: 4))
+        XCTAssertEqual(Array(UnsafeBufferPointer(start: data[2], count: 4)), ltc)
+        XCTAssertEqual(Array(UnsafeBufferPointer(start: data[3], count: 4)), [Float](repeating: 0, count: 4))
+    }
+
     func test_makeBufferMulti_clampsOutOfRangeChannel() throws {
         let mono: [Float] = [1, 2]
         let buffer = try XCTUnwrap(LTCAudioOutput.makeBuffer(

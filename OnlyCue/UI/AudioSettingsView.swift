@@ -161,7 +161,7 @@ struct AudioSettingsView: View {
 
     @ViewBuilder
     private var routingStatusCard: some View {
-        if settings.ltcChannel == nil {
+        if settings.ltcChannels.isEmpty {
             Label("No channel is assigned to LTC.", systemImage: "exclamationmark.triangle.fill")
                 .foregroundStyle(.orange)
                 .font(.caption)

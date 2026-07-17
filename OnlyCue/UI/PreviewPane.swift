@@ -186,6 +186,9 @@ struct PreviewPane: View {
                 onHideType: { typeId in
                     CueCommands.setCuePointTypeVisibility(id: typeId, to: false, document: document, undoManager: undoManager)
                 },
+                onShowType: { typeId in
+                    CueCommands.setCuePointTypeVisibility(id: typeId, to: true, document: document, undoManager: undoManager)
+                },
                 onShowAllTypes: {
                     CueCommands.showAllCuePointTypes(document: document, undoManager: undoManager)
                 },

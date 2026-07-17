@@ -13,6 +13,10 @@ import AVFoundation
 /// 30-ND and 30-DF (ADR-019: drop-frame is a labelling convention, not 29.97).
 enum LTCEncoder {
 
+    /// Standalone/test fallback amplitude for callers that build a schedule
+    /// without routing. The **product** default lives in
+    /// `LTCRoutingSettings.defaultAmplitude` (0.9) and is always passed
+    /// explicitly on the live output path (#651).
     static let defaultAmplitude: Float = 0.8
 
     /// Float PCM samples (mono, `±amplitude`) for one LTC frame at `timecode`,

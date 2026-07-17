@@ -16,6 +16,16 @@ final class CueCommandsTests: XCTestCase {
         XCTAssertTrue(undo.canUndo)
     }
 
+    func test_addCueAtPlayhead_createsWithEmptyName() throws {
+        // #661: new cues have a blank name (grandMA2-style placeholder), not "Cue".
+        let document = makeDocumentWithItem()
+        let undo = makeUndoManager()
+
+        CueCommands.addCueAtPlayhead(time: 1.0, document: document, undoManager: undo)
+
+        XCTAssertEqual(activeCues(document)[0].name, "")
+    }
+
     func test_addCueAtPlayhead_undoEmptiesList_redoRestoresCue() throws {
         let document = makeDocumentWithItem()
         let undo = makeUndoManager()

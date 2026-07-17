@@ -385,16 +385,12 @@ extension DocumentView {
                 item: activeItem,
                 framerate: document.model.timecodeSettings.framerate,
                 duration: activeItem.media.duration,
-                onToggleMute: {
-                    CueCommands.setLTCMuted(
-                        itemID: activeItem.id,
-                        muted: !activeItem.ltcMuted,
-                        document: document,
-                        undoManager: undoManager
-                    )
-                },
                 engine: engine
             )
+            // Share the waveform's horizontal inset so the LTC playhead is
+            // collinear with the waveform playhead (#663). The transport bar
+            // below stays full-bleed.
+            .padding(.horizontal, PreviewLayout.trackHorizontalInset)
         }
     }
 }

@@ -11,6 +11,13 @@ enum PreviewLayout {
     /// centered.
     static let switcherLeadingInset: CGFloat = 16
 
+    /// The single horizontal inset shared by the waveform track and the LTC
+    /// strip ruler (#663). Both are inset by this from the same detail-column
+    /// edge and both map time→x via `CueMarkersGeometry.position`, so their
+    /// playheads stay on one vertical line at every window width. Equal to the
+    /// standard `DS.Space.lg` gutter — pinned by `PreviewLayoutTests`.
+    static let trackHorizontalInset: CGFloat = 16
+
     /// Height of the timeline/waveform band beneath the video, for a preview of
     /// `totalHeight`. ~26% normally (~40% for the taller breakdown lanes), with
     /// a readable floor, and never more than half (the video stays dominant).

@@ -6,6 +6,9 @@ struct ItemListPane: View {
     @ObservedObject var document: CueListDocument
     let onDropURLs: ([URL]) -> Void
 
+    /// Gates the per-clip "Mute LTC" context-menu item to when LTC routing is on
+    /// (#663). Observing the singleton keeps the menu in sync with Preferences.
+    @ObservedObject private var ltcRoutingStore = LTCRoutingStore.shared
     @Environment(\.undoManager) private var undoManager
     @State private var editingItemID: MediaItem.ID?
 
@@ -112,6 +115,17 @@ struct ItemListPane: View {
                     }
                     .disabled(revealURL == nil)
                     .accessibilityIdentifier("contextMenuShowInFinder")
+                    if ltcRoutingStore.settings.isEnabled {
+                        Button(item.ltcMuted ? "Unmute LTC for this clip" : "Mute LTC for this clip") {
+                            CueCommands.setLTCMuted(
+                                itemID: item.id,
+                                muted: !item.ltcMuted,
+                                document: document,
+                                undoManager: undoManager
+                            )
+                        }
+                        .accessibilityIdentifier("contextMenuToggleLTCMute")
+                    }
                     Divider()
                     Button(role: .destructive) {
                         CueCommands.removeItem(id: item.id, document: document, undoManager: undoManager)

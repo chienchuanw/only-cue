@@ -1,72 +1,41 @@
 import QuartzCore
 import SwiftUI
 
-/// Lane shown below the waveform when LTC routing is enabled. A fixed-width
-/// header carries the mute toggle + active clip's file name; the trailing
-/// ruler draws `LTCTickGenerator` ticks + labels across the lane's width, with a
-/// moving playhead line (#653) that tracks playback. Strip is non-interactive
-/// (no hit testing on the ruler so clicks pass through to the click-to-seek
-/// surface above; the playhead is display-only).
+/// Ruler shown directly below the waveform when LTC routing is enabled. It draws
+/// `LTCTickGenerator` ticks + labels edge-to-edge across its width with a moving
+/// playhead line (#653) that tracks playback. The strip carries no header now —
+/// it shares the waveform's horizontal inset (`PreviewLayout.trackHorizontalInset`)
+/// so its playhead stays collinear with the waveform's (#663). Non-interactive
+/// (no hit testing, so clicks pass through to the click-to-seek surface above;
+/// the playhead is display-only). The per-clip LTC mute lives in the media
+/// right-click menu (#663).
 struct LTCStrip: View {
 
     let item: MediaItem
     let framerate: SMPTEFramerate
     let duration: TimeInterval
-    let onToggleMute: () -> Void
     /// Drives the moving playhead (#653). nil → no playhead (previews/tests
     /// without a playback context).
     var engine: PlayerEngine?
 
-    private static let laneHeaderWidth: CGFloat = 150
     private static let stripHeight: CGFloat = 34
     private static let playheadLineWidth: CGFloat = 1
 
-    /// Header/ruler spacing pinned to Figma 318:1308 (#553, audit `## ltc-strip`).
-    /// Off-grid (no DS token); `LTCStripMetricsTests` guards them.
+    /// Tick-label placement pinned to Figma 318:1308 (#553, audit `## ltc-strip`).
+    /// Off-grid (no DS token); `LTCStripMetricsTests` guards it.
     enum Metrics {
-        static let headerGap: CGFloat = 6          // icon ↔ label, Figma gap-[6px]
-        static let headerHPadding: CGFloat = 10    // Figma px-[10px]
-        static let iconWidth: CGFloat = 17         // Figma ic-spkr 17×14
-        static let iconHeight: CGFloat = 14
-        static let rulerLeadingInset: CGFloat = 8  // Figma ruler pl-[8px]
         static let tickLabelTop: CGFloat = 4       // Figma label top-[4px]
     }
 
     var body: some View {
-        HStack(spacing: 0) {
-            header
-            ruler
-        }
-        .frame(height: Self.stripHeight)
-        .background(DS.Color.surfaceSunken)
-        // Figma 318:1308 — the strip is bounded top and bottom by a hairline.
-        .dsHairline(edge: .top)
-        .dsHairline(edge: .bottom)
-        .accessibilityElement(children: .contain)
-        .accessibilityIdentifier("ltcStrip")
-    }
-
-    private var header: some View {
-        HStack(spacing: Metrics.headerGap) { // off-grid: Figma gap-[6px]
-            Button(action: onToggleMute) {
-                Image(systemName: item.ltcMuted ? "speaker.slash.fill" : "speaker.fill")
-                    .frame(width: Metrics.iconWidth, height: Metrics.iconHeight) // off-grid: Figma 17×14
-            }
-            .buttonStyle(.plain)
-            .help(item.ltcMuted ? "Unmute LTC for this clip" : "Mute LTC for this clip")
-            .accessibilityLabel(item.ltcMuted ? "LTC muted" : "LTC unmuted")
-            .accessibilityIdentifier("ltcMuteToggle.\(item.id.uuidString)")
-            Text("LTC · \(item.resolvedName)")
-                .font(DS.Text.small) // Figma: Inter Regular 11 (sans), not mono
-                .foregroundStyle(DS.Color.textSecondary)
-                .lineLimit(1)
-                .truncationMode(.middle)
-        }
-        .padding(.horizontal, Metrics.headerHPadding) // off-grid: Figma px-[10px]
-        .frame(width: Self.laneHeaderWidth, alignment: .leading)
-        // The header block is panel-tinted; the ruler area keeps the sunken fill.
-        .frame(maxHeight: .infinity)
-        .background(DS.Color.panel)
+        ruler
+            .frame(height: Self.stripHeight)
+            .background(DS.Color.surfaceSunken)
+            // Figma 318:1308 — the strip is bounded top and bottom by a hairline.
+            .dsHairline(edge: .top)
+            .dsHairline(edge: .bottom)
+            .accessibilityElement(children: .contain)
+            .accessibilityIdentifier("ltcStrip")
     }
 
     private var ruler: some View {
@@ -79,17 +48,16 @@ struct LTCStrip: View {
             }
             .frame(width: proxy.size.width, height: proxy.size.height)
         }
-        // off-grid: Figma ruler frame pl-[8px] — first tick is inset from the
-        // panel-header boundary rather than butting against it.
-        .padding(.leading, Metrics.rulerLeadingInset)
+        // No leading inset: the ruler spans the strip's full width so it maps
+        // time→x across the same x-range as the waveform above it (#663).
         .allowsHitTesting(false)
     }
 
     /// Moving playhead line (#653). Reuses the waveform's smooth interpolation
     /// (`PlayheadInterpolator`, driven by `TimelineView(.animation)`) and pure
     /// time→x mapping (`CueMarkersGeometry.position`), and its 1pt primary-color
-    /// style. Maps across the ruler's own width — proportional to, not
-    /// pixel-aligned with, the (differently-inset) waveform playhead.
+    /// style. Maps across the ruler's full width, which now shares the waveform's
+    /// inset — so this playhead is collinear with the waveform's (#663).
     @ViewBuilder
     private func playhead(width: CGFloat, height: CGFloat) -> some View {
         if let engine, duration > 0 {

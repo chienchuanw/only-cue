@@ -83,10 +83,12 @@ struct PreviewPane: View {
                         .padding(overlayPadding, DS.Space.md)
                 }
             }
-            // The waveform well is inset 16pt inside the full-width preview area
+            // The waveform well is inset inside the full-width preview area
             // (Figma 318:1252/318:1253); the pane itself is edge-to-edge now that
-            // mainPane drops its outer padding.
-            .padding(.horizontal, DS.Space.lg)
+            // mainPane drops its outer padding. This inset is shared with the LTC
+            // strip (`PreviewLayout.trackHorizontalInset`) so their playheads
+            // stay collinear (#663).
+            .padding(.horizontal, PreviewLayout.trackHorizontalInset)
         }
         // Top breathing for the switcher bar (Figma 318:1250 centers it in a
         // 62pt bar) — needed now that mainPane has no outer padding.

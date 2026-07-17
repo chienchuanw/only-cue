@@ -5,8 +5,8 @@ import CoreAudio
 /// `AVAudioEngine` half of epic #33's generator. Given the timecode at the
 /// current playhead, the project framerate, and `LTCRoutingSettings`, it opens
 /// an engine on the routed device and streams `LTCSchedule` buffers onto an
-/// `AVAudioPlayerNode`, with the mono LTC placed on the channel the routing
-/// assigned (`ChannelRole.ltc`) and silence on the others. When a
+/// `AVAudioPlayerNode`, with the mono LTC fanned onto every channel the routing
+/// assigned to `ChannelRole.ltc` (#655) and silence on the others. When a
 /// `ProgramAudioRingBuffer` is supplied to `start` (the media's program audio,
 /// captured by `ProgramAudioTap`), a second `AVAudioPlayerNode` plays it onto
 /// the routing's `trackLeft` / `trackRight` channels so the LTC channel never
@@ -105,11 +105,11 @@ final class LTCAudioOutput: ObservableObject {
 
     // MARK: - Transport hooks
 
-    /// Begin (or restart) LTC output at `timecode`, on the device + channel the
-    /// `routing` specifies. If `programRing` is non-nil and the routing assigns
-    /// Track channels, the engine also plays whatever is pushed into it onto
-    /// those channels. A no-op with a recorded error if `routing` has no LTC
-    /// channel.
+    /// Begin (or restart) LTC output at `timecode`, on the device + channel(s)
+    /// the `routing` specifies. If `programRing` is non-nil and the routing
+    /// assigns Track channels, the engine also plays whatever is pushed into it
+    /// onto those channels. A no-op with a recorded error if `routing` has no LTC
+    /// channel assigned.
     func start(at timecode: Timecode, routing: LTCRoutingSettings, programRing: ProgramAudioRingBuffer? = nil) {
         guard !routing.ltcChannels.isEmpty else {
             lastError = "No output channel is assigned to LTC."

@@ -7,7 +7,7 @@ final class LTCRoutingSettingsTests: XCTestCase {
         let settings = LTCRoutingSettings.default
         XCTAssertNil(settings.deviceUID)
         XCTAssertTrue(settings.channelRoles.isEmpty)
-        XCTAssertNil(settings.ltcChannel)
+        XCTAssertTrue(settings.ltcChannels.isEmpty)
         XCTAssertFalse(settings.isComplete)
     }
 
@@ -27,11 +27,13 @@ final class LTCRoutingSettingsTests: XCTestCase {
         XCTAssertEqual(LTCRoutingSettings.defaultRoles(forChannelCount: -3), [])
     }
 
-    func test_assigning_uniqueRole_clearsPreviousHolder() {
+    func test_assigning_sameRole_toSecondChannel_keepsBoth() {
+        // #655 — a role may sit on several channels; assigning no longer clears
+        // the role off the channel that already had it.
         let settings = LTCRoutingSettings(deviceUID: nil, channelRoles: [.ltc, .trackLeft, .trackRight, .silent])
-        let moved = settings.assigning(.ltc, toChannel: 3)
-        XCTAssertEqual(moved.channelRoles, [.silent, .trackLeft, .trackRight, .ltc])
-        XCTAssertEqual(moved.ltcChannel, 3)
+        let fanned = settings.assigning(.ltc, toChannel: 3)
+        XCTAssertEqual(fanned.channelRoles, [.ltc, .trackLeft, .trackRight, .ltc])
+        XCTAssertEqual(fanned.ltcChannels, [0, 3])
     }
 
     func test_assigning_silent_doesNotClearOtherSilents() {
@@ -89,19 +91,28 @@ final class LTCRoutingSettingsTests: XCTestCase {
 
     func test_trackChannels() {
         let none = LTCRoutingSettings(deviceUID: nil, channelRoles: [.ltc, .silent])
-        XCTAssertNil(none.trackLeftChannel)
-        XCTAssertNil(none.trackRightChannel)
+        XCTAssertTrue(none.trackLeftChannels.isEmpty)
+        XCTAssertTrue(none.trackRightChannels.isEmpty)
         XCTAssertFalse(none.hasTrackChannels)
 
         let both = LTCRoutingSettings(deviceUID: nil, channelRoles: [.ltc, .trackLeft, .trackRight])
-        XCTAssertEqual(both.trackLeftChannel, 1)
-        XCTAssertEqual(both.trackRightChannel, 2)
+        XCTAssertEqual(both.trackLeftChannels, [1])
+        XCTAssertEqual(both.trackRightChannels, [2])
         XCTAssertTrue(both.hasTrackChannels)
 
         let onlyRight = LTCRoutingSettings(deviceUID: nil, channelRoles: [.ltc, .silent, .trackRight])
-        XCTAssertNil(onlyRight.trackLeftChannel)
-        XCTAssertEqual(onlyRight.trackRightChannel, 2)
+        XCTAssertTrue(onlyRight.trackLeftChannels.isEmpty)
+        XCTAssertEqual(onlyRight.trackRightChannels, [2])
         XCTAssertTrue(onlyRight.hasTrackChannels)
+    }
+
+    func test_multipleChannels_perRole() {
+        // #655 — LTC and track roles fan out to several channels, in order.
+        let settings = LTCRoutingSettings(
+            deviceUID: nil, channelRoles: [.ltc, .trackLeft, .ltc, .trackLeft])
+        XCTAssertEqual(settings.ltcChannels, [0, 2])
+        XCTAssertEqual(settings.trackLeftChannels, [1, 3])
+        XCTAssertTrue(settings.channels(for: .trackRight).isEmpty)
     }
 
     func test_transforms_carryIsEnabled() {
@@ -128,12 +139,10 @@ final class LTCRoutingSettingsTests: XCTestCase {
         XCTAssertEqual(decoded, original)
     }
 
-    func test_channelRole_displayNamesAndUniqueness() {
+    func test_channelRole_displayNames() {
         XCTAssertEqual(ChannelRole.silent.displayName, "Silent")
         XCTAssertEqual(ChannelRole.ltc.displayName, "LTC")
-        XCTAssertFalse(ChannelRole.silent.isUnique)
-        XCTAssertTrue(ChannelRole.ltc.isUnique)
-        XCTAssertTrue(ChannelRole.trackLeft.isUnique)
-        XCTAssertTrue(ChannelRole.trackRight.isUnique)
+        XCTAssertEqual(ChannelRole.trackLeft.displayName, "Track L")
+        XCTAssertEqual(ChannelRole.trackRight.displayName, "Track R")
     }
 }

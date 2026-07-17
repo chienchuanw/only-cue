@@ -46,7 +46,8 @@ final class LTCAudioOutput: ObservableObject {
     /// `restartEngine`, read by `scheduleOneBuffer` (so the off-thread completion
     /// handler hops back to `self` rather than capturing them across the actor).
     private var renderFormat: AVAudioFormat?
-    private var ltcChannel = 0
+    /// The channels carrying LTC — the same signal is written to each (#655).
+    private var ltcChannels: [Int] = []
     /// When true, the LTC channel emits silence on the next render block. The
     /// encoder keeps running so toggling is instant (no re-cue glitch). Toggled
     /// by `LTCOutputHost` from `MediaItem.ltcMuted` on the active item.
@@ -58,8 +59,8 @@ final class LTCAudioOutput: ObservableObject {
     /// audio is scheduled, so those channels stay silent.
     private let programNode = AVAudioPlayerNode()
     private var programRing: ProgramAudioRingBuffer?
-    private var trackLeftChannel: Int?
-    private var trackRightChannel: Int?
+    private var trackLeftChannels: [Int] = []
+    private var trackRightChannels: [Int] = []
     private var outstandingProgramBuffers = 0
     /// Frames per program buffer — kept equal to the LTC buffer length so the two
     /// pumps stay in step.
@@ -110,7 +111,7 @@ final class LTCAudioOutput: ObservableObject {
     /// those channels. A no-op with a recorded error if `routing` has no LTC
     /// channel.
     func start(at timecode: Timecode, routing: LTCRoutingSettings, programRing: ProgramAudioRingBuffer? = nil) {
-        guard routing.ltcChannel != nil else {
+        guard !routing.ltcChannels.isEmpty else {
             lastError = "No output channel is assigned to LTC."
             return
         }
@@ -133,8 +134,9 @@ final class LTCAudioOutput: ObservableObject {
         outstandingBuffers = 0
         outstandingProgramBuffers = 0
         programRing = nil
-        trackLeftChannel = nil
-        trackRightChannel = nil
+        ltcChannels = []
+        trackLeftChannels = []
+        trackRightChannels = []
         isRunning = false
     }
 
@@ -196,9 +198,9 @@ final class LTCAudioOutput: ObservableObject {
             engine.connect(programNode, to: mixerNode, format: renderFormat)
             engine.connect(mixerNode, to: engine.outputNode, format: renderFormat)
             self.renderFormat = renderFormat
-            ltcChannel = pending.routing.ltcChannel ?? 0
-            trackLeftChannel = pending.routing.trackLeftChannel
-            trackRightChannel = pending.routing.trackRightChannel
+            ltcChannels = pending.routing.ltcChannels
+            trackLeftChannels = pending.routing.trackLeftChannels
+            trackRightChannels = pending.routing.trackRightChannels
 
             let framesPerBuffer = LTCSchedule.framesPerBuffer(
                 forTargetSeconds: bufferTargetSeconds, rate: pending.timecode.rate
@@ -261,7 +263,9 @@ final class LTCAudioOutput: ObservableObject {
         let buffer = currentSchedule.nextBuffer()
         schedule = currentSchedule
         let samples = Self.mutedSamples(buffer.samples, isMuted: isLTCMuted)
-        guard let pcm = Self.makeBuffer(monoSamples: samples, format: format, channel: ltcChannel) else { return }
+        // Write the same LTC samples to every assigned LTC channel (#655).
+        let entries = ltcChannels.map { (samples: samples, channel: $0) }
+        guard let pcm = Self.makeBuffer(channels: entries, format: format) else { return }
         outstandingBuffers += 1
         let generation = pumpGeneration
         // `AVAudioPlayerNode` invokes this on an internal engine thread, not the
@@ -317,7 +321,7 @@ extension LTCAudioOutput {
     /// Whether program (track) audio should be scheduled — there is a source ring
     /// buffer and the routing assigns at least one Track channel.
     private var hasProgramOutput: Bool {
-        programRing != nil && (trackLeftChannel != nil || trackRightChannel != nil) && programFramesPerBuffer > 0
+        programRing != nil && (!trackLeftChannels.isEmpty || !trackRightChannels.isEmpty) && programFramesPerBuffer > 0
     }
 
     func topUpProgramBuffers() {
@@ -336,8 +340,8 @@ extension LTCAudioOutput {
             right[frame] = interleaved[frame * 2 + 1]
         }
         var entries: [(samples: [Float], channel: Int)] = []
-        if let leftCh = trackLeftChannel { entries.append((left, leftCh)) }
-        if let rightCh = trackRightChannel { entries.append((right, rightCh)) }
+        for leftCh in trackLeftChannels { entries.append((left, leftCh)) }
+        for rightCh in trackRightChannels { entries.append((right, rightCh)) }
         guard !entries.isEmpty, let pcm = Self.makeBuffer(channels: entries, format: format) else { return }
         outstandingProgramBuffers += 1
         let generation = pumpGeneration

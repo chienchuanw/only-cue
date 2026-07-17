@@ -22,20 +22,20 @@ final class CueRowLayoutTests: XCTestCase {
         let view = CueRowView(
             cue: cue,
             resolvedColorHex: "#FF8800",
-            timeColumnWidth: CueListColumnWidths.timeDefault,
-            numberColumnWidth: CueListColumnWidths.numberDefault
+            numberColumnWidth: CueListColumnWidths.numberDefault,
+            infoColumnWidth: CueListColumnWidths.infoDefault
         )
         XCTAssertNotNil(view.body)
     }
 
     /// Sanity check on the shared layout constants that still live on
     /// `CueListLayout`: row tint stays subtle enough to keep text legible.
-    /// Time/Number widths now live on `CueListColumnWidths`.
+    /// Number/Info widths now live on `CueListColumnWidths` (#661).
     func test_cueListLayout_constants_areSane() {
         XCTAssertGreaterThan(CueListLayout.rowHorizontalSpacing, 0)
         XCTAssertGreaterThan(CueListLayout.rowTintOpacity, 0)
         XCTAssertLessThan(CueListLayout.rowTintOpacity, 0.5)
-        XCTAssertGreaterThan(CueListColumnWidths.timeDefault, 0)
         XCTAssertGreaterThan(CueListColumnWidths.numberDefault, 0)
+        XCTAssertGreaterThan(CueListColumnWidths.infoDefault, 0)
     }
 }

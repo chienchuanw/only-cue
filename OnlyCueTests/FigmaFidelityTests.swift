@@ -37,13 +37,6 @@ final class FigmaFidelityTests: XCTestCase {
         XCTAssertNotEqual(WaveformView(peaks: []).color, DS.Color.cueIndigo)
     }
 
-    /// Cue-list TIME column (Figma 318:1320) keeps the full 11-char SMPTE on one
-    /// line: its floor must fit `HH:MM:SS:FF` (~86pt at 13pt monospaced).
-    func test_cueTimeColumnFitsSMPTE() {
-        XCTAssertGreaterThanOrEqual(CueListColumnWidths.timeRange.lowerBound, 88)
-        XCTAssertTrue(CueListColumnWidths.timeRange.contains(CueListColumnWidths.timeDefault))
-    }
-
     /// Preview video/waveform split (Figma 318:1639): the waveform band is a
     /// ~quarter of the well, and the video stays dominant (band <= half).
     func test_previewVideoSplitProportion() {

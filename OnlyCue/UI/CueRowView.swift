@@ -4,12 +4,11 @@ struct CueRowView: View {
 
     let cue: Cue
     var resolvedColorHex: String?
-    var timeColumnWidth: CGFloat = CueListColumnWidths.timeDefault
     var numberColumnWidth: CGFloat = CueListColumnWidths.numberDefault
-    var fadeColumnWidth: CGFloat = CueListColumnWidths.fadeDefault
+    var infoColumnWidth: CGFloat = CueListColumnWidths.infoDefault
     var onRename: (String) -> Void = { _ in }
     var onCommitNumber: (Double?) -> CueNumberValidator.Result = { _ in .ok }
-    var onCommitFade: (FadeTime) -> Void = { _ in }
+    var onCommitNotes: (String) -> Void = { _ in }
     /// When true (Show mode) the row's editable fields are disabled.
     var isReadOnly: Bool = false
 
@@ -22,24 +21,13 @@ struct CueRowView: View {
     @State private var numberError: String?
     @FocusState private var numberFieldFocused: Bool
 
-    @State private var isEditingFade = false
-    @State private var fadeDraft = ""
-    @FocusState private var fadeFieldFocused: Bool
-
-    @Environment(\.projectFramerate) private var framerate
+    @State private var isEditingInfo = false
+    @State private var infoDraft = ""
+    @FocusState private var infoFieldFocused: Bool
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
             HStack(spacing: CueListLayout.rowHorizontalSpacing) {
-                Text(TimeFormat.smpte(cue.time, rate: framerate))
-                    .font(DS.Text.monoSmall)
-                    .foregroundStyle(DS.Color.textSecondary)
-                    // One line: the SMPTE string must never wrap to two
-                    // rows when the column compresses (Figma 318:1228).
-                    .lineLimit(1)
-                    .cueColumnFrame(width: timeColumnWidth, range: CueListColumnWidths.timeRange)
-                    .accessibilityIdentifier("cueTime-\(cue.id)")
-
                 numberCell
                     .cueColumnFrame(width: numberColumnWidth, range: CueListColumnWidths.numberRange)
                     .accessibilityIdentifier("cueNumber-\(cue.id)")
@@ -48,15 +36,15 @@ struct CueRowView: View {
                     .frame(maxWidth: .infinity, alignment: .leading)
                     .accessibilityIdentifier("cueName-\(cue.id)")
 
-                fadeCell
-                    .cueColumnFrame(width: fadeColumnWidth, range: CueListColumnWidths.fadeRange)
-                    .accessibilityIdentifier("cueRowFade-\(cue.id)")
+                infoCell
+                    .cueColumnFrame(width: infoColumnWidth, range: CueListColumnWidths.infoRange)
+                    .accessibilityIdentifier("cueInfo-\(cue.id)")
             }
             if let numberError {
                 Text(numberError)
                     .font(.caption2)
                     .foregroundStyle(.red) // semantic: error
-                    .padding(.leading, timeColumnWidth + CueListLayout.rowHorizontalSpacing)
+                    .padding(.leading, numberColumnWidth + CueListLayout.rowHorizontalSpacing)
                     .accessibilityIdentifier("cueNumberError-\(cue.id)")
             }
         }
@@ -123,38 +111,45 @@ struct CueRowView: View {
                 .onAppear { nameFieldFocused = true }
                 .focusedValue(\.editingCueField, true)
         } else {
-            Text(cue.name.isEmpty ? "Untitled" : cue.name)
+            // Empty name renders blank (#661) — no "Untitled". The column frame
+            // + contentShape keep the whole cell double-clickable even when
+            // blank, so the user can still start typing a name.
+            Text(cue.name)
                 .font(DS.Text.body)
                 .foregroundStyle(DS.Color.textPrimary)
                 .lineLimit(1)
                 .truncationMode(.tail)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .contentShape(Rectangle())
                 .onTapGesture(count: 2) { beginRename() }
         }
     }
 
+    /// The Info cell surfaces the cue's `notes` inline (#661) — double-click to
+    /// edit; the right-click Notes sheet remains for longer text.
     @ViewBuilder
-    private var fadeCell: some View {
-        if isEditingFade {
-            TextField("", text: $fadeDraft)
+    private var infoCell: some View {
+        if isEditingInfo {
+            TextField("Info", text: $infoDraft)
                 .textFieldStyle(.plain)
-                .font(DS.Text.monoSmall)
-                .focused($fadeFieldFocused)
-                .onSubmit { commitFade() }
-                .onExitCommand { cancelFadeEdit() }
-                .onChange(of: fadeFieldFocused) { _, isFocused in
-                    if !isFocused { commitFade() }
+                .font(DS.Text.small)
+                .focused($infoFieldFocused)
+                .onSubmit { commitInfo() }
+                .onExitCommand { cancelInfoEdit() }
+                .onChange(of: infoFieldFocused) { _, isFocused in
+                    if !isFocused { commitInfo() }
                 }
-                .onAppear { fadeFieldFocused = true }
+                .onAppear { infoFieldFocused = true }
                 .focusedValue(\.editingCueField, true)
         } else {
-            // Glance-only display carries the `" s"` unit (Figma 318:1228); the
-            // edit draft still uses `format()` so it round-trips through parse.
-            Text(cue.fadeTime.columnDisplay)
-                .font(DS.Text.monoSmall)
+            Text(cue.notes)
+                .font(DS.Text.small)
                 .foregroundStyle(DS.Color.textSecondary)
+                .lineLimit(1)
+                .truncationMode(.tail)
                 .frame(maxWidth: .infinity, alignment: .leading)
                 .contentShape(Rectangle())
-                .onTapGesture(count: 2) { beginFadeEdit() }
+                .onTapGesture(count: 2) { beginInfoEdit() }
         }
     }
 
@@ -203,19 +198,18 @@ struct CueRowView: View {
         }
     }
 
-    private func beginFadeEdit() {
-        fadeDraft = cue.fadeTime.format()
-        isEditingFade = true
+    private func beginInfoEdit() {
+        infoDraft = cue.notes
+        isEditingInfo = true
     }
 
-    private func cancelFadeEdit() {
-        isEditingFade = false
+    private func cancelInfoEdit() {
+        isEditingInfo = false
     }
 
-    private func commitFade() {
-        defer { isEditingFade = false }
-        guard let parsed = FadeTime.parse(fadeDraft) else { return }
-        guard parsed != cue.fadeTime else { return }
-        onCommitFade(parsed)
+    private func commitInfo() {
+        defer { isEditingInfo = false }
+        guard infoDraft != cue.notes else { return }
+        onCommitNotes(infoDraft)
     }
 }

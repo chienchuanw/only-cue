@@ -42,15 +42,14 @@ final class CueListPaneMinWidthTests: XCTestCase {
         // The fix's mechanism: the three fixed columns must be able to
         // compress to their range lower bounds under width pressure, not be
         // pinned at their (wider) stored/default widths. Pin the budget so a
-        // regression to `.frame(width:)` is caught at the source.
+        // regression to `.frame(width:)` is caught at the source. The two fixed
+        // columns are `#` and `Info` now (Name is flexible) — #661.
         let compressibleFloor =
-            CueListColumnWidths.timeRange.lowerBound
-            + CueListColumnWidths.numberRange.lowerBound
-            + CueListColumnWidths.fadeRange.lowerBound
+            CueListColumnWidths.numberRange.lowerBound
+            + CueListColumnWidths.infoRange.lowerBound
         let defaultsFloor =
-            CueListColumnWidths.timeDefault
-            + CueListColumnWidths.numberDefault
-            + CueListColumnWidths.fadeDefault
+            CueListColumnWidths.numberDefault
+            + CueListColumnWidths.infoDefault
         XCTAssertLessThan(
             compressibleFloor,
             defaultsFloor,

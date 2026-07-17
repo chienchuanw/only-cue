@@ -27,24 +27,25 @@ enum CueListLayout {
     /// row columns.
     static let rowLeadingGutter: CGFloat = DS.Space.xs / 2 + swatchDiameter + DS.Space.xs
 
-    /// Non-column horizontal cost of the header row: the 3 inter-column gaps
-    /// (`rowHorizontalSpacing` each) plus the leading swatch gutter and the
-    /// trailing edge padding. The Name column is flexible with no enforced
-    /// intrinsic minimum, so it compresses to ~0 and contributes nothing.
+    /// Non-column horizontal cost of the header row: the 2 inter-column gaps
+    /// (`rowHorizontalSpacing` each, for `# · Name · Info`) plus the leading
+    /// swatch gutter and the trailing edge padding. The Name column is flexible
+    /// with no enforced intrinsic minimum, so it compresses to ~0 and
+    /// contributes nothing.
     static let headerHorizontalChrome: CGFloat =
-        3 * rowHorizontalSpacing + rowLeadingGutter + rowHorizontalPadding
+        2 * rowHorizontalSpacing + rowLeadingGutter + rowHorizontalPadding
 
     /// The cue-list header's guaranteed-compressible minimum width — the
     /// value the outer `NSSplitView` sees as the pane's hard floor. Issue
     /// #297: this must never exceed `CueListInspectorMetrics.minWidth`, or
     /// the splitter cannot reach the 240 column minimum without the content
     /// demanding more and feeding the constraint-update loop. Header and rows
-    /// now share the same leading swatch gutter (`rowLeadingGutter`), so the
-    /// header is the binding floor; the floor stays ≤ 240 (92+40+56+46 = 234).
+    /// share the same leading swatch gutter (`rowLeadingGutter`), so the
+    /// header is the binding floor; the two fixed columns are `#` and `Info`
+    /// (Name is flexible), so the floor stays ≤ 240 (40+72+chrome).
     static var headerMinimumWidth: CGFloat {
-        CueListColumnWidths.timeRange.lowerBound
-            + CueListColumnWidths.numberRange.lowerBound
-            + CueListColumnWidths.fadeRange.lowerBound
+        CueListColumnWidths.numberRange.lowerBound
+            + CueListColumnWidths.infoRange.lowerBound
             + headerHorizontalChrome
     }
 }
@@ -84,32 +85,18 @@ struct CueListPane: View {
     /// one `.sheet` modifier per view — stacking two silently breaks both.
     @State var activeCueSheet: CueSheetKind?
 
-    @AppStorage(CueListColumnWidths.timeStorageKey)
-    private var timeColumnWidthRaw: Double = Double(CueListColumnWidths.timeDefault)
-
     @AppStorage(CueListColumnWidths.numberStorageKey)
     private var numberColumnWidthRaw: Double = Double(CueListColumnWidths.numberDefault)
 
-    @AppStorage(CueListColumnWidths.fadeStorageKey)
-    private var fadeColumnWidthRaw: Double = Double(CueListColumnWidths.fadeDefault)
-
-    private var timeColumnWidth: CGFloat {
-        CueListColumnWidths.clampTime(CGFloat(timeColumnWidthRaw))
-    }
+    @AppStorage(CueListColumnWidths.infoStorageKey)
+    private var infoColumnWidthRaw: Double = Double(CueListColumnWidths.infoDefault)
 
     private var numberColumnWidth: CGFloat {
         CueListColumnWidths.clampNumber(CGFloat(numberColumnWidthRaw))
     }
 
-    private var fadeColumnWidth: CGFloat {
-        CueListColumnWidths.clampFade(CGFloat(fadeColumnWidthRaw))
-    }
-
-    private var timeColumnWidthBinding: Binding<CGFloat> {
-        Binding(
-            get: { CueListColumnWidths.clampTime(CGFloat(timeColumnWidthRaw)) },
-            set: { timeColumnWidthRaw = Double(CueListColumnWidths.clampTime($0)) }
-        )
+    private var infoColumnWidth: CGFloat {
+        CueListColumnWidths.clampInfo(CGFloat(infoColumnWidthRaw))
     }
 
     private var numberColumnWidthBinding: Binding<CGFloat> {
@@ -119,10 +106,10 @@ struct CueListPane: View {
         )
     }
 
-    private var fadeColumnWidthBinding: Binding<CGFloat> {
+    private var infoColumnWidthBinding: Binding<CGFloat> {
         Binding(
-            get: { CueListColumnWidths.clampFade(CGFloat(fadeColumnWidthRaw)) },
-            set: { fadeColumnWidthRaw = Double(CueListColumnWidths.clampFade($0)) }
+            get: { CueListColumnWidths.clampInfo(CGFloat(infoColumnWidthRaw)) },
+            set: { infoColumnWidthRaw = Double(CueListColumnWidths.clampInfo($0)) }
         )
     }
 
@@ -242,15 +229,6 @@ struct CueListPane: View {
         // reporting and feeds the NSSplitView constraint-update loop
         // during outer-divider tracking (#271).
         HStack(spacing: CueListLayout.rowHorizontalSpacing) {
-            Text("Time")
-                .cueColumnFrame(width: timeColumnWidth, range: CueListColumnWidths.timeRange)
-                .overlay(alignment: .trailing) {
-                    ColumnResizeHandle(
-                        width: timeColumnWidthBinding,
-                        range: CueListColumnWidths.timeRange
-                    )
-                    .accessibilityIdentifier("cueListTimeColumnResizeHandle")
-                }
             Text("#")
                 .cueColumnFrame(width: numberColumnWidth, range: CueListColumnWidths.numberRange)
                 .overlay(alignment: .trailing) {
@@ -262,18 +240,18 @@ struct CueListPane: View {
                 }
             Text("Name")
                 .frame(maxWidth: .infinity, alignment: .leading)
-            Text("Fade")
-                .cueColumnFrame(width: fadeColumnWidth, range: CueListColumnWidths.fadeRange)
+            Text("Info")
+                .cueColumnFrame(width: infoColumnWidth, range: CueListColumnWidths.infoRange)
                 .overlay(alignment: .trailing) {
                     ColumnResizeHandle(
-                        width: fadeColumnWidthBinding,
-                        range: CueListColumnWidths.fadeRange
+                        width: infoColumnWidthBinding,
+                        range: CueListColumnWidths.infoRange
                     )
-                    .accessibilityIdentifier("cueListFadeColumnResizeHandle")
+                    .accessibilityIdentifier("cueListInfoColumnResizeHandle")
                 }
         }
         // Uppercase, tracked, tertiary micro-labels — the shared section-header
-        // treatment, matching the Figma column header `TIME · # · NAME · FADE`.
+        // treatment (grandMA2-style `# · NAME · INFO`, #661).
         .dsSectionHeader()
         // Reserve the same leading swatch gutter the rows carry so the columns
         // align (Figma 318:1320); trailing keeps the row edge padding.
@@ -334,17 +312,16 @@ struct CueListPane: View {
         CueRowView(
             cue: cue,
             resolvedColorHex: document.model.colorHex(for: cue),
-            timeColumnWidth: timeColumnWidth,
             numberColumnWidth: numberColumnWidth,
-            fadeColumnWidth: fadeColumnWidth,
+            infoColumnWidth: infoColumnWidth,
             onRename: { newName in
                 CueCommands.rename(cueId: cue.id, to: newName, document: document, undoManager: undoManager)
             },
             onCommitNumber: { newNumber in
                 CueCommands.setCueNumber(cueId: cue.id, to: newNumber, document: document, undoManager: undoManager)
             },
-            onCommitFade: { newFade in
-                CueCommands.setFadeTime(cueId: cue.id, to: newFade, document: document, undoManager: undoManager)
+            onCommitNotes: { newNotes in
+                CueCommands.setNotes(cueId: cue.id, to: newNotes, document: document, undoManager: undoManager)
             },
             isReadOnly: isReadOnly
         )

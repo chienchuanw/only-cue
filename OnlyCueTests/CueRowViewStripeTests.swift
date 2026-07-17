@@ -2,21 +2,21 @@ import XCTest
 import SwiftUI
 @testable import OnlyCue
 
-/// Compile-time guards that `CueRowView` exposes the new stripe + fade
-/// surface area. Pixel-level rendering is exercised by the UI tests in
+/// Compile-time guards that `CueRowView` exposes the stripe + Info surface
+/// area (#661). Pixel-level rendering is exercised by the UI tests in
 /// `OnlyCueUITests/CueInspectorMinimalUITests.swift`.
 @MainActor
 final class CueRowViewStripeTests: XCTestCase {
 
-    private func makeCue(fade: FadeTime = .zero) -> Cue {
+    private func makeCue(notes: String = "") -> Cue {
         Cue(
             id: UUID(),
             typeID: UUID(),
             cueNumber: nil,
             name: "Test",
             time: 0,
-            notes: "",
-            fadeTime: fade
+            notes: notes,
+            fadeTime: .zero
         )
     }
 
@@ -25,17 +25,17 @@ final class CueRowViewStripeTests: XCTestCase {
         XCTAssertNotNil(Mirror(reflecting: view))
     }
 
-    func test_rowAcceptsFadeColumnWidth() {
-        let view = CueRowView(cue: makeCue(), fadeColumnWidth: 80)
+    func test_rowAcceptsInfoColumnWidth() {
+        let view = CueRowView(cue: makeCue(), infoColumnWidth: 120)
         XCTAssertNotNil(Mirror(reflecting: view))
     }
 
-    func test_rowAcceptsOnCommitFadeCallback() {
-        var captured: FadeTime?
+    func test_rowAcceptsOnCommitNotesCallback() {
+        var captured: String?
         let view = CueRowView(
             cue: makeCue(),
-            fadeColumnWidth: 80,
-            onCommitFade: { captured = $0 }
+            infoColumnWidth: 120,
+            onCommitNotes: { captured = $0 }
         )
         _ = view
         XCTAssertNil(captured)

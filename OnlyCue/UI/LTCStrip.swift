@@ -106,9 +106,10 @@ struct LTCStrip: View {
                 Rectangle()
                     .fill(Color.primary)
                     .frame(width: Self.playheadLineWidth, height: height)
-                    .opacity(0.85)
+                    .opacity(0.85) // matches the waveform playhead so the ticks read through
                     .offset(x: xPosition - Self.playheadLineWidth / 2)
                     .accessibilityElement()
+                    .accessibilityLabel("LTC playhead")
                     .accessibilityIdentifier("ltcStripPlayhead")
             }
         }

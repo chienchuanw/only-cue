@@ -22,6 +22,10 @@ struct OSCServerHost: ViewModifier {
     /// Current editor mode, so `/cue/add` can be ignored in read-only Show mode
     /// while transport + cue navigation stay live (#592).
     var editorMode: EditorMode
+    /// The resolved Show-mode GO/step cue-type filter (#657): nil = All cues.
+    /// Non-nil only in Show mode with a live type selected, so `/cue/next`,
+    /// `/cue/prev`, and `/cue/go` walk that type only — matching the in-app UI.
+    var showGoTypeID: CuePointType.ID?
 
     @AppStorage(OSCServerSettings.enabledKey) private var enabled = false
     @AppStorage(OSCServerSettings.portKey) private var port = OSCServerSettings.defaultPort
@@ -36,8 +40,11 @@ struct OSCServerHost: ViewModifier {
             .onChange(of: port) { _, _ in syncServer() }
             // Rebind the command handler so it captures the current editor mode
             // (the closure snapshots `self`); otherwise the Show-mode guard
-            // would use the mode at server-start time (#592).
+            // would use the mode at server-start time (#592). The same closure
+            // snapshots `showGoTypeID`, so rebind when the filter changes too so
+            // OSC cue navigation follows the selected type (#657).
             .onChange(of: editorMode) { _, _ in syncServer() }
+            .onChange(of: showGoTypeID) { _, _ in syncServer() }
             .onDisappear { server.stop() }
             .onReceive(NotificationCenter.default.publisher(for: .oscMonitorRequested)) { _ in
                 showMonitor = true
@@ -81,7 +88,7 @@ struct OSCServerHost: ViewModifier {
     /// fires it deliberately.
     private func goNextCueAndPlay() {
         guard let item = document.model.activeItem,
-              case .seekAndPlay(let time) = item.showGoDecision(from: engine.currentTime)
+              case .seekAndPlay(let time) = item.showGoDecision(from: engine.currentTime, typeID: showGoTypeID)
         else { return }
         // Seek *then* play in the same task (matching `DocumentView.performGo`),
         // so playback doesn't briefly start at the old playhead before the async
@@ -113,7 +120,7 @@ struct OSCServerHost: ViewModifier {
 
     private func step(_ direction: MediaItem.PlayheadStep) {
         guard let item = document.model.activeItem,
-              let target = item.cue(steppingFrom: engine.currentTime, direction: direction)
+              let target = item.cue(steppingFrom: engine.currentTime, direction: direction, typeID: showGoTypeID)
         else { return }
         seek(to: target.time)
     }
@@ -124,8 +131,15 @@ extension View {
         engine: PlayerEngine,
         document: CueListDocument,
         undoManager: UndoManager?,
-        editorMode: EditorMode
+        editorMode: EditorMode,
+        showGoTypeID: CuePointType.ID?
     ) -> some View {
-        modifier(OSCServerHost(engine: engine, document: document, undoManager: undoManager, editorMode: editorMode))
+        modifier(OSCServerHost(
+            engine: engine,
+            document: document,
+            undoManager: undoManager,
+            editorMode: editorMode,
+            showGoTypeID: showGoTypeID
+        ))
     }
 }

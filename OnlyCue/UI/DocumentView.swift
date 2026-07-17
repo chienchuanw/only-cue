@@ -24,6 +24,7 @@ struct DocumentView: View {
     @AppStorage("pauseAtEachCue") var pauseAtEachCue = false
     /// The editor mode — per-window working state, restored across relaunch.
     @SceneStorage("onlycue.editorMode") private var editorModeRaw = EditorMode.cue.rawValue
+    @SceneStorage("onlycue.showGoTypeID") var showGoTypeIDRaw = ""
     @ObservedObject private var keymapStore = KeymapStore.shared
     /// Drives the main-view LTC strip's visibility — it appears whenever LTC
     /// routing is enabled. Observing the singleton here means flipping the
@@ -43,7 +44,7 @@ struct DocumentView: View {
             ?? KeyboardShortcut(KeyEquivalent("/"), modifiers: .command)
     }
 
-    private var editorMode: EditorMode { EditorMode(rawValue: editorModeRaw) ?? .cue }
+    var editorMode: EditorMode { EditorMode(rawValue: editorModeRaw) ?? .cue }
 
     /// Whether a cue may be created right now: a media item is loaded and the
     /// document is not in read-only Show mode (#592). Consulted by the keyboard
@@ -121,7 +122,7 @@ struct DocumentView: View {
             handleMediaDidReachEnd()
         }
         .exportSheet(model: document.model, pendingErrorMessage: pendingAlertMessageBinding)
-        .oscServerHost(engine: engine, document: document, undoManager: undoManager, editorMode: editorMode)
+        .oscServerHost(engine: engine, document: document, undoManager: undoManager, editorMode: editorMode, showGoTypeID: showGoTypeID)
         .ltcOutput(engine: engine, document: document)
         .environment(\.projectFramerate, document.model.timecodeSettings.framerate)
     }
@@ -141,7 +142,8 @@ struct DocumentView: View {
                     onToggleCue: { cueSelection.formSymmetricDifference([$0]) },
                     editorMode: editorMode,
                     setEditorMode: { editorModeRaw = $0.rawValue },
-                    lyricsCursor: $lyricsCursor
+                    lyricsCursor: $lyricsCursor,
+                    activeCueTypeID: showGoTypeID
                 )
 
                 // The LTC strip + transport are the bottom control group and sit

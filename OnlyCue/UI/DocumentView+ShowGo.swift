@@ -5,12 +5,24 @@ import SwiftUI
 /// seek only) and `performGo` (Show-mode GO, seek + play).
 extension DocumentView {
 
+    /// The resolved Show-mode GO/step/highlight cue-type filter (#657): nil = All
+    /// cues. Non-nil only in Show mode when the stored id (`showGoTypeIDRaw`)
+    /// still matches a live cue type — "", a deleted type, or any non-Show mode
+    /// all read as All, preserving pre-#657 behaviour.
+    var showGoTypeID: CuePointType.ID? {
+        guard editorMode == .show,
+              let id = UUID(uuidString: showGoTypeIDRaw),
+              document.model.cuePointTypes.contains(where: { $0.id == id })
+        else { return nil }
+        return id
+    }
+
     /// Steps the playhead to the previous / next cue (transport prev/next-cue
     /// buttons, keyboard, OSC). Seeks without changing the play/pause state —
-    /// unlike `performGo`, which also plays.
+    /// unlike `performGo`, which also plays. Honours the Show-mode type filter.
     func stepPlayhead(_ direction: MediaItem.PlayheadStep) {
         guard let item = document.model.activeItem,
-              let target = item.cue(steppingFrom: engine.currentTime, direction: direction)
+              let target = item.cue(steppingFrom: engine.currentTime, direction: direction, typeID: showGoTypeID)
         else { return }
         seekTask?.cancel()
         seekTask = Task { await engine.seek(to: target.time) }
@@ -23,7 +35,7 @@ extension DocumentView {
     /// `file_length` cap.
     func performGo() {
         guard let item = document.model.activeItem,
-              case .seekAndPlay(let time) = item.showGoDecision(from: engine.currentTime)
+              case .seekAndPlay(let time) = item.showGoDecision(from: engine.currentTime, typeID: showGoTypeID)
         else { return }
         seekTask?.cancel()
         seekTask = Task {

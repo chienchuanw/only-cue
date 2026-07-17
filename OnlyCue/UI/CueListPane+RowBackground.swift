@@ -12,9 +12,31 @@ extension CueListPane {
         return base.opacity(CueListLayout.rowTintOpacity)
     }
 
+    /// The resolved Show-mode GO-by-type filter (#657): nil = All cues. Non-nil
+    /// only in Show mode (`isReadOnly`) when the stored id still matches a live
+    /// cue type — "" or a deleted type read as All. Shared with `DocumentView`
+    /// via the per-window `@SceneStorage("onlycue.showGoTypeID")`.
+    var showGoTypeID: CuePointType.ID? {
+        guard isReadOnly,
+              let id = UUID(uuidString: showGoTypeIDRaw),
+              document.model.cuePointTypes.contains(where: { $0.id == id })
+        else { return nil }
+        return id
+    }
+
     /// The cue currently "active" at the playhead — emphasized in Show mode.
+    /// Honours the GO-by-type filter so the highlight tracks the same cue GO
+    /// walks (#657).
     var currentCueID: Cue.ID? {
-        document.model.activeItem?.activeCue(at: engine.currentTime)?.id
+        document.model.activeItem?.activeCue(at: engine.currentTime, typeID: showGoTypeID)?.id
+    }
+
+    /// Row content opacity: rows whose type differs from the selected GO filter
+    /// are dimmed (still visible) so the walked type stands out (#657). Full
+    /// opacity when no filter is active (All / non-Show mode).
+    func rowOpacity(for cue: Cue) -> Double {
+        guard let selected = showGoTypeID, cue.typeID != selected else { return 1 }
+        return 0.35
     }
 
     /// A row's background. Unselected rows are clean (Figma `318:1228`); the

@@ -21,6 +21,10 @@ struct PreviewPane: View {
     var editorMode: EditorMode = .cue
     var setEditorMode: (EditorMode) -> Void = { _ in }
     @Binding var lyricsCursor: LyricsAuthoringCursor
+    /// Show-mode GO-by-type filter (#657): nil = All cues. When non-nil the
+    /// notes overlay's "current cue" is the latest cue of that type at/before
+    /// the playhead, matching what GO walks.
+    var activeCueTypeID: CuePointType.ID?
 
     @Environment(\.undoManager) private var undoManager
     @State private var waveformURL: URL?
@@ -90,7 +94,7 @@ struct PreviewPane: View {
     }
 
     private var activeCue: Cue? {
-        document.model.activeItem?.activeCue(at: engine.currentTime)
+        document.model.activeItem?.activeCue(at: engine.currentTime, typeID: activeCueTypeID)
     }
 
     private var notesOverlayCard: some View {

@@ -47,23 +47,44 @@ struct LTCRoutingSettings: Codable, Equatable, Sendable {
     /// Role per output channel, indexed 0-based.
     var channelRoles: [ChannelRole]
 
+    /// Digital amplitude of the generated LTC signal, 0...1 (#651). Scales only
+    /// the LTC samples, independent of the program (track) audio level. Cannot
+    /// exceed the system output volume.
+    var amplitude: Float
+
+    /// LTC output level for a fresh install — near full-scale for reliable
+    /// decoding, with a little headroom (raised from the old hard-coded 0.8).
+    static let defaultAmplitude: Float = 0.9
+
     static let `default` = Self(isEnabled: false, deviceUID: nil, channelRoles: [])
 
-    init(isEnabled: Bool = false, deviceUID: String?, channelRoles: [ChannelRole]) {
+    init(
+        isEnabled: Bool = false,
+        deviceUID: String?,
+        channelRoles: [ChannelRole],
+        amplitude: Float = defaultAmplitude
+    ) {
         self.isEnabled = isEnabled
         self.deviceUID = deviceUID
         self.channelRoles = channelRoles
+        self.amplitude = Self.clampAmplitude(amplitude)
+    }
+
+    private static func clampAmplitude(_ value: Float) -> Float {
+        min(max(value, 0), 1)
     }
 
     // MARK: Codable — tolerate payloads written before `isEnabled` existed.
 
-    private enum CodingKeys: String, CodingKey { case isEnabled, deviceUID, channelRoles }
+    private enum CodingKeys: String, CodingKey { case isEnabled, deviceUID, channelRoles, amplitude }
 
     init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
         isEnabled = try container.decodeIfPresent(Bool.self, forKey: .isEnabled) ?? false
         deviceUID = try container.decodeIfPresent(String.self, forKey: .deviceUID)
         channelRoles = try container.decodeIfPresent([ChannelRole].self, forKey: .channelRoles) ?? []
+        let storedAmplitude = try container.decodeIfPresent(Float.self, forKey: .amplitude) ?? Self.defaultAmplitude
+        amplitude = Self.clampAmplitude(storedAmplitude)
     }
 
     func encode(to encoder: Encoder) throws {
@@ -71,6 +92,7 @@ struct LTCRoutingSettings: Codable, Equatable, Sendable {
         try container.encode(isEnabled, forKey: .isEnabled)
         try container.encodeIfPresent(deviceUID, forKey: .deviceUID)
         try container.encode(channelRoles, forKey: .channelRoles)
+        try container.encode(amplitude, forKey: .amplitude)
     }
 
     // MARK: Queries
@@ -114,19 +136,25 @@ struct LTCRoutingSettings: Codable, Equatable, Sendable {
             }
         }
         roles[channel] = role
-        return Self(isEnabled: isEnabled, deviceUID: deviceUID, channelRoles: roles)
+        return Self(isEnabled: isEnabled, deviceUID: deviceUID, channelRoles: roles, amplitude: amplitude)
     }
 
     /// Toggle the master switch, leaving the device + channel layout untouched.
     func settingEnabled(_ enabled: Bool) -> Self {
-        Self(isEnabled: enabled, deviceUID: deviceUID, channelRoles: channelRoles)
+        Self(isEnabled: enabled, deviceUID: deviceUID, channelRoles: channelRoles, amplitude: amplitude)
+    }
+
+    /// Set the LTC output level (#651), clamped to 0...1. Callers persist the
+    /// result. Only scales the LTC signal; program audio is untouched.
+    func settingAmplitude(_ value: Float) -> Self {
+        Self(isEnabled: isEnabled, deviceUID: deviceUID, channelRoles: channelRoles, amplitude: value)
     }
 
     /// Select a different output device. The channel-role list is left as-is;
     /// pair this with `resized(toChannelCount:)` once the new device's channel
     /// count is known.
     func selectingDevice(uid: String?) -> Self {
-        Self(isEnabled: isEnabled, deviceUID: uid, channelRoles: channelRoles)
+        Self(isEnabled: isEnabled, deviceUID: uid, channelRoles: channelRoles, amplitude: amplitude)
     }
 
     /// Pad with `.silent` or truncate so `channelRoles.count == count`. If the
@@ -141,12 +169,12 @@ struct LTCRoutingSettings: Codable, Equatable, Sendable {
         } else if roles.count < clamped {
             roles.append(contentsOf: repeatElement(.silent, count: clamped - roles.count))
         }
-        return Self(isEnabled: isEnabled, deviceUID: deviceUID, channelRoles: roles)
+        return Self(isEnabled: isEnabled, deviceUID: deviceUID, channelRoles: roles, amplitude: amplitude)
     }
 
     /// Replace the channel layout with the default one for `count` channels.
     func withDefaultRoles(forChannelCount count: Int) -> Self {
-        Self(isEnabled: isEnabled, deviceUID: deviceUID, channelRoles: Self.defaultRoles(forChannelCount: count))
+        Self(isEnabled: isEnabled, deviceUID: deviceUID, channelRoles: Self.defaultRoles(forChannelCount: count), amplitude: amplitude)
     }
 
     /// Default channel layout: ch 0 = LTC, ch 1 = Track L, ch 2 = Track R, the

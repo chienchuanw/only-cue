@@ -14,7 +14,9 @@ clumsy when the user hid several lanes and wants just one back.
 ## Decision
 
 - Turn the hidden-lane footer button into a **Menu**:
-  - one item per hidden Type (colour swatch + name) → re-shows just that Type;
+  - one item per hidden Type (name + an `eye` glyph) → re-shows just that Type.
+    (AppKit `Menu` items don't reliably render a custom colour-swatch view, so
+    the item uses the standard SF Symbol rather than the Type's colour dot.)
   - a `Show All` item at the bottom → the existing show-all behaviour.
 - The menu label keeps today's wording — `N hidden lane(s)` with the eye glyph.
 - Both actions go through existing `CueCommands` (undoable, persisted in

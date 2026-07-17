@@ -151,7 +151,12 @@ final class LTCAudioOutput: ObservableObject {
         programNode.stop()
         programRing?.flush()
         let framesPerBuffer = LTCSchedule.framesPerBuffer(forTargetSeconds: bufferTargetSeconds, rate: timecode.rate)
-        schedule = LTCSchedule(startTimecode: timecode, sampleRate: format.sampleRate, framesPerBuffer: framesPerBuffer)
+        schedule = LTCSchedule(
+            startTimecode: timecode,
+            sampleRate: format.sampleRate,
+            framesPerBuffer: framesPerBuffer,
+            amplitude: pending.routing.amplitude
+        )
         playerNode.play()
         programNode.play()
         topUpBuffers()
@@ -202,7 +207,8 @@ final class LTCAudioOutput: ObservableObject {
             schedule = LTCSchedule(
                 startTimecode: pending.timecode,
                 sampleRate: renderFormat.sampleRate,
-                framesPerBuffer: framesPerBuffer
+                framesPerBuffer: framesPerBuffer,
+                amplitude: pending.routing.amplitude
             )
 
             try engine.start()

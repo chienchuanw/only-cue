@@ -33,6 +33,7 @@ struct AudioSettingsView: View {
             VStack(alignment: .leading, spacing: DS.Space.lg) {
                 enableSection
                 if settings.isEnabled {
+                    levelSection
                     deviceSection
                     channelSection
                     routingStatusCard
@@ -69,6 +70,37 @@ struct AudioSettingsView: View {
                 + "muted while LTC is on."
             )
         }
+    }
+
+    private var levelSection: some View {
+        VStack(alignment: .leading, spacing: DS.Space.sm) {
+            settingsCard {
+                settingsRow {
+                    Text("LTC output level").font(DS.Text.body)
+                    Spacer(minLength: DS.Space.sm)
+                    Slider(value: amplitudeSelection, in: 0...1)
+                        .frame(width: 180)
+                        .accessibilityIdentifier("ltcOutputLevelSlider")
+                    Text("\(Int((settings.amplitude * 100).rounded()))%")
+                        .font(DS.Text.mono)
+                        .foregroundStyle(DS.Color.textSecondary)
+                        .frame(width: 44, alignment: .trailing)
+                        .monospacedDigit()
+                }
+            }
+            footnote(
+                "Sets the LTC signal level independently of the music — raise it if a decoder "
+                + "drops frames. It can’t exceed the Mac’s system output volume; for full "
+                + "independence, route LTC to an audio-interface channel."
+            )
+        }
+    }
+
+    private var amplitudeSelection: Binding<Double> {
+        Binding(
+            get: { Double(settings.amplitude) },
+            set: { store.update(settings.settingAmplitude(Float($0))) }
+        )
     }
 
     private var deviceSection: some View {

@@ -390,7 +390,8 @@ extension DocumentView {
                         document: document,
                         undoManager: undoManager
                     )
-                }
+                },
+                engine: engine
             )
         }
     }

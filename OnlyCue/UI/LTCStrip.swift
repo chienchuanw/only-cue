@@ -1,19 +1,25 @@
+import QuartzCore
 import SwiftUI
 
 /// Lane shown below the waveform when LTC routing is enabled. A fixed-width
 /// header carries the mute toggle + active clip's file name; the trailing
-/// ruler draws `LTCTickGenerator` ticks + labels across the lane's width.
-/// Strip is non-interactive (no hit testing on the ruler so clicks pass
-/// through to the click-to-seek surface above).
+/// ruler draws `LTCTickGenerator` ticks + labels across the lane's width, with a
+/// moving playhead line (#653) that tracks playback. Strip is non-interactive
+/// (no hit testing on the ruler so clicks pass through to the click-to-seek
+/// surface above; the playhead is display-only).
 struct LTCStrip: View {
 
     let item: MediaItem
     let framerate: SMPTEFramerate
     let duration: TimeInterval
     let onToggleMute: () -> Void
+    /// Drives the moving playhead (#653). nil → no playhead (previews/tests
+    /// without a playback context).
+    var engine: PlayerEngine?
 
     private static let laneHeaderWidth: CGFloat = 150
     private static let stripHeight: CGFloat = 34
+    private static let playheadLineWidth: CGFloat = 1
 
     /// Header/ruler spacing pinned to Figma 318:1308 (#553, audit `## ltc-strip`).
     /// Off-grid (no DS token); `LTCStripMetricsTests` guards them.
@@ -65,8 +71,11 @@ struct LTCStrip: View {
 
     private var ruler: some View {
         GeometryReader { proxy in
-            Canvas { context, size in
-                draw(into: context, size: size)
+            ZStack(alignment: .topLeading) {
+                Canvas { context, size in
+                    draw(into: context, size: size)
+                }
+                playhead(width: proxy.size.width, height: proxy.size.height)
             }
             .frame(width: proxy.size.width, height: proxy.size.height)
         }
@@ -74,6 +83,35 @@ struct LTCStrip: View {
         // panel-header boundary rather than butting against it.
         .padding(.leading, Metrics.rulerLeadingInset)
         .allowsHitTesting(false)
+    }
+
+    /// Moving playhead line (#653). Reuses the waveform's smooth interpolation
+    /// (`PlayheadInterpolator`, driven by `TimelineView(.animation)`) and pure
+    /// time→x mapping (`CueMarkersGeometry.position`), and its 1pt primary-color
+    /// style. Maps across the ruler's own width — proportional to, not
+    /// pixel-aligned with, the (differently-inset) waveform playhead.
+    @ViewBuilder
+    private func playhead(width: CGFloat, height: CGFloat) -> some View {
+        if let engine, duration > 0 {
+            TimelineView(.animation) { _ in
+                let time = PlayheadInterpolator.renderedTime(
+                    observedTime: engine.currentTime,
+                    observedAt: engine.currentTimeObservedAt,
+                    now: CACurrentMediaTime(),
+                    rate: Double(engine.rate),
+                    duration: duration,
+                    outputLatency: engine.outputLatency
+                )
+                let xPosition = CueMarkersGeometry.position(forTime: time, width: width, duration: duration)
+                Rectangle()
+                    .fill(Color.primary)
+                    .frame(width: Self.playheadLineWidth, height: height)
+                    .opacity(0.85)
+                    .offset(x: xPosition - Self.playheadLineWidth / 2)
+                    .accessibilityElement()
+                    .accessibilityIdentifier("ltcStripPlayhead")
+            }
+        }
     }
 
     private func draw(into context: GraphicsContext, size: CGSize) {

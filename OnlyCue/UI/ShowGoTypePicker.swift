@@ -25,7 +25,10 @@ struct ShowGoTypePicker: View {
             .labelsHidden()
             .pickerStyle(.menu)
             .controlSize(.small)
-            .accessibilityIdentifier("showGoTypePicker")
+            // NB: CueListPane stamps `cueListPane` on its whole subtree via
+            // `.accessibilityIdentifier`, which clobbers a nested identifier —
+            // so the "GO cue type" accessibility label (kept despite
+            // `.labelsHidden()`) is this control's stable test/VoiceOver handle.
             Spacer(minLength: 0)
         }
         .padding(.horizontal, CueListLayout.rowHorizontalPadding)

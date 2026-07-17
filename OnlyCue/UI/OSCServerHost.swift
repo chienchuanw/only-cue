@@ -71,8 +71,20 @@ struct OSCServerHost: ViewModifier {
             CueCommands.addCueAtPlayhead(time: engine.currentTime, document: document, undoManager: undoManager)
         case .cueNext: step(.next)
         case .cuePrev: step(.previous)
+        case .cueGo: goNextCueAndPlay()
         case .stop, .skip, .locate: break // handled above
         }
+    }
+
+    /// Show-mode GO (#645): seek to the next cue after the playhead and play.
+    /// No-op when there is no next cue. Not mode-gated — an external sender
+    /// fires it deliberately.
+    private func goNextCueAndPlay() {
+        guard let item = document.model.activeItem,
+              case .seekAndPlay(let time) = item.showGoDecision(from: engine.currentTime)
+        else { return }
+        seek(to: time)
+        engine.play()
     }
 
     /// The resolved absolute seek destination for a seek-y command, clamped to

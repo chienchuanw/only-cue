@@ -16,6 +16,9 @@ enum OSCCommand: Equatable {
     case cueAdd
     case cueNext
     case cuePrev
+    /// Walk to the next cue and start/keep playing (Show-mode GO, #645). Unlike
+    /// `cueNext`, which only seeks, this also plays.
+    case cueGo
 
     /// The OSC addresses OnlyCue listens for, in display order. Used by the
     /// Settings → OSC pane (display label + copy-the-bare-address button) and
@@ -29,7 +32,8 @@ enum OSCCommand: Equatable {
         OSCAddressEntry(address: "/onlycue/locate", argHint: "seconds"),
         OSCAddressEntry(address: "/onlycue/cue/add"),
         OSCAddressEntry(address: "/onlycue/cue/next"),
-        OSCAddressEntry(address: "/onlycue/cue/prev")
+        OSCAddressEntry(address: "/onlycue/cue/prev"),
+        OSCAddressEntry(address: "/onlycue/cue/go")
     ]
 
     /// Pure mapping from a parsed message to a command. Unknown addresses (or
@@ -47,6 +51,7 @@ enum OSCCommand: Equatable {
         case "/onlycue/cue/add": .cueAdd
         case "/onlycue/cue/next": .cueNext
         case "/onlycue/cue/prev": .cuePrev
+        case "/onlycue/cue/go": .cueGo
         default: nil
         }
     }

@@ -61,6 +61,11 @@ struct CueListPane: View {
     /// context menu, delete, and column resize are all disabled.
     var isReadOnly: Bool = false
 
+    /// Per-window GO-by-type filter (#657), shared with `DocumentView` under the
+    /// same key: the selected cue type's UUID string, "" = All. Drives the
+    /// Show-mode picker, the current-cue highlight, and the other-type row dim.
+    @SceneStorage("onlycue.showGoTypeID") var showGoTypeIDRaw = ""
+
     /// The single selected cue's id, when exactly one is selected — the
     /// granularity the inspector / snap / nudge / duplicate commands work at
     /// (batch versions over the whole `selection` are a follow-up leaf).
@@ -285,6 +290,8 @@ struct CueListPane: View {
             // Show mode (read-only) pins a "Read-only — Show Mode" lock footer
             // (Figma 318:1608); editable modes keep the Manage Types… footer.
             if isReadOnly {
+                ShowGoTypePicker(types: document.model.cuePointTypes, selectionRaw: $showGoTypeIDRaw)
+                Divider()
                 ShowModeFooter()
             } else {
                 CueListFooter()
@@ -297,6 +304,7 @@ struct CueListPane: View {
             List(selection: $selection) {
                 ForEach(cues, id: \.id) { cue in
                     cueRow(for: cue)
+                        .opacity(rowOpacity(for: cue))
                         .contextMenu { cueContextMenu(for: cue) }
                         .tag(cue.id)
                         .listRowBackground(rowBackground(for: cue))

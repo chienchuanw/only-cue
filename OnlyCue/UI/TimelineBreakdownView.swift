@@ -6,7 +6,7 @@ import SwiftUI
 /// track holding only that Type's cue markers (positioned by
 /// `CueMarkersGeometry.position`, the same mapping the waveform overlay uses).
 /// A single playhead line spans every lane. Hidden Types collapse into a
-/// "+N hidden" button that shows them all again. Lanes scroll vertically if
+/// "+N hidden" menu that re-shows a single lane (or all). Lanes scroll vertically if
 /// they overflow the timeline area; there's no horizontal zoom in v1.
 ///
 /// Shown in `PreviewPane` in place of the waveform view when `View → Show
@@ -22,6 +22,7 @@ struct TimelineBreakdownView: View {
     var onSelectCue: (Cue.ID) -> Void = { _ in }
     var onSeek: (TimeInterval) -> Void = { _ in }
     var onHideType: (CuePointType.ID) -> Void = { _ in }
+    var onShowType: (CuePointType.ID) -> Void = { _ in }
     var onShowAllTypes: () -> Void = {}
     var engine: PlayerEngine?
 
@@ -33,7 +34,7 @@ struct TimelineBreakdownView: View {
 
     var body: some View {
         let lanes = TimelineBreakdownLayout.lanes(cues: cues, types: types)
-        let hidden = TimelineBreakdownLayout.hiddenCount(types: types)
+        let hidden = TimelineBreakdownLayout.hiddenTypes(types: types)
         GeometryReader { proxy in
             let trackWidth = max(0, proxy.size.width - Self.labelWidth - Self.labelTrackGap)
             VStack(spacing: 0) {
@@ -45,7 +46,7 @@ struct TimelineBreakdownView: View {
                             playhead(trackWidth: trackWidth)
                         }
                 }
-                if hidden > 0 {
+                if !hidden.isEmpty {
                     hiddenFooter(hidden)
                 }
             }
@@ -140,17 +141,30 @@ struct TimelineBreakdownView: View {
         }
     }
 
-    private func hiddenFooter(_ hidden: Int) -> some View {
+    /// The hidden-lane footer: a menu listing each hidden Type so the user can
+    /// re-show a single lane, with a `Show All` item for the batch reveal (#659).
+    private func hiddenFooter(_ hidden: [CuePointType]) -> some View {
         HStack {
-            Button {
-                onShowAllTypes()
+            Menu {
+                ForEach(hidden) { type in
+                    Button {
+                        onShowType(type.id)
+                    } label: {
+                        Label(type.name, systemImage: "eye")
+                    }
+                    .accessibilityIdentifier("breakdownShowLane.\(type.id)")
+                }
+                Divider()
+                Button("Show All") { onShowAllTypes() }
+                    .accessibilityIdentifier("breakdownShowAllLanes")
             } label: {
-                Label("\(hidden) hidden lane\(hidden == 1 ? "" : "s")", systemImage: "eye")
+                Label("\(hidden.count) hidden lane\(hidden.count == 1 ? "" : "s")", systemImage: "eye")
                     .font(.caption)
             }
-            .buttonStyle(.borderless)
+            .menuStyle(.borderlessButton)
+            .fixedSize()
             .controlSize(.small)
-            .help("Show all Type lanes")
+            .help("Show a hidden Type lane")
             Spacer()
         }
         .padding(.top, 4)

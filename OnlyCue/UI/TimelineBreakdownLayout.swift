@@ -35,9 +35,16 @@ enum TimelineBreakdownLayout {
             }
     }
 
+    /// The currently hidden Types (`!isVisible`), in model order — drives the
+    /// "+N hidden" menu so the user can re-show a single lane (#659).
+    static func hiddenTypes(types: [CuePointType]) -> [CuePointType] {
+        types.filter { !$0.isVisible }
+    }
+
     /// How many Type lanes are currently hidden — drives the "+N hidden"
-    /// affordance.
+    /// affordance. Delegates to `hiddenTypes` so the count and the menu can't
+    /// diverge.
     static func hiddenCount(types: [CuePointType]) -> Int {
-        types.filter { !$0.isVisible }.count
+        hiddenTypes(types: types).count
     }
 }

@@ -14,8 +14,9 @@ extension MediaItem {
     /// The GO decision for the current playhead: the next cue strictly after
     /// `currentTime` (reusing `cue(steppingFrom:.next)`) means seek-and-play;
     /// none means no-op.
-    func showGoDecision(from currentTime: TimeInterval) -> GoDecision {
-        guard let next = cue(steppingFrom: currentTime, direction: .next) else { return .noOp }
+    /// `typeID` (nil = all cues) restricts GO to a single cue type (#657).
+    func showGoDecision(from currentTime: TimeInterval, typeID: CuePointType.ID? = nil) -> GoDecision {
+        guard let next = cue(steppingFrom: currentTime, direction: .next, typeID: typeID) else { return .noOp }
         return .seekAndPlay(next.time)
     }
 }

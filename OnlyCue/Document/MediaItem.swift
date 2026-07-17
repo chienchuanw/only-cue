@@ -44,12 +44,19 @@ extension MediaItem {
     /// `time` exactly equals `currentTime` is skipped, so repeated step presses
     /// always advance instead of getting stuck. Returns `nil` at the ends of
     /// the cue list (no wrap-around) and on empty cues.
-    func cue(steppingFrom currentTime: TimeInterval, direction: PlayheadStep) -> Cue? {
+    /// `typeID` (nil = all cues, the default) filters stepping to a single cue
+    /// type — Show mode's GO-by-type (#657).
+    func cue(
+        steppingFrom currentTime: TimeInterval,
+        direction: PlayheadStep,
+        typeID: CuePointType.ID? = nil
+    ) -> Cue? {
+        let candidates = typeID.map { id in cues.filter { $0.typeID == id } } ?? cues
         switch direction {
         case .previous:
-            return cues.filter { $0.time < currentTime }.max(by: { $0.time < $1.time })
+            return candidates.filter { $0.time < currentTime }.max(by: { $0.time < $1.time })
         case .next:
-            return cues.filter { $0.time > currentTime }.min(by: { $0.time < $1.time })
+            return candidates.filter { $0.time > currentTime }.min(by: { $0.time < $1.time })
         }
     }
 
@@ -60,7 +67,10 @@ extension MediaItem {
     /// the last cue when the playhead is past it (notes persist until show end).
     /// Inclusive on `currentTime` (`<=`), unlike `cue(steppingFrom:direction:)`
     /// which is strict — these are different semantic queries.
-    func activeCue(at currentTime: TimeInterval) -> Cue? {
-        cues.filter { $0.time <= currentTime }.max(by: { $0.time < $1.time })
+    /// `typeID` (nil = all cues, the default) filters to a single cue type —
+    /// Show mode's GO-by-type highlight / notes (#657).
+    func activeCue(at currentTime: TimeInterval, typeID: CuePointType.ID? = nil) -> Cue? {
+        let candidates = typeID.map { id in cues.filter { $0.typeID == id } } ?? cues
+        return candidates.filter { $0.time <= currentTime }.max(by: { $0.time < $1.time })
     }
 }

@@ -23,13 +23,20 @@ final class LTCStripAlignmentUITests: OnlyCueUITestCase {
         app.buttons["transportNextCue"].click()
         Thread.sleep(forTimeInterval: 0.5)
 
-        XCTAssertTrue(
-            app.descendants(matching: .any).matching(identifier: "playheadOverlay").firstMatch.waitForExistence(timeout: 5),
-            "the waveform playhead renders"
-        )
-        XCTAssertTrue(
-            app.descendants(matching: .any).matching(identifier: "ltcStripPlayhead").firstMatch.waitForExistence(timeout: 5),
-            "the LTC strip playhead renders"
+        let waveform = app.descendants(matching: .any).matching(identifier: "playheadOverlay").firstMatch
+        let ltc = app.descendants(matching: .any).matching(identifier: "ltcStripPlayhead").firstMatch
+        XCTAssertTrue(waveform.waitForExistence(timeout: 5), "the waveform playhead renders")
+        XCTAssertTrue(ltc.waitForExistence(timeout: 5), "the LTC strip playhead renders")
+
+        // At this mid-track cue the waveform's time-label is centered on its
+        // playhead line, so `playheadOverlay.midX` is the waveform playhead's x;
+        // `ltcStripPlayhead` is the 1pt LTC line. Aligned tracks ⇒ equal x.
+        print("WAVEFORM midX: \(waveform.frame.midX)  LTC midX: \(ltc.frame.midX)")
+        XCTAssertEqual(
+            ltc.frame.midX,
+            waveform.frame.midX,
+            accuracy: 2.0,
+            "the LTC playhead must be collinear with the waveform playhead"
         )
 
         let attachment = XCTAttachment(screenshot: app.windows.firstMatch.screenshot())

@@ -56,12 +56,19 @@ struct MediaEditSheet: View {
 
             Form {
                 LabeledContent("Name") {
-                    TextField(item.media.displayName, text: $nameDraft)
+                    // A `prompt:` renders inside the box; passing the hint as the
+                    // TextField's title instead makes macOS draw it as an external
+                    // label that eats the field's width (#649).
+                    TextField("Name", text: $nameDraft, prompt: Text(item.media.displayName))
+                        .labelsHidden()
                         .textFieldStyle(.roundedBorder)
                         .accessibilityIdentifier("mediaEditNameField")
                 }
                 LabeledContent("Start timecode") {
-                    TextField("HH:MM:SS:FF", text: $tcDraft)
+                    // In-field `prompt:` (not a title) so `.frame(width:)` goes
+                    // entirely to the input box, wide enough for HH:MM:SS:FF (#649).
+                    TextField("Start timecode", text: $tcDraft, prompt: Text("HH:MM:SS:FF"))
+                        .labelsHidden()
                         .font(.body.monospaced())
                         .textFieldStyle(.roundedBorder)
                         .frame(width: 130)

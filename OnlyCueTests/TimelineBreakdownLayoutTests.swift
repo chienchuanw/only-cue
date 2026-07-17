@@ -52,4 +52,30 @@ final class TimelineBreakdownLayoutTests: XCTestCase {
         XCTAssertEqual(TimelineBreakdownLayout.hiddenCount(types: types()), 0)
         XCTAssertEqual(TimelineBreakdownLayout.hiddenCount(types: types(soundVisible: false)), 1)
     }
+
+    // MARK: - hiddenTypes (#659)
+
+    func test_hiddenTypes_empty_whenAllVisible() {
+        XCTAssertTrue(TimelineBreakdownLayout.hiddenTypes(types: types()).isEmpty)
+    }
+
+    func test_hiddenTypes_returnsOnlyHidden_inModelOrder() {
+        let hidden = TimelineBreakdownLayout.hiddenTypes(
+            types: [
+                CuePointType(id: lightingID, name: "Lighting", colorHex: "#FF0000", isVisible: false),
+                CuePointType(id: soundID, name: "Sound", colorHex: "#00FF00"),
+                CuePointType(id: videoID, name: "Video", colorHex: "#0000FF", isVisible: false)
+            ]
+        )
+        XCTAssertEqual(hidden.map(\.id), [lightingID, videoID])
+        XCTAssertEqual(hidden.map(\.name), ["Lighting", "Video"])
+    }
+
+    func test_hiddenCount_equalsHiddenTypesCount() {
+        let sample = types(soundVisible: false)
+        XCTAssertEqual(
+            TimelineBreakdownLayout.hiddenCount(types: sample),
+            TimelineBreakdownLayout.hiddenTypes(types: sample).count
+        )
+    }
 }

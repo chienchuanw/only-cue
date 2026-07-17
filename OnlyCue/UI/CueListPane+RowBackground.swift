@@ -16,6 +16,11 @@ extension CueListPane {
     /// only in Show mode (`isReadOnly`) when the stored id still matches a live
     /// cue type — "" or a deleted type read as All. Shared with `DocumentView`
     /// via the per-window `@SceneStorage("onlycue.showGoTypeID")`.
+    ///
+    /// Must stay equivalent to `DocumentView.showGoTypeID`, which gates on
+    /// `editorMode == .show`: `isReadOnly` is passed `true` only from the `.show`
+    /// case of `ModeAwareInspector`, so the two agree today. Keep that invariant
+    /// if a future mode ever renders a read-only cue list.
     var showGoTypeID: CuePointType.ID? {
         guard isReadOnly,
               let id = UUID(uuidString: showGoTypeIDRaw),
@@ -36,7 +41,7 @@ extension CueListPane {
     /// opacity when no filter is active (All / non-Show mode).
     func rowOpacity(for cue: Cue) -> Double {
         guard let selected = showGoTypeID, cue.typeID != selected else { return 1 }
-        return 0.35
+        return CueListLayout.dimmedRowOpacity
     }
 
     /// A row's background. Unselected rows are clean (Figma `318:1228`); the

@@ -8,6 +8,10 @@ enum CueListLayout {
     static let rowHorizontalPadding: CGFloat = 8
     static let rowTintOpacity: Double = 0.18
 
+    /// Opacity of a cue row whose type differs from the Show-mode GO-by-type
+    /// filter — dimmed but still visible and hittable (#657).
+    static let dimmedRowOpacity: Double = 0.35
+
     /// Basis for `rowLeadingGutter` — kept so the header/row column alignment
     /// and the #297 floor are unchanged after the swatch became a stripe.
     static let swatchDiameter: CGFloat = 8

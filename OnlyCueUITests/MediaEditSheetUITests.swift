@@ -50,20 +50,16 @@ final class MediaEditSheetUITests: OnlyCueUITestCase {
 
         // Regression (#649): the input box must be wide enough to show a full
         // timecode, not squeezed to a few characters by an external prompt label.
-        print("[tc-field] width = \(tcField.frame.width)")
+        // (Before the fix the box measured ~35pt; the fix moves the hint to an
+        // in-field prompt so the frame width goes to the input box.)
         XCTAssertGreaterThan(
-            tcField.frame.width, 100,
+            tcField.frame.width,
+            100,
             "the timecode input box should fill its width (was \(tcField.frame.width))"
         )
 
-        let shot = app.windows.firstMatch.screenshot()
-        let dir = NSTemporaryDirectory() + "screenshots/"
-        try? FileManager.default.createDirectory(atPath: dir, withIntermediateDirectories: true)
-        let path = dir + "media-edit-tc.png"
-        try? shot.pngRepresentation.write(to: URL(fileURLWithPath: path))
-        print("[screenshot] wrote \(path)")
-        let attachment = XCTAttachment(screenshot: shot)
-        attachment.name = "media-edit-tc"
+        let attachment = XCTAttachment(screenshot: app.windows.firstMatch.screenshot())
+        attachment.name = "media-edit-timecode-field"
         attachment.lifetime = .keepAlways
         add(attachment)
     }

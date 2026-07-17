@@ -18,6 +18,9 @@ struct TransportControls: View {
     /// Steps the playhead to the previous / next cue. Supplied by `DocumentView`.
     var onStepPrevCue: () -> Void = {}
     var onStepNextCue: () -> Void = {}
+    /// Show-mode GO — walk to the next cue and play. nil outside Show mode, which
+    /// hides the GO button entirely. Supplied by `DocumentView` (#645).
+    var onGo: (() -> Void)?
 
     @Environment(\.stripedTimecode) private var stripedTimecode
     @ObservedObject private var ltcRoutingStore = LTCRoutingStore.shared
@@ -92,7 +95,26 @@ struct TransportControls: View {
                 engine.toggle()
             }
             iconButton("forward.end.fill", id: "transportNextCue", help: "Next cue", action: onStepNextCue)
+            if let onGo {
+                goButton(action: onGo)
+            }
         }
+    }
+
+    /// The Show-mode GO button — a labelled, emphasised control (not a glyph),
+    /// since it is the show caller's primary action. Only rendered in Show mode
+    /// (when `onGo` is non-nil).
+    private func goButton(action: @escaping () -> Void) -> some View {
+        Button(action: action) {
+            Text("GO")
+                .font(DS.Text.heading)
+                .foregroundStyle(DS.Color.onCueIndigo)
+                .frame(width: Metrics.primaryButtonWidth, height: Metrics.primaryButtonHeight)
+                .background(DS.Color.cueIndigo, in: RoundedRectangle(cornerRadius: DS.Radius.sm))
+        }
+        .buttonStyle(.plain)
+        .help("GO — next cue")
+        .accessibilityIdentifier("transportGo")
     }
 
     private func iconButton(

@@ -14,7 +14,7 @@ struct DocumentView: View {
     /// The id of the media item awaiting a relink file selection (#577).
     @State var relinkTarget: MediaItem.ID?
     @State var pendingAlert: DocumentAlert?
-    @State private var seekTask: Task<Void, Never>?
+    @State var seekTask: Task<Void, Never>?
     @State private var showOverlayAppearance = false
     @State var cueSelection: Set<Cue.ID> = []
     /// The unplaced-lyric-queue cursor — UI working state for placement.
@@ -159,7 +159,8 @@ struct DocumentView: View {
                         activeItem: activeItem,
                         playbackMode: document.model.playbackMode,
                         onStepPrevCue: { stepPlayhead(.previous) },
-                        onStepNextCue: { stepPlayhead(.next) }
+                        onStepNextCue: { stepPlayhead(.next) },
+                        onGo: editorMode == .show ? { performGo() } : nil
                     )
                     // Pin the transport to its natural height: its internal
                     // full-height divider (.frame(maxHeight: .infinity)) would
@@ -191,6 +192,10 @@ struct DocumentView: View {
                     engine: engine,
                     ltcEnabled: ltcRoutingStore.settings.isEnabled,
                     shortcutFor: shortcut
+                )
+                ShowGoShortcut(
+                    onGo: { performGo() },
+                    isEnabled: editorMode == .show && document.model.activeItem != nil
                 )
             }
             .frame(width: 0, height: 0)
@@ -315,14 +320,6 @@ extension DocumentView {
             document: document,
             undoManager: undoManager
         )
-    }
-
-    fileprivate func stepPlayhead(_ direction: MediaItem.PlayheadStep) {
-        guard let item = document.model.activeItem,
-              let target = item.cue(steppingFrom: engine.currentTime, direction: direction)
-        else { return }
-        seekTask?.cancel()
-        seekTask = Task { await engine.seek(to: target.time) }
     }
 
     func jump(by seconds: TimeInterval) {

@@ -27,6 +27,24 @@ struct PlayheadStepShortcuts: View {
     }
 }
 
+/// The Show-mode GO shortcut (#645): Return walks to the next cue and plays.
+/// Enabled only in Show mode — the space bar stays play/pause, and Return is
+/// otherwise unbound in Show mode (no inline cue editing there).
+struct ShowGoShortcut: View {
+
+    let onGo: () -> Void
+    let isEnabled: Bool
+
+    var body: some View {
+        Button("Go", action: onGo)
+            .keyboardShortcut(.return, modifiers: [])
+            .frame(width: 0, height: 0)
+            .opacity(0)
+            .accessibilityHidden(true)
+            .disabled(!isEnabled)
+    }
+}
+
 struct PlaybackRateShortcuts: View {
 
     let engine: PlayerEngine

@@ -8,7 +8,9 @@ extension DocumentView {
     /// The resolved Show-mode GO/step/highlight cue-type filter (#657): nil = All
     /// cues. Non-nil only in Show mode when the stored id (`showGoTypeIDRaw`)
     /// still matches a live cue type — "", a deleted type, or any non-Show mode
-    /// all read as All, preserving pre-#657 behaviour.
+    /// all read as All, preserving pre-#657 behaviour. Kept equivalent to
+    /// `CueListPane.showGoTypeID` (which gates on `isReadOnly`) so the picker /
+    /// row dim always agree with what GO walks.
     var showGoTypeID: CuePointType.ID? {
         guard editorMode == .show,
               let id = UUID(uuidString: showGoTypeIDRaw),

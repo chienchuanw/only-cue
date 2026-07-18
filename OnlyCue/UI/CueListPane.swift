@@ -316,6 +316,15 @@ struct CueListPane: View {
                     proxy.scrollTo(id, anchor: .center)
                 }
             }
+            // Keep the playhead's current cue visible, but only while playing —
+            // scrolling during editing would yank the list (#671). Fires once
+            // per cue-section crossing (currentCueID changes), not per frame.
+            .onChange(of: currentCueID) { _, id in
+                guard engine.isPlaying, let id else { return }
+                withAnimation(.easeOut(duration: 0.2)) {
+                    proxy.scrollTo(id, anchor: .center)
+                }
+            }
             .scrollContentBackground(.hidden)
         }
     }

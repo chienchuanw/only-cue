@@ -52,6 +52,17 @@ final class WaveformZoomController {
         max(viewportWidth * zoom, viewportWidth)
     }
 
+    /// The anchor-snapped scroll offset the waveform actually renders at
+    /// (`leadingAnchor × contentWidth / anchorCount`), which the caller stores in
+    /// `renderedScrollOffset` for the LTC strip to mirror. Recompute (and store)
+    /// this on every input that moves it: leading anchor, zoom, or viewport
+    /// width (#669). Zero when there are no anchors.
+    func snappedScrollOffset(leadingAnchor: Int, anchorCount: Int, viewportWidth: CGFloat) -> CGFloat {
+        guard anchorCount > 0 else { return 0 }
+        let pxPerAnchor = contentWidth(viewportWidth: viewportWidth) / CGFloat(anchorCount)
+        return CGFloat(leadingAnchor) * pxPerAnchor
+    }
+
     func setZoom(
         _ next: CGFloat,
         anchorFraction: CGFloat,

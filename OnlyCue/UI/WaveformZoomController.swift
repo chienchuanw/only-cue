@@ -32,6 +32,13 @@ final class WaveformZoomController {
     /// class.
     var scrollOffset: CGFloat = 0
 
+    /// The waveform's *actual rendered* horizontal scroll offset — the
+    /// anchor-snapped `leadingAnchor × pxPerAnchor` the `ScrollView` scrolls to,
+    /// which can differ from the un-snapped ideal `scrollOffset` by up to one
+    /// anchor bucket. The LTC strip mirrors THIS (not `scrollOffset`) so its
+    /// playhead lands exactly under the waveform's on-screen playhead (#669).
+    var renderedScrollOffset: CGFloat = 0
+
     /// Width of the visible viewport in points. Set by `GeometryReader` on each
     /// layout pass. Stored on the reference type so it survives struct copies and
     /// is directly settable from tests without going through `@State`.
@@ -100,6 +107,7 @@ final class WaveformZoomController {
     /// view state — clobbering it here would silently re-enable auto-scroll on
     /// the next clip after the user disabled it.
     func reset(scrollOffset: inout CGFloat) {
+        renderedScrollOffset = 0
         if zoom == 1 && scrollOffset == 0 { return }
         zoom = 1
         scrollOffset = 0

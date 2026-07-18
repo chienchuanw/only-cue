@@ -108,13 +108,23 @@ struct WaveformContainer: View {
             .scrollDisabled(zoom.zoom <= 1)
             .gesture(magnifyGesture(viewportWidth: width))
             .onChange(of: leadingAnchor) { _, new in
+                // Always mirror the rendered (anchor-snapped) offset so the LTC
+                // strip's playhead matches the waveform's on-screen playhead,
+                // even for programmatic scrolls (#669).
+                let pxPerAnchor = contentWidth / CGFloat(anchorCount())
+                zoom.renderedScrollOffset = CGFloat(new ?? 0) * pxPerAnchor
                 if isProgrammaticAnchor {
                     isProgrammaticAnchor = false
                     return
                 }
                 guard zoom.zoom > 1, let new, loadedDuration > 0 else { return }
-                let pxPerAnchor = contentWidth / CGFloat(anchorCount())
                 scrollOffset = CGFloat(new) * pxPerAnchor
+            }
+            // Zoom changes pxPerAnchor without necessarily changing leadingAnchor,
+            // so recompute the rendered offset when the zoom factor changes (#669).
+            .onChange(of: zoom.zoom) { _, _ in
+                let pxPerAnchor = contentWidth / CGFloat(anchorCount())
+                zoom.renderedScrollOffset = CGFloat(leadingAnchor ?? 0) * pxPerAnchor
             }
             .onAppear { viewportWidth = width }
             .onChange(of: width) { _, new in viewportWidth = new }

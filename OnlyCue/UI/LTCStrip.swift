@@ -51,7 +51,9 @@ struct LTCStrip: View {
             // zoom == 1 this is `contentWidth == viewport`, `offset == 0` (#663).
             let viewport = proxy.size.width
             let contentWidth = zoom?.contentWidth(viewportWidth: viewport) ?? viewport
-            let scrollOffset = zoom?.scrollOffset ?? 0
+            // Mirror the waveform's *rendered* (anchor-snapped) scroll offset, not
+            // the un-snapped ideal, so the playheads coincide exactly (#669).
+            let scrollOffset = zoom?.renderedScrollOffset ?? 0
             ZStack(alignment: .topLeading) {
                 Canvas { context, size in
                     draw(into: context, size: size)

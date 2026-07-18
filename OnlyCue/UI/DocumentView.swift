@@ -25,6 +25,8 @@ struct DocumentView: View {
     /// The editor mode — per-window working state, restored across relaunch.
     @SceneStorage("onlycue.editorMode") private var editorModeRaw = EditorMode.cue.rawValue
     @SceneStorage("onlycue.showGoTypeID") var showGoTypeIDRaw = ""
+    /// Shared waveform zoom/scroll — waveform + LTC strip stay collinear (#669).
+    @State private var waveformZoom = WaveformZoomController()
     @ObservedObject private var keymapStore = KeymapStore.shared
     /// Drives the main-view LTC strip's visibility — it appears whenever LTC
     /// routing is enabled. Observing the singleton here means flipping the
@@ -143,6 +145,7 @@ struct DocumentView: View {
                     editorMode: editorMode,
                     setEditorMode: { editorModeRaw = $0.rawValue },
                     lyricsCursor: $lyricsCursor,
+                    waveformZoom: waveformZoom,
                     activeCueTypeID: showGoTypeID
                 )
 
@@ -385,7 +388,8 @@ extension DocumentView {
                 item: activeItem,
                 framerate: document.model.timecodeSettings.framerate,
                 duration: activeItem.media.duration,
-                engine: engine
+                engine: engine,
+                zoom: waveformZoom
             )
             // Match the waveform's *total* playhead-track inset (outer gutter +
             // inner content inset) so the LTC playhead is collinear with the

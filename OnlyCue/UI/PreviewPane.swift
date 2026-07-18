@@ -21,6 +21,9 @@ struct PreviewPane: View {
     var editorMode: EditorMode = .cue
     var setEditorMode: (EditorMode) -> Void = { _ in }
     @Binding var lyricsCursor: LyricsAuthoringCursor
+    /// The waveform's horizontal-zoom controller, owned by `DocumentView` and
+    /// shared with the LTC strip so both stay zoom/scroll-synced (#669).
+    var waveformZoom: WaveformZoomController
     /// Show-mode GO-by-type filter (#657): nil = All cues. When non-nil the
     /// notes overlay's "current cue" is the latest cue of that type at/before
     /// the playhead, matching what GO walks.
@@ -214,6 +217,7 @@ struct PreviewPane: View {
     private func waveformContainer(for url: URL, item: MediaItem, withPlayhead: Bool) -> some View {
         WaveformContainer(
             asset: AVURLAsset(url: url),
+            zoom: waveformZoom,
             cues: item.cues,
             tempoGrid: DerivedTempoGrid.from(cues: item.cues),
             resolveColorHex: { document.model.colorHex(for: $0) },

@@ -4,6 +4,9 @@ import SwiftUI
 struct WaveformContainer: View {
 
     let asset: AVURLAsset
+    /// The horizontal-zoom controller. Injected (not `@State`-owned) so the LTC
+    /// strip can share the same instance and stay zoom/scroll-synced (#669).
+    var zoom: WaveformZoomController
     var resolution: Int = 12_000
     var cues: [Cue] = []
     var tempoGrid: DerivedTempoGrid = DerivedTempoGrid(segments: [])
@@ -29,7 +32,6 @@ struct WaveformContainer: View {
     @State var loadedDuration: TimeInterval = 0
     @State private var scrub = ScrubController()
     @State private var seekTask: Task<Void, Never>?
-    @State var zoom = WaveformZoomController()
     @State private var leadingAnchor: Int? = 0
     @AppStorage("showTempoGrid") var showTempoGrid = false
     // Persisted "Auto-Scroll Waveform" preference (#532), default on. Drives the
@@ -92,7 +94,7 @@ struct WaveformContainer: View {
     private func waveformBody(peaks: [Float]) -> some View {
         GeometryReader { proxy in
             let width = proxy.size.width
-            let contentWidth = max(width * zoom.zoom, width)
+            let contentWidth = zoom.contentWidth(viewportWidth: width)
 
             ScrollView(.horizontal, showsIndicators: zoom.zoom > 1) {
                 scrollContent(

@@ -111,23 +111,23 @@ struct WaveformContainer: View {
                 // Always mirror the rendered (anchor-snapped) offset so the LTC
                 // strip's playhead matches the waveform's on-screen playhead,
                 // even for programmatic scrolls (#669).
-                let pxPerAnchor = contentWidth / CGFloat(anchorCount())
-                zoom.renderedScrollOffset = CGFloat(new ?? 0) * pxPerAnchor
+                syncRenderedScrollOffset(viewportWidth: width)
                 if isProgrammaticAnchor {
                     isProgrammaticAnchor = false
                     return
                 }
                 guard zoom.zoom > 1, let new, loadedDuration > 0 else { return }
-                scrollOffset = CGFloat(new) * pxPerAnchor
+                scrollOffset = CGFloat(new) * (contentWidth / CGFloat(anchorCount()))
             }
-            // Zoom changes pxPerAnchor without necessarily changing leadingAnchor,
-            // so recompute the rendered offset when the zoom factor changes (#669).
-            .onChange(of: zoom.zoom) { _, _ in
-                let pxPerAnchor = contentWidth / CGFloat(anchorCount())
-                zoom.renderedScrollOffset = CGFloat(leadingAnchor ?? 0) * pxPerAnchor
-            }
+            // Zoom and viewport width both change the rendered offset (they scale
+            // pxPerAnchor) without necessarily moving leadingAnchor — recompute on
+            // each so the LTC strip never desyncs, incl. on window resize (#669).
+            .onChange(of: zoom.zoom) { _, _ in syncRenderedScrollOffset(viewportWidth: width) }
             .onAppear { viewportWidth = width }
-            .onChange(of: width) { _, new in viewportWidth = new }
+            .onChange(of: width) { _, new in
+                viewportWidth = new
+                syncRenderedScrollOffset(viewportWidth: new)
+            }
         }
     }
 
@@ -332,6 +332,17 @@ extension WaveformContainer {
     fileprivate func anchorCount() -> Int {
         let raw = max(Int(loadedDuration.rounded(.up)), 1)
         return min(raw, Self.maxAnchorCount)
+    }
+
+    /// Publishes the waveform's anchor-snapped rendered scroll offset to the
+    /// shared controller so the LTC strip mirrors what's actually on screen
+    /// (#669). Call on every input that moves it: leading anchor, zoom, or width.
+    fileprivate func syncRenderedScrollOffset(viewportWidth: CGFloat) {
+        zoom.renderedScrollOffset = zoom.snappedScrollOffset(
+            leadingAnchor: leadingAnchor ?? 0,
+            anchorCount: anchorCount(),
+            viewportWidth: viewportWidth
+        )
     }
 
     fileprivate func applyZoomIn() {

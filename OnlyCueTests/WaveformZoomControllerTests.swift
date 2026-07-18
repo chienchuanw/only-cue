@@ -10,6 +10,20 @@ final class WaveformZoomControllerTests: XCTestCase {
         XCTAssertTrue(zoom.followsPlayhead)
     }
 
+    func test_snappedScrollOffset_scalesWithLeadingAnchorZoomAndViewport() {
+        // #669: the anchor-snapped offset the LTC strip mirrors. It must scale
+        // with the viewport width (a window resize) so the strip doesn't desync.
+        let zoom = WaveformZoomController()
+        var offset: CGFloat = 0
+        zoom.setZoom(4, anchorFraction: 0.5, viewportWidth: 100, scrollOffset: &offset)
+        // contentWidth = 100×4 = 400; anchorCount 10 → pxPerAnchor 40; anchor 3 → 120.
+        XCTAssertEqual(zoom.snappedScrollOffset(leadingAnchor: 3, anchorCount: 10, viewportWidth: 100), 120)
+        // Resize wider: contentWidth = 200×4 = 800; pxPerAnchor 80; anchor 3 → 240.
+        XCTAssertEqual(zoom.snappedScrollOffset(leadingAnchor: 3, anchorCount: 10, viewportWidth: 200), 240)
+        // Zero anchors → zero (no divide-by-zero).
+        XCTAssertEqual(zoom.snappedScrollOffset(leadingAnchor: 3, anchorCount: 0, viewportWidth: 100), 0)
+    }
+
     func test_contentWidth_scalesWithZoom_neverBelowViewport() {
         // #669: the shared helper the waveform and LTC strip both use to size
         // the zoomed content so their playhead tracks stay identical.

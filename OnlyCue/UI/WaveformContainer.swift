@@ -134,8 +134,8 @@ struct WaveformContainer: View {
 
     /// The zoomable scroll content: waveform peaks, the tempo grid + time ruler,
     /// the click-to-seek surface (below markers so marker presses win), the cue
-    /// markers + lyric lane, the playhead, and the scroll-anchor rail. Extracted
-    /// so `waveformBody` stays under the function-length cap.
+    /// markers + lyric lane, and the playhead. Extracted so `waveformBody` stays
+    /// under the function-length cap.
     @ViewBuilder
     private func scrollContent(
         peaks: [Float],
@@ -272,7 +272,7 @@ extension WaveformContainer {
 
     /// Scrolls the waveform to reveal the sole-selected cue's marker (#536).
     /// No-op when zoomed out, the cue is already visible, or selection isn't a
-    /// single cue. Reuses the auto-follow apply path (offset + anchor sync). In
+    /// single cue. Reuses the auto-follow apply path (sets the scroll offset). In
     /// this extension so the main struct body stays under `type_body_length`.
     func scrollToSelectedCue() {
         guard selectedCueIDs.count == 1,

@@ -10,8 +10,10 @@ final class WaveformZoomController {
     static let maxZoom: CGFloat = 64
     static let zoomStep: CGFloat = 1.5
     static let dragPixelsPerStep: CGFloat = 60
-    static let followLeadingFraction: CGFloat = 0.2
-    static let followTrailingFraction: CGFloat = 0.8
+    /// The fraction of the viewport the playhead is pinned at during continuous
+    /// auto-follow (#675) — ~1/3 from the left, so ~2/3 of the view is
+    /// look-ahead (upcoming waveform / cues).
+    static let followFraction: CGFloat = 1.0 / 3.0
 
     private(set) var zoom: CGFloat = 1
     var followsPlayhead: Bool = true
@@ -32,12 +34,11 @@ final class WaveformZoomController {
     /// class.
     var scrollOffset: CGFloat = 0
 
-    /// The waveform's *actual rendered* horizontal scroll offset — the
-    /// anchor-snapped `leadingAnchor × pxPerAnchor` the `ScrollView` scrolls to,
-    /// which can differ from the un-snapped ideal `scrollOffset` by up to one
-    /// anchor bucket. The LTC strip mirrors THIS (not `scrollOffset`) so its
-    /// playhead lands exactly under the waveform's on-screen playhead (#669).
-    var renderedScrollOffset: CGFloat = 0
+    /// The waveform's actual rendered horizontal scroll offset, which the LTC
+    /// strip mirrors so its playhead lands exactly under the waveform's on-screen
+    /// playhead (#669). The waveform now renders via a continuous pixel offset
+    /// (#675), so this simply equals `scrollOffset` (no anchor snapping).
+    var renderedScrollOffset: CGFloat { scrollOffset }
 
     /// Width of the visible viewport in points. Set by `GeometryReader` on each
     /// layout pass. Stored on the reference type so it survives struct copies and
@@ -50,17 +51,6 @@ final class WaveformZoomController {
     /// stay collinear at any zoom.
     func contentWidth(viewportWidth: CGFloat) -> CGFloat {
         max(viewportWidth * zoom, viewportWidth)
-    }
-
-    /// The anchor-snapped scroll offset the waveform actually renders at
-    /// (`leadingAnchor × contentWidth / anchorCount`), which the caller stores in
-    /// `renderedScrollOffset` for the LTC strip to mirror. Recompute (and store)
-    /// this on every input that moves it: leading anchor, zoom, or viewport
-    /// width (#669). Zero when there are no anchors.
-    func snappedScrollOffset(leadingAnchor: Int, anchorCount: Int, viewportWidth: CGFloat) -> CGFloat {
-        guard anchorCount > 0 else { return 0 }
-        let pxPerAnchor = contentWidth(viewportWidth: viewportWidth) / CGFloat(anchorCount)
-        return CGFloat(leadingAnchor) * pxPerAnchor
     }
 
     func setZoom(
@@ -118,7 +108,6 @@ final class WaveformZoomController {
     /// view state — clobbering it here would silently re-enable auto-scroll on
     /// the next clip after the user disabled it.
     func reset(scrollOffset: inout CGFloat) {
-        renderedScrollOffset = 0
         if zoom == 1 && scrollOffset == 0 { return }
         zoom = 1
         scrollOffset = 0
@@ -146,35 +135,24 @@ final class WaveformZoomController {
         )
     }
 
-    /// Returns a new scroll offset that places the playhead at the leading fraction
-    /// of the viewport, when auto-follow is engaged and the playhead has crossed
-    /// the trailing threshold. Returns nil otherwise.
-    func autoFollowAdjustment(
-        playheadTime: TimeInterval,
-        duration: TimeInterval,
+    /// The continuous auto-follow scroll offset (#675): the offset that pins the
+    /// playhead at `followFraction` of the viewport, clamped to
+    /// `[0, contentWidth − viewportWidth]`. Applied every frame while playing so
+    /// the waveform flows smoothly under a fixed playhead (no jump-on-threshold).
+    func followScrollOffset(
+        playheadContentX: CGFloat,
         viewportWidth: CGFloat,
-        currentScrollOffset: CGFloat
-    ) -> CGFloat? {
-        guard followsPlayhead, zoom > 1, duration > 0, viewportWidth > 0 else { return nil }
-        let contentWidth = viewportWidth * zoom
-        let playheadContentX = CueMarkersGeometry.position(
-            forTime: playheadTime,
-            width: contentWidth,
-            duration: duration
-        )
-        let playheadViewportX = playheadContentX - currentScrollOffset
-        let trailingThreshold = viewportWidth * Self.followTrailingFraction
-        guard playheadViewportX > trailingThreshold else { return nil }
-        let targetOffset = playheadContentX - viewportWidth * Self.followLeadingFraction
+        contentWidth: CGFloat
+    ) -> CGFloat {
+        let target = playheadContentX - viewportWidth * Self.followFraction
         let maxOffset = max(contentWidth - viewportWidth, 0)
-        return min(max(targetOffset, 0), maxOffset)
+        return min(max(target, 0), maxOffset)
     }
 
     /// Returns a new scroll offset that brings `targetTime` into view, centered
     /// in the viewport, when zoomed in and the target is currently off-screen;
     /// nil if there's nothing to scroll (1× zoom, zero duration) or the target
-    /// is already visible. Used to focus the selected cue (#536). Unlike
-    /// `autoFollowAdjustment`, this is NOT gated on `followsPlayhead` — selecting
+    /// is already visible. Used to focus the selected cue (#536). NOT gated on `followsPlayhead` — selecting
     /// a cue should reveal it regardless of the auto-scroll preference.
     func scrollToRevealAdjustment(
         targetTime: TimeInterval,

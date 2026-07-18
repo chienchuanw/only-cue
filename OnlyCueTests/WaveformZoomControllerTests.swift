@@ -10,18 +10,14 @@ final class WaveformZoomControllerTests: XCTestCase {
         XCTAssertTrue(zoom.followsPlayhead)
     }
 
-    func test_snappedScrollOffset_scalesWithLeadingAnchorZoomAndViewport() {
-        // #669: the anchor-snapped offset the LTC strip mirrors. It must scale
-        // with the viewport width (a window resize) so the strip doesn't desync.
+    func test_renderedScrollOffset_equalsScrollOffset() {
+        // #675: continuous rendering ⇒ the offset the LTC strip mirrors is just
+        // the (continuous) scroll offset — no anchor snapping.
         let zoom = WaveformZoomController()
         var offset: CGFloat = 0
         zoom.setZoom(4, anchorFraction: 0.5, viewportWidth: 100, scrollOffset: &offset)
-        // contentWidth = 100×4 = 400; anchorCount 10 → pxPerAnchor 40; anchor 3 → 120.
-        XCTAssertEqual(zoom.snappedScrollOffset(leadingAnchor: 3, anchorCount: 10, viewportWidth: 100), 120)
-        // Resize wider: contentWidth = 200×4 = 800; pxPerAnchor 80; anchor 3 → 240.
-        XCTAssertEqual(zoom.snappedScrollOffset(leadingAnchor: 3, anchorCount: 10, viewportWidth: 200), 240)
-        // Zero anchors → zero (no divide-by-zero).
-        XCTAssertEqual(zoom.snappedScrollOffset(leadingAnchor: 3, anchorCount: 0, viewportWidth: 100), 0)
+        zoom.scrollOffset = 137
+        XCTAssertEqual(zoom.renderedScrollOffset, 137)
     }
 
     func test_followScrollOffset_placesPlayheadAtFollowFraction() {
@@ -153,92 +149,6 @@ final class WaveformZoomControllerTests: XCTestCase {
         XCTAssertEqual(zoom.zoom, 1, accuracy: 0.0001)
         XCTAssertEqual(offset, 0, accuracy: 0.001)
         XCTAssertFalse(zoom.followsPlayhead, "reset must preserve the auto-scroll preference")
-    }
-
-    // MARK: - Auto-follow
-
-    func test_autoFollow_returnsNil_whenNotFollowing() {
-        let zoom = WaveformZoomController()
-        var offset: CGFloat = 0
-        zoom.setZoom(4, anchorFraction: 0.5, viewportWidth: 100, scrollOffset: &offset)
-        zoom.followsPlayhead = false
-        let result = zoom.autoFollowAdjustment(
-            playheadTime: 90,
-            duration: 100,
-            viewportWidth: 100,
-            currentScrollOffset: 0
-        )
-        XCTAssertNil(result)
-    }
-
-    func test_autoFollow_returnsNil_atOneX() {
-        let zoom = WaveformZoomController()
-        let result = zoom.autoFollowAdjustment(
-            playheadTime: 90,
-            duration: 100,
-            viewportWidth: 100,
-            currentScrollOffset: 0
-        )
-        XCTAssertNil(result)
-    }
-
-    func test_autoFollow_returnsNil_whenPlayheadBelowTrailingThreshold() {
-        // zoom=2, viewport=100, content=200. Playhead t=70/100 → contentX=140.
-        // viewportX = 140 - scroll(0) = 140 > 80? YES at scroll=0. But scroll=70 makes viewportX=70 < 80.
-        let zoom = WaveformZoomController()
-        var offset: CGFloat = 0
-        zoom.setZoom(2, anchorFraction: 0.5, viewportWidth: 100, scrollOffset: &offset)
-        let result = zoom.autoFollowAdjustment(
-            playheadTime: 70,
-            duration: 100,
-            viewportWidth: 100,
-            currentScrollOffset: 70
-        )
-        XCTAssertNil(result)
-    }
-
-    func test_autoFollow_scrollsToLeadingFraction_whenPlayheadPastTrailing() {
-        // zoom=2, viewport=100, content=200. Playhead t=90 → contentX=180. scroll=0 → viewportX=180 (off-screen!).
-        // Trigger fires. Target: contentX - viewport × 0.2 = 180 - 20 = 160.
-        // Clamp to [0, content - viewport] = [0, 100] → 100.
-        let zoom = WaveformZoomController()
-        var offset: CGFloat = 0
-        zoom.setZoom(2, anchorFraction: 0.5, viewportWidth: 100, scrollOffset: &offset)
-        let result = zoom.autoFollowAdjustment(
-            playheadTime: 90,
-            duration: 100,
-            viewportWidth: 100,
-            currentScrollOffset: 0
-        )
-        XCTAssertEqual(result ?? .nan, 100, accuracy: 0.001)
-    }
-
-    func test_autoFollow_returnsTargetThatPlacesPlayheadAtLeadingFraction() {
-        // zoom=4, viewport=100, content=400. Playhead t=50 → contentX=200. scroll=80 → viewportX=120 > 80.
-        // Target: 200 - 20 = 180.
-        let zoom = WaveformZoomController()
-        var offset: CGFloat = 0
-        zoom.setZoom(4, anchorFraction: 0.5, viewportWidth: 100, scrollOffset: &offset)
-        let result = zoom.autoFollowAdjustment(
-            playheadTime: 50,
-            duration: 100,
-            viewportWidth: 100,
-            currentScrollOffset: 80
-        )
-        XCTAssertEqual(result ?? .nan, 180, accuracy: 0.001)
-    }
-
-    func test_autoFollow_returnsNil_whenZeroDuration() {
-        let zoom = WaveformZoomController()
-        var offset: CGFloat = 0
-        zoom.setZoom(4, anchorFraction: 0.5, viewportWidth: 100, scrollOffset: &offset)
-        let result = zoom.autoFollowAdjustment(
-            playheadTime: 1,
-            duration: 0,
-            viewportWidth: 100,
-            currentScrollOffset: 0
-        )
-        XCTAssertNil(result)
     }
 
     // MARK: - Scroll-to-reveal (selected cue, #536)

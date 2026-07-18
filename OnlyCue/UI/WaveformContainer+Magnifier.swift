@@ -30,11 +30,9 @@ extension WaveformContainer {
         )
         scrollOffset = offset
         pinchBaseline = zoom.zoom
-
-        syncAnchorFromOffset(viewportWidth: viewportWidth)
     }
 
     func applyMagnifierReset() {
-        applyZoomReset()    // existing helper: resets zoom + scrollOffset + leadingAnchor + pinchBaseline
+        applyZoomReset()    // existing helper: resets zoom + scrollOffset + pinchBaseline
     }
 }

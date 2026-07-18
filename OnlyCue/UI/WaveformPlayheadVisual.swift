@@ -23,10 +23,15 @@ struct WaveformPlayheadVisual: View {
 
     var body: some View {
         GeometryReader { _ in
-            TimelineView(.animation) { _ in
-                let displayedTime = renderedTime()
-                PlayheadOverlay(currentTime: displayedTime, duration: duration)
-                    .onChange(of: displayedTime) { _, _ in maybeAutoFollow() }
+            TimelineView(.animation) { context in
+                PlayheadOverlay(currentTime: renderedTime(), duration: duration)
+                    // Drive auto-follow off the frame date, NOT the interpolated
+                    // time: the latter uses `CACurrentMediaTime()` and so changes
+                    // on every re-render, which — since setting the scroll offset
+                    // re-renders — would spin an infinite render loop (#675). The
+                    // frame date is stable across non-frame re-renders, so this
+                    // fires once per frame.
+                    .onChange(of: context.date) { _, _ in maybeAutoFollow(displayedTime: renderedTime()) }
             }
         }
         .allowsHitTesting(false)
@@ -44,18 +49,24 @@ struct WaveformPlayheadVisual: View {
         )
     }
 
-    private func maybeAutoFollow() {
-        guard let zoom,
-              let applyAutoFollow,
-              viewportWidth > 0 else { return }
-        let target = zoom.autoFollowAdjustment(
-            playheadTime: scrub.state?.scrubTime ?? engine.currentTime,
-            duration: duration,
-            viewportWidth: viewportWidth,
-            currentScrollOffset: scrollOffset
+    /// Continuously pins the playhead at `followFraction` of the viewport while
+    /// playing (#675): every frame, set the scroll offset so `displayedTime`'s
+    /// content-x lands at the fixed follow position. Only while actually playing,
+    /// zoomed in, and the Auto-Scroll preference is on.
+    private func maybeAutoFollow(displayedTime: TimeInterval) {
+        guard let zoom, let applyAutoFollow, viewportWidth > 0,
+              zoom.followsPlayhead, engine.isPlaying, zoom.zoom > 1, duration > 0 else { return }
+        let contentWidth = zoom.contentWidth(viewportWidth: viewportWidth)
+        let playheadContentX = CueMarkersGeometry.position(
+            forTime: displayedTime,
+            width: contentWidth,
+            duration: duration
         )
-        if let target {
-            applyAutoFollow(target, viewportWidth)
-        }
+        let target = zoom.followScrollOffset(
+            playheadContentX: playheadContentX,
+            viewportWidth: viewportWidth,
+            contentWidth: contentWidth
+        )
+        applyAutoFollow(target, viewportWidth)
     }
 }

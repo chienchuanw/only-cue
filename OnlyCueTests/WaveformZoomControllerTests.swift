@@ -40,6 +40,72 @@ final class WaveformZoomControllerTests: XCTestCase {
         XCTAssertEqual(zoom.followScrollOffset(playheadContentX: 395, viewportWidth: 100, contentWidth: 400), 300)
     }
 
+    // MARK: - Pixel-snapped follow offset (#677: shimmer + pause jump)
+
+    func test_snappedFollowScrollOffset_alignsToDevicePixels() {
+        // #677A: the render offset must land on whole device pixels so the dense
+        // envelope translates without sub-pixel resampling (shimmer). With
+        // displayScale 2, the offset snaps to the nearest 0.5 pt.
+        // viewport 100, follow 1/3 ⇒ raw target = 137 − 33.333… = 103.666…
+        // → nearest 0.5 pt = 103.5.
+        let zoom = WaveformZoomController()
+        let snapped = zoom.snappedFollowScrollOffset(
+            playheadContentX: 137, viewportWidth: 100, contentWidth: 400, displayScale: 2
+        )
+        XCTAssertEqual(snapped, 103.5, accuracy: 0.0001)
+    }
+
+    func test_snappedFollowScrollOffset_clampsToContentBounds() {
+        // Snapping never pushes the offset outside [0, contentWidth − viewport].
+        let zoom = WaveformZoomController()
+        XCTAssertEqual(
+            zoom.snappedFollowScrollOffset(
+                playheadContentX: 10, viewportWidth: 100, contentWidth: 400, displayScale: 2
+            ),
+            0
+        )
+        XCTAssertEqual(
+            zoom.snappedFollowScrollOffset(
+                playheadContentX: 395, viewportWidth: 100, contentWidth: 400, displayScale: 2
+            ),
+            300
+        )
+    }
+
+    func test_snappedFollowScrollOffset_nonPositiveScale_fallsBackToUnsnapped() {
+        // displayScale ≤ 0 (unknown scale) ⇒ the plain clamped follow offset.
+        let zoom = WaveformZoomController()
+        let raw = zoom.followScrollOffset(playheadContentX: 137, viewportWidth: 100, contentWidth: 400)
+        XCTAssertEqual(
+            zoom.snappedFollowScrollOffset(
+                playheadContentX: 137, viewportWidth: 100, contentWidth: 400, displayScale: 0
+            ),
+            raw,
+            accuracy: 0.0001
+        )
+    }
+
+    func test_snappedFollowOffset_pinsPlayheadAtFollowFraction_withinOnePixel() {
+        // #677B: the invariant that makes the pause jump impossible — because the
+        // offset and the playhead come from the SAME time sample, the on-screen
+        // playhead (playheadContentX − snappedOffset) sits at viewport × 1/3
+        // across the whole follow region, within one device pixel of snapping.
+        let zoom = WaveformZoomController()
+        let viewport: CGFloat = 100
+        let contentWidth: CGFloat = 640 // 6.4× — deep enough to stay off both clamps
+        let displayScale: CGFloat = 2
+        let expected = viewport * WaveformZoomController.followFraction
+        // Sweep content-x through the clamp-free interior.
+        for x in stride(from: expected + 1, through: contentWidth - (viewport - expected) - 1, by: 3.7) {
+            let offset = zoom.snappedFollowScrollOffset(
+                playheadContentX: x, viewportWidth: viewport, contentWidth: contentWidth, displayScale: displayScale
+            )
+            let onScreen = x - offset
+            XCTAssertEqual(onScreen, expected, accuracy: 1.0 / displayScale,
+                           "playhead should stay at 1/3 within one device pixel at x=\(x)")
+        }
+    }
+
     func test_contentWidth_scalesWithZoom_neverBelowViewport() {
         // #669: the shared helper the waveform and LTC strip both use to size
         // the zoomed content so their playhead tracks stay identical.

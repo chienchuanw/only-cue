@@ -31,19 +31,33 @@ enum TableSelectionHighlightStyler {
     }
 }
 
-/// Zero-size AppKit probe hosted behind a `List` row; on appear and on every
-/// update it disables the enclosing table's system selection highlight (#679).
+/// Zero-size AppKit probe hosted behind a `List` row that disables the
+/// enclosing table's system selection highlight (#679). It re-applies whenever
+/// it is actually spliced into the view tree (`viewDidMoveToWindow` /
+/// `viewDidMoveToSuperview`) — not on a hopeful single async hop — so the table
+/// is reachable by the time the walk runs, and again on every SwiftUI update in
+/// case a table rebuild restored the blue.
+private final class SelectionHighlightProbeView: NSView {
+    override func viewDidMoveToWindow() {
+        super.viewDidMoveToWindow()
+        TableSelectionHighlightStyler.disableSystemHighlight(from: self)
+    }
+
+    override func viewDidMoveToSuperview() {
+        super.viewDidMoveToSuperview()
+        TableSelectionHighlightStyler.disableSystemHighlight(from: self)
+    }
+}
+
 private struct PlainListSelectionProbe: NSViewRepresentable {
     func makeNSView(context: Context) -> NSView {
-        let view = NSView()
+        let view = SelectionHighlightProbeView()
         view.setAccessibilityHidden(true)
-        // The probe isn't in the table hierarchy until after layout, so defer.
-        DispatchQueue.main.async { TableSelectionHighlightStyler.disableSystemHighlight(from: view) }
         return view
     }
 
     func updateNSView(_ nsView: NSView, context: Context) {
-        DispatchQueue.main.async { TableSelectionHighlightStyler.disableSystemHighlight(from: nsView) }
+        TableSelectionHighlightStyler.disableSystemHighlight(from: nsView)
     }
 }
 

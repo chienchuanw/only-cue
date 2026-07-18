@@ -19,6 +19,14 @@ final class CueRowFillTests: XCTestCase {
         XCTAssertEqual(fill, tint)
     }
 
+    /// #679: a selected cue with NO type color (tint nil) falls back to the
+    /// achromatic selection highlight — otherwise, now that the blue system
+    /// highlight is gone, an uncolored selected row would show nothing at all.
+    func test_selectedRow_withoutTint_fallsBackToSelectionHighlight() {
+        let fill = CueRowFill.color(isSelected: true, isCurrent: false, tint: nil, selection: selection)
+        XCTAssertEqual(fill, selection)
+    }
+
     /// #671: the cue at the playhead gets the achromatic highlight in ANY mode
     /// (previously Show-mode only) — the playhead's current section.
     func test_currentCue_usesSelectionHighlight() {

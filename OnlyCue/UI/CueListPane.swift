@@ -8,6 +8,13 @@ enum CueListLayout {
     static let rowHorizontalPadding: CGFloat = 8
     static let rowTintOpacity: Double = 0.18
 
+    /// The horizontal inset macOS's `List` adds to every row on top of the
+    /// row's own padding. The column header lives *outside* the `List`, so it
+    /// must mirror this inset to line its columns up with the row values below
+    /// (`listRowInsets` / `.listStyle(.plain)` do not remove it on macOS). The
+    /// `CueListColumnAlignmentUITests` regression guard fails if it drifts.
+    static let listRowHorizontalInset: CGFloat = 16
+
     /// Opacity of a cue row whose type differs from the Show-mode GO-by-type
     /// filter — dimmed but still visible and hittable (#657).
     static let dimmedRowOpacity: Double = 0.35
@@ -34,6 +41,7 @@ enum CueListLayout {
     /// contributes nothing.
     static let headerHorizontalChrome: CGFloat =
         2 * rowHorizontalSpacing + rowLeadingGutter + rowHorizontalPadding
+            + 2 * listRowHorizontalInset
 
     /// The cue-list header's guaranteed-compressible minimum width — the
     /// value the outer `NSSplitView` sees as the pane's hard floor. Issue
@@ -257,6 +265,10 @@ struct CueListPane: View {
         // align (Figma 318:1320); trailing keeps the row edge padding.
         .padding(.leading, CueListLayout.rowLeadingGutter)
         .padding(.trailing, CueListLayout.rowHorizontalPadding)
+        // Mirror the inset macOS's List adds to the rows below — the header is
+        // outside the List, so without this its columns sit left of the values
+        // (#661 follow-up; guarded by CueListColumnAlignmentUITests).
+        .padding(.horizontal, CueListLayout.listRowHorizontalInset)
         .padding(.vertical, DS.Space.sm)
         .accessibilityIdentifier(Self.headerAccessibilityIdentifier)
         .disabled(isReadOnly)

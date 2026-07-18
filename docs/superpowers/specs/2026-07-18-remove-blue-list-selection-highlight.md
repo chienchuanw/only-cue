@@ -47,9 +47,26 @@ panes live in one window, so a window-wide search could style the wrong table).
 
 ## Test plan (TDD)
 
-- **Unit** (`TableSelectionHighlightStylerTests`): build a synthetic
+- **Unit — walk** (`TableSelectionHighlightStylerTests`): a synthetic
   `NSTableView → rowView → probe` tree; `disableSystemHighlight(from: probe)`
   sets the table's `selectionHighlightStyle` to `.none` and returns that table;
-  a tree with no table returns nil and changes nothing.
-- **UITest**: select a row and assert it is still marked selected (keyboard nav
-  intact); attach a screenshot for visual confirmation that no blue shows.
+  a tree with no table returns nil.
+- **Integration — premise** (same file): host a real
+  `List { … .plainListSelectionHighlight() }` in an `NSHostingView`/`NSWindow`,
+  spin the runloop, and assert the mounted `NSTableView`'s
+  `selectionHighlightStyle` is `.none`. This is the guard that the fix actually
+  applies, and it is **focus-independent** — see the note below.
+- **Unit — fill** (`CueRowFillTests`): a selected cue with no type color falls
+  back to the achromatic `selection` fill (#679), so it stays visible with the
+  blue gone.
+- **UITest** (`ListSelectionHighlightUITests`): smoke that click + keyboard
+  selection still work; screenshot for the record.
+
+### Why the blue can't be asserted on-screen
+
+The emphasized blue selection only renders in a **key/focused** window. XCUITest
+does not put the app into that state, so under test both the fixed and broken
+builds look identical (no blue either way) — a pixel/screenshot assertion would
+pass vacuously (verified: neutering the fix left the UITest green). The
+focus-independent integration test above is therefore the real guard; it was
+verified to fail when the styler is neutered.

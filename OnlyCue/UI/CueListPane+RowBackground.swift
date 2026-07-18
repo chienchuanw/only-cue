@@ -2,12 +2,13 @@ import SwiftUI
 
 extension CueListPane {
 
-    /// The cue's type-color tint at the row-tint opacity, or clear when the
-    /// cue has no resolvable color.
-    func rowTint(for cue: Cue) -> Color {
+    /// The cue's type-color tint at the row-tint opacity, or nil when the cue
+    /// has no resolvable color (a selected uncolored cue then falls back to the
+    /// achromatic selection highlight in `CueRowFill`, #679).
+    func rowTint(for cue: Cue) -> Color? {
         guard let hex = document.model.colorHex(for: cue),
               let base = Color(hex: hex) else {
-            return Color.clear
+            return nil
         }
         return base.opacity(CueListLayout.rowTintOpacity)
     }

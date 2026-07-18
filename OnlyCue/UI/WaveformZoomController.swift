@@ -5,7 +5,9 @@ import Foundation
 final class WaveformZoomController {
 
     static let minZoom: CGFloat = 1
-    static let maxZoom: CGFloat = 16
+    // Raised 16→64 (#667) so long tracks can be zoomed in far enough for precise
+    // cue placement — a ~4-minute clip then shows ~4s across the viewport.
+    static let maxZoom: CGFloat = 64
     static let zoomStep: CGFloat = 1.5
     static let dragPixelsPerStep: CGFloat = 60
     static let followLeadingFraction: CGFloat = 0.2

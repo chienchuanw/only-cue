@@ -24,6 +24,26 @@ final class WaveformZoomControllerTests: XCTestCase {
         XCTAssertEqual(zoom.snappedScrollOffset(leadingAnchor: 3, anchorCount: 0, viewportWidth: 100), 0)
     }
 
+    func test_followScrollOffset_placesPlayheadAtFollowFraction() {
+        // #675: continuous auto-follow keeps the playhead at ~1/3 of the viewport.
+        // viewport 100, follow fraction 1/3 ⇒ target = playheadX − 33.33.
+        let zoom = WaveformZoomController()
+        let target = zoom.followScrollOffset(playheadContentX: 300, viewportWidth: 100, contentWidth: 400)
+        XCTAssertEqual(target, 300 - 100 * WaveformZoomController.followFraction, accuracy: 0.001)
+    }
+
+    func test_followScrollOffset_clampsAtStart() {
+        // Near the start the target goes negative → clamp to 0 (playhead sits left of 1/3).
+        let zoom = WaveformZoomController()
+        XCTAssertEqual(zoom.followScrollOffset(playheadContentX: 10, viewportWidth: 100, contentWidth: 400), 0)
+    }
+
+    func test_followScrollOffset_clampsAtEnd() {
+        // Near the end the target exceeds maxOffset (contentWidth − viewport) → clamp.
+        let zoom = WaveformZoomController()
+        XCTAssertEqual(zoom.followScrollOffset(playheadContentX: 395, viewportWidth: 100, contentWidth: 400), 300)
+    }
+
     func test_contentWidth_scalesWithZoom_neverBelowViewport() {
         // #669: the shared helper the waveform and LTC strip both use to size
         // the zoomed content so their playhead tracks stay identical.

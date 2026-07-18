@@ -1,4 +1,3 @@
-import AppKit
 import SwiftUI
 
 /// Full-bleed transparent surface that bears the click-to-seek and
@@ -46,12 +45,10 @@ struct WaveformSeekSurface: View {
                         .onEnded { value in seek(toX: value.location.x, width: width) }
                         .simultaneously(with: timelineDragGesture(width: width))
                 )
-                .onContinuousHover { phase in
-                    switch phase {
-                    case .active: NSCursor.openHand.set()
-                    case .ended: NSCursor.arrow.set()
-                    }
-                }
+                // No cursor override (#673): the waveform keeps the default
+                // arrow on hover and while scrubbing (dropped the open/closed
+                // hand). Cue markers (↔) and the zoom magnifier (✛) still set
+                // their own cursors.
                 .accessibilityIdentifier("waveformSeekSurface")
         }
     }
@@ -83,12 +80,10 @@ struct WaveformSeekSurface: View {
                     case .startScrub(let originalTime):
                         scrub.begin(originalTime: originalTime, isPlaying: false)
                     }
-                    NSCursor.closedHand.set()
                 }
                 scrub.update(dx: value.translation.width, width: width, duration: duration)
             }
             .onEnded { _ in
-                NSCursor.arrow.set()
                 guard let finished = scrub.end() else { return }
                 let effect = TimelineScrubOrchestrator.end(finished: finished)
                 seekTask?.cancel()

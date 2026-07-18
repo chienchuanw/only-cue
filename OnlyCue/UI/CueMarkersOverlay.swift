@@ -36,7 +36,17 @@ struct CueMarkersOverlay: View {
         var dxApplied: CGFloat
     }
 
-    private static let dragThreshold: CGFloat = 4
+    /// Tap-vs-drag boundary for a cue marker (#673, lowered 4→2): a press that
+    /// moves less than this is a tap (select + seek to the cue); at/over it is a
+    /// retime. Kept small so small drags reliably retime rather than being
+    /// swallowed as a seek.
+    static let dragThreshold: CGFloat = 2
+
+    /// Whether a marker press with the given horizontal translation is a tap
+    /// (rather than a retime drag). Pure so the threshold is unit-tested (#673).
+    static func isTap(translationWidth: CGFloat) -> Bool {
+        abs(translationWidth) < dragThreshold
+    }
 
     var body: some View {
         GeometryReader { geometry in
@@ -88,7 +98,7 @@ struct CueMarkersOverlay: View {
         // the selection here, then the subsequent tap path would toggle the
         // grabbed cue out — netting an empty selection.
         if activeDrag == nil {
-            guard abs(translationWidth) >= Self.dragThreshold else { return }
+            guard !Self.isTap(translationWidth: translationWidth) else { return }
             let isGroup = selectedCueIDs.contains(grabbedID) && selectedCueIDs.count >= 2
             let moving: Set<Cue.ID>
             if isGroup {
@@ -121,7 +131,7 @@ struct CueMarkersOverlay: View {
         // can clear the threshold even when the user only clicked (e.g. Shift-
         // click landing a couple of pixels off a beat would snap onto the beat
         // and otherwise trigger an unintended retime).
-        if abs(translationWidth) < Self.dragThreshold {
+        if Self.isTap(translationWidth: translationWidth) {
             handleTap(grabbedID: grabbedID)
             return
         }

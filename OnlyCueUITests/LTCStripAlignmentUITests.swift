@@ -44,4 +44,48 @@ final class LTCStripAlignmentUITests: OnlyCueUITestCase {
         attachment.lifetime = .keepAlways
         add(attachment)
     }
+
+    /// #669 — the playheads must stay collinear when the waveform is zoomed in.
+    /// Zooming moves the playhead's on-screen x (the ruler stretches), so this
+    /// distinguishes a synced LTC strip from the old unzoomed one even at scroll
+    /// offset 0.
+    func test_ltcAndWaveformPlayheads_stayAligned_whenZoomed() throws {
+        let app = launchApp(seed: .threeCuesAt1And3And6, extraArguments: ["--ui-test-ltc-enabled"])
+        XCTAssertTrue(app.buttons["transportPlayPause"].waitForExistence(timeout: 15))
+        XCTAssertTrue(
+            app.descendants(matching: .any).matching(identifier: "ltcStrip").firstMatch.waitForExistence(timeout: 5)
+        )
+
+        // Zoom in a few steps (×1.5 each → ~3.4×). Menu zoom anchors on the
+        // viewport centre, so the visible window is around the clip's midpoint.
+        for _ in 0..<3 {
+            app.menuBars.menuBarItems["View"].click()
+            app.menuItems["Zoom In Horizontally"].click()
+        }
+        // Click the waveform's horizontal centre to seek to the window-centre
+        // time, so the playhead lands mid-viewport — visible and (being centred)
+        // with its time-label unclamped, so `playheadOverlay.midX` is the line x.
+        let preview = app.descendants(matching: .any).matching(identifier: "previewPane").firstMatch
+        XCTAssertTrue(preview.waitForExistence(timeout: 5))
+        preview.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.6)).tap()
+        Thread.sleep(forTimeInterval: 0.5)
+
+        let waveform = app.descendants(matching: .any).matching(identifier: "playheadOverlay").firstMatch
+        let ltc = app.descendants(matching: .any).matching(identifier: "ltcStripPlayhead").firstMatch
+        XCTAssertTrue(waveform.waitForExistence(timeout: 5), "the waveform playhead renders")
+        XCTAssertTrue(ltc.waitForExistence(timeout: 5), "the LTC strip playhead renders")
+
+        print("ZOOMED WAVEFORM midX: \(waveform.frame.midX)  LTC midX: \(ltc.frame.midX)")
+        XCTAssertEqual(
+            ltc.frame.midX,
+            waveform.frame.midX,
+            accuracy: 2.0,
+            "the LTC playhead must stay collinear with the waveform playhead when zoomed"
+        )
+
+        let attachment = XCTAttachment(screenshot: app.windows.firstMatch.screenshot())
+        attachment.name = "ltc-waveform-playhead-alignment-zoomed"
+        attachment.lifetime = .keepAlways
+        add(attachment)
+    }
 }

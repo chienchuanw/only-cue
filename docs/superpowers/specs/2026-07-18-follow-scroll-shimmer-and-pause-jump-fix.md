@@ -75,3 +75,23 @@ pixels → no sub-pixel resampling → no shimmer (A).
     pixel (this is the property that makes the pause jump impossible).
 - **UITest** (`WaveformFollowUITests`): zoom, play, pause; assert the playhead
   is still ~1/3 of the viewport after pausing (no forward jump).
+
+## Design notes (adversarial review)
+
+- **Collinearity is self-correcting in follow mode.** The waveform uses
+  `loadedDuration` and the LTC strip uses `MediaReference.duration`, but both
+  come from the same `asset.load(.duration)` of the same file
+  (`MediaImporter` at import, `WaveformContainer` on load) so they are identical.
+  Even if they diverged, each strip now pins *its own* playhead to
+  `viewport × followFraction` using *its own* duration, so the two playhead
+  lines coincide at 1/3 regardless — a stronger guarantee than #669's
+  shared-offset scheme (which required equal durations). Non-following (paused /
+  manual scroll) uses the single shared `scrollOffset`, unchanged from #669.
+- **Residual pause micro-shift is bounded by `outputLatency`.** Rendered time is
+  intentionally discontinuous at play→pause: playing subtracts `outputLatency`
+  (#611, audio sync), paused does not (seeks must stay exact). #677 puts that
+  `L`-sized step on the *content* (the playhead stays at 1/3) instead of on the
+  playhead. The shift is `L × pxPerSecond` — a few px on the long tracks deep
+  zoom targets, and always smaller than the reported playhead jump it replaces.
+  Absorbing it on the playhead instead would reintroduce the reported jump;
+  removing it entirely would break paused seek precision. Accepted.

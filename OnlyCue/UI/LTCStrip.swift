@@ -23,6 +23,10 @@ struct LTCStrip: View {
     /// the two playheads stay collinear at any zoom/scroll.
     var zoom: WaveformZoomController?
 
+    /// Device pixel scale — the follow offset is snapped to this grid so the
+    /// ruler tracks the waveform's shimmer-free scroll (#677).
+    @Environment(\.displayScale) private var displayScale
+
     private static let stripHeight: CGFloat = 34
     private static let playheadLineWidth: CGFloat = 1
 
@@ -46,26 +50,88 @@ struct LTCStrip: View {
     private var ruler: some View {
         GeometryReader { proxy in
             // Mirror the waveform's zoomed content width + scroll offset (#669):
-            // draw ticks/playhead across `contentWidth`, shift by `-scrollOffset`,
-            // and clip to the viewport — the same window the waveform shows. At
-            // zoom == 1 this is `contentWidth == viewport`, `offset == 0` (#663).
+            // draw ticks/playhead across `contentWidth`, shift by the scroll
+            // offset, and clip to the viewport — the same window the waveform
+            // shows. At zoom == 1 this is `contentWidth == viewport`, `offset ==
+            // 0` (#663).
             let viewport = proxy.size.width
             let contentWidth = zoom?.contentWidth(viewportWidth: viewport) ?? viewport
-            // Mirror the waveform's continuous rendered scroll offset so the
-            // playheads coincide exactly at any zoom/scroll (#669, #675).
-            let scrollOffset = zoom?.renderedScrollOffset ?? 0
-            ZStack(alignment: .topLeading) {
-                Canvas { context, size in
-                    draw(into: context, size: size)
-                }
-                playhead(width: contentWidth, height: proxy.size.height)
-            }
-            .frame(width: contentWidth, height: proxy.size.height, alignment: .leading)
-            .offset(x: -scrollOffset)
-            .frame(width: viewport, height: proxy.size.height, alignment: .leading)
-            .clipped()
+            rulerContent(viewport: viewport, contentWidth: contentWidth, height: proxy.size.height)
         }
         .allowsHitTesting(false)
+    }
+
+    /// While following (playing, zoomed, Auto-Scroll on) recompute the offset
+    /// every frame from the same interpolated time the waveform uses (#677) — the
+    /// stored `scrollOffset` is only persisted on pause now, so the ruler must
+    /// derive its own per-frame offset to stay collinear and shimmer-free.
+    /// Otherwise mirror the waveform's stored (rendered) scroll offset (#669).
+    @ViewBuilder
+    private func rulerContent(viewport: CGFloat, contentWidth: CGFloat, height: CGFloat) -> some View {
+        if isFollowing(viewport: viewport) {
+            TimelineView(.animation) { _ in
+                rulerStack(
+                    viewport: viewport,
+                    contentWidth: contentWidth,
+                    height: height,
+                    scrollOffset: followOffset(viewport: viewport, contentWidth: contentWidth)
+                )
+            }
+        } else {
+            rulerStack(
+                viewport: viewport,
+                contentWidth: contentWidth,
+                height: height,
+                scrollOffset: zoom?.renderedScrollOffset ?? 0
+            )
+        }
+    }
+
+    private func rulerStack(viewport: CGFloat, contentWidth: CGFloat, height: CGFloat, scrollOffset: CGFloat) -> some View {
+        ZStack(alignment: .topLeading) {
+            Canvas { context, size in
+                draw(into: context, size: size)
+            }
+            playhead(width: contentWidth, height: height)
+        }
+        .frame(width: contentWidth, height: height, alignment: .leading)
+        .offset(x: -scrollOffset)
+        .frame(width: viewport, height: height, alignment: .leading)
+        .clipped()
+    }
+
+    private func isFollowing(viewport: CGFloat) -> Bool {
+        guard let zoom, let engine else { return false }
+        return zoom.followsPlayhead && engine.isPlaying && zoom.zoom > 1 && duration > 0 && viewport > 0
+    }
+
+    private func followOffset(viewport: CGFloat, contentWidth: CGFloat) -> CGFloat {
+        guard let zoom else { return 0 }
+        let playheadContentX = CueMarkersGeometry.position(
+            forTime: renderedTime(),
+            width: contentWidth,
+            duration: duration
+        )
+        return zoom.snappedFollowScrollOffset(
+            playheadContentX: playheadContentX,
+            viewportWidth: viewport,
+            contentWidth: contentWidth,
+            displayScale: displayScale
+        )
+    }
+
+    /// The interpolated playhead time — shared by the follow offset and the
+    /// ruler's own moving playhead so they track one time basis (#653, #677).
+    private func renderedTime() -> TimeInterval {
+        guard let engine else { return 0 }
+        return PlayheadInterpolator.renderedTime(
+            observedTime: engine.currentTime,
+            observedAt: engine.currentTimeObservedAt,
+            now: CACurrentMediaTime(),
+            rate: Double(engine.rate),
+            duration: duration,
+            outputLatency: engine.outputLatency
+        )
     }
 
     /// Moving playhead line (#653). Reuses the waveform's smooth interpolation
@@ -75,17 +141,9 @@ struct LTCStrip: View {
     /// inset — so this playhead is collinear with the waveform's (#663).
     @ViewBuilder
     private func playhead(width: CGFloat, height: CGFloat) -> some View {
-        if let engine, duration > 0 {
+        if engine != nil, duration > 0 {
             TimelineView(.animation) { _ in
-                let time = PlayheadInterpolator.renderedTime(
-                    observedTime: engine.currentTime,
-                    observedAt: engine.currentTimeObservedAt,
-                    now: CACurrentMediaTime(),
-                    rate: Double(engine.rate),
-                    duration: duration,
-                    outputLatency: engine.outputLatency
-                )
-                let xPosition = CueMarkersGeometry.position(forTime: time, width: width, duration: duration)
+                let xPosition = CueMarkersGeometry.position(forTime: renderedTime(), width: width, duration: duration)
                 Rectangle()
                     .fill(Color.primary)
                     .frame(width: Self.playheadLineWidth, height: height)

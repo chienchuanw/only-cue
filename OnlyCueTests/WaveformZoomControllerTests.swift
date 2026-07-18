@@ -101,8 +101,12 @@ final class WaveformZoomControllerTests: XCTestCase {
                 playheadContentX: x, viewportWidth: viewport, contentWidth: contentWidth, displayScale: displayScale
             )
             let onScreen = x - offset
-            XCTAssertEqual(onScreen, expected, accuracy: 1.0 / displayScale,
-                           "playhead should stay at 1/3 within one device pixel at x=\(x)")
+            XCTAssertEqual(
+                onScreen,
+                expected,
+                accuracy: 1.0 / displayScale,
+                "playhead should stay at 1/3 within one device pixel at x=\(x)"
+            )
         }
     }
 

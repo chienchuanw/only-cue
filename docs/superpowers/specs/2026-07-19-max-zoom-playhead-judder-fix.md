@@ -26,18 +26,34 @@ Smooth at ~3×, so it is a zoom-amplified regression from the #677 follow work.
 
 ## Fix
 
-- **Unify the time source.** Compute `renderedTime()` **once** per frame in the
-  offset `TimelineView` and feed it to both the offset and the playhead: thread
-  `overrideTime` into `WaveformPlayheadVisual`, which — while following — draws a
-  static `PlayheadOverlay(currentTime: overrideTime)` instead of running its own
-  `TimelineView`. Same unification in `LTCStrip` (the ruler offset and the LTC
-  playhead share one `renderedTime()`). The on-screen playhead is then
-  analytically `viewport × followFraction` every frame — no cross-`TimelineView`
-  desync, so no zoom-amplified jitter.
+- **Render the static content once, translate per frame (the decisive fix).**
+  #677 wrapped the whole scroll content — including the wide waveform `Canvas` —
+  in a per-frame `TimelineView`, so the Canvas was re-rasterized across its full
+  `contentWidth` (up to ~40 000 px at 64×) every frame → dropped frames (judder)
+  and, under sustained load, a main-thread hang. Split the static content
+  (waveform, grid, ruler, markers, seek surface) into `staticScrollContent`,
+  built **once** outside the per-frame loop and only `.offset`-translated each
+  frame; only the lightweight playhead (`playheadLayer`) is redrawn per frame.
+  A wide layer rendered once and translated is fine — it was the per-frame
+  re-rasterization, not the width, that hurt.
+- **Unify the time source.** Compute `renderedTime()` **once** per frame and feed
+  it to both the offset and the playhead: thread `overrideTime` into
+  `WaveformPlayheadVisual`, which while following draws a static
+  `PlayheadOverlay(currentTime: overrideTime)` instead of running its own
+  `TimelineView`. Same in `LTCStrip`. The on-screen playhead is then analytically
+  `viewport × followFraction` every frame — no cross-`TimelineView` desync jitter.
 - **Cap the column count.** `WaveformView` buckets into
-  `min(Int(contentWidth), peaks.count)` columns instead of `Int(contentWidth)`.
-  Lossless — above the source resolution the extra columns are collinear
-  interpolations of the same peaks — and ~6× cheaper per frame at 64×.
+  `min(Int(contentWidth), peaks.count)` columns. Lossless (above the source
+  resolution the extra columns are collinear interpolations) and cheaper at deep
+  zoom.
+
+## Outcome
+
+The follow UITest was run at increasing zoom: 7.6×, 26×, 57× and the 64× max all
+hold the playhead at ~1/3 and run smoothly. Before the static-content split, 7.6×
+and deeper hung the app. Options considered and NOT needed: windowing the
+waveform to the viewport, or lowering `maxZoom` — the static-once split alone
+scales across the whole zoom range.
 
 ## What stays the same
 

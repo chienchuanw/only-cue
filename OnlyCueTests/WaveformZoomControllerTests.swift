@@ -24,6 +24,21 @@ final class WaveformZoomControllerTests: XCTestCase {
         XCTAssertEqual(zoom.zoom, WaveformZoomController.maxZoom, accuracy: 0.0001)
     }
 
+    func test_maxZoom_allowsDeepZoom() {
+        // Raised 16→64 so long tracks can be zoomed in far enough for precise
+        // cue placement (grilling decision).
+        XCTAssertEqual(WaveformZoomController.maxZoom, 64)
+    }
+
+    func test_zoomIn_reachesMaxZoom() {
+        let zoom = WaveformZoomController()
+        var offset: CGFloat = 0
+        for _ in 0..<20 { // more than enough ×1.5 steps to saturate
+            zoom.zoomIn(anchorFraction: 0.5, viewportWidth: 100, scrollOffset: &offset)
+        }
+        XCTAssertEqual(zoom.zoom, 64, accuracy: 0.0001)
+    }
+
     func test_setZoom_anchoredAtCenter_keepsCenterTimeUnderCenter() {
         // viewport=100, zoom 1→2, anchor=0.5, scroll=0.
         // Time under center is at content-x=50 in content-width=100; fraction=0.5.

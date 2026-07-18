@@ -32,7 +32,6 @@ struct WaveformContainer: View {
     @State var loadedDuration: TimeInterval = 0
     @State private var scrub = ScrubController()
     @State private var seekTask: Task<Void, Never>?
-    @State private var leadingAnchor: Int? = 0
     @AppStorage("showTempoGrid") var showTempoGrid = false
     // Persisted "Auto-Scroll Waveform" preference (#532), default on. Drives the
     // zoom controller's auto-follow gate; synced on appear and on change so a
@@ -40,11 +39,8 @@ struct WaveformContainer: View {
     @AppStorage("autoScrollWaveform") var autoScrollWaveform = true
 
     @State var pinchBaseline: CGFloat = 1
-    @State private var isProgrammaticAnchor = false
     @State var isHoveringWaveform = false
     @State var hintShowing = false
-
-    private static let maxAnchorCount = 200
 
     var body: some View {
         Group {
@@ -94,41 +90,46 @@ struct WaveformContainer: View {
     private func waveformBody(peaks: [Float]) -> some View {
         GeometryReader { proxy in
             let width = proxy.size.width
+            let height = proxy.size.height
             let contentWidth = zoom.contentWidth(viewportWidth: width)
 
-            ScrollView(.horizontal, showsIndicators: zoom.zoom > 1) {
-                scrollContent(
-                    peaks: peaks,
-                    width: width,
-                    contentWidth: contentWidth,
-                    height: proxy.size.height
-                )
-            }
-            .scrollPosition(id: $leadingAnchor, anchor: .leading)
-            .scrollDisabled(zoom.zoom <= 1)
-            .gesture(magnifyGesture(viewportWidth: width))
-            .onChange(of: leadingAnchor) { _, new in
-                // Always mirror the rendered (anchor-snapped) offset so the LTC
-                // strip's playhead matches the waveform's on-screen playhead,
-                // even for programmatic scrolls (#669).
-                syncRenderedScrollOffset(viewportWidth: width)
-                if isProgrammaticAnchor {
-                    isProgrammaticAnchor = false
-                    return
+            // Continuous pixel-offset render (#675): draw the content at
+            // `contentWidth`, shift by `-scrollOffset`, clip to the viewport —
+            // smooth at any zoom, no anchor buckets. Manual scrolling comes from
+            // the scroll-wheel reader (the ScrollView it replaced).
+            HorizontalScrollWheelReader(
+                onScroll: { dx in manualScroll(dx: dx, viewportWidth: width) },
+                content: {
+                    scrollContent(peaks: peaks, width: width, contentWidth: contentWidth, height: height)
+                        .frame(width: contentWidth, height: height, alignment: .leading)
+                        .offset(x: -scrollOffset)
+                        .frame(width: width, height: height, alignment: .leading)
+                        .clipped()
                 }
-                guard zoom.zoom > 1, let new, loadedDuration > 0 else { return }
-                scrollOffset = CGFloat(new) * (contentWidth / CGFloat(anchorCount()))
-            }
-            // Zoom and viewport width both change the rendered offset (they scale
-            // pxPerAnchor) without necessarily moving leadingAnchor — recompute on
-            // each so the LTC strip never desyncs, incl. on window resize (#669).
-            .onChange(of: zoom.zoom) { _, _ in syncRenderedScrollOffset(viewportWidth: width) }
+            )
+            .gesture(magnifyGesture(viewportWidth: width))
             .onAppear { viewportWidth = width }
             .onChange(of: width) { _, new in
                 viewportWidth = new
-                syncRenderedScrollOffset(viewportWidth: new)
+                clampScrollOffset(viewportWidth: new)
             }
+            .onChange(of: zoom.zoom) { _, _ in clampScrollOffset(viewportWidth: width) }
         }
+    }
+
+    /// Manual horizontal scroll from the wheel reader — natural-scroll direction,
+    /// clamped to the content (#675). No-op at 1× (whole track fits).
+    private func manualScroll(dx: CGFloat, viewportWidth: CGFloat) {
+        guard zoom.zoom > 1 else { return }
+        clampScrollOffset(viewportWidth: viewportWidth, proposed: scrollOffset - dx)
+    }
+
+    /// Clamps `scrollOffset` to `[0, contentWidth − viewport]` (optionally to a
+    /// proposed value) — after resize, zoom, or manual scroll.
+    private func clampScrollOffset(viewportWidth: CGFloat, proposed: CGFloat? = nil) {
+        let contentWidth = zoom.contentWidth(viewportWidth: viewportWidth)
+        let maxOffset = max(contentWidth - viewportWidth, 0)
+        scrollOffset = min(max(proposed ?? scrollOffset, 0), maxOffset)
     }
 
     /// The zoomable scroll content: waveform peaks, the tempo grid + time ruler,
@@ -176,25 +177,8 @@ struct WaveformContainer: View {
                     applyAutoFollow: applyAutoFollow
                 )
             }
-            if zoom.zoom > 1 && loadedDuration > 0 {
-                anchorRail(contentWidth: contentWidth)
-            }
         }
         .frame(width: contentWidth, height: height, alignment: .leading)
-    }
-
-    private func anchorRail(contentWidth: CGFloat) -> some View {
-        let count = anchorCount()
-        let segmentWidth = contentWidth / CGFloat(count)
-        return HStack(spacing: 0) {
-            ForEach(0..<count, id: \.self) { index in
-                Color.clear
-                    .frame(width: segmentWidth, height: 1)
-                    .id(index)
-            }
-        }
-        .frame(height: 1)
-        .allowsHitTesting(false)
     }
 
     private func magnifyGesture(viewportWidth: CGFloat) -> some Gesture {
@@ -210,7 +194,6 @@ struct WaveformContainer: View {
                     scrollOffset: &temp
                 )
                 scrollOffset = temp
-                syncAnchorFromOffset(viewportWidth: viewportWidth)
             }
             .onEnded { _ in
                 pinchBaseline = zoom.zoom
@@ -221,30 +204,11 @@ struct WaveformContainer: View {
         var offset = scrollOffset
         zoom.reset(scrollOffset: &offset)
         scrollOffset = offset
-        isProgrammaticAnchor = true
-        leadingAnchor = 0
         pinchBaseline = 1
-    }
-
-    func syncAnchorFromOffset(viewportWidth: CGFloat) {
-        guard zoom.zoom > 1, loadedDuration > 0 else {
-            isProgrammaticAnchor = true
-            leadingAnchor = 0
-            return
-        }
-        let contentWidth = viewportWidth * zoom.zoom
-        let pxPerAnchor = contentWidth / CGFloat(anchorCount())
-        isProgrammaticAnchor = true
-        leadingAnchor = max(Int((scrollOffset / pxPerAnchor).rounded()), 0)
     }
 
     private func applyAutoFollow(targetOffset: CGFloat, viewportWidth: CGFloat) {
         scrollOffset = targetOffset
-        guard zoom.zoom > 1 else { return }
-        let contentWidth = viewportWidth * zoom.zoom
-        let pxPerAnchor = contentWidth / CGFloat(anchorCount())
-        isProgrammaticAnchor = true
-        leadingAnchor = max(Int((targetOffset / pxPerAnchor).rounded()), 0)
     }
 
     private func load() async {
@@ -253,10 +217,6 @@ struct WaveformContainer: View {
         var resetOffset = scrollOffset
         zoom.reset(scrollOffset: &resetOffset)
         scrollOffset = resetOffset
-        if leadingAnchor != 0 {
-            isProgrammaticAnchor = true
-            leadingAnchor = 0
-        }
         pinchBaseline = 1
 
         let cache = WaveformCache.shared
@@ -327,24 +287,6 @@ extension WaveformContainer {
         applyAutoFollow(targetOffset: target, viewportWidth: viewportWidth)
     }
 
-    /// The number of anchor segments for the scroll-position rail. Split into an
-    /// extension so the main struct body stays under the `type_body_length` cap.
-    fileprivate func anchorCount() -> Int {
-        let raw = max(Int(loadedDuration.rounded(.up)), 1)
-        return min(raw, Self.maxAnchorCount)
-    }
-
-    /// Publishes the waveform's anchor-snapped rendered scroll offset to the
-    /// shared controller so the LTC strip mirrors what's actually on screen
-    /// (#669). Call on every input that moves it: leading anchor, zoom, or width.
-    fileprivate func syncRenderedScrollOffset(viewportWidth: CGFloat) {
-        zoom.renderedScrollOffset = zoom.snappedScrollOffset(
-            leadingAnchor: leadingAnchor ?? 0,
-            anchorCount: anchorCount(),
-            viewportWidth: viewportWidth
-        )
-    }
-
     fileprivate func applyZoomIn() {
         mutateZoom { width, offset in
             zoom.zoomIn(viewportWidth: width, scrollOffset: &offset)
@@ -363,7 +305,6 @@ extension WaveformContainer {
         block(viewportWidth, &offset)
         scrollOffset = offset
         pinchBaseline = zoom.zoom
-        syncAnchorFromOffset(viewportWidth: viewportWidth)
     }
 }
 

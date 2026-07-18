@@ -50,7 +50,6 @@ extension CueListPane {
     func rowBackground(for cue: Cue) -> Color {
         CueRowFill.color(
             isSelected: selection.contains(cue.id),
-            isReadOnly: isReadOnly,
             isCurrent: cue.id == currentCueID,
             tint: rowTint(for: cue),
             selection: DS.Color.selection

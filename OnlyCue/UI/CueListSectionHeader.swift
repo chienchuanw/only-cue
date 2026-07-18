@@ -21,6 +21,9 @@ struct CueListSectionHeader: View {
                 .accessibilityIdentifier("cueListSectionCount")
         }
         .padding(.horizontal, CueListLayout.rowHorizontalPadding)
+        // Mirror the List's row inset (like the column header) so the caption
+        // and count sit over the row content, not left of it (#661 follow-up).
+        .padding(.horizontal, CueListLayout.listRowHorizontalInset)
         .padding(.top, DS.Space.sm)
         .padding(.bottom, DS.Space.xs)
         .frame(maxWidth: .infinity, alignment: .leading)

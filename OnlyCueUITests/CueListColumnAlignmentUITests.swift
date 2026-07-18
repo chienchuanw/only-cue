@@ -2,10 +2,12 @@ import XCTest
 
 /// #661 follow-up — the cue-list column headers must line up with the row
 /// values below them. Regression guard for the List-inset misalignment: the
-/// header sits outside the `List` while rows sit inside it, so without zeroed
-/// `.listRowInsets` the List shifts every row right of the header. Uses
-/// `setListActI` (numbered, named cues) and compares the `NAME`/`#` header x to
-/// a row's name/number x.
+/// header sits outside the `List` while rows sit inside it, so the List shifts
+/// every row right of the header unless the header mirrors that inset. Uses
+/// `setListActI` (numbered, named cues) and asserts the `NAME` header's x
+/// matches a row's name-value x. The trailing (Info) side is aligned by the same
+/// symmetric `.padding(.horizontal, …)`; the seed's Info cells are empty so
+/// there's no info value to measure directly.
 final class CueListColumnAlignmentUITests: OnlyCueUITestCase {
 
     func test_headerColumns_alignWithRowValues() throws {

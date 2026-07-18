@@ -31,7 +31,7 @@ struct WaveformContainer: View {
     @State private var peaks: [Float]?
     @State private var failed = false
     @State var loadedDuration: TimeInterval = 0
-    @State private var scrub = ScrubController()
+    @State var scrub = ScrubController()
     @State private var seekTask: Task<Void, Never>?
     @AppStorage("showTempoGrid") var showTempoGrid = false
     // Persisted "Auto-Scroll Waveform" preference (#532), default on. Drives the
@@ -44,7 +44,7 @@ struct WaveformContainer: View {
     @State var hintShowing = false
     /// Device pixel scale — the follow offset is snapped to this grid so the
     /// waveform envelope translates without sub-pixel resampling (shimmer, #677).
-    @Environment(\.displayScale) private var displayScale
+    @Environment(\.displayScale) var displayScale
 
     var body: some View {
         Group {
@@ -138,12 +138,13 @@ struct WaveformContainer: View {
         scrollOffset = min(max(proposed ?? scrollOffset, 0), maxOffset)
     }
 
-    /// The zoomable scroll content: waveform peaks, the tempo grid + time ruler,
-    /// the click-to-seek surface (below markers so marker presses win), the cue
-    /// markers + lyric lane, and the playhead. Extracted so `waveformBody` stays
-    /// under the function-length cap.
-    @ViewBuilder
-    private func scrollContent(
+    /// The STATIC zoomable content — waveform peaks, tempo grid + time ruler,
+    /// click-to-seek surface (below markers so marker presses win), cue markers,
+    /// lyric lane. Everything except the playhead. During follow it is rendered
+    /// ONCE (outside the per-frame `TimelineView`) and only translated each
+    /// frame, so the wide waveform Canvas is not re-rasterized 60×/s at high zoom
+    /// (#681). The playhead — the only per-frame element — is `playheadLayer`.
+    func staticScrollContent(
         peaks: [Float],
         width: CGFloat,
         contentWidth: CGFloat,
@@ -151,8 +152,8 @@ struct WaveformContainer: View {
     ) -> some View {
         ZStack(alignment: .topLeading) {
             // Audit §9.1: Show mode dims the waveform peaks to convey the
-            // "show-running" locked state while leaving cue markers, the
-            // playhead, and the seek surface at full contrast.
+            // "show-running" locked state while leaving cue markers and the
+            // seek surface at full contrast.
             WaveformView(peaks: peaks)
                 .opacity(editorMode == .show ? 0.45 : 1)
             tempoGridOverlay()
@@ -170,19 +171,24 @@ struct WaveformContainer: View {
             }
             markersOverlay()
             lyricsLaneOverlay()
-            if let engine, loadedDuration > 0 {
-                // Playhead line + time-label badge ABOVE the markers so a
-                // selected (wider) cap never visually occludes them. The follow
-                // offset (#677) is applied by `offsetScrollContent`, not here —
-                // this draws the line at the interpolated time only.
-                WaveformPlayheadVisual(
-                    engine: engine,
-                    duration: loadedDuration,
-                    scrub: $scrub
-                )
-            }
         }
         .frame(width: contentWidth, height: height, alignment: .leading)
+    }
+
+    /// The playhead line + time-label badge, ABOVE the markers so a selected
+    /// (wider) cap never occludes them. `overrideTime` non-nil (following) draws
+    /// at that shared per-frame sample; nil self-animates (#681).
+    @ViewBuilder
+    func playheadLayer(overrideTime: TimeInterval?, contentWidth: CGFloat, height: CGFloat) -> some View {
+        if let engine, loadedDuration > 0 {
+            WaveformPlayheadVisual(
+                engine: engine,
+                duration: loadedDuration,
+                scrub: $scrub,
+                overrideTime: overrideTime
+            )
+            .frame(width: contentWidth, height: height, alignment: .leading)
+        }
     }
 
     private func magnifyGesture(viewportWidth: CGFloat) -> some Gesture {
@@ -309,82 +315,6 @@ extension WaveformContainer {
         block(viewportWidth, &offset)
         scrollOffset = offset
         pinchBaseline = zoom.zoom
-    }
-}
-
-extension WaveformContainer {
-    /// Applies the horizontal scroll offset to the zoomable content and clips it
-    /// to the viewport. While following (playing, zoomed, Auto-Scroll on) the
-    /// offset is recomputed every frame from the interpolated playhead time
-    /// inside a `TimelineView` — the SAME time source the playhead line uses —
-    /// so the two stay locked at `followFraction` with no cross-frame lag (no
-    /// pause jump), and the offset is pixel-snapped so the envelope translates
-    /// without shimmer (#677). Otherwise the stored offset (manual scroll / zoom
-    /// / 1×) is used.
-    @ViewBuilder
-    func offsetScrollContent(peaks: [Float], width: CGFloat, contentWidth: CGFloat, height: CGFloat) -> some View {
-        let content = scrollContent(peaks: peaks, width: width, contentWidth: contentWidth, height: height)
-            .frame(width: contentWidth, height: height, alignment: .leading)
-        if isFollowing(viewportWidth: width) {
-            TimelineView(.animation) { _ in
-                content
-                    .offset(x: -followOffset(viewportWidth: width, contentWidth: contentWidth))
-                    .frame(width: width, height: height, alignment: .leading)
-                    .clipped()
-            }
-        } else {
-            content
-                .offset(x: -scrollOffset)
-                .frame(width: width, height: height, alignment: .leading)
-                .clipped()
-        }
-    }
-
-    /// True while continuous playhead-follow is active: playing, zoomed in, and
-    /// the Auto-Scroll preference on. Gates the per-frame follow offset (#677).
-    func isFollowing(viewportWidth: CGFloat) -> Bool {
-        guard let engine else { return false }
-        return zoom.followsPlayhead && engine.isPlaying && zoom.zoom > 1 && loadedDuration > 0 && viewportWidth > 0
-    }
-
-    /// The pixel-snapped follow offset for the current interpolated playhead time.
-    func followOffset(viewportWidth: CGFloat, contentWidth: CGFloat) -> CGFloat {
-        let playheadContentX = CueMarkersGeometry.position(
-            forTime: followRenderedTime(),
-            width: contentWidth,
-            duration: loadedDuration
-        )
-        return zoom.snappedFollowScrollOffset(
-            playheadContentX: playheadContentX,
-            viewportWidth: viewportWidth,
-            contentWidth: contentWidth,
-            displayScale: displayScale
-        )
-    }
-
-    /// The interpolated playhead time — same mapping as `WaveformPlayheadVisual`
-    /// so the follow offset and the playhead line share one time basis (#677).
-    func followRenderedTime() -> TimeInterval {
-        guard let engine else { return 0 }
-        if let scrubTime = scrub.state?.scrubTime { return scrubTime }
-        return PlayheadInterpolator.renderedTime(
-            observedTime: engine.currentTime,
-            observedAt: engine.currentTimeObservedAt,
-            now: CACurrentMediaTime(),
-            rate: Double(engine.rate),
-            duration: loadedDuration,
-            outputLatency: engine.outputLatency
-        )
-    }
-
-    /// On pause, snapshot the current follow offset into the stored scroll offset
-    /// so the frozen frame matches the last followed frame (no jump) and manual
-    /// scroll resumes from the right place (#677). No-op when auto-scroll is off,
-    /// not zoomed, or no media is loaded.
-    func persistFollowOffsetOnPause() {
-        guard zoom.followsPlayhead, zoom.zoom > 1, viewportWidth > 0, loadedDuration > 0 else { return }
-        let contentWidth = zoom.contentWidth(viewportWidth: viewportWidth)
-        scrollOffset = followOffset(viewportWidth: viewportWidth, contentWidth: contentWidth)
     }
 }
 

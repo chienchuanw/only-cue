@@ -16,11 +16,21 @@ struct WaveformPlayheadVisual: View {
     let engine: PlayerEngine
     let duration: TimeInterval
     @Binding var scrub: ScrubController
+    /// When set (during follow-scroll), the playhead is drawn at this time — the
+    /// SAME per-frame sample that computes the scroll offset — instead of running
+    /// its own `TimelineView`. That keeps the line and the offset on one time
+    /// basis so the playhead can't jitter against the flowing waveform at high
+    /// zoom (#681). nil (not following) → self-animate off `renderedTime()`.
+    var overrideTime: TimeInterval?
 
     var body: some View {
         GeometryReader { _ in
-            TimelineView(.animation) { _ in
-                PlayheadOverlay(currentTime: renderedTime(), duration: duration)
+            if let overrideTime {
+                PlayheadOverlay(currentTime: overrideTime, duration: duration)
+            } else {
+                TimelineView(.animation) { _ in
+                    PlayheadOverlay(currentTime: renderedTime(), duration: duration)
+                }
             }
         }
         .allowsHitTesting(false)

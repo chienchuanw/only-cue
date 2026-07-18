@@ -39,13 +39,22 @@ struct WaveformView: View {
         return (CGFloat(index) + 0.5) / CGFloat(count) * width
     }
 
+    /// Number of envelope columns to draw for a given content width. Capped at
+    /// the source resolution (`peakCount`) so deep horizontal zoom doesn't
+    /// upsample ~12k peaks into tens of thousands of columns and re-draw a huge
+    /// path every follow frame (#681). Lossless: above the source resolution the
+    /// extra columns would only be collinear interpolations of the same peaks.
+    static func bucketCount(width: CGFloat, peakCount: Int) -> Int {
+        min(Int(width.rounded()), max(peakCount, 0))
+    }
+
     var body: some View {
         Canvas { context, size in
             guard !peaks.isEmpty, size.width > 0, size.height > 0 else { return }
 
             let columns = WaveformPeakBucketer.bucket(
                 peaks: peaks,
-                into: Int(size.width.rounded())
+                into: Self.bucketCount(width: size.width, peakCount: peaks.count)
             )
             guard columns.count > 1 else { return }
 

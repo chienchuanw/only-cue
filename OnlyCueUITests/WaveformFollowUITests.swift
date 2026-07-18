@@ -14,8 +14,11 @@ final class WaveformFollowUITests: OnlyCueUITestCase {
         let app = launchApp(seed: .threeCuesAt1And3And6)
         XCTAssertTrue(app.buttons["transportPlayPause"].waitForExistence(timeout: 15))
 
-        // Zoom in so the 30s clip scrolls during playback.
-        for _ in 0..<3 {
+        // Zoom in deep (≈1.5^8 ≈ 26×) so the 30s clip scrolls fast during
+        // playback — the high-zoom regime that used to hang the app by
+        // re-rasterizing the wide waveform Canvas every frame (#681). It must
+        // now run smoothly and hold the playhead near 1/3.
+        for _ in 0..<8 {
             app.menuBars.menuBarItems["View"].click()
             app.menuItems["Zoom In Horizontally"].click()
         }

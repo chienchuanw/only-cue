@@ -69,12 +69,16 @@ struct LTCStrip: View {
     @ViewBuilder
     private func rulerContent(viewport: CGFloat, contentWidth: CGFloat, height: CGFloat) -> some View {
         if isFollowing(viewport: viewport) {
+            // One renderedTime sample per frame drives BOTH the ruler offset and
+            // the playhead line, so they can't desync/jitter at high zoom (#681).
             TimelineView(.animation) { _ in
+                let time = renderedTime()
                 rulerStack(
                     viewport: viewport,
                     contentWidth: contentWidth,
                     height: height,
-                    scrollOffset: followOffset(viewport: viewport, contentWidth: contentWidth)
+                    scrollOffset: followOffset(time: time, viewport: viewport, contentWidth: contentWidth),
+                    overrideTime: time
                 )
             }
         } else {
@@ -82,17 +86,24 @@ struct LTCStrip: View {
                 viewport: viewport,
                 contentWidth: contentWidth,
                 height: height,
-                scrollOffset: zoom?.renderedScrollOffset ?? 0
+                scrollOffset: zoom?.renderedScrollOffset ?? 0,
+                overrideTime: nil
             )
         }
     }
 
-    private func rulerStack(viewport: CGFloat, contentWidth: CGFloat, height: CGFloat, scrollOffset: CGFloat) -> some View {
+    private func rulerStack(
+        viewport: CGFloat,
+        contentWidth: CGFloat,
+        height: CGFloat,
+        scrollOffset: CGFloat,
+        overrideTime: TimeInterval?
+    ) -> some View {
         ZStack(alignment: .topLeading) {
             Canvas { context, size in
                 draw(into: context, size: size)
             }
-            playhead(width: contentWidth, height: height)
+            playhead(width: contentWidth, height: height, overrideTime: overrideTime)
         }
         .frame(width: contentWidth, height: height, alignment: .leading)
         .offset(x: -scrollOffset)
@@ -105,10 +116,10 @@ struct LTCStrip: View {
         return zoom.followsPlayhead && engine.isPlaying && zoom.zoom > 1 && duration > 0 && viewport > 0
     }
 
-    private func followOffset(viewport: CGFloat, contentWidth: CGFloat) -> CGFloat {
+    private func followOffset(time: TimeInterval, viewport: CGFloat, contentWidth: CGFloat) -> CGFloat {
         guard let zoom else { return 0 }
         let playheadContentX = CueMarkersGeometry.position(
-            forTime: renderedTime(),
+            forTime: time,
             width: contentWidth,
             duration: duration
         )
@@ -134,26 +145,34 @@ struct LTCStrip: View {
         )
     }
 
-    /// Moving playhead line (#653). Reuses the waveform's smooth interpolation
-    /// (`PlayheadInterpolator`, driven by `TimelineView(.animation)`) and pure
-    /// time→x mapping (`CueMarkersGeometry.position`), and its 1pt primary-color
-    /// style. Maps across the ruler's full width, which now shares the waveform's
-    /// inset — so this playhead is collinear with the waveform's (#663).
+    /// Moving playhead line (#653). Pure time→x mapping (`CueMarkersGeometry`),
+    /// 1pt primary-color style, collinear with the waveform's (#663). While
+    /// following it is drawn at `overrideTime` — the same per-frame sample as the
+    /// ruler offset — so the two can't desync at high zoom (#681); otherwise it
+    /// self-animates off `renderedTime()` via its own `TimelineView`.
     @ViewBuilder
-    private func playhead(width: CGFloat, height: CGFloat) -> some View {
+    private func playhead(width: CGFloat, height: CGFloat, overrideTime: TimeInterval?) -> some View {
         if engine != nil, duration > 0 {
-            TimelineView(.animation) { _ in
-                let xPosition = CueMarkersGeometry.position(forTime: renderedTime(), width: width, duration: duration)
-                Rectangle()
-                    .fill(Color.primary)
-                    .frame(width: Self.playheadLineWidth, height: height)
-                    .opacity(0.85) // matches the waveform playhead so the ticks read through
-                    .offset(x: xPosition - Self.playheadLineWidth / 2)
-                    .accessibilityElement()
-                    .accessibilityLabel("LTC playhead")
-                    .accessibilityIdentifier("ltcStripPlayhead")
+            if let overrideTime {
+                playheadLine(at: overrideTime, width: width, height: height)
+            } else {
+                TimelineView(.animation) { _ in
+                    playheadLine(at: renderedTime(), width: width, height: height)
+                }
             }
         }
+    }
+
+    private func playheadLine(at time: TimeInterval, width: CGFloat, height: CGFloat) -> some View {
+        let xPosition = CueMarkersGeometry.position(forTime: time, width: width, duration: duration)
+        return Rectangle()
+            .fill(Color.primary)
+            .frame(width: Self.playheadLineWidth, height: height)
+            .opacity(0.85) // matches the waveform playhead so the ticks read through
+            .offset(x: xPosition - Self.playheadLineWidth / 2)
+            .accessibilityElement()
+            .accessibilityLabel("LTC playhead")
+            .accessibilityIdentifier("ltcStripPlayhead")
     }
 
     private func draw(into context: GraphicsContext, size: CGSize) {

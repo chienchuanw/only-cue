@@ -305,6 +305,9 @@ struct CueListPane: View {
                         .contextMenu { cueContextMenu(for: cue) }
                         .tag(cue.id)
                         .listRowBackground(rowBackground(for: cue))
+                        // Kill the macOS blue system selection highlight so only
+                        // the cue-type tint row background shows (#679).
+                        .plainListSelectionHighlight()
                 }
                 .onDelete(perform: isReadOnly ? nil : deleteAtOffsets)
             }

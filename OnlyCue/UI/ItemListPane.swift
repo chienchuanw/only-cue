@@ -147,6 +147,9 @@ struct ItemListPane: View {
                         ))
                         .padding(.horizontal, DS.Space.xs)
                 )
+                // Kill the macOS blue system selection highlight so only the
+                // achromatic selection pill shows (#679).
+                .plainListSelectionHighlight()
             }
             .onMove(perform: move)
             .onDelete(perform: deleteAtOffsets)

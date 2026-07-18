@@ -299,6 +299,9 @@ struct CueListPane: View {
                 ForEach(cues, id: \.id) { cue in
                     cueRow(for: cue)
                         .opacity(rowOpacity(for: cue))
+                        // Expose the playhead's current cue to VoiceOver, matching
+                        // the lyrics pane's current-line trait (#671).
+                        .accessibilityAddTraits(cue.id == currentCueID ? .isSelected : [])
                         .contextMenu { cueContextMenu(for: cue) }
                         .tag(cue.id)
                         .listRowBackground(rowBackground(for: cue))

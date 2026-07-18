@@ -17,7 +17,7 @@ final class WaveformZoomMagnifierTests: XCTestCase {
     /// controller IS the shared mutable state.
     private func makeContainer() -> WaveformContainer {
         let url = URL(fileURLWithPath: "/dev/null")
-        let container = WaveformContainer(asset: AVURLAsset(url: url))
+        let container = WaveformContainer(asset: AVURLAsset(url: url), zoom: WaveformZoomController())
         container.viewportWidth = 400
         return container
     }

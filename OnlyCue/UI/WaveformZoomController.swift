@@ -37,6 +37,14 @@ final class WaveformZoomController {
     /// is directly settable from tests without going through `@State`.
     var viewportWidth: CGFloat = 0
 
+    /// The zoomed content width for a given viewport width — `viewportWidth ×
+    /// zoom`, never below the viewport. Shared by the waveform and the LTC strip
+    /// (#669) so their time→x tracks are sized identically and their playheads
+    /// stay collinear at any zoom.
+    func contentWidth(viewportWidth: CGFloat) -> CGFloat {
+        max(viewportWidth * zoom, viewportWidth)
+    }
+
     func setZoom(
         _ next: CGFloat,
         anchorFraction: CGFloat,

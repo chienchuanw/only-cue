@@ -17,6 +17,11 @@ struct LTCStrip: View {
     /// Drives the moving playhead (#653). nil → no playhead (previews/tests
     /// without a playback context).
     var engine: PlayerEngine?
+    /// The waveform's shared horizontal-zoom controller (#669). nil → unzoomed
+    /// (previews/tests). When set, the ruler is drawn across the same zoomed
+    /// content width and shifted by the same `scrollOffset` as the waveform, so
+    /// the two playheads stay collinear at any zoom/scroll.
+    var zoom: WaveformZoomController?
 
     private static let stripHeight: CGFloat = 34
     private static let playheadLineWidth: CGFloat = 1
@@ -40,16 +45,24 @@ struct LTCStrip: View {
 
     private var ruler: some View {
         GeometryReader { proxy in
+            // Mirror the waveform's zoomed content width + scroll offset (#669):
+            // draw ticks/playhead across `contentWidth`, shift by `-scrollOffset`,
+            // and clip to the viewport — the same window the waveform shows. At
+            // zoom == 1 this is `contentWidth == viewport`, `offset == 0` (#663).
+            let viewport = proxy.size.width
+            let contentWidth = zoom?.contentWidth(viewportWidth: viewport) ?? viewport
+            let scrollOffset = zoom?.scrollOffset ?? 0
             ZStack(alignment: .topLeading) {
                 Canvas { context, size in
                     draw(into: context, size: size)
                 }
-                playhead(width: proxy.size.width, height: proxy.size.height)
+                playhead(width: contentWidth, height: proxy.size.height)
             }
-            .frame(width: proxy.size.width, height: proxy.size.height)
+            .frame(width: contentWidth, height: proxy.size.height, alignment: .leading)
+            .offset(x: -scrollOffset)
+            .frame(width: viewport, height: proxy.size.height, alignment: .leading)
+            .clipped()
         }
-        // No leading inset: the ruler spans the strip's full width so it maps
-        // time→x across the same x-range as the waveform above it (#663).
         .allowsHitTesting(false)
     }
 

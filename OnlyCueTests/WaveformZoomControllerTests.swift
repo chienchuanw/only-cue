@@ -10,6 +10,16 @@ final class WaveformZoomControllerTests: XCTestCase {
         XCTAssertTrue(zoom.followsPlayhead)
     }
 
+    func test_contentWidth_scalesWithZoom_neverBelowViewport() {
+        // #669: the shared helper the waveform and LTC strip both use to size
+        // the zoomed content so their playhead tracks stay identical.
+        let zoom = WaveformZoomController()
+        XCTAssertEqual(zoom.contentWidth(viewportWidth: 100), 100) // 1× = viewport
+        var offset: CGFloat = 0
+        zoom.setZoom(4, anchorFraction: 0.5, viewportWidth: 100, scrollOffset: &offset)
+        XCTAssertEqual(zoom.contentWidth(viewportWidth: 100), 400) // 4× = 4 × viewport
+    }
+
     func test_setZoom_clampsBelowMin() {
         let zoom = WaveformZoomController()
         var offset: CGFloat = 0

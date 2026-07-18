@@ -149,6 +149,29 @@ final class WaveformZoomController {
         return min(max(target, 0), maxOffset)
     }
 
+    /// `followScrollOffset` aligned to whole device pixels (#677). Snapping the
+    /// *render* offset to the pixel grid stops the dense waveform envelope from
+    /// resampling under sub-pixel Core Animation translation — the "shimmer"
+    /// during follow-scroll. `displayScale ≤ 0` (unknown scale) falls back to the
+    /// unsnapped clamped offset. The clamp is re-applied after snapping so a
+    /// rounded value can never sit outside `[0, contentWidth − viewportWidth]`.
+    func snappedFollowScrollOffset(
+        playheadContentX: CGFloat,
+        viewportWidth: CGFloat,
+        contentWidth: CGFloat,
+        displayScale: CGFloat
+    ) -> CGFloat {
+        let raw = followScrollOffset(
+            playheadContentX: playheadContentX,
+            viewportWidth: viewportWidth,
+            contentWidth: contentWidth
+        )
+        guard displayScale > 0 else { return raw }
+        let snapped = (raw * displayScale).rounded() / displayScale
+        let maxOffset = max(contentWidth - viewportWidth, 0)
+        return min(max(snapped, 0), maxOffset)
+    }
+
     /// Returns a new scroll offset that brings `targetTime` into view, centered
     /// in the viewport, when zoomed in and the target is currently off-screen;
     /// nil if there's nothing to scroll (1× zoom, zero duration) or the target

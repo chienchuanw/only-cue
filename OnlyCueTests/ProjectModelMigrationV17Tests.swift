@@ -36,7 +36,7 @@ final class ProjectModelMigrationV17Tests: XCTestCase {
 
     func test_v16ToV17_bumpsSchemaVersion() throws {
         let migrated = try ProjectModel.decode(from: Data(v16Doc().utf8))
-        XCTAssertEqual(migrated.schemaVersion, 17)
+        XCTAssertEqual(migrated.schemaVersion, ProjectModel.currentSchemaVersion)
     }
 
     func test_v16ToV17_ma2PushTargetIsNil_othersIntact() throws {

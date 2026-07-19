@@ -27,6 +27,30 @@ struct MA2PushTarget: Codable, Equatable {
     /// (same convention as `CueExportFilter`).
     var includedTypeIDs: Set<UUID>
 
+    /// User-facing English sequence name (#686). `nil` = derive from the clip's
+    /// sanitized resolved name at push time. Persisted (schema v18).
+    var sequenceName: String?
+
+    /// Explicit memberwise init so `sequenceName` can default to nil and existing
+    /// call sites stay source-compatible (Codable/Equatable stay synthesized).
+    init(
+        sequenceSlot: Int,
+        timecodeSlot: Int,
+        executorPage: Int,
+        executorNumber: Int,
+        timecodeCommand: MA2TimecodeCommand,
+        includedTypeIDs: Set<UUID>,
+        sequenceName: String? = nil
+    ) {
+        self.sequenceSlot = sequenceSlot
+        self.timecodeSlot = timecodeSlot
+        self.executorPage = executorPage
+        self.executorNumber = executorNumber
+        self.timecodeCommand = timecodeCommand
+        self.includedTypeIDs = includedTypeIDs
+        self.sequenceName = sequenceName
+    }
+
     /// Console slots, pages and executors are 1-based; anything below 1 would
     /// emit invalid XML indices (`index="-1"`) and telnet commands
     /// (`Delete Sequence 0`). The push sheet refuses invalid targets.

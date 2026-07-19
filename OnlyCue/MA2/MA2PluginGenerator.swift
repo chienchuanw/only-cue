@@ -20,8 +20,9 @@ enum MA2PluginGenerator {
         lines.append(contentsOf: writeFile(plan.sequenceUpload))
         lines.append(contentsOf: writeFile(plan.timecodeUpload))
         for command in plan.commands {
-            // Plan commands never contain single quotes; wrap in a Lua single-quoted string.
-            lines.append("  CMD('\(command)')")
+            // Names (e.g. "Don't Stop") reach here via Label commands, so the
+            // command can contain apostrophes — escape for the single-quoted Lua string.
+            lines.append("  CMD(\(luaSingleQuoted(command)))")
         }
         lines.append("  gma.sleep(0.5)")
         lines.append("  os.remove(path..'\(plan.sequenceUpload.filename)')")
@@ -32,12 +33,37 @@ enum MA2PluginGenerator {
     }
 
     private static func writeFile(_ upload: MA2PushPlan.Upload) -> [String] {
-        // Long-bracket literal [==[ … ]==] keeps the XML's double quotes intact.
+        // Long-bracket literal keeps the XML's quotes/newlines intact; the level
+        // is bumped if the content contains the closing sequence. Our filenames
+        // are generated (`onlycue_seq_<n>.xml`) and never contain apostrophes.
         [
             "  local f = io.open(path..'\(upload.filename)', 'w')",
-            "  f:write([==[\(upload.xml)]==])",
+            "  f:write(\(luaLongBracket(upload.xml)))",
             "  f:close()"
         ]
+    }
+
+    /// A Lua single-quoted string literal, escaping `\` and `'` so a command
+    /// carrying an apostrophe can't break the plugin. Commands are single-line.
+    private static func luaSingleQuoted(_ value: String) -> String {
+        let escaped = value
+            .replacingOccurrences(of: "\\", with: "\\\\")
+            .replacingOccurrences(of: "'", with: "\\'")
+        return "'\(escaped)'"
+    }
+
+    /// A Lua long-bracket string literal (`[==[ … ]==]`) whose `=` level is
+    /// raised until the content no longer contains the matching closing
+    /// sequence — airtight for multi-line XML (which always ends in `>`, so the
+    /// boundary never produces a stray `]`). Defaults to level 2 so ordinary
+    /// content renders unchanged.
+    private static func luaLongBracket(_ value: String) -> String {
+        var level = 2
+        while value.contains("]" + String(repeating: "=", count: level) + "]") {
+            level += 1
+        }
+        let eq = String(repeating: "=", count: level)
+        return "[\(eq)[\(value)]\(eq)]"
     }
 }
 

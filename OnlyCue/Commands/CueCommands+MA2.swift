@@ -12,6 +12,18 @@ extension CueCommands {
         document: CueListDocument,
         undoManager: UndoManager?
     ) {
-        fatalError("unimplemented")
+        guard let index = document.model.items.firstIndex(where: { $0.id == itemID }) else { return }
+        let previous = document.model.items[index].ma2PushTarget
+        guard previous != target else { return }
+
+        undoManager?.beginUndoGrouping()
+        defer { undoManager?.endUndoGrouping() }
+
+        document.model.items[index].ma2PushTarget = target
+
+        undoManager?.registerUndo(withTarget: document) { doc in
+            Self.setMA2PushTarget(previous, itemID: itemID, document: doc, undoManager: undoManager)
+        }
+        undoManager?.setActionName("Set grandMA2 Target")
     }
 }

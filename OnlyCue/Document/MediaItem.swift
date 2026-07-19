@@ -16,6 +16,9 @@ struct MediaItem: Codable, Identifiable, Equatable {
     /// Timestamped lyrics for this clip — a per-`MediaItem` reference/HUD layer
     /// decoupled from cues (ADR-022). Empty by default. Schema v13.
     var lyrics: Lyrics = .empty
+    /// Last grandMA2 push destination for this clip (#683). nil until the clip
+    /// is first pushed. Schema v17.
+    var ma2PushTarget: MA2PushTarget?
 }
 
 extension MediaItem {

@@ -11,6 +11,12 @@ enum MA2PushRequestBuilder {
         case ready(MA2PushPlan)
     }
 
+    /// The English sequence name for a push (#686): the target's persisted
+    /// `sequenceName` when set, else the clip's resolved name sanitized to ASCII.
+    static func resolvedSequenceName(item: MediaItem, target: MA2PushTarget) -> String {
+        target.sequenceName ?? MA2Name.sanitize(item.resolvedName, fallbackSlot: target.sequenceSlot)
+    }
+
     static func outcome(
         item: MediaItem,
         target: MA2PushTarget,
@@ -25,7 +31,7 @@ enum MA2PushRequestBuilder {
         let framesPerSecond = Double(framerate.framesPerSecond)
         let lengthFrames = item.startTimecodeFrames
             + Int((item.media.duration * framesPerSecond).rounded(.up))
-        let sequenceName = item.resolvedName
+        let sequenceName = resolvedSequenceName(item: item, target: target)
 
         return .ready(MA2PushPlanner.plan(
             cues: cues,
@@ -59,7 +65,7 @@ enum MA2PushRequestBuilder {
         return .ready(MA2CommandPlanner.commands(
             cues: cues,
             target: target,
-            sequenceName: item.resolvedName,
+            sequenceName: resolvedSequenceName(item: item, target: target),
             startTimecodeFrames: item.startTimecodeFrames,
             framerate: framerate
         ))

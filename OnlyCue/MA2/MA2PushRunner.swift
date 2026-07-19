@@ -14,6 +14,8 @@ protocol MA2PushTransport: Sendable {
 extension MA2TelnetClient: MA2PushTransport {}
 
 /// Upload seam for `MA2PushRunner` (`MA2CurlUploader` in production).
+/// Retained for Approach C (plugin export) reuse; the live push now uses the
+/// commands-only path (`run(commands:…)`), which needs no FTP (#683).
 protocol MA2Uploading: Sendable {
     func upload(xml: String, filename: String, host: String) async throws
 }
@@ -65,6 +67,8 @@ final class MA2PushRunner {
         self.interCommandDelay = interCommandDelay
     }
 
+    /// XML-over-FTP push (#683). Retained for Approach C (plugin export) reuse;
+    /// the live UI now calls `run(commands:…)`, which needs no FTP.
     func run(plan: MA2PushPlan, host: String, username: String, password: String) async {
         var titles = [
             "Upload \(plan.sequenceUpload.filename)",

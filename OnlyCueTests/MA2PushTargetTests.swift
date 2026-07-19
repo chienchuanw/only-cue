@@ -47,4 +47,34 @@ final class MA2PushTargetTests: XCTestCase {
         let decoded = try JSONDecoder().decode(MediaItem.self, from: data)
         XCTAssertEqual(decoded.ma2PushTarget, item.ma2PushTarget)
     }
+
+    // MARK: - Validity (console slots/pages/executors are 1-based; anything
+    // below 1 would emit invalid XML indices and telnet commands)
+
+    private func target(
+        sequenceSlot: Int = 1,
+        timecodeSlot: Int = 1,
+        executorPage: Int = 1,
+        executorNumber: Int = 1
+    ) -> MA2PushTarget {
+        MA2PushTarget(
+            sequenceSlot: sequenceSlot,
+            timecodeSlot: timecodeSlot,
+            executorPage: executorPage,
+            executorNumber: executorNumber,
+            timecodeCommand: .goto,
+            includedTypeIDs: []
+        )
+    }
+
+    func test_allOnes_isValid() {
+        XCTAssertTrue(target().isValid)
+    }
+
+    func test_zeroOrNegativeComponents_areInvalid() {
+        XCTAssertFalse(target(sequenceSlot: 0).isValid)
+        XCTAssertFalse(target(timecodeSlot: 0).isValid)
+        XCTAssertFalse(target(executorPage: -1).isValid)
+        XCTAssertFalse(target(executorNumber: 0).isValid)
+    }
 }

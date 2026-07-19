@@ -26,4 +26,11 @@ struct MA2PushTarget: Codable, Equatable {
     /// Cue-type filter used for the last push. Empty = all types
     /// (same convention as `CueExportFilter`).
     var includedTypeIDs: Set<UUID>
+
+    /// Console slots, pages and executors are 1-based; anything below 1 would
+    /// emit invalid XML indices (`index="-1"`) and telnet commands
+    /// (`Delete Sequence 0`). The push sheet refuses invalid targets.
+    var isValid: Bool {
+        sequenceSlot >= 1 && timecodeSlot >= 1 && executorPage >= 1 && executorNumber >= 1
+    }
 }

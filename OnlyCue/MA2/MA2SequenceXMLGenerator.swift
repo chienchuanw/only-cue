@@ -19,6 +19,17 @@ enum MA2CueNumber {
         let thousandths = Int((value * 1000).rounded())
         return Components(number: thousandths / 1000, subNumber: thousandths % 1000)
     }
+
+    /// Cue number as an MA2 command token: an integer when whole, else up to
+    /// three decimals with trailing zeros trimmed (`1.15`, `2.001`, `3`). Used by
+    /// the telnet command planner (#683, Approach A).
+    static func commandString(from value: Double) -> String {
+        let parts = components(from: value)
+        guard parts.subNumber != 0 else { return "\(parts.number)" }
+        var frac = String(format: "%03d", parts.subNumber)
+        while frac.hasSuffix("0") { frac.removeLast() }
+        return "\(parts.number).\(frac)"
+    }
 }
 
 /// Generates the grandMA2 sequence import XML (#683): one content-empty cue

@@ -89,6 +89,6 @@ enum MA2PushPlanner {
     /// MA2 command lines quote names with double quotes and have no documented
     /// escape for embedded ones — strip them rather than break the command.
     private static func commandQuotable(_ name: String) -> String {
-        name.replacingOccurrences(of: "\"", with: "")
+        MA2CommandQuoting.quotable(name)
     }
 }

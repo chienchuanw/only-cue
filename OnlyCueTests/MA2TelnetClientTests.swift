@@ -72,7 +72,7 @@ final class MA2TelnetClientTests: XCTestCase {
         private func ingest(_ data: Data, on connection: NWConnection) {
             lineBuffer.append(data)
             while let terminator = lineBuffer.range(of: Data("\r\n".utf8)) {
-                let line = String(decoding: lineBuffer[..<terminator.lowerBound], as: UTF8.self)
+                let line = String(bytes: lineBuffer[..<terminator.lowerBound], encoding: .utf8) ?? ""
                 lineBuffer.removeSubrange(..<terminator.upperBound)
                 lines.append(line)
                 if let response = handler(line) {

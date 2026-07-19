@@ -31,7 +31,7 @@ sync with OnlyCue playback with no manual programming beyond lighting content.
     Keychain**, never UserDefaults.
   - Target parameters + cue-type filter → **per clip, in the document**:
     `MediaItem.ma2PushTarget` (optional struct). `ProjectModel` schemaVersion
-    15 → 16 with migration (absent field → nil).
+    16 → 17 with migration (absent field → nil).
 - **Overwrite**: always confirm in-app before sending ("will overwrite Seq X,
   TC Y on the console, and assign to Exec P.E"), then `Delete Seq X /nc` +
   `Delete Timecode Y /nc` and rebuild. No console-state querying (parsing
@@ -110,7 +110,32 @@ New `OnlyCue/MA2/` module (mirrors `OnlyCue/OSC/`):
 - **`MA2PushSheet`** (+ presenter) — the push UI described above.
 - **`MediaItem.ma2PushTarget: MA2PushTarget?`** — `{ sequenceSlot, timecodeSlot,
   executorPage, executorNumber, timecodeCommand, includedTypeIDs }`, Codable,
-  schema v16 migration.
+  schema v17 migration.
+
+## XML schemas (researched from real console exports, v3.9.x)
+
+- Wrapper: `<MA xmlns=… major_vers/minor_vers/stream_vers>` + `<Info datetime showfile>`.
+- Timecode: `Timecode(index=slot−1, name, lenght(sic), frame_format="30 FPS") →
+  Track(Object <No>30/1/page/exec</No>) → SubTrack(0) → Event(index, time=frames,
+  command=Go|Goto, pressed, step) → Cue(<No>1/seq/cueIndex</No>)`. Event `time`
+  is in **frames** at `frame_format`; omitted for frame 0.
+- Sequence: `Sequ(index, name) → Cue(index) → Number(number, sub_number)` +
+  `CuePart(index=0, name, basic_fade, basic_outfade)` + `InfoItems → Info`.
+  Cue-only import (no CueDatas) is valid — proven by TCHelper / MLA.
+- Import syntax: `Import "file" At Timecode N` / sequence via
+  `cd sequences; cd global; import "file" at N` (argument order differs from
+  Export; wrong order → Error #12).
+
+## Open questions (verify on the real rig before merge)
+
+- The network target may be a Windows **onPC**, not a console. Telnet is
+  identical, but only consoles/NPUs are documented to run the built-in FTP
+  server (`data`/`data`). Verify FTP on the actual onPC machine; fallbacks:
+  (a) SMB-share the gma2 folder and write directly, (b) sequence via per-cue
+  telnet commands and only the timecode (which has no command-line
+  alternative) via file import.
+- Exact import path/argument order re-verified on the rig via gma2-mcp
+  `send_raw_command` before merge.
 
 ## What stays the same
 
@@ -128,7 +153,7 @@ New `OnlyCue/MA2/` module (mirrors `OnlyCue/OSC/`):
 - **Unit — planner**: telnet command list (delete-first, import at the right
   slots, executor assign, labels); pre-flight rejection (unnumbered /
   duplicate numbers) with the offending cues named; filter application.
-- **Unit — model**: `MA2PushTarget` Codable round-trip; schema v15 → v16
+- **Unit — model**: `MA2PushTarget` Codable round-trip; schema v16 → v17
   migration (old documents load, field nil).
 - **Unit — client**: against a local loopback TCP fixture (spawn a listener in
   the test): login handshake, command/response framing, timeout.

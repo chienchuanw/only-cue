@@ -82,6 +82,13 @@ struct AppCommands: Commands {
             }
             .accessibilityIdentifier("sendToMA2MenuItem")
 
+            Button {
+                NotificationCenter.default.post(name: .exportMA2PluginRequested, object: nil)
+            } label: {
+                Label("Export grandMA2 plugin…", systemImage: "square.and.arrow.down")
+            }
+            .accessibilityIdentifier("exportMA2PluginMenuItem")
+
             Divider()
 
             Button {

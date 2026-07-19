@@ -44,6 +44,23 @@ sync with OnlyCue playback with no manual programming beyond lighting content.
   Settings, Send button → confirm → stepwise progress.
 - **Cue-type filter**: same per-type selection as the Export sheet, reusing
   `CueExportFilter`. Filter selection saved per clip alongside the target.
+- **Mechanism (amended 2026-07-19 after research)**: MA confirmed on the
+  official forum that timecode events **cannot** be created from the command
+  line — only via the GUI or by importing a timecode-show XML. The proven
+  remote pipeline (Moving Light Assistant, almost certainly GMA Toolbox's
+  "send to console") is: generate MA2 XML files, upload them into the
+  console's `gma2/importexport/` over the console's built-in **FTP server**
+  (fixed credentials `data`/`data`), then `Import` them from the telnet
+  command line. Decision: the **sequence goes the same way** (one sequence
+  XML carrying cue numbers / names / info / fades) rather than per-cue telnet
+  commands — a 60-cue song imports in one command instead of ~200 throttled
+  telnet lines. The telnet session then only runs: login → delete seq/tc →
+  import sequence at slot → import timecode at slot → assign seq at exec →
+  labels. FTP upload is done via the system `curl` (`/usr/bin/curl -T`,
+  FTP is long-deprecated in Foundation); no third-party dependency.
+  Exact `Import` syntax/path is validated against a real onPC during
+  development (the gma2-mcp server's `send_raw_command` is available for
+  interactive verification).
 - **Cue mapping**:
   | OnlyCue | grandMA2 |
   | --- | --- |
@@ -72,15 +89,22 @@ New `OnlyCue/MA2/` module (mirrors `OnlyCue/OSC/`):
   to port 30000. `login`, `send(command:) -> String` (send line, read response
   with timeout), disconnect. No third-party dependency. First outbound
   connection in the app; no sandbox (ADR-007) so no entitlement change.
-- **`MA2PushPlanner`** (pure, fully unit-testable) — given cues + target +
-  clip timecode settings, produce the ordered `[String]` command list:
-  login → delete seq/tc → `Store Seq X Cue N /cueonly /nc` per cue → `Label`,
-  `Assign Seq X Cue N /info=... /fade=... /outfade=...` → timecode pool object,
-  events (chosen Go/Goto on the executor) → `Assign Seq X At Exec P.E`.
-  Exact syntax cross-checked against the gma2 MCP server implementation and
-  the MA2 manual during TDD.
-- **`MA2PushRunner`** — feeds the plan through the client step by step,
-  reporting progress and stopping on error.
+- **`MA2SequenceXMLGenerator`** / **`MA2TimecodeXMLGenerator`** (pure, fully
+  unit-testable — the TDD bulk) — given cues + target + clip timecode
+  settings, emit the MA2 import XML: sequence XML with one cue per OnlyCue
+  cue (number, label, info, fade/outfade), and timecode XML with one Go/Goto
+  event per cue on the chosen executor at start-timecode + cue time. Schemas
+  cross-checked against real console exports.
+- **`MA2PushPlanner`** (pure) — produce the ordered plan: the two XML
+  payloads + the telnet command list (login → `Delete Seq X /nc` /
+  `Delete Timecode Y /nc` → `Import` sequence at slot → `Import` timecode at
+  slot → `Assign Seq X At Exec P.E` → labels). Exact syntax cross-checked
+  against the gma2-mcp implementation and the MA2 manual during TDD.
+- **`MA2FTPUploader`** — uploads the generated XML into the console's
+  `gma2/importexport/` via system `curl` (`Process`), fixed `data`/`data`
+  credentials, same host as telnet.
+- **`MA2PushRunner`** — generate XML → FTP upload → feed the telnet plan
+  through the client step by step, reporting progress and stopping on error.
 - **`MA2ConnectionSettings`** (`@AppStorage` keys) + **`MA2Keychain`** (small
   Keychain wrapper for the password) + **`MA2SettingsView`** (Settings pane).
 - **`MA2PushSheet`** (+ presenter) — the push UI described above.
@@ -96,11 +120,14 @@ New `OnlyCue/MA2/` module (mirrors `OnlyCue/OSC/`):
 
 ## Test plan (TDD)
 
-- **Unit — planner** (bulk of the coverage): command list for a known cue set
-  (numbers, labels with escaping, info, fades, TC event times with start-
-  timecode offset at each framerate, Go vs Goto, delete-first, executor
-  assign); pre-flight rejection (unnumbered / duplicate numbers) with the
-  offending cues named; filter application.
+- **Unit — XML generators** (bulk of the coverage): sequence XML for a known
+  cue set (numbers incl. decimals, labels with XML escaping, info, fades);
+  timecode XML (event times with start-timecode offset at each framerate,
+  Go vs Goto, executor reference); golden-file comparison against
+  console-validated samples.
+- **Unit — planner**: telnet command list (delete-first, import at the right
+  slots, executor assign, labels); pre-flight rejection (unnumbered /
+  duplicate numbers) with the offending cues named; filter application.
 - **Unit — model**: `MA2PushTarget` Codable round-trip; schema v15 → v16
   migration (old documents load, field nil).
 - **Unit — client**: against a local loopback TCP fixture (spawn a listener in

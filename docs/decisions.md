@@ -15,6 +15,16 @@ ADR template:
 
 ---
 
+## ADR-030 — grandMA2 push goes XML-over-FTP; telnet only orchestrates
+
+**Date**: 2026-07-19
+**Status**: Accepted
+**Decision**: "Send to grandMA2" (#683) writes a clip's cues to the console by generating two grandMA2 3.9 XML files — a sequence export and a timecode-show export — uploading them via the console's built-in FTP server (`data`/`data`) into `gma2/importexport/`, then driving a short telnet (TCP 30000) session that only runs `login`, `Delete … /nc` for the two target slots, `Import … /nc` for both files, `Assign` to the executor, and `Label`. Uploads happen **before** any telnet command, and overwrite is an in-app confirmation followed by unconditional delete-and-rebuild — OnlyCue never queries console state.
+**Why**: Timecode events cannot be created from the MA2 command line at all — XML import is the only remote path to a populated timecode show, so a pure command-streaming design (à la GMA Toolbox cue-by-cue `Store`) cannot meet the feature's scope. Generating the full XML also makes the push deterministic and testable offline (golden-file tests against a real v3.9.60 console export), and uploading before touching telnet leaves the console untouched if the network/FTP leg fails. Delete-then-import keeps re-push idempotent without parsing console replies, whose text format is undocumented and version-dependent.
+**Reversal cost**: Moderate. The XML generators, planner, FTP uploader, and telnet client are separate seams (`OnlyCue/MA2/`), so swapping the transport (e.g. MA3 OSC, or command streaming for consoles with FTP disabled) replaces the planner/uploader without touching the sheet or `CueCommands`. The XML schema itself is pinned to grandMA2 3.9 and would need new golden files for other console generations.
+
+---
+
 ## ADR-029 — The main window is dark-only
 
 **Date**: 2026-06-05

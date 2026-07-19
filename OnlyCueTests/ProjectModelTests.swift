@@ -39,7 +39,7 @@ final class ProjectModelTests: XCTestCase {
         XCTAssertNil(model.cuePointType(forHotkey: 5))
     }
 
-    func test_currentSchemaVersionIsSeventeen() {
+    func test_currentSchemaVersionIsEighteen() {
         XCTAssertEqual(ProjectModel.currentSchemaVersion, 18)
     }
 

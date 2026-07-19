@@ -23,10 +23,14 @@ struct MA2SettingsView: View {
                     TextField("Console IP / hostname", text: $host)
                         .accessibilityIdentifier("ma2HostField")
                     if !discovered.isEmpty {
-                        Picker("", selection: $host) {
-                            ForEach(discovered) { console in Text(console.host).tag(console.host) }
+                        // A Menu of buttons (not a Picker bound to $host) so a
+                        // manually-typed host that isn't in the discovered list
+                        // doesn't trigger SwiftUI's "no matching tag" warning.
+                        Menu("Discovered") {
+                            ForEach(discovered) { console in
+                                Button(console.host) { host = console.host }
+                            }
                         }
-                        .labelsHidden()
                         .frame(width: 150)
                         .accessibilityIdentifier("ma2HostPicker")
                     }

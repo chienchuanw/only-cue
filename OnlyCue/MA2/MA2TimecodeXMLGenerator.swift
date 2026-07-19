@@ -91,6 +91,10 @@ enum MA2TimecodeXMLGenerator {
         startTimecodeFrames: Int,
         framerate: SMPTEFramerate
     ) -> [String] {
+        // For `.fps30drop` this emits *physical* frame counts under a
+        // non-drop "30 FPS" format label (MA2 has no drop-frame format); how
+        // the console maps them when chasing DF LTC is a rig-validation item
+        // (#683 plan step 13) — do not ship DF pushes as verified until then.
         let frame = startTimecodeFrames + Int((cue.time * Double(framerate.framesPerSecond)).rounded())
         var attributes = ["index=\"\(eventIndex)\""]
         if frame != 0 {

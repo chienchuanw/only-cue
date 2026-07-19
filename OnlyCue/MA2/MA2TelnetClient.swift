@@ -118,8 +118,12 @@ actor MA2TelnetClient {
             }
         }
 
-        let response = String(decoding: buffer, as: UTF8.self)
-            .trimmingCharacters(in: .whitespacesAndNewlines)
+        // Console output should be ASCII/UTF-8; anything else is surfaced
+        // lossily rather than dropped.
+        let text = String(bytes: buffer, encoding: .utf8)
+            ?? String(bytes: buffer, encoding: .isoLatin1)
+            ?? ""
+        let response = text.trimmingCharacters(in: .whitespacesAndNewlines)
         if response.contains("Error #") {
             throw Failure.console(command: command, response: response)
         }

@@ -11,6 +11,7 @@ final class MA2PushRunnerTests: XCTestCase {
         var log: [String] = []
         var failOnCommand: String?
         var failLogin = false
+        var sendDelay: TimeInterval = 0
 
         func connect() async throws { log.append("connect") }
         func login(username: String, password: String) async throws {
@@ -19,6 +20,9 @@ final class MA2PushRunnerTests: XCTestCase {
         }
         func send(_ command: String) async throws -> String {
             log.append(command)
+            if sendDelay > 0 {
+                try await Task.sleep(for: .seconds(sendDelay))
+            }
             if command == failOnCommand {
                 throw MA2TelnetClient.Failure.console(command: command, response: "Error #12")
             }
@@ -119,5 +123,23 @@ final class MA2PushRunnerTests: XCTestCase {
         XCTAssertFalse(runner.didSucceed)
         XCTAssertEqual(transport.log, ["connect", "login admin", "disconnect"])
         XCTAssertEqual(runner.steps[3].state, .failed("no login"))
+    }
+
+    func test_cancellation_stopsRun_disconnects_andReportsCancelled() async {
+        let transport = MockTransport()
+        transport.sendDelay = 10 // park the run inside the first command
+        let uploader = MockUploader()
+        let runner = runner(transport: transport, uploader: uploader)
+
+        let task = Task { await runner.run(plan: plan(), host: "10.0.0.2", username: "a", password: "p") }
+        // Let the run reach the delayed send, then cancel it.
+        try? await Task.sleep(for: .milliseconds(100))
+        task.cancel()
+        await task.value
+
+        XCTAssertFalse(runner.didSucceed)
+        XCTAssertFalse(runner.isRunning)
+        XCTAssertEqual(runner.failureMessage, "Cancelled")
+        XCTAssertEqual(transport.log.last, "disconnect")
     }
 }

@@ -71,7 +71,7 @@ final class MA2SequenceXMLGeneratorTests: XCTestCase {
         XCTAssertEqual(xml, expected)
     }
 
-    func test_cuesAreOrderedByNumber_notByTime() {
+    func test_cuesAreOrderedByNumber_notByTime() throws {
         // OnlyCue cue numbers need not be monotonic with time; MA2 sequences
         // are number-ordered, and the timecode generator references cues by
         // this number-sorted index.
@@ -82,11 +82,9 @@ final class MA2SequenceXMLGeneratorTests: XCTestCase {
         let xml = MA2SequenceXMLGenerator.xml(
             cues: cues, sequenceName: "S", showfile: "F", datetime: "2026-07-19T12:00:00"
         )
-        let first = xml.range(of: "name=\"First\"")
-        let second = xml.range(of: "name=\"Second\"")
-        XCTAssertNotNil(first)
-        XCTAssertNotNil(second)
-        XCTAssertTrue(first!.lowerBound < second!.lowerBound)
+        let first = try XCTUnwrap(xml.range(of: "name=\"First\""))
+        let second = try XCTUnwrap(xml.range(of: "name=\"Second\""))
+        XCTAssertTrue(first.lowerBound < second.lowerBound)
     }
 
     func test_zeroFades_omitted_emptyNotes_omitInfoItems() {

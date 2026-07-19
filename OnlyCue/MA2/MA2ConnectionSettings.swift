@@ -12,6 +12,10 @@ enum MA2ConnectionSettings {
     /// The MA telnet remote port (not classic telnet 23).
     static let defaultPort = 30000
     static let defaultUsername = "administrator"
+
+    /// Fixed Keychain account name — one console password per Mac, looked up
+    /// independently of the (editable) username field.
+    static let passwordAccount = "grandMA2"
 }
 
 /// Minimal Keychain wrapper for the grandMA2 password: one generic-password

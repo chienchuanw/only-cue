@@ -26,6 +26,8 @@ struct MA2PushSheet: View {
     @State private var preflightIssues: [MA2PushPreflight.Issue] = []
     @State private var confirmingPlan: MA2PushPlan?
     @State private var runner: MA2PushRunner?
+    @State private var pushTask: Task<Void, Never>?
+    @State private var passwordError: String?
 
     init(
         item: MediaItem,
@@ -101,9 +103,110 @@ struct MA2PushSheet: View {
         .accessibilityIdentifier("ma2PushSheet")
     }
 
-    // MARK: - Cards
+    // MARK: - Actions
 
-    private var targetCard: some View {
+    @ViewBuilder
+    private var actionRow: some View {
+        HStack {
+            if let runner {
+                Spacer()
+                if runner.isRunning {
+                    Button("Cancel") { pushTask?.cancel() }
+                        .accessibilityIdentifier("ma2CancelPushButton")
+                } else {
+                    Button("Close") { onDismiss() }
+                        .keyboardShortcut(.defaultAction)
+                        .accessibilityIdentifier("ma2CloseButton")
+                }
+            } else if confirmingPlan != nil {
+                Button("Back") { confirmingPlan = nil }
+                Spacer()
+                Button("Replace and Push") { push() }
+                    .keyboardShortcut(.defaultAction)
+                    .accessibilityIdentifier("ma2ConfirmPushButton")
+            } else {
+                Button("Cancel") { onDismiss() }
+                    .keyboardShortcut(.cancelAction)
+                Spacer()
+                Button("Push…") { prepare() }
+                    .keyboardShortcut(.defaultAction)
+                    .disabled(host.isEmpty || !isConfigurationValid)
+                    .accessibilityIdentifier("ma2PushButton")
+            }
+        }
+    }
+
+    /// Slots/pages/executors must be 1-based and the port a real TCP port —
+    /// `UInt16(port)` would trap on out-of-range settings values.
+    private var isConfigurationValid: Bool {
+        currentTarget.isValid && UInt16(exactly: port).map { $0 > 0 } == true
+    }
+
+    private func prepare() {
+        let target = currentTarget
+        let datetime = ISO8601DateFormatter().string(from: Date())
+        switch MA2PushRequestBuilder.outcome(
+            item: item, target: target, framerate: framerate, showfile: showfile, datetime: datetime
+        ) {
+        case .blocked(let issues):
+            preflightIssues = issues
+        case .ready(let plan):
+            // Persist the target (undoably) only for a push that can proceed —
+            // a blocked attempt should not dirty the document.
+            onSaveTarget(target)
+            preflightIssues = []
+            confirmingPlan = plan
+        }
+    }
+
+    private func push() {
+        guard let plan = confirmingPlan, let portValue = UInt16(exactly: port), portValue > 0 else { return }
+        let password: String
+        do {
+            password = try MA2Keychain.password(account: MA2ConnectionSettings.passwordAccount) ?? ""
+        } catch {
+            // A Keychain failure would otherwise surface as a baffling console
+            // login rejection — name the real cause and stay on this screen.
+            passwordError = "Could not read the console password from the Keychain."
+            return
+        }
+        passwordError = nil
+        let client = MA2TelnetClient(configuration: .init(host: host, port: portValue))
+        let runner = MA2PushRunner(transport: client)
+        self.runner = runner
+        confirmingPlan = nil
+        pushTask = Task {
+            await runner.run(plan: plan, host: host, username: username, password: password)
+        }
+    }
+
+    private func typeBinding(for id: UUID) -> Binding<Bool> {
+        Binding(
+            get: { includedTypeIDs.contains(id) },
+            set: { include in
+                if include { includedTypeIDs.insert(id) } else { includedTypeIDs.remove(id) }
+            }
+        )
+    }
+
+    static func describe(_ issue: MA2PushPreflight.Issue) -> String {
+        switch issue {
+        case .noCues:
+            return "No cues match the current filter."
+        case .unnumbered(let cues):
+            return "\(cues.count) cue(s) have no cue number."
+        case .duplicateNumber(let number, let cues):
+            return "Cue number \(FadeTime.formatNumber(number)) is used by \(cues.count) cues."
+        }
+    }
+}
+
+// MARK: - Cards
+// (An extension keeps the main type body under SwiftLint's length limit.)
+
+private extension MA2PushSheet {
+
+    var targetCard: some View {
         VStack(alignment: .leading, spacing: DS.Space.sm) {
             Text("Target").dsSectionHeader()
             Grid(alignment: .leading, horizontalSpacing: DS.Space.md, verticalSpacing: DS.Space.xs) {
@@ -188,86 +291,16 @@ struct MA2PushSheet: View {
             Text("\(plan.commands.count) commands, 2 files via FTP.")
                 .font(.caption)
                 .foregroundStyle(DS.Color.textSecondary)
+            if let passwordError {
+                Label(passwordError, systemImage: "xmark.octagon")
+                    .foregroundStyle(.red)
+                    .font(.callout)
+                    .accessibilityIdentifier("ma2PasswordError")
+            }
         }
         .frame(maxWidth: .infinity, alignment: .leading)
         .dsCard()
         .accessibilityIdentifier("ma2OverwriteConfirmation")
-    }
-
-    // MARK: - Actions
-
-    @ViewBuilder
-    private var actionRow: some View {
-        HStack {
-            if let runner {
-                Spacer()
-                Button(runner.isRunning ? "Running…" : "Close") { onDismiss() }
-                    .disabled(runner.isRunning)
-                    .keyboardShortcut(.defaultAction)
-                    .accessibilityIdentifier("ma2CloseButton")
-            } else if confirmingPlan != nil {
-                Button("Back") { confirmingPlan = nil }
-                Spacer()
-                Button("Replace and Push") { push() }
-                    .keyboardShortcut(.defaultAction)
-                    .accessibilityIdentifier("ma2ConfirmPushButton")
-            } else {
-                Button("Cancel") { onDismiss() }
-                    .keyboardShortcut(.cancelAction)
-                Spacer()
-                Button("Push…") { prepare() }
-                    .keyboardShortcut(.defaultAction)
-                    .disabled(host.isEmpty)
-                    .accessibilityIdentifier("ma2PushButton")
-            }
-        }
-    }
-
-    private func prepare() {
-        let target = currentTarget
-        onSaveTarget(target)
-        let datetime = ISO8601DateFormatter().string(from: Date())
-        switch MA2PushRequestBuilder.outcome(
-            item: item, target: target, framerate: framerate, showfile: showfile, datetime: datetime
-        ) {
-        case .blocked(let issues):
-            preflightIssues = issues
-        case .ready(let plan):
-            preflightIssues = []
-            confirmingPlan = plan
-        }
-    }
-
-    private func push() {
-        guard let plan = confirmingPlan else { return }
-        let client = MA2TelnetClient(configuration: .init(host: host, port: UInt16(port)))
-        let runner = MA2PushRunner(transport: client)
-        self.runner = runner
-        confirmingPlan = nil
-        let password = (try? MA2Keychain.password(account: MA2ConnectionSettings.passwordAccount)) ?? ""
-        Task {
-            await runner.run(plan: plan, host: host, username: username, password: password)
-        }
-    }
-
-    private func typeBinding(for id: UUID) -> Binding<Bool> {
-        Binding(
-            get: { includedTypeIDs.contains(id) },
-            set: { include in
-                if include { includedTypeIDs.insert(id) } else { includedTypeIDs.remove(id) }
-            }
-        )
-    }
-
-    static func describe(_ issue: MA2PushPreflight.Issue) -> String {
-        switch issue {
-        case .noCues:
-            return "No cues match the current filter."
-        case .unnumbered(let cues):
-            return "\(cues.count) cue(s) have no cue number."
-        case .duplicateNumber(let number, let cues):
-            return "Cue number \(FadeTime.formatNumber(number)) is used by \(cues.count) cues."
-        }
     }
 }
 

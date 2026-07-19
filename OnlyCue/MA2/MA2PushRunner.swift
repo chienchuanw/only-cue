@@ -136,6 +136,7 @@ final class MA2PushRunner {
     /// Human-readable text for the known failure shapes; the console's own
     /// error text is surfaced verbatim.
     private static func message(for error: Error) -> String {
+        if error is CancellationError { return "Cancelled" }
         switch error {
         case let MA2TelnetClient.Failure.console(_, response):
             return response

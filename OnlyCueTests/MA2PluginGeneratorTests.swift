@@ -29,4 +29,24 @@ final class MA2PluginGeneratorTests: XCTestCase {
         XCTAssertTrue(lua.contains("os.remove(path..'onlycue_seq_900.xml')"))
         XCTAssertTrue(lua.contains("os.remove(path..'onlycue_tc_9.xml')"))
     }
+
+    func test_bundle_pairsLuaWithManifestPointingToIt() {
+        let bundle = MA2PluginGenerator.bundle(
+            plan: plan(),
+            pluginName: "Opening",
+            datetime: "2026-07-20T00:00:00"
+        )
+        XCTAssertEqual(bundle.luaFilename, "OnlyCue_Opening_PLUGIN.lua")
+        XCTAssertEqual(bundle.manifestFilename, "OnlyCue_Opening.xml")
+        XCTAssertTrue(bundle.manifestXML.contains("<Plugin"))
+        XCTAssertTrue(bundle.manifestXML.contains("luafile=\"OnlyCue_Opening_PLUGIN.lua\""))
+        XCTAssertTrue(bundle.manifestXML.contains("datetime=\"2026-07-20T00:00:00\""))
+        XCTAssertEqual(bundle.lua, MA2PluginGenerator.lua(plan: plan()))
+    }
+
+    func test_bundle_sanitizesPluginNameForFilenames() {
+        let bundle = MA2PluginGenerator.bundle(plan: plan(), pluginName: "A / B: c", datetime: "d")
+        XCTAssertFalse(bundle.luaFilename.contains("/"))
+        XCTAssertFalse(bundle.luaFilename.contains(":"))
+    }
 }

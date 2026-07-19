@@ -40,3 +40,44 @@ enum MA2PluginGenerator {
         ]
     }
 }
+
+/// The two files of a generated grandMA2 plugin (#683, Approach C): the Lua
+/// script and its `.xml` manifest that points to it.
+struct MA2PluginBundle: Equatable {
+    var luaFilename: String
+    var lua: String
+    var manifestFilename: String
+    var manifestXML: String
+}
+
+extension MA2PluginGenerator {
+
+    static func bundle(plan: MA2PushPlan, pluginName: String, datetime: String) -> MA2PluginBundle {
+        let base = "OnlyCue_" + sanitize(pluginName)
+        let luaFilename = base + "_PLUGIN.lua"
+        return MA2PluginBundle(
+            luaFilename: luaFilename,
+            lua: lua(plan: plan),
+            manifestFilename: base + ".xml",
+            manifestXML: manifestXML(pluginName: pluginName, luaFilename: luaFilename, datetime: datetime)
+        )
+    }
+
+    static func manifestXML(pluginName: String, luaFilename: String, datetime: String) -> String {
+        let escape = MA2SequenceXMLGenerator.escape
+        return [
+            "<?xml version=\"1.0\" encoding=\"UTF-8\"?>",
+            "<MA xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" "
+                + "xmlns=\"http://schemas.malighting.de/grandma2/xml/MA\" "
+                + "major_vers=\"3\" minor_vers=\"9\" stream_vers=\"60\">",
+            "\t<Info datetime=\"\(escape(datetime))\" showfile=\"OnlyCue\" />",
+            "\t<Plugin index=\"0\" name=\"\(escape(pluginName))\" luafile=\"\(escape(luaFilename))\" />",
+            "</MA>"
+        ].joined(separator: "\n")
+    }
+
+    /// Filesystem-safe base: replace path separators and colons with `_`.
+    private static func sanitize(_ name: String) -> String {
+        String(name.map { "/\\:".contains($0) ? "_" : $0 })
+    }
+}

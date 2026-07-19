@@ -28,6 +28,75 @@ enum MA2CueNumber {
 enum MA2SequenceXMLGenerator {
 
     static func xml(cues: [Cue], sequenceName: String, showfile: String, datetime: String) -> String {
-        ""
+        // MA2 sequences are number-ordered; the timecode generator references
+        // cues by this number-sorted 1-based index. Cue numbers need not be
+        // monotonic with cue times in OnlyCue.
+        let ordered = cues.sorted { ($0.cueNumber ?? 0) < ($1.cueNumber ?? 0) }
+
+        var lines: [String] = []
+        lines.append("<?xml version=\"1.0\" encoding=\"utf-8\"?>")
+        lines.append("<?xml-stylesheet type=\"text/xsl\" href=\"styles/sequ@html@default.xsl\"?>")
+        lines.append(
+            "<MA xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" "
+            + "xmlns=\"http://schemas.malighting.de/grandma2/xml/MA\" "
+            + "xsi:schemaLocation=\"http://schemas.malighting.de/grandma2/xml/MA "
+            + "http://schemas.malighting.de/grandma2/xml/3.9.60/MA.xsd\" "
+            + "major_vers=\"3\" minor_vers=\"9\" stream_vers=\"60\">"
+        )
+        lines.append("\t<Info datetime=\"\(escape(datetime))\" showfile=\"\(escape(showfile))\" />")
+        lines.append(
+            "\t<Sequ index=\"0\" name=\"\(escape(sequenceName))\" "
+            + "timecode_slot=\"255\" forced_position_mode=\"0\">"
+        )
+        lines.append("\t\t<Cue xsi:nil=\"true\" />") // cue-zero placeholder
+        for (position, cue) in ordered.enumerated() {
+            lines.append(contentsOf: cueElement(cue, index: position + 1))
+        }
+        lines.append("\t</Sequ>")
+        lines.append("</MA>")
+        return lines.joined(separator: "\n")
+    }
+
+    private static func cueElement(_ cue: Cue, index: Int) -> [String] {
+        let numberComponents = MA2CueNumber.components(from: cue.cueNumber ?? 0)
+        var lines: [String] = []
+        lines.append("\t\t<Cue index=\"\(index)\">")
+        lines.append(
+            "\t\t\t<Number number=\"\(numberComponents.number)\" "
+            + "sub_number=\"\(numberComponents.subNumber)\" />"
+        )
+        lines.append("\t\t\t\(cuePart(cue))")
+        if !cue.notes.isEmpty {
+            lines.append("\t\t\t<InfoItems>")
+            lines.append("\t\t\t\t<Info>\(escape(cue.notes))</Info>")
+            lines.append("\t\t\t</InfoItems>")
+        }
+        lines.append("\t\t</Cue>")
+        return lines
+    }
+
+    /// All cue data (name, fades) lives on part 0 in MA2. Zero fades and empty
+    /// names are omitted — the import fills defaults.
+    private static func cuePart(_ cue: Cue) -> String {
+        var attributes = ["index=\"0\""]
+        if !cue.name.isEmpty {
+            attributes.append("name=\"\(escape(cue.name))\"")
+        }
+        if cue.fadeTime.fadeIn > 0 {
+            attributes.append("basic_fade=\"\(FadeTime.formatNumber(cue.fadeTime.fadeIn))\"")
+        }
+        if cue.fadeTime.fadeOut > 0 {
+            attributes.append("basic_outfade=\"\(FadeTime.formatNumber(cue.fadeTime.fadeOut))\"")
+        }
+        return "<CuePart \(attributes.joined(separator: " ")) />"
+    }
+
+    /// Minimal XML escaping for attribute values and text nodes.
+    static func escape(_ text: String) -> String {
+        text
+            .replacingOccurrences(of: "&", with: "&amp;")
+            .replacingOccurrences(of: "<", with: "&lt;")
+            .replacingOccurrences(of: ">", with: "&gt;")
+            .replacingOccurrences(of: "\"", with: "&quot;")
     }
 }

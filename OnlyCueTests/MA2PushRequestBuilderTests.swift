@@ -126,10 +126,11 @@ final class MA2PushRequestBuilderTests: XCTestCase {
         XCTAssertEqual(commands.last, "Assign Sequence 18 At Exec 2.3")
         XCTAssertTrue(commands.contains("Label Sequence 18 \"Opening\""))
         // Number-sorted: cue 1 stored before cue 2.
-        let store1 = commands.firstIndex(of: "Store Sequence 18 Cue 1 \"\" /nc")
-        let store2 = commands.firstIndex(of: "Store Sequence 18 Cue 2 \"\" /nc")
-        XCTAssertNotNil(store1); XCTAssertNotNil(store2)
-        XCTAssertLessThan(store1!, store2!)
+        guard let store1 = commands.firstIndex(of: "Store Sequence 18 Cue 1 \"\" /nc"),
+              let store2 = commands.firstIndex(of: "Store Sequence 18 Cue 2 \"\" /nc") else {
+            return XCTFail("both cues should be stored")
+        }
+        XCTAssertLessThan(store1, store2)
     }
 
     func test_commandOutcome_blocked_onUnnumberedCue() {

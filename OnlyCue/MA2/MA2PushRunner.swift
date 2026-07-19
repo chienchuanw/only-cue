@@ -117,6 +117,42 @@ final class MA2PushRunner {
         didSucceed = true
     }
 
+    /// Commands-only push (#683, Approach A): connect → login → run each command,
+    /// no FTP uploads. Stops on the first error; idempotent, so re-push recovers.
+    func run(commands: [String], host: String, username: String, password: String) async {
+        var titles = ["Connect to \(host)", "Login as \(username)"]
+        titles.append(contentsOf: commands)
+        steps = titles.enumerated().map { Step(id: $0.offset, title: $0.element) }
+        isRunning = true
+        didSucceed = false
+        failureMessage = nil
+        defer { isRunning = false }
+
+        guard await perform(step: 0, { try await self.transport.connect() }) else { return }
+        guard await perform(step: 1, {
+            try await self.transport.login(username: username, password: password)
+        }) else {
+            await transport.disconnect()
+            return
+        }
+
+        for (offset, command) in commands.enumerated() {
+            let succeeded = await perform(step: 2 + offset) {
+                try await self.transport.send(command)
+                if self.interCommandDelay > 0 {
+                    try await Task.sleep(for: .seconds(self.interCommandDelay))
+                }
+            }
+            guard succeeded else {
+                await transport.disconnect()
+                return
+            }
+        }
+
+        await transport.disconnect()
+        didSucceed = true
+    }
+
     /// Runs one step, tracking `running` → `done` / `failed`. Returns whether
     /// to continue.
     private func perform(step index: Int, _ work: () async throws -> Void) async -> Bool {

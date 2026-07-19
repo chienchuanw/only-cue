@@ -22,4 +22,5 @@ extension Notification.Name {
     static let playbackRateReset = Notification.Name("OnlyCue.playbackRateReset")
     static let playbackRateInterlockBlocked = Notification.Name("OnlyCue.playbackRateInterlockBlocked")
     static let playbackRateInterlockReset = Notification.Name("OnlyCue.playbackRateInterlockReset")
+    static let sendToMA2Requested = Notification.Name("OnlyCue.sendToMA2Requested")
 }

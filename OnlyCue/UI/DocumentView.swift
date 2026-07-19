@@ -124,6 +124,7 @@ struct DocumentView: View {
             handleMediaDidReachEnd()
         }
         .exportSheet(model: document.model, pendingErrorMessage: pendingAlertMessageBinding)
+        .ma2PushSheet(document: document, undoManager: undoManager)
         .oscServerHost(engine: engine, document: document, undoManager: undoManager, editorMode: editorMode, showGoTypeID: showGoTypeID)
         .ltcOutput(engine: engine, document: document)
         .environment(\.projectFramerate, document.model.timecodeSettings.framerate)

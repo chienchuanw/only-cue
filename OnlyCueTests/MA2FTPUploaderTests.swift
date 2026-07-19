@@ -36,4 +36,19 @@ final class MA2FTPUploaderTests: XCTestCase {
     func test_curlLaunchPath_isSystemCurl() {
         XCTAssertEqual(MA2FTPUploader.curlPath, "/usr/bin/curl")
     }
+
+    func test_upload_rejectsHostWithURLUnsafeCharacters() async {
+        // A host containing `/`, `@` or spaces would silently rewrite the curl
+        // URL's path or userinfo — refuse it before any process runs.
+        for badHost in ["10.0.0.2/evil", "user@10.0.0.2", "host name", ""] {
+            do {
+                try await MA2FTPUploader.upload(xml: "<x/>", filename: "f.xml", host: badHost)
+                XCTFail("expected upload to throw for host \(badHost)")
+            } catch let MA2FTPUploader.Failure.uploadFailed(_, message) {
+                XCTAssertTrue(message.contains("host"), "unexpected message: \(message)")
+            } catch {
+                XCTFail("unexpected error \(error)")
+            }
+        }
+    }
 }

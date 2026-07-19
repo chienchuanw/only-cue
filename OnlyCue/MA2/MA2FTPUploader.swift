@@ -29,10 +29,22 @@ enum MA2FTPUploader {
     /// Writes `xml` to a temporary file and uploads it as
     /// `gma2/importexport/<filename>` on `host`.
     static func upload(xml: String, filename: String, host: String) async throws {
-        let localFileURL = FileManager.default.temporaryDirectory
-            .appendingPathComponent(filename)
+        // A host containing `/`, `@`, `?` or spaces would silently rewrite the
+        // curl URL's path or userinfo — refuse it before any process runs.
+        guard !host.isEmpty,
+              host.rangeOfCharacter(from: CharacterSet.urlHostAllowed.inverted) == nil,
+              !host.contains("/"), !host.contains("@") else {
+            throw Failure.uploadFailed(filename: filename, message: "Invalid console host: \"\(host)\"")
+        }
+
+        // Unique directory per upload so simultaneous pushes targeting the
+        // same slot number cannot race on one temp file.
+        let directory = FileManager.default.temporaryDirectory
+            .appendingPathComponent("OnlyCue-MA2-\(UUID().uuidString)", isDirectory: true)
+        try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
+        defer { try? FileManager.default.removeItem(at: directory) }
+        let localFileURL = directory.appendingPathComponent(filename)
         try xml.write(to: localFileURL, atomically: true, encoding: .utf8)
-        defer { try? FileManager.default.removeItem(at: localFileURL) }
 
         let process = Process()
         process.executableURL = URL(fileURLWithPath: curlPath)
@@ -41,10 +53,17 @@ enum MA2FTPUploader {
         process.standardError = stderrPipe
         process.standardOutput = Pipe()
 
-        try process.run()
         // `waitUntilExit` blocks its thread; hop it off the cooperative pool.
-        await withCheckedContinuation { continuation in
+        // The termination handler must be installed BEFORE `run()` — a fast
+        // exit could otherwise slip past and leave the continuation hanging.
+        try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<Void, Error>) in
             process.terminationHandler = { _ in continuation.resume() }
+            do {
+                try process.run()
+            } catch {
+                process.terminationHandler = nil
+                continuation.resume(throwing: error)
+            }
         }
 
         guard process.terminationStatus == 0 else {

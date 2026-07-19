@@ -64,6 +64,7 @@ final class CueCommandsMA2Tests: XCTestCase {
         let itemA = makeItem(name: "a.wav")
         let doc = makeDocument(items: [itemA])
         let undoManager = UndoManager()
+        undoManager.groupsByEvent = false
 
         CueCommands.setMA2PushTarget(target, itemID: itemA.id, document: doc, undoManager: undoManager)
         XCTAssertTrue(undoManager.canUndo)
@@ -77,6 +78,8 @@ final class CueCommandsMA2Tests: XCTestCase {
         let itemA = makeItem(name: "a.wav")
         let doc = makeDocument(items: [itemA])
         let undoManager = UndoManager()
+        // Per-call grouping (no runloop in tests) — the CueCommands test convention.
+        undoManager.groupsByEvent = false
 
         CueCommands.setMA2PushTarget(target, itemID: itemA.id, document: doc, undoManager: undoManager)
         var changed = target

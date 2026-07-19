@@ -77,4 +77,24 @@ final class MA2PushTargetTests: XCTestCase {
         XCTAssertFalse(target(executorPage: -1).isValid)
         XCTAssertFalse(target(executorNumber: 0).isValid)
     }
+
+    // MARK: - Sequence name (#686)
+
+    func test_sequenceName_defaultsNil_andRoundTrips() throws {
+        XCTAssertNil(target().sequenceName)
+
+        var named = target()
+        named.sequenceName = "Opening"
+        let data = try JSONEncoder().encode(named)
+        let decoded = try JSONDecoder().decode(MA2PushTarget.self, from: data)
+        XCTAssertEqual(decoded.sequenceName, "Opening")
+    }
+
+    func test_decodesLegacyTargetWithoutSequenceName_asNil() throws {
+        let json = Data("""
+        {"sequenceSlot":1,"timecodeSlot":1,"executorPage":1,"executorNumber":1,"timecodeCommand":"goto","includedTypeIDs":[]}
+        """.utf8)
+        let decoded = try JSONDecoder().decode(MA2PushTarget.self, from: json)
+        XCTAssertNil(decoded.sequenceName)
+    }
 }

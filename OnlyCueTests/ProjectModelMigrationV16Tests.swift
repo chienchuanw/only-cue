@@ -36,7 +36,8 @@ final class ProjectModelMigrationV16Tests: XCTestCase {
 
     func test_v15ToV16_bumpsSchemaVersion() throws {
         let migrated = try ProjectModel.decode(from: Data(v15Doc().utf8))
-        XCTAssertEqual(migrated.schemaVersion, 16)
+        // Legacy decodes re-stamp straight to the current version (17 as of #683).
+        XCTAssertEqual(migrated.schemaVersion, ProjectModel.currentSchemaVersion)
     }
 
     func test_v15ToV16_mediaBundlePathIsNil_othersIntact() throws {

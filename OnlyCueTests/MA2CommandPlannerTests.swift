@@ -80,4 +80,40 @@ final class MA2CommandPlannerTests: XCTestCase {
         XCTAssertTrue(commands.contains("Label Sequence 5 \"ab\""))
         XCTAssertTrue(commands.contains("Assign Sequence 5 At Exec 2.3"))
     }
+
+    // MARK: - Cue info (#686)
+
+    private func cueWithNotes(_ notes: String) -> Cue {
+        Cue(
+            id: UUID(),
+            typeID: UUID(),
+            cueNumber: 1,
+            name: "C",
+            time: 0,
+            notes: notes,
+            fadeTime: FadeTime(fadeIn: 0, fadeOut: 0)
+        )
+    }
+
+    func test_emitsInfo_forCueWithNotes_singleLinedAndQuoteStripped() {
+        let commands = MA2CommandPlanner.commands(
+            cues: [cueWithNotes("line1\nline2 \"q\"")],
+            target: target(),
+            sequenceName: "S",
+            startTimecodeFrames: 0,
+            framerate: .fps30
+        )
+        XCTAssertTrue(commands.contains("Assign Sequence 900 Cue 1 /info=\"line1 line2 q\""))
+    }
+
+    func test_omitsInfo_whenNotesEmpty() {
+        let commands = MA2CommandPlanner.commands(
+            cues: [cueWithNotes("")],
+            target: target(),
+            sequenceName: "S",
+            startTimecodeFrames: 0,
+            framerate: .fps30
+        )
+        XCTAssertFalse(commands.contains(where: { $0.contains("/info=") }))
+    }
 }

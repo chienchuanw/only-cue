@@ -50,6 +50,14 @@ enum MA2CommandPlanner {
                     "Assign Sequence \(seq) Cue \(num) /outfade=\(FadeTime.formatNumber(cue.fadeTime.fadeOut))"
                 )
             }
+            if !cue.notes.isEmpty {
+                // Newlines would split the CRLF-framed telnet line; quotes would break
+                // the quoted argument. Collapse to one line, strip embedded quotes.
+                let info = MA2CommandQuoting.quotable(
+                    cue.notes.split(whereSeparator: \.isNewline).joined(separator: " ")
+                )
+                commands.append("Assign Sequence \(seq) Cue \(num) /info=\"\(info)\"")
+            }
         }
 
         commands.append("Label Sequence \(seq) \"\(MA2CommandQuoting.quotable(sequenceName))\"")

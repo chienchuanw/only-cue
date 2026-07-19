@@ -37,6 +37,16 @@ final class MA2PushPreflightTests: XCTestCase {
         XCTAssertEqual(issues, [.duplicateNumber(number: 3, cues: [dupA1, dupA2])])
     }
 
+    func test_duplicateDetection_usesThousandths_notExactDoubles() {
+        // The XML generator rounds cue numbers to integer thousandths
+        // (`MA2CueNumber`), so two Doubles that differ only past the third
+        // decimal collide on the console — preflight must catch them.
+        let dup1 = cue(number: 1.0001, name: "A")
+        let dup2 = cue(number: 1.0004, name: "B")
+        let issues = MA2PushPreflight.validate([dup1, dup2])
+        XCTAssertEqual(issues, [.duplicateNumber(number: 1, cues: [dup1, dup2])])
+    }
+
     func test_emptyCueList_isReported() {
         // Pushing zero cues is a user error (wrong filter), not a silent no-op.
         XCTAssertEqual(MA2PushPreflight.validate([]), [.noCues])

@@ -26,18 +26,22 @@ enum MA2PushPreflight {
         }
 
         // Group numbered cues by number, keeping first-appearance order of the
-        // duplicated numbers so the report is stable across runs.
-        var cuesByNumber: [Double: [Cue]] = [:]
-        var numberOrder: [Double] = []
+        // duplicated numbers so the report is stable across runs. Numbers are
+        // compared in integer thousandths — the same rounding `MA2CueNumber`
+        // applies in the XML — so two Doubles differing only past the third
+        // decimal are caught as the console collision they would become.
+        var cuesByNumber: [Int: [Cue]] = [:]
+        var numberOrder: [Int] = []
         for cue in cues {
             guard let number = cue.cueNumber else { continue }
-            if cuesByNumber[number] == nil { numberOrder.append(number) }
-            cuesByNumber[number, default: []].append(cue)
+            let thousandths = Int((number * 1000).rounded())
+            if cuesByNumber[thousandths] == nil { numberOrder.append(thousandths) }
+            cuesByNumber[thousandths, default: []].append(cue)
         }
-        for number in numberOrder {
-            let group = cuesByNumber[number] ?? []
+        for thousandths in numberOrder {
+            let group = cuesByNumber[thousandths] ?? []
             if group.count > 1 {
-                issues.append(.duplicateNumber(number: number, cues: group))
+                issues.append(.duplicateNumber(number: Double(thousandths) / 1000, cues: group))
             }
         }
 

@@ -107,4 +107,38 @@ final class MA2PushRequestBuilderTests: XCTestCase {
 
         XCTAssertEqual(outcome, .blocked([.noCues]))
     }
+
+    // MARK: - Approach A: command outcome (telnet, no XML/FTP)
+
+    private func commandOutcome(item: MediaItem, target: MA2PushTarget) -> MA2PushRequestBuilder.CommandOutcome {
+        MA2PushRequestBuilder.commandOutcome(item: item, target: target, framerate: .fps30)
+    }
+
+    func test_commandOutcome_ready_returnsCommandList() {
+        let item = item(cues: [cue(number: 2, typeID: typeA, time: 5), cue(number: 1, typeID: typeA, time: 2)])
+
+        let outcome = commandOutcome(item: item, target: target())
+
+        guard case .ready(let commands) = outcome else {
+            return XCTFail("expected ready, got \(outcome)")
+        }
+        XCTAssertEqual(commands.first, "Delete Sequence 18 /nc")
+        XCTAssertEqual(commands.last, "Assign Sequence 18 At Exec 2.3")
+        XCTAssertTrue(commands.contains("Label Sequence 18 \"Opening\""))
+        // Number-sorted: cue 1 stored before cue 2.
+        let store1 = commands.firstIndex(of: "Store Sequence 18 Cue 1 \"\" /nc")
+        let store2 = commands.firstIndex(of: "Store Sequence 18 Cue 2 \"\" /nc")
+        XCTAssertNotNil(store1); XCTAssertNotNil(store2)
+        XCTAssertLessThan(store1!, store2!)
+    }
+
+    func test_commandOutcome_blocked_onUnnumberedCue() {
+        let item = item(cues: [cue(number: nil, typeID: typeA)])
+
+        let outcome = commandOutcome(item: item, target: target())
+
+        guard case .blocked = outcome else {
+            return XCTFail("expected blocked, got \(outcome)")
+        }
+    }
 }

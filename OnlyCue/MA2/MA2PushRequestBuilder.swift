@@ -39,4 +39,29 @@ enum MA2PushRequestBuilder {
             datetime: datetime
         ))
     }
+
+    enum CommandOutcome: Equatable {
+        case blocked([MA2PushPreflight.Issue])
+        case ready([String])
+    }
+
+    /// Approach A (#683): the same filter + pre-flight, then a pure telnet
+    /// command list (no XML, no FTP). `showfile` / `datetime` are irrelevant to
+    /// the command path and omitted.
+    static func commandOutcome(
+        item: MediaItem,
+        target: MA2PushTarget,
+        framerate: SMPTEFramerate
+    ) -> CommandOutcome {
+        let cues = CueExportFilter.cues(item.cues, onlyTypeIDs: target.includedTypeIDs)
+        let issues = MA2PushPreflight.validate(cues)
+        guard issues.isEmpty else { return .blocked(issues) }
+        return .ready(MA2CommandPlanner.commands(
+            cues: cues,
+            target: target,
+            sequenceName: item.resolvedName,
+            startTimecodeFrames: item.startTimecodeFrames,
+            framerate: framerate
+        ))
+    }
 }

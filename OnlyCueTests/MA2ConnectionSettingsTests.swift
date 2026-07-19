@@ -37,6 +37,12 @@ final class MA2ConnectionSettingsTests: XCTestCase {
         XCTAssertNoThrow(try MA2Keychain.deletePassword(account: "test-never-saved-\(UUID().uuidString)"))
     }
 
+    func test_passwordAccount_isFixed() {
+        // One console password per Mac; a fixed account name keeps the lookup
+        // independent of the (editable) username field.
+        XCTAssertEqual(MA2ConnectionSettings.passwordAccount, "grandMA2")
+    }
+
     func test_keychain_service_isOnlyCueMA2() {
         XCTAssertEqual(MA2Keychain.service, "OnlyCue-MA2")
     }

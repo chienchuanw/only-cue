@@ -65,6 +65,8 @@ struct OnlyCueApp: App {
                     .tabItem { Label("Keyboard", systemImage: "keyboard") }
                 OSCSettingsView()
                     .tabItem { Label("OSC", systemImage: "dot.radiowaves.left.and.right") }
+                MA2SettingsView()
+                    .tabItem { Label("grandMA2", systemImage: "network") }
             }
             .tint(DS.Color.cueIndigo)
         }

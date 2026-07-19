@@ -16,6 +16,31 @@ enum MA2PushPreflight {
     }
 
     static func validate(_ cues: [Cue]) -> [Issue] {
-        []
+        guard !cues.isEmpty else { return [.noCues] }
+
+        var issues: [Issue] = []
+
+        let unnumbered = cues.filter { $0.cueNumber == nil }
+        if !unnumbered.isEmpty {
+            issues.append(.unnumbered(cues: unnumbered))
+        }
+
+        // Group numbered cues by number, keeping first-appearance order of the
+        // duplicated numbers so the report is stable across runs.
+        var cuesByNumber: [Double: [Cue]] = [:]
+        var numberOrder: [Double] = []
+        for cue in cues {
+            guard let number = cue.cueNumber else { continue }
+            if cuesByNumber[number] == nil { numberOrder.append(number) }
+            cuesByNumber[number, default: []].append(cue)
+        }
+        for number in numberOrder {
+            let group = cuesByNumber[number] ?? []
+            if group.count > 1 {
+                issues.append(.duplicateNumber(number: number, cues: group))
+            }
+        }
+
+        return issues
     }
 }

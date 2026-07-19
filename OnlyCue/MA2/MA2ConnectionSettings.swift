@@ -25,14 +25,54 @@ enum MA2Keychain {
     }
 
     static func password(account: String) throws -> String? {
-        fatalError("unimplemented")
+        var query = baseQuery(account: account)
+        query[kSecReturnData as String] = true
+        query[kSecMatchLimit as String] = kSecMatchLimitOne
+
+        var result: CFTypeRef?
+        let status = SecItemCopyMatching(query as CFDictionary, &result)
+        switch status {
+        case errSecSuccess:
+            guard let data = result as? Data else { return nil }
+            return String(bytes: data, encoding: .utf8)
+        case errSecItemNotFound:
+            return nil
+        default:
+            throw Failure.unexpectedStatus(status)
+        }
     }
 
     static func setPassword(_ password: String, account: String) throws {
-        fatalError("unimplemented")
+        let passwordData = Data(password.utf8)
+        let query = baseQuery(account: account)
+
+        let update = [kSecValueData as String: passwordData]
+        let updateStatus = SecItemUpdate(query as CFDictionary, update as CFDictionary)
+        if updateStatus == errSecSuccess { return }
+        guard updateStatus == errSecItemNotFound else {
+            throw Failure.unexpectedStatus(updateStatus)
+        }
+
+        var add = query
+        add[kSecValueData as String] = passwordData
+        let addStatus = SecItemAdd(add as CFDictionary, nil)
+        guard addStatus == errSecSuccess else {
+            throw Failure.unexpectedStatus(addStatus)
+        }
     }
 
     static func deletePassword(account: String) throws {
-        fatalError("unimplemented")
+        let status = SecItemDelete(baseQuery(account: account) as CFDictionary)
+        guard status == errSecSuccess || status == errSecItemNotFound else {
+            throw Failure.unexpectedStatus(status)
+        }
+    }
+
+    private static func baseQuery(account: String) -> [String: Any] {
+        [
+            kSecClass as String: kSecClassGenericPassword,
+            kSecAttrService as String: service,
+            kSecAttrAccount as String: account
+        ]
     }
 }

@@ -18,6 +18,25 @@ enum MA2PushRequestBuilder {
         showfile: String,
         datetime: String
     ) -> Outcome {
-        fatalError("unimplemented")
+        let cues = CueExportFilter.cues(item.cues, onlyTypeIDs: target.includedTypeIDs)
+        let issues = MA2PushPreflight.validate(cues)
+        guard issues.isEmpty else { return .blocked(issues) }
+
+        let framesPerSecond = Double(framerate.framesPerSecond)
+        let lengthFrames = item.startTimecodeFrames
+            + Int((item.media.duration * framesPerSecond).rounded(.up))
+        let sequenceName = item.resolvedName
+
+        return .ready(MA2PushPlanner.plan(
+            cues: cues,
+            target: target,
+            sequenceName: sequenceName,
+            timecodeName: "\(sequenceName) TC",
+            startTimecodeFrames: item.startTimecodeFrames,
+            lengthFrames: lengthFrames,
+            framerate: framerate,
+            showfile: showfile,
+            datetime: datetime
+        ))
     }
 }

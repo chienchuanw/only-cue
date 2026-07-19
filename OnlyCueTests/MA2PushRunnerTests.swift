@@ -151,7 +151,9 @@ final class MA2PushRunnerTests: XCTestCase {
 
         await runner.run(
             commands: ["Delete Sequence 900 /nc", "Label Sequence 900 \"X\""],
-            host: "1.2.3.4", username: "administrator", password: "admin"
+            host: "1.2.3.4",
+            username: "administrator",
+            password: "admin"
         )
 
         XCTAssertTrue(runner.didSucceed)
@@ -172,7 +174,9 @@ final class MA2PushRunnerTests: XCTestCase {
 
         await runner.run(
             commands: ["Delete Sequence 900 /nc", "Assign Sequence 900 At Exec 1.15", "Label Sequence 900 \"X\""],
-            host: "h", username: "u", password: "p"
+            host: "h",
+            username: "u",
+            password: "p"
         )
 
         XCTAssertFalse(runner.didSucceed)

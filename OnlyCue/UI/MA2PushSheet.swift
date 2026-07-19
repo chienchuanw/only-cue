@@ -24,7 +24,7 @@ struct MA2PushSheet: View {
     @State private var includedTypeIDs: Set<UUID>
 
     @State private var preflightIssues: [MA2PushPreflight.Issue] = []
-    @State private var confirmingPlan: MA2PushPlan?
+    @State private var confirmingCommands: [String]?
     @State private var runner: MA2PushRunner?
     @State private var pushTask: Task<Void, Never>?
     @State private var passwordError: String?
@@ -81,8 +81,8 @@ struct MA2PushSheet: View {
 
             if let runner {
                 MA2PushProgressList(runner: runner)
-            } else if let confirmingPlan {
-                confirmationCard(for: confirmingPlan)
+            } else if let confirmingCommands {
+                confirmationCard(for: confirmingCommands)
             } else {
                 targetCard
                 typesCard
@@ -118,8 +118,8 @@ struct MA2PushSheet: View {
                         .keyboardShortcut(.defaultAction)
                         .accessibilityIdentifier("ma2CloseButton")
                 }
-            } else if confirmingPlan != nil {
-                Button("Back") { confirmingPlan = nil }
+            } else if confirmingCommands != nil {
+                Button("Back") { confirmingCommands = nil }
                 Spacer()
                 Button("Replace and Push") { push() }
                     .keyboardShortcut(.defaultAction)
@@ -144,23 +144,20 @@ struct MA2PushSheet: View {
 
     private func prepare() {
         let target = currentTarget
-        let datetime = ISO8601DateFormatter().string(from: Date())
-        switch MA2PushRequestBuilder.outcome(
-            item: item, target: target, framerate: framerate, showfile: showfile, datetime: datetime
-        ) {
+        switch MA2PushRequestBuilder.commandOutcome(item: item, target: target, framerate: framerate) {
         case .blocked(let issues):
             preflightIssues = issues
-        case .ready(let plan):
+        case .ready(let commands):
             // Persist the target (undoably) only for a push that can proceed —
             // a blocked attempt should not dirty the document.
             onSaveTarget(target)
             preflightIssues = []
-            confirmingPlan = plan
+            confirmingCommands = commands
         }
     }
 
     private func push() {
-        guard let plan = confirmingPlan, let portValue = UInt16(exactly: port), portValue > 0 else { return }
+        guard let commands = confirmingCommands, let portValue = UInt16(exactly: port), portValue > 0 else { return }
         let password: String
         do {
             password = try MA2Keychain.password(account: MA2ConnectionSettings.passwordAccount) ?? ""
@@ -174,9 +171,9 @@ struct MA2PushSheet: View {
         let client = MA2TelnetClient(configuration: .init(host: host, port: portValue))
         let runner = MA2PushRunner(transport: client)
         self.runner = runner
-        confirmingPlan = nil
+        confirmingCommands = nil
         pushTask = Task {
-            await runner.run(plan: plan, host: host, username: username, password: password)
+            await runner.run(commands: commands, host: host, username: username, password: password)
         }
     }
 
@@ -280,15 +277,15 @@ private extension MA2PushSheet {
         }
     }
 
-    private func confirmationCard(for plan: MA2PushPlan) -> some View {
+    private func confirmationCard(for commands: [String]) -> some View {
         VStack(alignment: .leading, spacing: DS.Space.sm) {
             Label(
-                "This replaces Sequence \(sequenceSlot) and Timecode \(timecodeSlot) "
-                + "on the console. Existing contents of those slots are deleted.",
+                "This replaces Sequence \(sequenceSlot) on the console. "
+                + "Existing contents of that slot are deleted.",
                 systemImage: "exclamationmark.triangle"
             )
             .foregroundStyle(.yellow)
-            Text("\(plan.commands.count) commands, 2 files via FTP.")
+            Text("\(commands.count) commands over telnet.")
                 .font(.caption)
                 .foregroundStyle(DS.Color.textSecondary)
             if let passwordError {

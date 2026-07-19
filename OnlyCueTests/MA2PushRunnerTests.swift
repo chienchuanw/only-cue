@@ -142,4 +142,42 @@ final class MA2PushRunnerTests: XCTestCase {
         XCTAssertEqual(runner.failureMessage, "Cancelled")
         XCTAssertEqual(transport.log.last, "disconnect")
     }
+
+    // MARK: - Approach A: commands-only run (no uploads)
+
+    func test_runCommands_connects_logins_sendsEachCommand_inOrder() async {
+        let transport = MockTransport()
+        let runner = MA2PushRunner(transport: transport, interCommandDelay: 0)
+
+        await runner.run(
+            commands: ["Delete Sequence 900 /nc", "Label Sequence 900 \"X\""],
+            host: "1.2.3.4", username: "administrator", password: "admin"
+        )
+
+        XCTAssertTrue(runner.didSucceed)
+        XCTAssertEqual(transport.log, [
+            "connect", "login administrator", "Delete Sequence 900 /nc", "Label Sequence 900 \"X\"", "disconnect"
+        ])
+        XCTAssertEqual(runner.steps.map(\.title), [
+            "Connect to 1.2.3.4", "Login as administrator", "Delete Sequence 900 /nc", "Label Sequence 900 \"X\""
+        ])
+        XCTAssertTrue(runner.steps.allSatisfy { $0.state == .done })
+        XCTAssertFalse(runner.isRunning)
+    }
+
+    func test_runCommands_stopsOnFirstConsoleError_andDisconnects() async {
+        let transport = MockTransport()
+        transport.failOnCommand = "Assign Sequence 900 At Exec 1.15"
+        let runner = MA2PushRunner(transport: transport, interCommandDelay: 0)
+
+        await runner.run(
+            commands: ["Delete Sequence 900 /nc", "Assign Sequence 900 At Exec 1.15", "Label Sequence 900 \"X\""],
+            host: "h", username: "u", password: "p"
+        )
+
+        XCTAssertFalse(runner.didSucceed)
+        XCTAssertEqual(runner.failureMessage, "Error #12")
+        XCTAssertFalse(transport.log.contains("Label Sequence 900 \"X\""))
+        XCTAssertEqual(transport.log.last, "disconnect")
+    }
 }

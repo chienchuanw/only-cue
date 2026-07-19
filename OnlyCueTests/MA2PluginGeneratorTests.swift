@@ -49,4 +49,28 @@ final class MA2PluginGeneratorTests: XCTestCase {
         XCTAssertFalse(bundle.luaFilename.contains("/"))
         XCTAssertFalse(bundle.luaFilename.contains(":"))
     }
+
+    func test_lua_escapesApostrophesInCommands_forValidLua() {
+        // A song title like "Don't Stop" flows into a Label command; an
+        // unescaped ' would close the CMD('…') Lua string and break the plugin.
+        let planWithApostrophe = MA2PushPlan(
+            sequenceUpload: .init(filename: "s.xml", xml: "<s/>"),
+            timecodeUpload: .init(filename: "t.xml", xml: "<t/>"),
+            commands: ["Label Sequence 1 \"Don't Stop\""]
+        )
+        let lua = MA2PluginGenerator.lua(plan: planWithApostrophe)
+        XCTAssertTrue(lua.contains("CMD('Label Sequence 1 \"Don\\'t Stop\"')"))
+        XCTAssertFalse(lua.contains("CMD('Label Sequence 1 \"Don't Stop\"')"))
+    }
+
+    func test_lua_bumpsLongBracketLevel_whenXmlContainsClosingSequence() {
+        // A name yielding "]==]" inside the XML must not close the [==[ … ]==] literal.
+        let planWithBracket = MA2PushPlan(
+            sequenceUpload: .init(filename: "s.xml", xml: "a]==]b"),
+            timecodeUpload: .init(filename: "t.xml", xml: "<t/>"),
+            commands: []
+        )
+        let lua = MA2PluginGenerator.lua(plan: planWithBracket)
+        XCTAssertTrue(lua.contains("[===[a]==]b]===]"))
+    }
 }

@@ -180,11 +180,11 @@ final class MA2PushRequestBuilderTests: XCTestCase {
     // MARK: - Resolved sequence name (#686)
 
     func test_resolvedName_prefersTargetSequenceName() {
-        var t = target()
-        t.sequenceName = "My Cues"
+        var named = target()
+        named.sequenceName = "My Cues"
         let item = item(cues: [cue(number: 1, typeID: typeA, time: 0)])
 
-        guard case .ready(let commands) = MA2PushRequestBuilder.commandOutcome(item: item, target: t, framerate: .fps30) else {
+        guard case .ready(let commands) = MA2PushRequestBuilder.commandOutcome(item: item, target: named, framerate: .fps30) else {
             return XCTFail("expected ready")
         }
         XCTAssertTrue(commands.contains("Label Sequence 18 \"My Cues\""))

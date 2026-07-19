@@ -22,6 +22,7 @@ struct MA2PushSheet: View {
     @State private var executorNumber: Int
     @State private var timecodeCommand: MA2TimecodeCommand
     @State private var includedTypeIDs: Set<UUID>
+    @State private var sequenceName: String
 
     @State private var preflightIssues: [MA2PushPreflight.Issue] = []
     @State private var confirmingCommands: [String]?
@@ -57,6 +58,8 @@ struct MA2PushSheet: View {
         _executorNumber = State(initialValue: saved.executorNumber)
         _timecodeCommand = State(initialValue: saved.timecodeCommand)
         _includedTypeIDs = State(initialValue: saved.includedTypeIDs)
+        _sequenceName = State(initialValue: saved.sequenceName
+            ?? MA2Name.sanitize(item.resolvedName, fallbackSlot: saved.sequenceSlot))
     }
 
     private var currentTarget: MA2PushTarget {
@@ -66,7 +69,8 @@ struct MA2PushSheet: View {
             executorPage: executorPage,
             executorNumber: executorNumber,
             timecodeCommand: timecodeCommand,
-            includedTypeIDs: includedTypeIDs
+            includedTypeIDs: includedTypeIDs,
+            sequenceName: sequenceName.isEmpty ? nil : sequenceName
         )
     }
 
@@ -206,6 +210,11 @@ private extension MA2PushSheet {
     var targetCard: some View {
         VStack(alignment: .leading, spacing: DS.Space.sm) {
             Text("Target").dsSectionHeader()
+            HStack {
+                Text("Sequence name")
+                TextField("English name", text: $sequenceName)
+                    .accessibilityIdentifier("ma2SequenceNameField")
+            }
             Grid(alignment: .leading, horizontalSpacing: DS.Space.md, verticalSpacing: DS.Space.xs) {
                 GridRow {
                     Text("Sequence slot")

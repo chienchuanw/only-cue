@@ -12,12 +12,33 @@ struct MA2SettingsView: View {
 
     @State private var password = ""
     @State private var passwordStatus: String?
+    @State private var discovered: [MA2Console] = []
+    @State private var isScanning = false
+    @State private var scanNote: String?
 
     var body: some View {
         Form {
             Section {
-                TextField("Console IP / hostname", text: $host)
-                    .accessibilityIdentifier("ma2HostField")
+                HStack {
+                    TextField("Console IP / hostname", text: $host)
+                        .accessibilityIdentifier("ma2HostField")
+                    if !discovered.isEmpty {
+                        Picker("", selection: $host) {
+                            ForEach(discovered) { console in Text(console.host).tag(console.host) }
+                        }
+                        .labelsHidden()
+                        .frame(width: 150)
+                        .accessibilityIdentifier("ma2HostPicker")
+                    }
+                    Button(isScanning ? "Scanning…" : "Scan", action: scan)
+                        .disabled(isScanning)
+                        .accessibilityIdentifier("ma2ScanButton")
+                }
+                if let scanNote {
+                    Text(scanNote)
+                        .font(.caption)
+                        .foregroundStyle(DS.Color.textSecondary)
+                }
                 TextField("Telnet port", value: $port, format: .number.grouping(.never))
                     .frame(maxWidth: 120)
                     .accessibilityIdentifier("ma2PortField")
@@ -49,6 +70,26 @@ struct MA2SettingsView: View {
         .frame(width: 600, height: 360)
         .accessibilityIdentifier("ma2Settings")
         .onAppear(perform: loadPassword)
+    }
+
+    private func scan() {
+        isScanning = true
+        scanNote = nil
+        Task {
+            let found = await MA2ConsoleScanner.scan()
+            await MainActor.run {
+                discovered = found
+                isScanning = false
+                if found.isEmpty {
+                    let subnets = MA2ConsoleScanner.localSubnets().map { "\($0).0/24" }.joined(separator: ", ")
+                    scanNote = subnets.isEmpty
+                        ? "No active network interfaces to scan."
+                        : "No consoles found on \(subnets)."
+                } else if host.isEmpty, let first = found.first {
+                    host = first.host
+                }
+            }
+        }
     }
 
     private func loadPassword() {

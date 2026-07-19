@@ -119,6 +119,10 @@ struct ItemListPane: View {
                         NotificationCenter.default.post(name: .sendToMA2Requested, object: item.id)
                     }
                     .accessibilityIdentifier("contextMenuSendToMA2")
+                    Button("Export grandMA2 plugin…") {
+                        NotificationCenter.default.post(name: .exportMA2PluginRequested, object: item.id)
+                    }
+                    .accessibilityIdentifier("contextMenuExportMA2Plugin")
                     if ltcRoutingStore.settings.isEnabled {
                         Button(item.ltcMuted ? "Unmute LTC for this clip" : "Mute LTC for this clip") {
                             CueCommands.setLTCMuted(

@@ -64,4 +64,35 @@ enum MA2PushRequestBuilder {
             framerate: framerate
         ))
     }
+
+    enum PluginOutcome: Equatable {
+        case blocked([MA2PushPreflight.Issue])
+        case ready(MA2PluginBundle)
+    }
+
+    /// Approach C (#683): reuse the FTP-era plan builder, then wrap it into a
+    /// downloadable Lua plugin instead of pushing over FTP.
+    static func pluginOutcome(
+        item: MediaItem,
+        target: MA2PushTarget,
+        framerate: SMPTEFramerate,
+        datetime: String
+    ) -> PluginOutcome {
+        switch outcome(
+            item: item,
+            target: target,
+            framerate: framerate,
+            showfile: "OnlyCue",
+            datetime: datetime
+        ) {
+        case .blocked(let issues):
+            return .blocked(issues)
+        case .ready(let plan):
+            return .ready(MA2PluginGenerator.bundle(
+                plan: plan,
+                pluginName: item.resolvedName,
+                datetime: datetime
+            ))
+        }
+    }
 }

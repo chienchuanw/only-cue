@@ -142,4 +142,38 @@ final class MA2PushRequestBuilderTests: XCTestCase {
             return XCTFail("expected blocked, got \(outcome)")
         }
     }
+
+    // MARK: - Approach C: plugin outcome (downloadable Lua plugin)
+
+    func test_pluginOutcome_ready_wrapsPlanInBundle() {
+        let item = item(cues: [cue(number: 1, typeID: typeA, time: 2)])
+
+        let outcome = MA2PushRequestBuilder.pluginOutcome(
+            item: item,
+            target: target(),
+            framerate: .fps30,
+            datetime: "2026-07-20T00:00:00"
+        )
+
+        guard case .ready(let bundle) = outcome else {
+            return XCTFail("expected ready, got \(outcome)")
+        }
+        XCTAssertTrue(bundle.manifestXML.contains("name=\"Opening\""))
+        XCTAssertTrue(bundle.lua.contains("CMD('Label Sequence 18 \"Opening\"')"))
+    }
+
+    func test_pluginOutcome_blocked_onUnnumberedCue() {
+        let item = item(cues: [cue(number: nil, typeID: typeA)])
+
+        let outcome = MA2PushRequestBuilder.pluginOutcome(
+            item: item,
+            target: target(),
+            framerate: .fps30,
+            datetime: "d"
+        )
+
+        guard case .blocked = outcome else {
+            return XCTFail("expected blocked")
+        }
+    }
 }

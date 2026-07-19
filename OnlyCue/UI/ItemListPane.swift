@@ -115,6 +115,10 @@ struct ItemListPane: View {
                     }
                     .disabled(revealURL == nil)
                     .accessibilityIdentifier("contextMenuShowInFinder")
+                    Button("Send to grandMA2…") {
+                        NotificationCenter.default.post(name: .sendToMA2Requested, object: item.id)
+                    }
+                    .accessibilityIdentifier("contextMenuSendToMA2")
                     if ltcRoutingStore.settings.isEnabled {
                         Button(item.ltcMuted ? "Unmute LTC for this clip" : "Mute LTC for this clip") {
                             CueCommands.setLTCMuted(

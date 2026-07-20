@@ -84,12 +84,11 @@ actor MA2TelnetClient {
     func login(username: String, password: String) async throws {
         let response = try await send("login \"\(username)\" \"\(password)\"")
         guard response.localizedCaseInsensitiveContains("logged in") else {
-            // The console may echo the command line back — never surface the
-            // plaintext password in UI or logs.
-            let redacted = password.isEmpty
-                ? response
-                : response.replacingOccurrences(of: password, with: "•••")
-            throw Failure.loginRejected(response: redacted)
+            // The console echoes the command line back, but the credentials are
+            // grandMA2's published defaults (#690) \u2014 there is no user secret to
+            // redact, and blanking "admin" would corrupt "administrator" in the
+            // rejection message. Surface the console's text verbatim.
+            throw Failure.loginRejected(response: response)
         }
     }
 

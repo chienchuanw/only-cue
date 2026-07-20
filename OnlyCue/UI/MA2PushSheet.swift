@@ -221,10 +221,6 @@ private extension MA2PushSheet {
                     TextField("", value: $sequenceSlot, format: .number.grouping(.never))
                         .frame(width: 70)
                         .accessibilityIdentifier("ma2SequenceSlotField")
-                    Text("Timecode slot")
-                    TextField("", value: $timecodeSlot, format: .number.grouping(.never))
-                        .frame(width: 70)
-                        .accessibilityIdentifier("ma2TimecodeSlotField")
                 }
                 GridRow {
                     Text("Executor (page.exec)")
@@ -237,16 +233,11 @@ private extension MA2PushSheet {
                             .frame(width: 40)
                             .accessibilityIdentifier("ma2ExecutorNumberField")
                     }
-                    Text("TC command")
-                    Picker("", selection: $timecodeCommand) {
-                        Text("Goto").tag(MA2TimecodeCommand.goto)
-                        Text("Go").tag(MA2TimecodeCommand.go)
-                    }
-                    .labelsHidden()
-                    .frame(width: 90)
-                    .accessibilityIdentifier("ma2TimecodeCommandPicker")
                 }
             }
+            // `timecodeSlot` / `timecodeCommand` are not shown here — Approach A
+            // (per-cue Trig=Timecode) never uses them. They stay in `currentTarget`
+            // (seeded from the saved target) so the plugin export keeps its values.
         }
         .frame(maxWidth: .infinity, alignment: .leading)
         .dsCard()

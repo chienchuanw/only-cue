@@ -139,6 +139,30 @@ final class MA2TelnetClientTests: XCTestCase {
         await client.disconnect()
     }
 
+    func test_login_rejection_surfacesConsoleTextVerbatim() async throws {
+        // The console echoes the command line back, and "admin" is a substring of
+        // "administrator" — any password-blanking would corrupt the rejection
+        // message into "•••istrator" (#690).
+        let fixture = try Fixture { _ in
+            "Executing : Login \"administrator\" \"admin\"\r\nLogin incorrect\r\n"
+        }
+        defer { fixture.stop() }
+        let client = client(port: fixture.port)
+        try await client.connect()
+
+        do {
+            try await client.login(username: "administrator", password: "admin")
+            XCTFail("expected loginRejected")
+        } catch let failure as MA2TelnetClient.Failure {
+            guard case .loginRejected(let response) = failure else {
+                return XCTFail("unexpected failure \(failure)")
+            }
+            XCTAssertTrue(response.contains("administrator"), "got: \(response)")
+            XCTAssertFalse(response.contains("•••"), "got: \(response)")
+        }
+        await client.disconnect()
+    }
+
     func test_consoleErrorResponse_throwsWithCommandAndText() async throws {
         let fixture = try Fixture { _ in "Error #12 at line 1\r\n" }
         defer { fixture.stop() }

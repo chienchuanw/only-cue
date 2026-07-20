@@ -8,6 +8,11 @@ struct OnlyCueApp: App {
     @NSApplicationDelegateAdaptor(AppDelegate.self) private var appDelegate
 
     init() {
+        // Credentials are hardcoded now (#690) — drop the console password older
+        // builds stored in the Keychain rather than abandoning it there. No-op
+        // when nothing was saved.
+        MA2ConnectionSettings.removeLegacyKeychainPassword()
+
         Task { @MainActor in
             // Dark-only main window (ADR-029): pin system chrome to Dark Aqua
             // regardless of the host's appearance setting.

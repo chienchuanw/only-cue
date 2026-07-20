@@ -14,7 +14,6 @@ struct MA2PushSheet: View {
 
     @AppStorage(MA2ConnectionSettings.hostKey) private var host = ""
     @AppStorage(MA2ConnectionSettings.portKey) private var port = MA2ConnectionSettings.defaultPort
-    @AppStorage(MA2ConnectionSettings.usernameKey) private var username = MA2ConnectionSettings.defaultUsername
 
     @State private var sequenceSlot: Int
     @State private var timecodeSlot: Int
@@ -28,7 +27,6 @@ struct MA2PushSheet: View {
     @State private var confirmingCommands: [String]?
     @State private var runner: MA2PushRunner?
     @State private var pushTask: Task<Void, Never>?
-    @State private var passwordError: String?
 
     init(
         item: MediaItem,
@@ -162,22 +160,18 @@ struct MA2PushSheet: View {
 
     private func push() {
         guard let commands = confirmingCommands, let portValue = UInt16(exactly: port), portValue > 0 else { return }
-        let password: String
-        do {
-            password = try MA2Keychain.password(account: MA2ConnectionSettings.passwordAccount) ?? ""
-        } catch {
-            // A Keychain failure would otherwise surface as a baffling console
-            // login rejection — name the real cause and stay on this screen.
-            passwordError = "Could not read the console password from the Keychain."
-            return
-        }
-        passwordError = nil
         let client = MA2TelnetClient(configuration: .init(host: host, port: portValue))
         let runner = MA2PushRunner(transport: client)
         self.runner = runner
         confirmingCommands = nil
         pushTask = Task {
-            await runner.run(commands: commands, host: host, username: username, password: password)
+            // Credentials are grandMA2's fixed defaults (#690) — nothing to read.
+            await runner.run(
+                commands: commands,
+                host: host,
+                username: MA2ConnectionSettings.username,
+                password: MA2ConnectionSettings.password
+            )
         }
     }
 
@@ -288,12 +282,6 @@ private extension MA2PushSheet {
             Text("\(commands.count) commands over telnet.")
                 .font(.caption)
                 .foregroundStyle(DS.Color.textSecondary)
-            if let passwordError {
-                Label(passwordError, systemImage: "xmark.octagon")
-                    .foregroundStyle(.red)
-                    .font(.callout)
-                    .accessibilityIdentifier("ma2PasswordError")
-            }
         }
         .frame(maxWidth: .infinity, alignment: .leading)
         .dsCard()

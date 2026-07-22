@@ -57,26 +57,32 @@ OnlyCue 是 macOS 專屬 App,無法在 Windows 環境執行。燈光設計者在
 ## `.pbf` 產生規則 (Format Rules)
 
 檔案內容:
+> **格式來源(#695 修正)**:v0.18.0 原本用 UTF-8 無 BOM,PotPlayer 讀不出來。以使用者實機 PotPlayer 產生的 `.pbf` 逐位元組比對後,正確格式如下(我方輸出已與真檔 byte-for-byte 一致)。
+
 ```ini
 [Bookmark]
+0=<毫秒>*<標題>*
 1=<毫秒>*<標題>*
-2=<毫秒>*<標題>*
+2=
+（空行）
 ```
 
-- 每行 `N=<毫秒>*<標題>*`,第三欄(縮圖)留空,`N` 從 1 遞增。
+- 每行 `N=<毫秒>*<標題>*`,第三欄(縮圖)留空,`N` 從 **0** 遞增。
+- 書籤之後接一行 **`{數量}=`**(下一個索引槽,空的)再加一行**空行**,比照 PotPlayer 真檔。
+- **換行**:**CRLF(`\r\n`)**。
+- **編碼**:**UTF-16 little-endian + BOM(`FF FE`)**(由 `PotPlayerBundleWriter` 寫檔時處理;`PBFExporter` 產生的是不含 BOM 的邏輯字串)。
 - **毫秒** = `round(cue.time × 1000)`。
 - **標題** = `[型別] 編號 名稱`:
   - 型別:由 `cue.typeID` 查 `CuePointType.name`。
   - 編號:`cue.cueNumber` 為整數時不帶小數(`12`),分數保留(`12.5`);為 `nil` 時省略該段(→ `[型別] 名稱`)。
 - **淨化**:標題內的 `*`、`\n`、`\r` 一律替換成空白(不動 OnlyCue 原始資料)。
 - **排序**:書籤依毫秒遞增;同毫秒再依 `cueNumber`。
-- **過濾**:僅輸出所屬型別 `isExportEnabled == true` 的 cue。
-- **編碼**:UTF-8。
+- **過濾**:排除所屬型別 `isExportEnabled == false` 的 cue(孤兒型別的 cue 保留)。
 
 ## 輸出結構與邊界情況 (Output & Edge Cases)
 
 - 使用者選一個目標資料夾;內部為**扁平**的成對檔案:`歌名.mp4` + `歌名.pbf`,同層同名。
-- **空影片**(過濾後無 cue):仍產生只有 `[Bookmark]` 標頭的 `.pbf`。
+- **空影片**(過濾後無 cue):仍產生 `.pbf`,內容為 `[Bookmark]` + `0=` 槽 + 空行。
 - **檔名碰撞**(兩支 basename 相同):自動加後綴 `-2`、`-3`,影片與 `.pbf` 共用同一後綴以維持配對。
 
 ## 測試策略 (TDD)
@@ -88,17 +94,20 @@ OnlyCue 是 macOS 專屬 App,無法在 Windows 環境執行。燈光設計者在
 - 編號:整數 / 分數 / `nil` 三種。
 - 標題淨化:`*`、`\n`、`\r` → 空白。
 - `isExportEnabled` 過濾(停用型別的 cue 不出現)。
-- 空影片 → 僅 `[Bookmark]` 標頭。
+- 空影片 → `[Bookmark]` + `0=` 槽 + 空行。
+- 0-based 索引、CRLF、尾端 `{數量}=` 槽 + 空行。
 
 ### 協調層測試
 - 檔名碰撞自動加後綴,且影片與 `.pbf` 配對一致。
 - 成對輸出(每支啟用影片一個 `.pbf`)。
 - 忽略 `startTimecodeFrames`(時間基準以 `cue.time` 為準)。
+- `.pbf` 以 UTF-16LE + `FF FE` BOM 寫出。
 
 ### 手動驗證
-- 以含中文標題的測試影片實測,確認 PotPlayer(Windows)能正確讀取 UTF-8 標題並跳點。
+- Windows/PotPlayer 實測(#695):我方輸出已與使用者實機 PotPlayer 產生的 `.pbf` byte-for-byte 相同,確認自動掛載、跳點、中文標題正常。
 
 ## 開放風險 (Risks)
 
-- PotPlayer 對 `.pbf` 編碼/BOM 的容忍度需以實機驗證(預設 UTF-8,無 BOM)。
+- ~~PotPlayer 對 `.pbf` 編碼/BOM 的容忍度~~ → **已解決(#695)**:正確編碼為 UTF-16LE + BOM,已與真檔逐位元組比對。
 - 若 Windows 端影片檔名與匯出不一致,自動掛載失效,需手動匯入(已為可接受 fallback)。
+- 尾端 `{數量}=` 空槽:比照真檔保留;PotPlayer 讀自己的檔不會產生幽靈書籤,故判定安全(實測確認)。

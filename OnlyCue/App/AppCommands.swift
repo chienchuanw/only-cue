@@ -76,6 +76,13 @@ struct AppCommands: Commands {
             .accessibilityIdentifier("exportBundleMenuItem")
 
             Button {
+                NotificationCenter.default.post(name: .exportPotPlayerRequested, object: nil)
+            } label: {
+                Label("Export PotPlayer Bookmarks…", systemImage: "bookmark")
+            }
+            .accessibilityIdentifier("exportPotPlayerMenuItem")
+
+            Button {
                 NotificationCenter.default.post(name: .sendToMA2Requested, object: nil)
             } label: {
                 Label("Send to grandMA2…", systemImage: "network")

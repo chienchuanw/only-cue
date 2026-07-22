@@ -9,6 +9,7 @@ extension Notification.Name {
     static let exportCueListRequested = Notification.Name("OnlyCue.exportCueListRequested")
     static let importCueListRequested = Notification.Name("OnlyCue.importCueListRequested")
     static let exportBundleRequested = Notification.Name("OnlyCue.exportBundleRequested")
+    static let exportPotPlayerRequested = Notification.Name("OnlyCue.exportPotPlayerRequested")
     static let saveTemplateRequested = Notification.Name("OnlyCue.saveTemplateRequested")
     static let loadTemplateRequested = Notification.Name("OnlyCue.loadTemplateRequested")
     static let oscMonitorRequested = Notification.Name("OnlyCue.oscMonitorRequested")

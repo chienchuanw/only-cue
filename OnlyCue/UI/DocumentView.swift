@@ -249,6 +249,7 @@ struct DocumentView: View {
         )
         .cueTransferMenuReceiver(document: document, undoManager: undoManager)
         .bundleExportMenuReceiver(document: document)
+        .potPlayerExportMenuReceiver(document: document)
     }
 
     private func alertContent(_ alert: DocumentAlert) -> Alert {

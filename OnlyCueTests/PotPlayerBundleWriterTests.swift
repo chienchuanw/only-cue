@@ -90,6 +90,23 @@ final class PotPlayerBundleWriterTests: XCTestCase {
         XCTAssertEqual(pbf, "[Bookmark]\n1=1000*[Lighting] 1 keep*\n")
     }
 
+    func test_write_keepsCueWithDanglingType() throws {
+        // A cue whose typeID has no matching CuePointType is not "disabled" — it
+        // survives (bracket dropped by PBFExporter), unlike an explicitly
+        // export-disabled Type.
+        let danglingType = UUID(), itemID = UUID()
+        let source = try makeSourceFile("orphan.mp4", bytes: [1])
+        let m = model(types: [], items: [item(id: itemID, name: "orphan.mp4",
+            cues: [cue(type: danglingType, number: 7, name: "orphan", time: 1)])])
+        let layout = BundleLayout.plan([.init(id: itemID, name: "orphan.mp4", url: source)])
+        let dest = tempRoot.appendingPathComponent("out", isDirectory: true)
+
+        try PotPlayerBundleWriter.write(layout: layout, model: m, to: dest)
+
+        let pbf = try String(contentsOf: dest.appendingPathComponent("orphan.pbf"), encoding: .utf8)
+        XCTAssertEqual(pbf, "[Bookmark]\n1=1000*7 orphan*\n")
+    }
+
     func test_write_emptyVideoStillGetsPBF() throws {
         let itemID = UUID()
         let source = try makeSourceFile("silent.mp4", bytes: [1])

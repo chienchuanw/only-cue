@@ -19,8 +19,14 @@ enum PotPlayerBundleWriter {
     ) throws {
         try fileManager.createDirectory(at: destination, withIntermediateDirectories: true)
 
-        let enabledTypeIDs = Set(
-            model.cuePointTypes.filter { $0.isExportEnabled }.map { $0.id }
+        // Exclude only cues whose Type is *explicitly* export-disabled. A cue
+        // whose Type is missing (dangling reference) is kept — matching
+        // PBFExporter's unknown-Type title handling and `isExportEnabled`'s
+        // default of true. `CueExportFilter` isn't reused here: its empty
+        // `onlyTypeIDs` means "pass all", which would wrongly export everything
+        // when every Type is disabled.
+        let disabledTypeIDs = Set(
+            model.cuePointTypes.filter { !$0.isExportEnabled }.map { $0.id }
         )
         let typeNamesByID = Dictionary(
             uniqueKeysWithValues: model.cuePointTypes.map { ($0.id, $0.name) }
@@ -43,7 +49,7 @@ enum PotPlayerBundleWriter {
             let cues = entry.itemIDs
                 .compactMap { itemsByID[$0]?.cues }
                 .flatMap { $0 }
-                .filter { enabledTypeIDs.contains($0.typeID) }
+                .filter { !disabledTypeIDs.contains($0.typeID) }
             let body = PBFExporter.pbf(cues: cues, typeNamesByID: typeNamesByID)
             let pbfName = (entry.destName as NSString).deletingPathExtension + ".pbf"
             try body.write(

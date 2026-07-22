@@ -42,6 +42,16 @@ final class PBFExporterTests: XCTestCase {
         XCTAssertEqual(out, "[Bookmark]\n1=1000*early*\n2=9000*late*\n")
     }
 
+    func test_sameMillisecond_ordersByCueNumber() {
+        let type = UUID()
+        let out = PBFExporter.pbf(
+            cues: [cue(type: type, number: 2, name: "b", time: 4),
+                   cue(type: type, number: 1, name: "a", time: 4)],
+            typeNamesByID: [type: "L"]
+        )
+        XCTAssertEqual(out, "[Bookmark]\n1=4000*[L] 1 a*\n2=4000*[L] 2 b*\n")
+    }
+
     func test_unnumberedCue_dropsNumber() {
         let type = UUID()
         let out = PBFExporter.pbf(cues: [cue(type: type, name: "副歌", time: 0)],

@@ -3,7 +3,8 @@ import XCTest
 
 /// `PotPlayerBundleWriter` copies each located video flat into the destination
 /// and writes a paired `<stem>.pbf` (cues filtered to exclude export-disabled
-/// Types). Integration-tested against a temp directory (no NSSavePanel / GUI).
+/// Types). The `.pbf` is UTF-16 little-endian with a `FF FE` BOM — the byte
+/// format PotPlayer itself authors. Integration-tested against a temp directory.
 final class PotPlayerBundleWriterTests: XCTestCase {
 
     private var tempRoot: URL!
@@ -16,6 +17,12 @@ final class PotPlayerBundleWriterTests: XCTestCase {
 
     override func tearDownWithError() throws {
         try? FileManager.default.removeItem(at: tempRoot)
+    }
+
+    /// Reads a `.pbf` back through the UTF-16 BOM (strips it, honors LE), giving
+    /// the logical text the exporter produced.
+    private func readPBF(_ url: URL) throws -> String {
+        try String(contentsOf: url, encoding: .utf16)
     }
 
     private func makeSourceFile(_ name: String, bytes: [UInt8]) throws -> URL {
@@ -52,6 +59,26 @@ final class PotPlayerBundleWriterTests: XCTestCase {
         )
     }
 
+    func test_write_pbfIsUTF16LEWithBOM() throws {
+        let type = UUID()
+        let itemID = UUID()
+        let source = try makeSourceFile("intro.mp4", bytes: [1])
+        let intro = cue(type: type, number: 1, name: "副歌", time: 5)
+        let project = model(
+            types: [CuePointType(id: type, name: "L", colorHex: "#fff")],
+            items: [item(id: itemID, name: "intro.mp4", cues: [intro])]
+        )
+        let layout = BundleLayout.plan([.init(id: itemID, name: "intro.mp4", url: source)])
+        let dest = tempRoot.appendingPathComponent("out", isDirectory: true)
+
+        try PotPlayerBundleWriter.write(layout: layout, model: project, to: dest)
+
+        let raw = try Data(contentsOf: dest.appendingPathComponent("intro.pbf"))
+        XCTAssertEqual(Array(raw.prefix(2)), [0xFF, 0xFE], "must start with UTF-16LE BOM")
+        // No lone bytes: UTF-16 is 2 bytes per code unit, so length is even.
+        XCTAssertEqual(raw.count % 2, 0)
+    }
+
     func test_write_copiesVideoFlatAndWritesPairedPBF() throws {
         let type = UUID()
         let itemID = UUID()
@@ -67,8 +94,8 @@ final class PotPlayerBundleWriterTests: XCTestCase {
         try PotPlayerBundleWriter.write(layout: layout, model: project, to: dest)
 
         XCTAssertEqual(try Data(contentsOf: dest.appendingPathComponent("intro.mp4")), Data([1, 2, 3]))
-        let pbf = try String(contentsOf: dest.appendingPathComponent("intro.pbf"), encoding: .utf8)
-        XCTAssertEqual(pbf, "[Bookmark]\n1=5000*[Lighting] 1 開場*\n")
+        let pbf = try readPBF(dest.appendingPathComponent("intro.pbf"))
+        XCTAssertEqual(pbf, "[Bookmark]\r\n0=5000*[Lighting] 1 開場*\r\n1=\r\n\r\n")
     }
 
     func test_write_excludesDisabledTypes() throws {
@@ -90,8 +117,8 @@ final class PotPlayerBundleWriterTests: XCTestCase {
 
         try PotPlayerBundleWriter.write(layout: layout, model: project, to: dest)
 
-        let pbf = try String(contentsOf: dest.appendingPathComponent("song.pbf"), encoding: .utf8)
-        XCTAssertEqual(pbf, "[Bookmark]\n1=1000*[Lighting] 1 keep*\n")
+        let pbf = try readPBF(dest.appendingPathComponent("song.pbf"))
+        XCTAssertEqual(pbf, "[Bookmark]\r\n0=1000*[Lighting] 1 keep*\r\n1=\r\n\r\n")
     }
 
     func test_write_keepsCueWithDanglingType() throws {
@@ -108,8 +135,8 @@ final class PotPlayerBundleWriterTests: XCTestCase {
 
         try PotPlayerBundleWriter.write(layout: layout, model: project, to: dest)
 
-        let pbf = try String(contentsOf: dest.appendingPathComponent("orphan.pbf"), encoding: .utf8)
-        XCTAssertEqual(pbf, "[Bookmark]\n1=1000*7 orphan*\n")
+        let pbf = try readPBF(dest.appendingPathComponent("orphan.pbf"))
+        XCTAssertEqual(pbf, "[Bookmark]\r\n0=1000*7 orphan*\r\n1=\r\n\r\n")
     }
 
     func test_write_emptyVideoStillGetsPBF() throws {
@@ -121,8 +148,8 @@ final class PotPlayerBundleWriterTests: XCTestCase {
 
         try PotPlayerBundleWriter.write(layout: layout, model: project, to: dest)
 
-        let pbf = try String(contentsOf: dest.appendingPathComponent("silent.pbf"), encoding: .utf8)
-        XCTAssertEqual(pbf, "[Bookmark]\n")
+        let pbf = try readPBF(dest.appendingPathComponent("silent.pbf"))
+        XCTAssertEqual(pbf, "[Bookmark]\r\n0=\r\n\r\n")
     }
 
     func test_write_collisionRenamesVideoAndPBFTogether() throws {
@@ -176,7 +203,7 @@ final class PotPlayerBundleWriterTests: XCTestCase {
 
         try PotPlayerBundleWriter.write(layout: layout, model: project, to: dest)
 
-        let pbf = try String(contentsOf: dest.appendingPathComponent("offset.pbf"), encoding: .utf8)
-        XCTAssertEqual(pbf, "[Bookmark]\n1=5000*[L] 1 x*\n")
+        let pbf = try readPBF(dest.appendingPathComponent("offset.pbf"))
+        XCTAssertEqual(pbf, "[Bookmark]\r\n0=5000*[L] 1 x*\r\n1=\r\n\r\n")
     }
 }

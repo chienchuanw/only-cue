@@ -52,11 +52,12 @@ enum PotPlayerBundleWriter {
                 .filter { !disabledTypeIDs.contains($0.typeID) }
             let body = PBFExporter.pbf(cues: cues, typeNamesByID: typeNamesByID)
             let pbfName = (entry.destName as NSString).deletingPathExtension + ".pbf"
-            try body.write(
-                to: destination.appendingPathComponent(pbfName),
-                atomically: true,
-                encoding: .utf8
-            )
+            // PotPlayer reads `.pbf` as UTF-16 little-endian with a FF FE BOM;
+            // a UTF-8 file is silently rejected (loads zero bookmarks). Emit the
+            // BOM bytes, then the body as raw UTF-16LE code units.
+            let bom = Data([0xFF, 0xFE])
+            let bodyLE = Data(body.utf16.flatMap { [UInt8($0 & 0x00FF), UInt8($0 >> 8)] })
+            try (bom + bodyLE).write(to: destination.appendingPathComponent(pbfName))
         }
     }
 }

@@ -1,18 +1,23 @@
 import Foundation
 
-/// Exports one video's cues to a PotPlayer bookmark file (`.pbf`) body.
+/// Exports one video's cues to a PotPlayer bookmark file (`.pbf`) body — the
+/// logical text; `PotPlayerBundleWriter` encodes it as UTF-16LE with a BOM, the
+/// byte format PotPlayer itself authors.
 ///
-/// `.pbf` is an INI-style text file; each bookmark is a line under a
-/// `[Bookmark]` header:
+/// A real PotPlayer `.pbf` is an INI-style file with a `[Bookmark]` header and
+/// one **CRLF**-terminated, **0-based** line per bookmark, then a trailing
+/// next-index slot line and a final blank line:
 ///
 ///     [Bookmark]
+///     0=<milliseconds>*<title>*
 ///     1=<milliseconds>*<title>*
+///     2=
+///     <blank>
 ///
 /// The three `*`-separated fields are time (ms from the video's 0), title, and
-/// thumbnail (left empty). Bookmarks are written in time order with a 1-based
-/// index. Times are `round(cue.time * 1000)` — the same 0-based playback seconds
-/// OnlyCue stores, so a bookmark lands on the identical frame; the SMPTE
-/// `startTimecodeFrames` label offset is deliberately ignored.
+/// thumbnail (left empty). Times are `round(cue.time * 1000)` — the same 0-based
+/// playback seconds OnlyCue stores, so a bookmark lands on the identical frame;
+/// the SMPTE `startTimecodeFrames` label offset is deliberately ignored.
 ///
 /// Title is `[Type] Number Name`, e.g. `[Lighting] 12 副歌`; the number is
 /// dropped when the cue is unnumbered and the `[Type]` bracket when the type is
@@ -21,8 +26,8 @@ import Foundation
 /// never the stored cue.
 ///
 /// Per-Type `isExportEnabled` filtering happens upstream in the writer; this
-/// renders exactly the cues it is handed. An empty list yields just the
-/// `[Bookmark]` header, matching PotPlayer's empty bookmark file.
+/// renders exactly the cues it is handed. An empty list still emits the header,
+/// the `0=` slot, and the blank line.
 enum PBFExporter {
 
     static func pbf(cues: [Cue], typeNamesByID: [UUID: String]) -> String {
@@ -31,11 +36,14 @@ enum PBFExporter {
             return (lhs.cueNumber ?? .greatestFiniteMagnitude)
                  < (rhs.cueNumber ?? .greatestFiniteMagnitude)
         }
-        var out = "[Bookmark]\n"
+        var out = "[Bookmark]\r\n"
         for (index, cue) in sorted.enumerated() {
             let ms = Int((cue.time * 1000).rounded())
-            out += "\(index + 1)=\(ms)*\(title(for: cue, typeNamesByID: typeNamesByID))*\n"
+            out += "\(index)=\(ms)*\(title(for: cue, typeNamesByID: typeNamesByID))*\r\n"
         }
+        // PotPlayer writes a trailing next-index slot (`{count}=`) and a final
+        // blank line; match it byte-for-byte.
+        out += "\(sorted.count)=\r\n\r\n"
         return out
     }
 

@@ -12,8 +12,15 @@ final class PBFExporterTests: XCTestCase {
         name: String = "",
         time: TimeInterval
     ) -> Cue {
-        Cue(id: UUID(), typeID: type, cueNumber: number, name: name,
-            time: time, notes: "", fadeTime: FadeTime(fadeIn: 0, fadeOut: 0))
+        Cue(
+            id: UUID(),
+            typeID: type,
+            cueNumber: number,
+            name: name,
+            time: time,
+            notes: "",
+            fadeTime: FadeTime(fadeIn: 0, fadeOut: 0)
+        )
     }
 
     func test_emptyList_returnsHeaderOnly() {
@@ -45,8 +52,10 @@ final class PBFExporterTests: XCTestCase {
     func test_sameMillisecond_ordersByCueNumber() {
         let type = UUID()
         let out = PBFExporter.pbf(
-            cues: [cue(type: type, number: 2, name: "b", time: 4),
-                   cue(type: type, number: 1, name: "a", time: 4)],
+            cues: [
+                cue(type: type, number: 2, name: "b", time: 4),
+                cue(type: type, number: 1, name: "a", time: 4)
+            ],
             typeNamesByID: [type: "L"]
         )
         XCTAssertEqual(out, "[Bookmark]\n1=4000*[L] 1 a*\n2=4000*[L] 2 b*\n")
@@ -54,14 +63,18 @@ final class PBFExporterTests: XCTestCase {
 
     func test_unnumberedCue_dropsNumber() {
         let type = UUID()
-        let out = PBFExporter.pbf(cues: [cue(type: type, name: "副歌", time: 0)],
-                                  typeNamesByID: [type: "Lighting"])
+        let out = PBFExporter.pbf(
+            cues: [cue(type: type, name: "副歌", time: 0)],
+            typeNamesByID: [type: "Lighting"]
+        )
         XCTAssertEqual(out, "[Bookmark]\n1=0*[Lighting] 副歌*\n")
     }
 
     func test_unknownType_dropsBracket() {
-        let out = PBFExporter.pbf(cues: [cue(number: 3, name: "hit", time: 0)],
-                                  typeNamesByID: [:])
+        let out = PBFExporter.pbf(
+            cues: [cue(number: 3, name: "hit", time: 0)],
+            typeNamesByID: [:]
+        )
         XCTAssertEqual(out, "[Bookmark]\n1=0*3 hit*\n")
     }
 

@@ -315,7 +315,14 @@ struct AppCommands: Commands {
         }
     }
 
-    private static func newDocumentFromTemplate() {
+}
+
+// Static helpers live in an extension so they don't count toward the struct's
+// SwiftLint `type_body_length` budget — same "extract at the cap" pattern the
+// codebase uses elsewhere (e.g. OSCServerHost / ExportSheetPresenter).
+private extension AppCommands {
+
+    static func newDocumentFromTemplate() {
         do {
             try TemplateAction.newDocument()
         } catch {
@@ -325,7 +332,7 @@ struct AppCommands: Commands {
         }
     }
 
-    private static func showAboutPanel() {
+    static func showAboutPanel() {
         let credits = NSAttributedString(
             string: "A native macOS cue list editor for lighting designers and show programmers.\n\nInspired by CuePoints (cuepoints.com).",
             attributes: [

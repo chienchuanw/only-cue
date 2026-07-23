@@ -50,4 +50,23 @@ final class LTCRoutingStoreTests: XCTestCase {
         defaults.set(Data("garbage".utf8), forKey: LTCRoutingStore.storageKey)
         XCTAssertEqual(LTCRoutingStore(defaults: defaults).settings, .default)
     }
+
+    /// UI-test persistence suppression must be scoped to the store the UI-test
+    /// session configures — never process-global. Regression for #697: the
+    /// suppression used to be a `static` flag that `UITestLTCHandler` flipped on
+    /// whenever the CI marker `/tmp/.onlycue-ci-active` existed. A lingering
+    /// marker (left by a hard-killed job) then no-op'd persistence for *every*
+    /// store in the unit-test host, silently failing this suite.
+    func test_uiTestSuppression_doesNotLeakToOtherStores() {
+        // A store running hermetically for a UI-test session…
+        LTCRoutingStore.suppressPersistenceForUITests = true
+        defer { LTCRoutingStore.suppressPersistenceForUITests = false }
+
+        // …must NOT disable persistence for an independent store.
+        let realStore = LTCRoutingStore(defaults: defaults)
+        let updated = LTCRoutingSettings(deviceUID: "uid-1", channelRoles: [.ltc, .trackLeft])
+        realStore.update(updated)
+
+        XCTAssertEqual(LTCRoutingStore(defaults: defaults).settings, updated)
+    }
 }

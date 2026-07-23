@@ -35,7 +35,8 @@ enum UITestLTCHandler {
         guard isUITestLaunch else { return }
         // Run the whole session in memory so neither this handler nor the
         // settings pane's on-appear reconcile touches the persisted default.
-        LTCRoutingStore.suppressPersistenceForUITests = true
+        // `applyEphemeralForUITests` suppresses persistence on `shared` only —
+        // scoped per-instance so it never leaks into unit tests (#697).
         let settings = arguments.contains(enableArgument) ? enabledSettings : .default
         LTCRoutingStore.shared.applyEphemeralForUITests(settings)
     }

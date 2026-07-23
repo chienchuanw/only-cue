@@ -58,11 +58,15 @@ final class LTCRoutingStoreTests: XCTestCase {
     /// marker (left by a hard-killed job) then no-op'd persistence for *every*
     /// store in the unit-test host, silently failing this suite.
     func test_uiTestSuppression_doesNotLeakToOtherStores() {
-        // A store running hermetically for a UI-test session…
-        LTCRoutingStore.suppressPersistenceForUITests = true
-        defer { LTCRoutingStore.suppressPersistenceForUITests = false }
+        // A store running hermetically for a UI-test session suppresses its own
+        // persistence…
+        let uiTestStore = LTCRoutingStore(defaults: defaults)
+        uiTestStore.applyEphemeralForUITests(
+            LTCRoutingSettings(deviceUID: "ephemeral", channelRoles: [.ltc]))
 
-        // …must NOT disable persistence for an independent store.
+        // …but must NOT disable persistence for an independent store sharing the
+        // same defaults. (Regression: suppression was once a process-global
+        // static, so a lingering CI marker no-op'd persistence for every store.)
         let realStore = LTCRoutingStore(defaults: defaults)
         let updated = LTCRoutingSettings(deviceUID: "uid-1", channelRoles: [.ltc, .trackLeft])
         realStore.update(updated)

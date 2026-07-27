@@ -318,6 +318,10 @@ struct AppCommands: Commands {
                 NotificationCenter.default.post(name: .oscMonitorRequested, object: nil)
             }
 
+            Button("MIDI Monitor…") {
+                NotificationCenter.default.post(name: .midiMonitorRequested, object: nil)
+            }
+
             Button("Timecode Settings…") {
                 NotificationCenter.default.post(name: .timecodeSettingsRequested, object: nil)
             }

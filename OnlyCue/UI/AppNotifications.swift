@@ -13,6 +13,7 @@ extension Notification.Name {
     static let saveTemplateRequested = Notification.Name("OnlyCue.saveTemplateRequested")
     static let loadTemplateRequested = Notification.Name("OnlyCue.loadTemplateRequested")
     static let oscMonitorRequested = Notification.Name("OnlyCue.oscMonitorRequested")
+    static let midiMonitorRequested = Notification.Name("OnlyCue.midiMonitorRequested")
     static let timecodeSettingsRequested = Notification.Name("OnlyCue.timecodeSettingsRequested")
     static let snapSelectedCuesToBeat = Notification.Name("OnlyCue.snapSelectedCuesToBeat")
     static let snapSelectedCuesToBar = Notification.Name("OnlyCue.snapSelectedCuesToBar")

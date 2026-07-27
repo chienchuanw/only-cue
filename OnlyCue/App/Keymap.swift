@@ -124,6 +124,10 @@ struct Keymap: Codable, Equatable, Sendable {
         .addCueOfType6: KeyChord(key: "6"),
         .addCueOfType7: KeyChord(key: "7"),
         .addCueOfType8: KeyChord(key: "8"),
-        .addCueOfType9: KeyChord(key: "9")
+        .addCueOfType9: KeyChord(key: "9"),
+        // External control — bindable from MIDI (#699). Not installed as keyboard
+        // shortcuts in this leaf; present so the map stays total.
+        .go: KeyChord(key: "return"),
+        .stop: KeyChord(key: "escape")
     ]
 }

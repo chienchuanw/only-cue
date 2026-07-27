@@ -48,6 +48,10 @@ enum KeymapAction: String, CaseIterable, Codable, Identifiable, Sendable {
     case addCueOfType8
     case addCueOfType9
 
+    // External control — shared with MIDI (#699). Show-mode GO (seek + play) and Stop.
+    case go
+    case stop
+
     var id: String { rawValue }
 
     /// Human-readable label for the Settings → Keyboard table. Data-driven (a
@@ -99,6 +103,8 @@ enum KeymapAction: String, CaseIterable, Codable, Identifiable, Sendable {
         .addCueOfType6: "Add Cue of Type 6",
         .addCueOfType7: "Add Cue of Type 7",
         .addCueOfType8: "Add Cue of Type 8",
-        .addCueOfType9: "Add Cue of Type 9"
+        .addCueOfType9: "Add Cue of Type 9",
+        .go: "Go",
+        .stop: "Stop"
     ]
 }

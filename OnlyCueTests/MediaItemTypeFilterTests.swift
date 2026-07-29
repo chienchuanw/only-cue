@@ -38,7 +38,9 @@ final class MediaItemTypeFilterTests: XCTestCase {
 
     func test_stepPrev_type_skipsOtherTypes() {
         // from 6: B candidates are 2 and 5, the active one is 5, so the step
-        // lands on 2 — skipping A@3 entirely.
+        // lands on 2 — skipping A@3 entirely. Note 6 is past the last B, which
+        // under a type filter is the *common* position rather than an edge
+        // case: the active cue is still 5, so B@5 itself is not steppable (#709).
         XCTAssertEqual(mixed().cue(steppingFrom: 6, direction: .previous, typeID: typeB)?.time, 2)
     }
 

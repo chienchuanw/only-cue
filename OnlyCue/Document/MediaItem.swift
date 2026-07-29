@@ -56,6 +56,13 @@ extension MediaItem {
     /// playback selects the active cue itself — so the button rewound the
     /// current cue instead of stepping back, and behaved differently depending
     /// on whether the playhead landed exactly on a cue (#709).
+    ///
+    /// Note the consequence past the last cue: with cues at 5/10/15 and the
+    /// playhead at 20 the active cue is 15, so `.previous` returns 10 and the
+    /// last cue is not reachable by stepping back (`.next` is already nil
+    /// there). With a single cue — or a single cue of the filtered type —
+    /// `.previous` is therefore always nil. That is the cost of "one press,
+    /// one meaning"; `Stop` and a direct click still reach those cues.
     func cue(
         steppingFrom currentTime: TimeInterval,
         direction: PlayheadStep,
@@ -64,9 +71,7 @@ extension MediaItem {
         let candidates = typeID.map { id in cues.filter { $0.typeID == id } } ?? cues
         switch direction {
         case .previous:
-            guard let active = candidates.filter({ $0.time <= currentTime })
-                .max(by: { $0.time < $1.time })
-            else { return nil }
+            guard let active = activeCue(at: currentTime, typeID: typeID) else { return nil }
             return candidates.filter { $0.time < active.time }.max(by: { $0.time < $1.time })
         case .next:
             return candidates.filter { $0.time > currentTime }.min(by: { $0.time < $1.time })
@@ -78,8 +83,8 @@ extension MediaItem {
     /// notes of whichever cue the show caller is "in" right now. Returns nil
     /// when the playhead is before the first cue or `cues` is empty; returns
     /// the last cue when the playhead is past it (notes persist until show end).
-    /// Inclusive on `currentTime` (`<=`), unlike `cue(steppingFrom:direction:)`
-    /// which is strict — these are different semantic queries.
+    /// This is also the anchor `cue(steppingFrom:direction:)` steps away from
+    /// (#709), so the two stay consistent by construction.
     /// `typeID` (nil = all cues, the default) filters to a single cue type —
     /// Show mode's GO-by-type highlight / notes (#657).
     func activeCue(at currentTime: TimeInterval, typeID: CuePointType.ID? = nil) -> Cue? {

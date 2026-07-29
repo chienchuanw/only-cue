@@ -57,6 +57,26 @@ final class MediaItemTests: XCTestCase {
         )
     }
 
+    func test_cueSteppingPrevious_pastTheLastCue_returnsTheSecondToLast() {
+        let item = makeItem(cueTimes: [5, 10, 15])
+        XCTAssertEqual(
+            item.cue(steppingFrom: 20, direction: .previous)?.time,
+            10,
+            "past the last cue the active cue is 15, so stepping back lands on 10 — the last "
+                + "cue is not reachable by stepping in either direction, which is the accepted "
+                + "cost of anchoring both directions on the active cue (#709)"
+        )
+    }
+
+    func test_cueSteppingPrevious_singleCueClip_isAlwaysNil() {
+        let item = makeItem(cueTimes: [5])
+        XCTAssertNil(item.cue(steppingFrom: 0, direction: .previous))
+        XCTAssertNil(
+            item.cue(steppingFrom: 99, direction: .previous),
+            "with one cue there is never an earlier cue, so Previous is inert for that clip (#709)"
+        )
+    }
+
     func test_cueSteppingPrevious_returnsNilWhenPlayheadBeforeFirstCue() {
         let item = makeItem(cueTimes: [5, 10, 15])
         XCTAssertNil(item.cue(steppingFrom: 0, direction: .previous))

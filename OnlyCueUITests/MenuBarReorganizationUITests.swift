@@ -39,6 +39,48 @@ final class MenuBarReorganizationUITests: OnlyCueUITestCase {
         app.typeKey(.escape, modifierFlags: [])
     }
 
+    /// Guards the HIG File-menu order (#707). `Save As…` is supplied by
+    /// `DocumentGroup`, but OnlyCue's own import/export block used to be injected
+    /// at `after: .newItem`, which pushed every standard document command below
+    /// nine custom items — users concluded the app had no Save As at all.
+    ///
+    /// Asserted by frame geometry rather than index, because the standard items
+    /// are AppKit-injected and don't appear in any list SwiftUI controls.
+    func test_fileMenu_standardDocumentItems_precedeAppSpecificItems() throws {
+        let app = launchSeeded()
+        _ = try waitForSeedWindow(in: app)
+
+        let fileBarItem = app.menuBars.menuBarItems["File"]
+        XCTAssertTrue(fileBarItem.waitForExistence(timeout: 5))
+        fileBarItem.click()
+
+        let fileMenu = fileBarItem.menus.firstMatch
+        XCTAssertTrue(fileMenu.waitForExistence(timeout: 3))
+
+        let saveAs = fileMenu.menuItems["Save As…"]
+        let importMedia = fileMenu.menuItems["Import Media…"]
+        let newFromTemplate = fileMenu.menuItems["New from Template…"]
+        let openItem = fileMenu.menuItems["Open…"]
+        XCTAssertTrue(saveAs.waitForExistence(timeout: 3), "DocumentGroup must supply Save As…")
+        XCTAssertTrue(importMedia.exists)
+        XCTAssertTrue(newFromTemplate.exists)
+        XCTAssertTrue(openItem.exists)
+
+        XCTAssertLessThan(
+            saveAs.frame.minY,
+            importMedia.frame.minY,
+            "'Save As…' must sit above OnlyCue's import/export block, not below it (#707)"
+        )
+        // Document *creation* stays beside New, above Open… — it is a New verb,
+        // not part of the block that moved down.
+        XCTAssertLessThan(
+            newFromTemplate.frame.minY,
+            openItem.frame.minY,
+            "'New from Template…' must stay beside New, above 'Open…' (#707)"
+        )
+        app.typeKey(.escape, modifierFlags: [])
+    }
+
     func test_pauseAtEachCue_isUnderPlaybackMenu() throws {
         let app = launchSeeded()
         _ = try waitForSeedWindow(in: app)

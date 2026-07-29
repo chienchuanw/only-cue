@@ -49,9 +49,28 @@ struct AppCommands: Commands {
             .accessibilityIdentifier("checkForUpdatesMenuItem")
         }
 
+        // Document *creation* belongs beside New, above Open… — it is a New
+        // verb, unlike the import/export block below (#707).
         CommandGroup(after: .newItem) {
-            // Separate the OS-standard New / Open / Open Recent items from
-            // OnlyCue's Import / Export block.
+            Button {
+                Self.newDocumentFromTemplate()
+            } label: {
+                Label("New from Template…", systemImage: "doc.badge.plus")
+            }
+        }
+
+        // Everything else OnlyCue adds sits *below* the standard document block
+        // (Save, Save As…, Duplicate, Rename…, Move To…, Revert To). Injecting
+        // it after `.newItem` instead buried those nine standard items at the
+        // bottom of a 24-item menu, and users concluded the app had no Save As
+        // at all (#707). Order follows the macOS HIG: app-specific file
+        // operations come after the standard ones.
+        //
+        // AppKit's own `Share` item lands between `Revert To` and this block,
+        // and no SwiftUI placement sits between those two. `before: .printItem`
+        // resolves to the same spot but emits a doubled separator, so
+        // `.saveItem` is the better of the two available anchors.
+        CommandGroup(after: .saveItem) {
             Divider()
 
             Button {
@@ -97,12 +116,6 @@ struct AppCommands: Commands {
             .accessibilityIdentifier("exportMA2PluginMenuItem")
 
             Divider()
-
-            Button {
-                Self.newDocumentFromTemplate()
-            } label: {
-                Label("New from Template…", systemImage: "doc.badge.plus")
-            }
 
             Button {
                 NotificationCenter.default.post(name: .saveTemplateRequested, object: nil)

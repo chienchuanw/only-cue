@@ -160,6 +160,40 @@ final class MenuBarReorganizationUITests: OnlyCueUITestCase {
         app.typeKey(.escape, modifierFlags: [])
     }
 
+    /// #707 relocated OnlyCue's nine File-menu items from `after: .newItem` to
+    /// `after: .saveItem`. Reordering a menu is exactly the change that silently
+    /// drops an item, and the ordering assertions above would still pass with
+    /// only eight of the nine present — so pin the full set by name.
+    func test_fileMenu_retainsEveryOnlyCueItemAfterTheMove() throws {
+        let app = launchSeeded()
+        _ = try waitForSeedWindow(in: app)
+
+        let fileBarItem = app.menuBars.menuBarItems["File"]
+        XCTAssertTrue(fileBarItem.waitForExistence(timeout: 5))
+        fileBarItem.click()
+
+        let fileMenu = fileBarItem.menus.firstMatch
+        XCTAssertTrue(fileMenu.waitForExistence(timeout: 3))
+
+        for title in [
+            "New from Template…",
+            "Import Media…",
+            "Export Cues…",
+            "Export Bundle…",
+            "Export PotPlayer Bookmarks…",
+            "Send to grandMA2…",
+            "Export grandMA2 plugin…",
+            "Save Template As…",
+            "Load Template…"
+        ] {
+            XCTAssertTrue(
+                fileMenu.menuItems[title].exists,
+                "'\(title)' must survive the File-menu reorder (#707)"
+            )
+        }
+        app.typeKey(.escape, modifierFlags: [])
+    }
+
     func test_viewMenu_noLongerContainsCueEditingItems() throws {
         let app = launchSeeded()
         _ = try waitForSeedWindow(in: app)

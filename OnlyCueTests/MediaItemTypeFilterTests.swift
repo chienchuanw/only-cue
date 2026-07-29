@@ -37,8 +37,15 @@ final class MediaItemTypeFilterTests: XCTestCase {
     }
 
     func test_stepPrev_type_skipsOtherTypes() {
-        // from 4: prev B is 2 (skips A@3).
-        XCTAssertEqual(mixed().cue(steppingFrom: 4, direction: .previous, typeID: typeB)?.time, 2)
+        // from 6: B candidates are 2 and 5, the active one is 5, so the step
+        // lands on 2 — skipping A@3 entirely.
+        XCTAssertEqual(mixed().cue(steppingFrom: 6, direction: .previous, typeID: typeB)?.time, 2)
+    }
+
+    func test_stepPrev_type_insideFirstMatchingCue_returnsNil() {
+        // from 4 the active B is 2 and no B precedes it, so there is nowhere to
+        // step back to — even though A@3 sits between them (#709).
+        XCTAssertNil(mixed().cue(steppingFrom: 4, direction: .previous, typeID: typeB))
     }
 
     func test_go_type_seeksNextMatchingType() {

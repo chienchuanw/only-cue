@@ -30,9 +30,31 @@ final class MediaItemTests: XCTestCase {
 
     // MARK: - .previous
 
-    func test_cueSteppingPrevious_returnsLastCueStrictlyBeforeCurrentTime() {
+    func test_cueSteppingPrevious_fromMidCue_returnsCueBeforeTheActiveOne() {
         let item = makeItem(cueTimes: [5, 10, 15])
-        XCTAssertEqual(item.cue(steppingFrom: 12, direction: .previous)?.time, 10)
+        XCTAssertEqual(
+            item.cue(steppingFrom: 12, direction: .previous)?.time,
+            5,
+            "at 12 the active cue is 10, so stepping back must reach 5 — not restart 10 (#709)"
+        )
+    }
+
+    func test_cueSteppingPrevious_isIndependentOfPositionWithinTheCue() {
+        let item = makeItem(cueTimes: [5, 10, 15])
+        XCTAssertEqual(
+            item.cue(steppingFrom: 10, direction: .previous)?.time,
+            item.cue(steppingFrom: 12, direction: .previous)?.time,
+            "sitting exactly on cue 10 and playing past it must step back to the same place (#709)"
+        )
+    }
+
+    func test_cueSteppingPrevious_insideFirstCue_returnsNil() {
+        let item = makeItem(cueTimes: [5, 10, 15])
+        XCTAssertNil(
+            item.cue(steppingFrom: 7, direction: .previous),
+            "no cue precedes the first one, so stepping back is a no-op — symmetric with "
+                + "`.next` at the last cue. Back-to-top is the Stop action's job (#709)."
+        )
     }
 
     func test_cueSteppingPrevious_returnsNilWhenPlayheadBeforeFirstCue() {

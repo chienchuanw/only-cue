@@ -21,14 +21,20 @@ struct MIDIInputHost: ViewModifier {
     /// The resolved Show-mode GO/step cue-type filter (#657): nil = All cues.
     var showGoTypeID: CuePointType.ID?
 
-    @StateObject private var mapStore = MIDIMapStore.shared
-    @StateObject private var learnSession = MIDILearnSession.shared
+    // Observed, not owned: both are process-wide singletons shared with the
+    // Settings window, matching `LTCOutputHost` and `MIDISettingsView`.
+    @ObservedObject private var mapStore = MIDIMapStore.shared
+    @ObservedObject private var learnSession = MIDILearnSession.shared
     @State private var input = MIDIInput()
     @State private var seekTask: Task<Void, Never>?
     @State private var showMonitor = false
     /// Last seen CC value per control, so press-edge detection can tell a
     /// button's press from its release.
     @State private var previousCC: [MIDIControlID: UInt8] = [:]
+    /// Monotonic timestamp of the last applied continuous value, plus the
+    /// pending trailing re-fire, so a fader sweep is coalesced to frame cadence.
+    @State private var lastContinuousFire: TimeInterval?
+    @State private var continuousTask: Task<Void, Never>?
 
     func body(content: Content) -> some View {
         content
@@ -39,7 +45,11 @@ struct MIDIInputHost: ViewModifier {
             // (the same reason `OSCServerHost` re-syncs on these).
             .onChange(of: editorMode) { _, _ in syncInput() }
             .onChange(of: showGoTypeID) { _, _ in syncInput() }
-            .onDisappear { input.stop() }
+            .onDisappear {
+                input.stop()
+                seekTask?.cancel()
+                continuousTask?.cancel()
+            }
             .onReceive(NotificationCenter.default.publisher(for: .midiMonitorRequested)) { _ in
                 showMonitor = true
             }
@@ -72,13 +82,33 @@ struct MIDIInputHost: ViewModifier {
         }
 
         let value = MIDIDispatchGate.value(of: message)
-        let shouldFire = action.isContinuous
-            ? MIDIDispatchGate.shouldFireContinuous(message)
-            : MIDIDispatchGate.shouldFireDiscrete(message, previousCCValue: previousCC[control])
-        if shouldFire {
+        if action.isContinuous {
+            fireContinuous(action, value: value)
+        } else if MIDIDispatchGate.shouldFireDiscrete(message, previousCCValue: previousCC[control]) {
             apply(MIDICommandDispatcher.effect(for: action, value: value, engine: snapshot()))
         }
         rememberCC(message)
+    }
+
+    /// Applies a continuous target at most once per frame (spec: rapid fader CC
+    /// is coalesced so a sweep doesn't overwhelm the seek path or, for LTC
+    /// level, write `UserDefaults` on every message). Coalescing must not swallow
+    /// the *end* of a sweep, so a suppressed message is re-fired when the window
+    /// closes — the fader's resting position is what the user actually sees.
+    private func fireContinuous(_ action: MIDIAction, value: UInt8) {
+        continuousTask?.cancel()
+        let now = ProcessInfo.processInfo.systemUptime
+        guard !MIDIDispatchGate.shouldFireContinuous(now: now, lastFiredAt: lastContinuousFire) else {
+            lastContinuousFire = now
+            apply(MIDICommandDispatcher.effect(for: action, value: value, engine: snapshot()))
+            return
+        }
+        let delay = MIDIDispatchGate.continuousDelay(now: now, lastFiredAt: lastContinuousFire)
+        continuousTask = Task {
+            try? await Task.sleep(for: .seconds(delay))
+            guard !Task.isCancelled else { return }
+            apply(MIDICommandDispatcher.effect(for: action, value: value, engine: snapshot()))
+        }
     }
 
     private func rememberCC(_ message: MIDIMessage) {

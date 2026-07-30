@@ -59,6 +59,10 @@ enum AudioSampleReader {
     ) async throws -> [Float] {
         let asset = AVURLAsset(url: url)
         let track = try await firstAudioTrack(of: asset)
+        // 0 when the duration is unknown or indefinite, which reads as "reserve
+        // nothing" below rather than as a nonsense capacity.
+        let loadedSeconds = CMTimeGetSeconds((try? await track.load(.timeRange))?.duration ?? .invalid)
+        let trackSeconds = loadedSeconds.isFinite ? max(0, loadedSeconds) : 0
 
         let reader: AVAssetReader
         do { reader = try AVAssetReader(asset: asset) } catch { throw Error.readerFailed }
@@ -86,7 +90,14 @@ enum AudioSampleReader {
 
         var samples: [Float] = []
         if let range, range.upperBound > range.lowerBound {
-            samples.reserveCapacity(Int((range.upperBound - range.lowerBound) * sampleRate) * outputChannels)
+            // Clamped to what the track actually holds: every file with no LTC
+            // reaches the 60 s window, and most are shorter than that — the
+            // returned array keeps whatever was reserved, so an unclamped
+            // reserve would hold 92 MB for 8 MB of samples on exactly the files
+            // the widened scan visits most.
+            let available = max(0, trackSeconds - range.lowerBound)
+            let seconds = min(range.upperBound - range.lowerBound, available)
+            samples.reserveCapacity(Int(seconds * sampleRate) * outputChannels)
         }
         while let buffer = output.copyNextSampleBuffer() {
             // Decoding a 60 s × 8-channel window is the slow part of an LTC

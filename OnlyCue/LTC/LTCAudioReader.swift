@@ -27,4 +27,33 @@ enum LTCAudioReader {
     static func decodeTimecodes(from url: URL, maxSeconds: TimeInterval = 10) async throws -> [LTCDecoder.DecodedFrame] {
         LTCDecoder.decode(samples: try await readMonoSamples(from: url, maxSeconds: maxSeconds), sampleRate: sampleRate)
     }
+
+    /// Scan windows, in seconds, tried in order. 10 s is enough for a file that
+    /// starts on timecode and keeps the common case cheap; widening to 60 s
+    /// covers a pre-roll, a countdown, or leading silence before the LTC starts.
+    static let scanWindows: [TimeInterval] = [10, 60]
+
+    /// Finds the LTC on `url` without being told where it is: each channel is
+    /// decoded on its own — timecode is normally striped onto *one* channel of a
+    /// delivery mix, where the down-mix `decodeTimecodes` reads would bury it
+    /// under the programme audio — and the scan widens only if nothing is found.
+    ///
+    /// The first channel that decodes wins. Returns an empty array when the file
+    /// carries no LTC, which is a real answer worth caching, not a failure.
+    static func detectTimecodes(
+        from url: URL,
+        windows: [TimeInterval] = scanWindows
+    ) async throws -> [LTCDecoder.DecodedFrame] {
+        let channels = max(1, try await AudioSampleReader.channelCount(of: url))
+        for window in windows {
+            for channel in 0..<channels {
+                let samples = try await AudioSampleReader.readSamples(
+                    from: url, channel: channels == 1 ? nil : channel, range: 0...window
+                )
+                let decoded = LTCDecoder.decode(samples: samples, sampleRate: sampleRate)
+                if !decoded.isEmpty { return decoded }
+            }
+        }
+        return []
+    }
 }

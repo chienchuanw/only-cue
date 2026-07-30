@@ -41,8 +41,10 @@ final class TransportBarScreenshotTests: XCTestCase {
             timeReadout.waitForExistence(timeout: 10),
             "the transport should render for the seeded document within 10 seconds"
         )
+        // Wait rather than check instantly: the striped-LTC scan is async, so an
+        // immediate `exists` would pass before it could have published (#712).
         XCTAssertFalse(
-            app.staticTexts["smpteTimecode"].exists,
+            app.staticTexts["smpteTimecode"].waitForExistence(timeout: 5),
             "the timecode readout must be hidden with no file timecode and LTC output off (#712)"
         )
 

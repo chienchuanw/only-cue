@@ -37,14 +37,7 @@ final class LTCAudioReaderTests: XCTestCase {
     private func writeWav(channels: [[Float]], sampleRate: Double) throws -> URL {
         let url = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString + ".wav")
         let frames = try XCTUnwrap(channels.first?.count)
-        let format = try XCTUnwrap(
-            AVAudioFormat(
-                commonFormat: .pcmFormatFloat32,
-                sampleRate: sampleRate,
-                channels: AVAudioChannelCount(channels.count),
-                interleaved: false
-            )
-        )
+        let format = try makeFormat(channels: channels.count, sampleRate: sampleRate)
         let file = try AVAudioFile(forWriting: url, settings: format.settings)
         let buffer = try XCTUnwrap(AVAudioPCMBuffer(pcmFormat: format, frameCapacity: AVAudioFrameCount(frames)))
         buffer.frameLength = AVAudioFrameCount(frames)
@@ -56,6 +49,33 @@ final class LTCAudioReaderTests: XCTestCase {
         }
         try file.write(from: buffer)
         return url
+    }
+
+    /// Above stereo `AVAudioFormat(commonFormat:sampleRate:channels:interleaved:)`
+    /// returns nil — a channel count with no layout is not a describable format.
+    /// Discrete-in-order matches how a delivery mix's separate feeds are read.
+    private func makeFormat(channels: Int, sampleRate: Double) throws -> AVAudioFormat {
+        guard channels > 2 else {
+            return try XCTUnwrap(
+                AVAudioFormat(
+                    commonFormat: .pcmFormatFloat32,
+                    sampleRate: sampleRate,
+                    channels: AVAudioChannelCount(channels),
+                    interleaved: false
+                )
+            )
+        }
+        let layout = try XCTUnwrap(
+            AVAudioChannelLayout(layoutTag: kAudioChannelLayoutTag_DiscreteInOrder | UInt32(channels))
+        )
+        return try XCTUnwrap(
+            AVAudioFormat(
+                commonFormat: .pcmFormatFloat32,
+                sampleRate: sampleRate,
+                interleaved: false,
+                channelLayout: layout
+            )
+        )
     }
 
     /// Loud programme audio, the thing that swamps LTC when channels are summed.
@@ -83,6 +103,73 @@ final class LTCAudioReaderTests: XCTestCase {
         XCTAssertLessThanOrEqual(first.frameCount - start.frameCount, 1)
         XCTAssertGreaterThanOrEqual(first.frameCount, start.frameCount)
         XCTAssertGreaterThanOrEqual(decoded.count, 8)
+    }
+
+    // The headline case, and the one the `AVChannelLayoutKey` code exists for:
+    // a 6-channel delivery mix with timecode on the last channel. Above stereo
+    // `AVAssetReader` refuses the read outright without an explicit layout, so
+    // without this test that branch never executes in CI.
+    func test_detectTimecodes_ltcOnTheLastChannelOfASixChannelMix_decodes() async throws {
+        let start = tc(3, 0, 0, 0, .fps25)
+        let ltc = LTCFrameStream(startTimecode: start, sampleRate: 48_000).samples(frameCount: 10)
+        let programme = tone(count: ltc.count, sampleRate: 48_000)
+        let url = try writeWav(
+            channels: Array(repeating: programme, count: 5) + [ltc],
+            sampleRate: 48_000
+        )
+        defer { try? FileManager.default.removeItem(at: url) }
+
+        let decoded = try await LTCAudioReader.detectTimecodes(from: url)
+        let first = try XCTUnwrap(decoded.first?.timecode)
+        XCTAssertEqual(first.rate, .fps25)
+        XCTAssertLessThanOrEqual(first.frameCount - start.frameCount, 1)
+        XCTAssertGreaterThanOrEqual(first.frameCount, start.frameCount)
+
+        // Non-vacuity: the down-mix of the same file finds nothing.
+        let downmixed = try await LTCAudioReader.decodeTimecodes(from: url)
+        XCTAssertTrue(downmixed.isEmpty, "the down-mix must not decode — otherwise this proves nothing")
+    }
+
+    // A cancelled scan must not quietly return a partial answer that then gets
+    // cached and labelled `FILE` (#712).
+    func test_detectTimecodes_cancelledTask_throws() async throws {
+        let ltc = LTCFrameStream(startTimecode: tc(5, 0, 0, 0, .fps25), sampleRate: 48_000).samples(frameCount: 10)
+        let url = try writeWav(ltc, sampleRate: 48_000)
+        defer { try? FileManager.default.removeItem(at: url) }
+
+        let task = Task { try await LTCAudioReader.detectTimecodes(from: url) }
+        task.cancel()
+        do {
+            _ = try await task.value
+            XCTFail("a cancelled scan should throw, not return frames")
+        } catch is CancellationError {
+            // expected
+        }
+    }
+
+    // One lucky sync-word + parity + BCD match in minutes of programme audio
+    // would otherwise re-base the entire readout on a garbage frame.
+    func test_isCorroborated_requiresTwoConsecutiveFrames() throws {
+        func frame(_ frameCount: Int) -> LTCDecoder.DecodedFrame {
+            LTCDecoder.DecodedFrame(timecode: Timecode(frameCount: frameCount, rate: .fps25), startSample: 0)
+        }
+        XCTAssertFalse(LTCAudioReader.isCorroborated([]))
+        XCTAssertFalse(LTCAudioReader.isCorroborated([frame(100)]), "a lone frame is not evidence")
+        XCTAssertFalse(LTCAudioReader.isCorroborated([frame(100), frame(4000)]), "unrelated frames are not a run")
+        XCTAssertTrue(LTCAudioReader.isCorroborated([frame(100), frame(101)]))
+        XCTAssertTrue(LTCAudioReader.isCorroborated([frame(100), frame(4000), frame(4001)]))
+    }
+
+    func test_readSamples_channelBeyondTheTrack_throws() async throws {
+        let url = try writeWav([Float](repeating: 0.1, count: 4_800), sampleRate: 48_000)
+        defer { try? FileManager.default.removeItem(at: url) }
+
+        do {
+            _ = try await AudioSampleReader.readSamples(from: url, channel: 3)
+            XCTFail("asking for channel 3 of a mono file should throw")
+        } catch let error as AudioSampleReader.Error {
+            XCTAssertEqual(error, .channelOutOfRange)
+        }
     }
 
     // Non-vacuity guard for the test above: the mono down-mix of that same file

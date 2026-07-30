@@ -38,22 +38,50 @@ enum LTCAudioReader {
     /// delivery mix, where the down-mix `decodeTimecodes` reads would bury it
     /// under the programme audio — and the scan widens only if nothing is found.
     ///
-    /// The first channel that decodes wins. Returns an empty array when the file
+    /// The first *corroborated* channel wins (see `isCorroborated`); a channel
+    /// that yielded only an uncorroborated frame is held as a fallback and
+    /// returned if no channel does better. Returns an empty array when the file
     /// carries no LTC, which is a real answer worth caching, not a failure.
+    ///
+    /// Throws `CancellationError` if the enclosing task is cancelled — the user
+    /// switching clips mid-scan. Callers must not cache a cancelled result.
     static func detectTimecodes(
         from url: URL,
         windows: [TimeInterval] = scanWindows
     ) async throws -> [LTCDecoder.DecodedFrame] {
         let channels = max(1, try await AudioSampleReader.channelCount(of: url))
+        var fallback: [LTCDecoder.DecodedFrame] = []
         for window in windows {
+            try Task.checkCancellation()
+            // One read per window, sliced per channel in memory: reading each
+            // channel separately would decode the whole multichannel span N
+            // times, which on a compressed 8-channel delivery mix is the
+            // difference between one decode and sixteen.
+            let interleaved = try await AudioSampleReader.readInterleavedSamples(
+                from: url, channels: channels, range: 0...window
+            )
             for channel in 0..<channels {
-                let samples = try await AudioSampleReader.readSamples(
-                    from: url, channel: channels == 1 ? nil : channel, range: 0...window
-                )
+                try Task.checkCancellation()
+                let samples = AudioSampleReader.channel(channel, of: channels, in: interleaved)
                 let decoded = LTCDecoder.decode(samples: samples, sampleRate: sampleRate)
-                if !decoded.isEmpty { return decoded }
+                if isCorroborated(decoded) { return decoded }
+                if fallback.isEmpty { fallback = decoded }
             }
         }
-        return []
+        return fallback
+    }
+
+    /// Whether `frames` are trustworthy enough to relabel the transport `FILE`
+    /// and anchor the whole readout on `frames.first`.
+    ///
+    /// A single frame isn't: sync word + parity + BCD can all line up by chance
+    /// somewhere in minutes of programme audio across every channel, and one
+    /// spurious hit would re-base every displayed timecode. Two consecutive
+    /// frame numbers can't plausibly be luck.
+    static func isCorroborated(_ frames: [LTCDecoder.DecodedFrame]) -> Bool {
+        guard frames.count >= 2 else { return false }
+        return zip(frames, frames.dropFirst()).contains { previous, next in
+            next.timecode.frameCount == previous.timecode.frameCount + 1
+        }
     }
 }

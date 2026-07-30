@@ -28,12 +28,19 @@ final class StripedTimecodeCache {
     ) async -> StripedTimecodeTrack? {
         if let cached = entries[id] { return cached }
         let decoded = await decode()
+        // A cancelled scan reports whatever it had reached, which is not an
+        // answer about the file — remembering it would make an interrupted
+        // clip switch permanently mislabel that file for the rest of the run.
+        guard !Task.isCancelled else { return decoded }
         entries[id] = decoded
         return decoded
     }
 
-    /// Drops everything — for tests, and for a future "rescan" affordance.
-    func removeAll() {
-        entries.removeAll()
+    /// Forgets `id`'s scan, so the next ask re-reads the audio. Needed because
+    /// the key is the item id, which survives a relink: the user can point the
+    /// same item at a different file, and a remembered "no LTC" would otherwise
+    /// outlive the file it was true of.
+    func invalidate(_ id: MediaItem.ID) {
+        entries.removeValue(forKey: id)
     }
 }

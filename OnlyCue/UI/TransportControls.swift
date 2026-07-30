@@ -158,8 +158,11 @@ struct TransportControls: View {
             }
             PlaybackRateBadge(engine: engine, ltcEnabled: ltcRoutingStore.settings.isEnabled)
             PlaybackModeBadge(mode: playbackMode)
-            if ltcRoutingStore.settings.isEnabled {
-                Text("SMPTE \(smpteReadout)")
+            if TimecodeReadout.isVisible(
+                hasFileTimecode: stripedTimecode != nil,
+                ltcOutputEnabled: ltcRoutingStore.settings.isEnabled
+            ) {
+                Text("\(TimecodeReadout.prefix(hasFileTimecode: stripedTimecode != nil)) \(smpteReadout)")
                     .font(DS.Text.mono)
                     .foregroundStyle(DS.Color.textSecondary)
                     .accessibilityIdentifier("smpteTimecode")

@@ -137,21 +137,27 @@ enum MediaImporter {
         return nil
     }
 
-    /// Decode the LTC striped onto `item`'s first audio track (resolving its
-    /// security-scoped bookmark), or `nil` if there's none / the file can't be
-    /// read. Used by the document window to make the SMPTE readout follow the
-    /// file's own timecode.
+    /// Decode the LTC carried by `item`'s audio (resolving its security-scoped
+    /// bookmark), or `nil` if there's none / the file can't be read. Used by the
+    /// document window to make the timecode readout follow the file's own LTC.
+    ///
+    /// Every channel is scanned, not just the down-mix, because timecode is
+    /// normally striped onto one channel of a delivery mix. The result — hit or
+    /// miss — is cached for the run, so flipping between clips doesn't re-read
+    /// audio (#712).
     @MainActor
     static func stripedTimecode(for item: MediaItem?) async -> StripedTimecodeTrack? {
         guard let item else { return nil }
-        do {
-            let resolution = try Bookmarks.resolve(item.media.bookmarkData)
-            let didAccess = resolution.url.startAccessingSecurityScopedResource()
-            defer { if didAccess { resolution.url.stopAccessingSecurityScopedResource() } }
-            let frames = try await LTCAudioReader.decodeTimecodes(from: resolution.url)
-            return StripedTimecodeTrack(decodedFrames: frames, sampleRate: LTCAudioReader.sampleRate)
-        } catch {
-            return nil
+        return await StripedTimecodeCache.shared.track(for: item.id) {
+            do {
+                let resolution = try Bookmarks.resolve(item.media.bookmarkData)
+                let didAccess = resolution.url.startAccessingSecurityScopedResource()
+                defer { if didAccess { resolution.url.stopAccessingSecurityScopedResource() } }
+                let frames = try await LTCAudioReader.detectTimecodes(from: resolution.url)
+                return StripedTimecodeTrack(decodedFrames: frames, sampleRate: LTCAudioReader.sampleRate)
+            } catch {
+                return nil
+            }
         }
     }
 

@@ -174,11 +174,18 @@ final class LTCAudioReaderTests: XCTestCase {
     // sync-word + parity + BCD match, so an uncorroborated frame is discarded
     // rather than returned as a last resort (#712).
     func test_detectTimecodes_returnsNothingWhenNoChannelCorroborates() async throws {
-        let url = try writeWav(tone(count: 48_000, sampleRate: 48_000), sampleRate: 48_000)
+        // Three frames' worth of LTC decodes to exactly one frame — the shortest
+        // fixture that is a genuine single hit rather than silence.
+        let ltc = LTCFrameStream(startTimecode: tc(2, 0, 0, 0, .fps25), sampleRate: 48_000).samples(frameCount: 3)
+        let url = try writeWav(ltc, sampleRate: 48_000)
         defer { try? FileManager.default.removeItem(at: url) }
 
+        // Non-vacuity: the raw decode really does find a frame, so it is the
+        // corroboration gate — not an empty decode — that yields nothing below.
+        XCTAssertEqual(LTCDecoder.decode(samples: ltc, sampleRate: 48_000).count, 1)
+
         let decoded = try await LTCAudioReader.detectTimecodes(from: url)
-        XCTAssertTrue(decoded.isEmpty)
+        XCTAssertTrue(decoded.isEmpty, "a lone uncorroborated frame must not be returned")
     }
 
     func test_channel_slicesInterleavedSamplesAndPassesMonoThrough() {

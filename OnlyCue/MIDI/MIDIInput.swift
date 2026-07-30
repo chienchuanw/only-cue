@@ -34,9 +34,11 @@ final class MIDIInput {
 
     var onMessage: ((MIDIMessage) -> Void)?
 
-    private var client = MIDIClientRef()
-    private var port = MIDIPortRef()
-    private var connectedSource: MIDIEndpointRef?
+    // Transport handles, not view state — kept out of observation so `deinit`
+    // can dispose them without touching the observation registrar.
+    @ObservationIgnored private var client = MIDIClientRef()
+    @ObservationIgnored private var port = MIDIPortRef()
+    @ObservationIgnored private var connectedSource: MIDIEndpointRef?
 
     // MARK: - Lifecycle
 
@@ -47,6 +49,13 @@ final class MIDIInput {
     func start(inputUID: String?) {
         ensureClientAndPort()
         disconnectSource()
+        // Creation failed — `lastError` already says why, so don't overwrite it
+        // with a misleading "MIDIPortConnectSource failed" below.
+        guard port != MIDIPortRef() else {
+            isConnected = false
+            connectedName = nil
+            return
+        }
         guard let inputUID, let source = Self.source(withUID: inputUID) else {
             isConnected = false
             connectedName = nil
@@ -71,6 +80,15 @@ final class MIDIInput {
         connectedName = nil
     }
 
+    /// `stop()` only breaks the source connection so a hot-plug can reconnect;
+    /// the client and port live as long as the host does. Dispose them here or
+    /// every closed document window leaks one of each for the process lifetime
+    /// (`OSCServer` draws the same line with `listener?.cancel()`).
+    deinit {
+        if port != MIDIPortRef() { MIDIPortDispose(port) }
+        if client != MIDIClientRef() { MIDIClientDispose(client) }
+    }
+
     private func disconnectSource() {
         if let connectedSource {
             MIDIPortDisconnectSource(port, connectedSource)
@@ -78,8 +96,16 @@ final class MIDIInput {
         connectedSource = nil
     }
 
+    /// Idempotent, and — importantly — *retryable*. The port is what matters, so
+    /// that is what gates the early return: if the client was created but the
+    /// port was not, a later `start` retries the port against the surviving
+    /// client instead of latching MIDI off for the life of the process.
     private func ensureClientAndPort() {
-        guard client == MIDIClientRef() else { return }
+        guard port == MIDIPortRef() else { return }
+        guard client == MIDIClientRef() else {
+            createPort()
+            return
+        }
         var newClient = MIDIClientRef()
         // The notify block fires on hot-plug; re-running `start` re-resolves the
         // selected UID, so replugging the surface restores the connection.
@@ -93,7 +119,10 @@ final class MIDIInput {
             return
         }
         client = newClient
+        createPort()
+    }
 
+    private func createPort() {
         var newPort = MIDIPortRef()
         let portStatus = MIDIInputPortCreateWithProtocol(
             client, "OnlyCue Input" as CFString, ._1_0, &newPort
@@ -184,19 +213,49 @@ final class MIDIInput {
     /// Universal MIDI Packets in the MIDI 1.0 protocol carry the legacy status
     /// bytes in the low three bytes of each 32-bit word, so we re-emit those to
     /// `MIDIMessage.parse` rather than duplicating status decoding here.
+    ///
+    /// Walked via the `unsafeSequence()` overlay rather than by hand. A packet
+    /// is variable-length, so its successor's address depends on `wordCount`:
+    /// stepping with `MIDIEventPacketNext` over a `var` copy of a packet lands
+    /// on uninitialised stack memory, and garbage words whose top nibble happens
+    /// to be `0x2` decode into phantom Note/CC that then get dispatched.
     nonisolated private static func messages(in eventList: UnsafePointer<MIDIEventList>) -> [MIDIMessage] {
         var result: [MIDIMessage] = []
-        var packet = eventList.pointee.packet
-        for _ in 0..<eventList.pointee.numPackets {
-            withUnsafeBytes(of: packet.words) { raw in
-                let words = raw.bindMemory(to: UInt32.self)
-                for index in 0..<Int(packet.wordCount) where index < words.count {
-                    if let message = message(fromUMPWord: words[index]) { result.append(message) }
-                }
+        for packet in eventList.unsafeSequence() {
+            // Read words one at a time out of the list's own storage. Copying
+            // the whole `words` tuple would read all 64 slots — 256 bytes — off
+            // a packet that only allocated `wordCount` of them.
+            let base = UnsafeRawPointer(packet)
+            let count = min(Int(packet.pointee.wordCount), Self.maxWordsPerPacket)
+            var index = 0
+            while index < count {
+                let word = base.load(
+                    fromByteOffset: Self.wordsOffset + index * MemoryLayout<UInt32>.stride,
+                    as: UInt32.self
+                )
+                // Skip whole messages, not single words: the trailing words of a
+                // SysEx7 or MIDI 2.0 message are pure data and may happen to
+                // start with the `0x2` nibble, which would decode as a message.
+                if let message = message(fromUMPWord: word) { result.append(message) }
+                index += umpWordCount(forMessageType: UInt8(word >> 28))
             }
-            packet = MIDIEventPacketNext(&packet).pointee
         }
         return result
+    }
+
+    /// Byte offset of `MIDIEventPacket.words` (12: an 8-byte timestamp plus a
+    /// 4-byte word count) and the tuple's slot count, as declared in
+    /// `<CoreMIDI/MIDIServices.h>`.
+    nonisolated private static let wordsOffset =
+        MemoryLayout<MIDIEventPacket>.offset(of: \MIDIEventPacket.words) ?? 12
+    nonisolated private static let maxWordsPerPacket = 64
+
+    /// Words per Universal MIDI Packet message, indexed by message type (the
+    /// top nibble of the first word) — MIDI 2.0 spec, table "Message Type".
+    nonisolated private static let umpWordCounts = [1, 1, 1, 2, 2, 4, 1, 1, 2, 2, 2, 3, 3, 4, 4, 4]
+
+    nonisolated private static func umpWordCount(forMessageType type: UInt8) -> Int {
+        umpWordCounts[Int(type) & 0xF]
     }
 
     /// Decodes one MIDI 1.0 Universal MIDI Packet word (`0x2` message type):

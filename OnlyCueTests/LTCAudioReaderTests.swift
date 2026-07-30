@@ -180,9 +180,11 @@ final class LTCAudioReaderTests: XCTestCase {
         let url = try writeWav(ltc, sampleRate: 48_000)
         defer { try? FileManager.default.removeItem(at: url) }
 
-        // Non-vacuity: the raw decode really does find a frame, so it is the
-        // corroboration gate — not an empty decode — that yields nothing below.
-        XCTAssertEqual(LTCDecoder.decode(samples: ltc, sampleRate: 48_000).count, 1)
+        // Non-vacuity, through the same file path as the assertion below: the
+        // read really does find a frame, so it is the corroboration gate — not
+        // an empty decode — that yields nothing.
+        let ungated = try await LTCAudioReader.decodeTimecodes(from: url)
+        XCTAssertEqual(ungated.count, 1)
 
         let decoded = try await LTCAudioReader.detectTimecodes(from: url)
         XCTAssertTrue(decoded.isEmpty, "a lone uncorroborated frame must not be returned")

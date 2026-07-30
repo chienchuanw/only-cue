@@ -22,8 +22,9 @@ final class TransportBarScreenshotTests: XCTestCase {
     /// Scenario: Transport bar renders on a fresh document with LTC output disabled
     /// Given the app is launched and an untitled document is opened
     /// And LTCRoutingStore.shared.settings.isEnabled is false (the fresh-launch default)
+    /// And the seeded media carries no LTC
     /// Then the HMS time readout is visible
-    /// And the SMPTE readout is hidden
+    /// And the timecode readout is hidden
     /// And a screenshot of the document window is captured for review.
     func test_transportBar_visualBaseline() throws {
         let app = XCUIApplication()
@@ -42,7 +43,7 @@ final class TransportBarScreenshotTests: XCTestCase {
         )
         XCTAssertFalse(
             app.staticTexts["smpteTimecode"].exists,
-            "the SMPTE readout must be hidden when LTC output is disabled (fresh-launch default)"
+            "the timecode readout must be hidden with no file timecode and LTC output off (#712)"
         )
 
         // Activate the app so it comes to the front before screenshot — without

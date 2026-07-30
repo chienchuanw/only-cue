@@ -1,12 +1,15 @@
 import XCTest
 
-/// Verifies the SMPTE readout in TransportBar is hidden when LTC output is
-/// disabled in Settings (the fresh-launch default). The companion `LTC-on`
-/// path is covered manually — toggling LTCRoutingStore from a UI test would
-/// require driving Settings, which is out of scope for this gating check.
+/// Verifies the timecode readout in TransportBar is hidden when there is
+/// nothing to show: no LTC on the media file *and* LTC output disabled (the
+/// fresh-launch default). Since #712 those are two independent reasons to show
+/// it — a file carrying LTC displays its timecode even with output off — so
+/// this asserts the remaining hidden case. Both `on` paths are covered
+/// manually and by `TimecodeReadoutTests`; toggling LTCRoutingStore or
+/// importing an LTC-striped file from a UI test is out of scope here.
 final class TransportBarSMPTEGatingUITests: OnlyCueUITestCase {
 
-    func test_smpteReadout_hiddenByDefault_whenLTCOutputDisabled() throws {
+    func test_timecodeReadout_hiddenByDefault_withNoFileTimecodeAndLTCOutputDisabled() throws {
         // A seeded document (media present) so the transport — and its SMPTE
         // readout — render; the transport is hidden in the no-media state.
         let app = launchApp(seed: .threeCuesAt1And3And6)
@@ -17,11 +20,12 @@ final class TransportBarSMPTEGatingUITests: OnlyCueUITestCase {
             "transport should render for the seeded document within 10s"
         )
 
-        // The gate under test: with LTCRoutingStore.shared.settings.isEnabled
-        // == false (fresh-launch default), the SMPTE readout must be hidden.
+        // The seeded media carries no LTC and LTCRoutingStore.shared.settings
+        // .isEnabled is false (fresh-launch default), so neither reason to show
+        // the readout applies.
         XCTAssertFalse(
             app.staticTexts["smpteTimecode"].exists,
-            "smpteTimecode must be hidden when LTC output is disabled"
+            "the timecode readout must stay hidden with no file timecode and LTC output off"
         )
     }
 }

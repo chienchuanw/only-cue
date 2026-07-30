@@ -33,8 +33,11 @@ struct MIDIInputHost: ViewModifier {
     @State private var previousCC: [MIDIControlID: UInt8] = [:]
     /// Monotonic timestamp of the last applied continuous value, plus the
     /// pending trailing re-fire, so a fader sweep is coalesced to frame cadence.
-    @State private var lastContinuousFire: TimeInterval?
-    @State private var continuousTask: Task<Void, Never>?
+    /// Keyed per control (spec: "keep only the latest value per control") — with
+    /// one shared slot, moving two faders at once would let each cancel the
+    /// other's pending re-fire and strand it short of its resting position.
+    @State private var lastContinuousFire: [MIDIControlID: TimeInterval] = [:]
+    @State private var continuousTasks: [MIDIControlID: Task<Void, Never>] = [:]
 
     func body(content: Content) -> some View {
         content
@@ -47,8 +50,13 @@ struct MIDIInputHost: ViewModifier {
             .onChange(of: showGoTypeID) { _, _ in syncInput() }
             .onDisappear {
                 input.stop()
+                // Drop the handler as well: it captures this modifier, which
+                // holds the `@State` box owning `input`. Breaking that ring is
+                // what lets `MIDIInput.deinit` run and dispose the CoreMIDI
+                // client + port rather than leaking one per document window.
+                input.onMessage = nil
                 seekTask?.cancel()
-                continuousTask?.cancel()
+                continuousTasks.values.forEach { $0.cancel() }
             }
             .onReceive(NotificationCenter.default.publisher(for: .midiMonitorRequested)) { _ in
                 showMonitor = true
@@ -83,7 +91,7 @@ struct MIDIInputHost: ViewModifier {
 
         let value = MIDIDispatchGate.value(of: message)
         if action.isContinuous {
-            fireContinuous(action, value: value)
+            fireContinuous(action, value: value, from: control)
         } else if MIDIDispatchGate.shouldFireDiscrete(message, previousCCValue: previousCC[control]) {
             apply(MIDICommandDispatcher.effect(for: action, value: value, engine: snapshot()))
         }
@@ -95,18 +103,22 @@ struct MIDIInputHost: ViewModifier {
     /// level, write `UserDefaults` on every message). Coalescing must not swallow
     /// the *end* of a sweep, so a suppressed message is re-fired when the window
     /// closes — the fader's resting position is what the user actually sees.
-    private func fireContinuous(_ action: MIDIAction, value: UInt8) {
-        continuousTask?.cancel()
+    private func fireContinuous(_ action: MIDIAction, value: UInt8, from control: MIDIControlID) {
+        continuousTasks[control]?.cancel()
         let now = ProcessInfo.processInfo.systemUptime
-        guard !MIDIDispatchGate.shouldFireContinuous(now: now, lastFiredAt: lastContinuousFire) else {
-            lastContinuousFire = now
+        let last = lastContinuousFire[control]
+        guard !MIDIDispatchGate.shouldFireContinuous(now: now, lastFiredAt: last) else {
+            lastContinuousFire[control] = now
             apply(MIDICommandDispatcher.effect(for: action, value: value, engine: snapshot()))
             return
         }
-        let delay = MIDIDispatchGate.continuousDelay(now: now, lastFiredAt: lastContinuousFire)
-        continuousTask = Task {
-            try? await Task.sleep(for: .seconds(delay))
+        continuousTasks[control] = Task {
+            try? await Task.sleep(for: .seconds(MIDIDispatchGate.continuousDelay(now: now, lastFiredAt: last)))
             guard !Task.isCancelled else { return }
+            // Stamp the trailing fire too, or the next message measures against
+            // the *leading* one, finds a full frame elapsed and fires straight
+            // away — twice the intended cadence.
+            lastContinuousFire[control] = ProcessInfo.processInfo.systemUptime
             apply(MIDICommandDispatcher.effect(for: action, value: value, engine: snapshot()))
         }
     }

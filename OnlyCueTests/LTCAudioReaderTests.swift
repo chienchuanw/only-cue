@@ -32,6 +32,93 @@ final class LTCAudioReaderTests: XCTestCase {
         return url
     }
 
+    /// Write per-channel `channels` as an interleaved 32-bit-float WAV. All
+    /// channels must be the same length.
+    private func writeWav(channels: [[Float]], sampleRate: Double) throws -> URL {
+        let url = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString + ".wav")
+        let frames = try XCTUnwrap(channels.first?.count)
+        let format = try XCTUnwrap(
+            AVAudioFormat(
+                commonFormat: .pcmFormatFloat32,
+                sampleRate: sampleRate,
+                channels: AVAudioChannelCount(channels.count),
+                interleaved: false
+            )
+        )
+        let file = try AVAudioFile(forWriting: url, settings: format.settings)
+        let buffer = try XCTUnwrap(AVAudioPCMBuffer(pcmFormat: format, frameCapacity: AVAudioFrameCount(frames)))
+        buffer.frameLength = AVAudioFrameCount(frames)
+        let data = try XCTUnwrap(buffer.floatChannelData)
+        for (index, samples) in channels.enumerated() {
+            try samples.withUnsafeBufferPointer { source in
+                data[index].update(from: try XCTUnwrap(source.baseAddress), count: frames)
+            }
+        }
+        try file.write(from: buffer)
+        return url
+    }
+
+    /// Loud programme audio, the thing that swamps LTC when channels are summed.
+    private func tone(count: Int, sampleRate: Double) -> [Float] {
+        (0..<count).map { Float(sin(2 * .pi * 440 * Double($0) / sampleRate)) }
+    }
+
+    // The common delivery shape: programme audio on L, timecode on R. Summing to
+    // mono buries the biphase square wave under the music, so the decoder — which
+    // works from zero crossings — must see the channel on its own.
+    func test_decodeTimecodes_ltcOnOneChannelOfAStereoMix_decodes() async throws {
+        let start = tc(2, 0, 0, 0, .fps25)
+        let ltc = LTCFrameStream(startTimecode: start, sampleRate: 48_000).samples(frameCount: 10)
+        let url = try writeWav(
+            channels: [tone(count: ltc.count, sampleRate: 48_000), ltc],
+            sampleRate: 48_000
+        )
+        defer { try? FileManager.default.removeItem(at: url) }
+
+        let decoded = try await LTCAudioReader.detectTimecodes(from: url)
+        let first = try XCTUnwrap(decoded.first?.timecode)
+        XCTAssertEqual(first.rate, .fps25)
+        // The leading partial frame may be clipped, same one-frame slack the
+        // mono round-trip test allows.
+        XCTAssertLessThanOrEqual(first.frameCount - start.frameCount, 1)
+        XCTAssertGreaterThanOrEqual(first.frameCount, start.frameCount)
+        XCTAssertGreaterThanOrEqual(decoded.count, 8)
+    }
+
+    // Non-vacuity guard for the test above: the mono down-mix of that same file
+    // decodes nothing, so the per-channel pass is doing the work.
+    func test_decodeTimecodes_monoDownmixOfThatSameMix_findsNothing() async throws {
+        let start = tc(2, 0, 0, 0, .fps25)
+        let ltc = LTCFrameStream(startTimecode: start, sampleRate: 48_000).samples(frameCount: 10)
+        let url = try writeWav(
+            channels: [tone(count: ltc.count, sampleRate: 48_000), ltc],
+            sampleRate: 48_000
+        )
+        defer { try? FileManager.default.removeItem(at: url) }
+
+        let downmixed = try await LTCAudioReader.decodeTimecodes(from: url)
+        XCTAssertTrue(downmixed.isEmpty)
+    }
+
+    // A pre-roll, a countdown or leading silence pushes the first LTC frame past
+    // the cheap 10 s window; the scan must widen rather than report "no LTC".
+    func test_detectTimecodes_ltcStartingAfterTheFirstWindow_isFoundByTheWiderScan() async throws {
+        let start = tc(4, 0, 0, 0, .fps25)
+        let silence = [Float](repeating: 0, count: 12 * 48_000)
+        let ltc = LTCFrameStream(startTimecode: start, sampleRate: 48_000).samples(frameCount: 25)
+        let url = try writeWav(silence + ltc, sampleRate: 48_000)
+        defer { try? FileManager.default.removeItem(at: url) }
+
+        let narrow = try await LTCAudioReader.detectTimecodes(from: url, windows: [10])
+        XCTAssertTrue(
+            narrow.isEmpty,
+            "the 10 s window alone must not find it — otherwise this test proves nothing"
+        )
+        let decoded = try await LTCAudioReader.detectTimecodes(from: url)
+        XCTAssertEqual(try XCTUnwrap(decoded.first?.timecode).rate, .fps25)
+        XCTAssertGreaterThanOrEqual(decoded.count, 20)
+    }
+
     func test_readMonoSamples_roundTripsThroughWrittenFile() async throws {
         let pcm = LTCFrameStream(startTimecode: tc(1, 2, 3, 4), sampleRate: 48_000).samples(frameCount: 8)
         let url = try writeWav(pcm, sampleRate: 48_000)

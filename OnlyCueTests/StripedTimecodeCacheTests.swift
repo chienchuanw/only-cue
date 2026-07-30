@@ -47,6 +47,39 @@ final class StripedTimecodeCacheTests: XCTestCase {
         XCTAssertNil(second)
     }
 
+    // The key is the item id, which survives a relink — the user can point the
+    // same item at a different file, and a remembered "no LTC" would otherwise
+    // outlive the file it was true of (#712).
+    func test_invalidate_forcesARescanForThatItemOnly() async {
+        let cache = StripedTimecodeCache()
+        var decodes = 0
+
+        _ = await cache.track(for: idA) { decodes += 1; return nil }
+        _ = await cache.track(for: idB) { decodes += 1; return nil }
+        cache.invalidate(idA)
+
+        let rescanned = await cache.track(for: idA) { decodes += 1; return self.track(self.anchor) }
+        XCTAssertEqual(rescanned?.anchorTimecode, anchor, "the relinked file's LTC must be found")
+        _ = await cache.track(for: idB) { decodes += 1; return nil }
+        XCTAssertEqual(decodes, 3, "only the invalidated item re-decodes")
+    }
+
+    // A cancelled scan reports whatever it had reached, which is not an answer
+    // about the file — caching it would mislabel that file for the whole run.
+    func test_doesNotRememberTheResultOfACancelledScan() async {
+        let cache = StripedTimecodeCache()
+        var decodes = 0
+
+        // The body can't start until this actor suspends at `await`, so the
+        // cancel is guaranteed to land first.
+        let task = Task { await cache.track(for: self.idA) { decodes += 1; return nil } }
+        task.cancel()
+        _ = await task.value
+
+        _ = await cache.track(for: idA) { decodes += 1; return self.track(self.anchor) }
+        XCTAssertEqual(decodes, 2, "the cancelled scan's answer must not have been stored")
+    }
+
     func test_cachesPerItem_notGlobally() async {
         let cache = StripedTimecodeCache()
         var decodes = 0

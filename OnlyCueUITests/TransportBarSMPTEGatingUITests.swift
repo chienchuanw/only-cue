@@ -23,8 +23,13 @@ final class TransportBarSMPTEGatingUITests: OnlyCueUITestCase {
         // The seeded media carries no LTC and LTCRoutingStore.shared.settings
         // .isEnabled is false (fresh-launch default), so neither reason to show
         // the readout applies.
+        //
+        // `waitForExistence`, not `exists`: the striped-LTC scan is async and
+        // now reads every channel across two windows, so an immediate check
+        // would pass before the scan could possibly have published anything —
+        // it would hold even if the media *did* carry LTC.
         XCTAssertFalse(
-            app.staticTexts["smpteTimecode"].exists,
+            app.staticTexts["smpteTimecode"].waitForExistence(timeout: 5),
             "the timecode readout must stay hidden with no file timecode and LTC output off"
         )
     }

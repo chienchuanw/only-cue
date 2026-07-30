@@ -185,7 +185,14 @@ struct TransportControls: View {
 
     private var smpteReadoutHelp: String {
         if stripedTimecode != nil {
-            return "SMPTE timecode read from the media file's LTC track."
+            var help = "SMPTE timecode read from the media file's LTC track."
+            // Be explicit when the two disagree: the generator keeps emitting the
+            // project-settings timecode, so with output on this readout is *not*
+            // what is going out the LTC port (#712).
+            if ltcRoutingStore.settings.isEnabled {
+                help += " LTC output is generating the project-settings timecode, which may differ."
+            }
+            return help
         }
         return "SMPTE timecode at the playhead (\(timecodeSettings.framerate.displayName);"
             + " edit in Tools → Timecode Settings…)."

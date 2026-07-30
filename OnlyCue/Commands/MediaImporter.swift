@@ -64,6 +64,10 @@ enum MediaImporter {
             bookmarkData: bookmark
         )
         CueCommands.relinkMedia(itemID: itemID, to: media, in: document, undoManager: undoManager)
+        // The item id is unchanged but the audio behind it is not, so anything
+        // remembered about its LTC — including "none" — is now about a
+        // different file (#712).
+        StripedTimecodeCache.shared.invalidate(itemID)
         if document.model.activeItemID == itemID {
             try await loadActive(into: document, engine: engine)
         }

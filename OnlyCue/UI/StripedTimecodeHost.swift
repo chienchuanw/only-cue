@@ -26,7 +26,15 @@ private struct StripedTimecodeHost: ViewModifier {
             .environment(\.stripedTimecode, track)
             .task(id: item?.id) {
                 track = nil
-                track = await MediaImporter.stripedTimecode(for: item)
+                let decoded = await MediaImporter.stripedTimecode(for: item)
+                // The scan can outlive its clip: switching from a slow file (LTC
+                // late on the last of 8 channels) to one with a cached answer
+                // lets the outgoing task finish *after* the incoming one. Without
+                // this guard it would publish the old file's timecode under the
+                // new file's name — and the readout says `FILE`, asserting the
+                // number came off the media on screen.
+                guard !Task.isCancelled else { return }
+                track = decoded
             }
     }
 }

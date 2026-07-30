@@ -146,6 +146,13 @@ Scenario: Reading does not depend on generating
       run; re-selecting the clip is served from the cache.
 - [ ] No `.cuelist` schema change; no new `SMPTEFramerate` case; no change to any
       LTC output path.
+- [ ] A channel is only accepted on two consecutive frame numbers. One chance
+      sync-word + parity + BCD match across minutes of programme audio must not
+      relabel the transport `FILE` and re-base the readout on a garbage frame.
+- [ ] Switching clips mid-scan cannot publish — or cache — the outgoing file's
+      timecode against the incoming file's name.
+- [ ] Relinking an item re-scans it: the cache key is the item id, which survives
+      being pointed at a different file.
 - [ ] Hardware-verified by the user against a real multichannel delivery file.
       Synthetic round-trip tests prove the decoder, not that real files decode.
 
@@ -155,6 +162,12 @@ Scenario: Reading does not depend on generating
   it with a channel selection rather than changing its default behavior.
 - The channel count comes from the track's format description
   (`AudioStreamBasicDescription.mChannelsPerFrame`).
+- Read each window **once** and slice the channels in memory. A read per channel
+  decodes the whole multichannel span N times and discards N−1 channels each
+  pass — cheap on PCM, not on a compressed 8-channel delivery mix.
+- The scan is cancellable (`Task.checkCancellation` per window and per channel);
+  the view publishes only if it was not cancelled, and a cancelled result is
+  never cached.
 - The cache is keyed by something stable per media file and holds an
   `Optional<StripedTimecodeTrack>` so a miss and a known-negative are
   distinguishable. It is in-memory only, discarded on quit.

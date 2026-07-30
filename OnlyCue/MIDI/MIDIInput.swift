@@ -36,8 +36,11 @@ final class MIDIInput {
 
     // Transport handles, not view state — kept out of observation so `deinit`
     // can dispose them without touching the observation registrar.
-    @ObservationIgnored private var client = MIDIClientRef()
-    @ObservationIgnored private var port = MIDIPortRef()
+    // `nonisolated(unsafe)` so the nonisolated `deinit` can dispose them: both
+    // are only ever mutated from the main actor, and CoreMIDI's dispose calls
+    // are themselves thread-safe.
+    @ObservationIgnored nonisolated(unsafe) private var client = MIDIClientRef()
+    @ObservationIgnored nonisolated(unsafe) private var port = MIDIPortRef()
     @ObservationIgnored private var connectedSource: MIDIEndpointRef?
 
     // MARK: - Lifecycle
@@ -226,7 +229,11 @@ final class MIDIInput {
             // the whole `words` tuple would read all 64 slots — 256 bytes — off
             // a packet that only allocated `wordCount` of them.
             let base = UnsafeRawPointer(packet)
-            let count = min(Int(packet.pointee.wordCount), Self.maxWordsPerPacket)
+            // Read `wordCount` as a field, not via `packet.pointee`, which would
+            // formally load all 268 bytes of a packet that only allocated
+            // `12 + 4 * wordCount` of them.
+            let declared = base.load(fromByteOffset: Self.wordCountOffset, as: UInt32.self)
+            let count = min(Int(declared), Self.maxWordsPerPacket)
             var index = 0
             while index < count {
                 let word = base.load(
@@ -248,6 +255,8 @@ final class MIDIInput {
     /// `<CoreMIDI/MIDIServices.h>`.
     nonisolated private static let wordsOffset =
         MemoryLayout<MIDIEventPacket>.offset(of: \MIDIEventPacket.words) ?? 12
+    nonisolated private static let wordCountOffset =
+        MemoryLayout<MIDIEventPacket>.offset(of: \MIDIEventPacket.wordCount) ?? 8
     nonisolated private static let maxWordsPerPacket = 64
 
     /// Words per Universal MIDI Packet message, indexed by message type (the

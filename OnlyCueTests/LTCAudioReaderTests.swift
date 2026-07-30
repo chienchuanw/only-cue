@@ -109,6 +109,11 @@ final class LTCAudioReaderTests: XCTestCase {
     // a 6-channel delivery mix with timecode on the last channel. Above stereo
     // `AVAssetReader` refuses the read outright without an explicit layout, so
     // without this test that branch never executes in CI.
+    //
+    // The fixture is discrete-in-order, not positional 5.1 — a positionally
+    // tagged source can invoke a mixing matrix instead of a pass-through, which
+    // only the spec's hardware-verification step covers. Don't read this green
+    // test as proof that a real 5.1/7.1 delivery passes through un-mixed.
     func test_detectTimecodes_ltcOnTheLastChannelOfASixChannelMix_decodes() async throws {
         let start = tc(3, 0, 0, 0, .fps25)
         let ltc = LTCFrameStream(startTimecode: start, sampleRate: 48_000).samples(frameCount: 10)
@@ -158,18 +163,29 @@ final class LTCAudioReaderTests: XCTestCase {
         XCTAssertFalse(LTCAudioReader.isCorroborated([frame(100), frame(4000)]), "unrelated frames are not a run")
         XCTAssertTrue(LTCAudioReader.isCorroborated([frame(100), frame(101)]))
         XCTAssertTrue(LTCAudioReader.isCorroborated([frame(100), frame(4000), frame(4001)]))
+        // The decoder drops a frame it can't parse but still advances past it,
+        // so real-but-noisy LTC reads as 100, 102 — rejecting that would mean
+        // showing nothing for a file that plainly carries timecode.
+        XCTAssertTrue(LTCAudioReader.isCorroborated([frame(100), frame(102)]))
+        XCTAssertFalse(LTCAudioReader.isCorroborated([frame(100), frame(104)]), "a 4-frame jump is not a run")
     }
 
-    func test_readSamples_channelBeyondTheTrack_throws() async throws {
-        let url = try writeWav([Float](repeating: 0.1, count: 4_800), sampleRate: 48_000)
+    // An ordinary music file must not be relabelled `FILE` by one chance
+    // sync-word + parity + BCD match, so an uncorroborated frame is discarded
+    // rather than returned as a last resort (#712).
+    func test_detectTimecodes_returnsNothingWhenNoChannelCorroborates() async throws {
+        let url = try writeWav(tone(count: 48_000, sampleRate: 48_000), sampleRate: 48_000)
         defer { try? FileManager.default.removeItem(at: url) }
 
-        do {
-            _ = try await AudioSampleReader.readSamples(from: url, channel: 3)
-            XCTFail("asking for channel 3 of a mono file should throw")
-        } catch let error as AudioSampleReader.Error {
-            XCTAssertEqual(error, .channelOutOfRange)
-        }
+        let decoded = try await LTCAudioReader.detectTimecodes(from: url)
+        XCTAssertTrue(decoded.isEmpty)
+    }
+
+    func test_channel_slicesInterleavedSamplesAndPassesMonoThrough() {
+        let interleaved: [Float] = [1, 10, 100, 2, 20, 200, 3, 30, 300]
+        XCTAssertEqual(AudioSampleReader.channel(0, of: 3, in: interleaved), [1, 2, 3])
+        XCTAssertEqual(AudioSampleReader.channel(2, of: 3, in: interleaved), [100, 200, 300])
+        XCTAssertEqual(AudioSampleReader.channel(0, of: 1, in: [1, 2, 3]), [1, 2, 3])
     }
 
     // Non-vacuity guard for the test above: the mono down-mix of that same file

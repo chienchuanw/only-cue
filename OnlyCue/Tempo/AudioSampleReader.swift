@@ -12,9 +12,6 @@ enum AudioSampleReader {
         case noAudioTrack
         /// `AVAssetReader` failed to start or aborted mid-read.
         case readerFailed
-        /// A channel index outside the track's channel count was asked for —
-        /// a programmer error, kept distinct from "that channel is silence".
-        case channelOutOfRange
     }
 
     /// 48 kHz mono: keeps 24 / 25 / 30 fps LTC at an integer-ish samples-per-half-bit
@@ -29,11 +26,11 @@ enum AudioSampleReader {
         from url: URL,
         range: ClosedRange<TimeInterval>? = nil
     ) async throws -> [Float] {
-        try await readSamples(from: url, channel: nil, range: range)
+        try await readInterleavedSamples(from: url, channels: 1, range: range)
     }
 
     /// How many channels `url`'s first audio track carries — the bound for
-    /// `readSamples(from:channel:range:)`. Zero when it can't be determined.
+    /// `readInterleavedSamples(from:channels:range:)`. Zero when it can't be determined.
     static func channelCount(of url: URL) async throws -> Int {
         let track = try await firstAudioTrack(of: AVURLAsset(url: url))
         let descriptions: [CMFormatDescription]
@@ -42,34 +39,15 @@ enum AudioSampleReader {
         return Int(basic.mChannelsPerFrame)
     }
 
-    /// One channel of `url`'s first audio track as `Float` PCM at `sampleRate`,
-    /// or the down-mix of all of them when `channel` is nil.
-    ///
-    /// The single-channel form exists for LTC: timecode is striped onto *one*
-    /// channel of a delivery mix, and summing that channel with the programme
-    /// audio buries the biphase square wave the decoder reads zero crossings
-    /// from. Consumers that don't care about channel identity — the tempo
-    /// analyzer — should keep using the down-mix.
-    static func readSamples(
-        from url: URL,
-        channel: Int?,
-        range: ClosedRange<TimeInterval>? = nil
-    ) async throws -> [Float] {
-        // Extracting one channel means decoding all of them and striding: a
-        // 1-channel output would down-mix, which is exactly what we're avoiding.
-        guard let channel else { return try await readInterleavedSamples(from: url, channels: 1, range: range) }
-        let channels = max(1, try await channelCount(of: url))
-        guard channel >= 0, channel < channels else { throw Error.channelOutOfRange }
-        let interleaved = try await readInterleavedSamples(from: url, channels: channels, range: range)
-        return self.channel(channel, of: channels, in: interleaved)
-    }
-
     /// Every channel of `url`'s first audio track, interleaved, at `sampleRate`.
     ///
-    /// Callers that want several channels of the same span should read once
-    /// through this and slice with `channel(_:of:in:)` — a `readSamples` call
-    /// per channel would decode the whole multichannel track N times over and
-    /// throw away N−1 channels each pass.
+    /// This exists for LTC: timecode is striped onto *one* channel of a delivery
+    /// mix, and summing that channel with the programme audio buries the biphase
+    /// square wave the decoder reads zero crossings from. Consumers that don't
+    /// care about channel identity — the tempo analyzer — keep using the
+    /// down-mix. Read once through here and slice with `channel(_:of:in:)`
+    /// rather than reading per channel, which would decode the whole
+    /// multichannel track N times and throw away N−1 channels each pass.
     ///
     /// `channels` is passed in rather than probed so a caller that already knows
     /// it (from `channelCount(of:)`) doesn't pay for a second asset load; pass 1
@@ -107,7 +85,18 @@ enum AudioSampleReader {
         guard reader.startReading() else { throw Error.readerFailed }
 
         var samples: [Float] = []
+        if let range, range.upperBound > range.lowerBound {
+            samples.reserveCapacity(Int((range.upperBound - range.lowerBound) * sampleRate) * outputChannels)
+        }
         while let buffer = output.copyNextSampleBuffer() {
+            // Decoding a 60 s × 8-channel window is the slow part of an LTC
+            // scan; without this a cancelled scan (the user switching clips)
+            // would still decode the whole window before anyone noticed.
+            guard !Task.isCancelled else {
+                CMSampleBufferInvalidate(buffer)
+                reader.cancelReading()
+                throw CancellationError()
+            }
             appendFloatSamples(from: buffer, into: &samples)
             CMSampleBufferInvalidate(buffer)
         }
@@ -116,9 +105,11 @@ enum AudioSampleReader {
         return samples
     }
 
-    /// One channel lifted out of an interleaved buffer, without re-reading the file.
+    /// One channel lifted out of an interleaved buffer, without re-reading the
+    /// file. `channels == 1` passes the buffer straight through.
     static func channel(_ index: Int, of channels: Int, in interleaved: [Float]) -> [Float] {
-        guard channels > 1, index >= 0, index < channels else { return interleaved }
+        precondition(index >= 0 && index < channels, "channel \(index) is outside a \(channels)-channel buffer")
+        guard channels > 1 else { return interleaved }
         return stride(from: index, to: interleaved.count, by: channels).map { interleaved[$0] }
     }
 

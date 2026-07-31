@@ -1,6 +1,6 @@
 # Spec — Rearrangeable workspace with savable presets (phase A)
 
-**Status:** draft — awaiting approval (grilled 2026-07-31)
+**Status:** approved (grilled 2026-07-31, mockups signed off "LGTM"; sidebar spike resolved 2026-07-31)
 **Area:** `area:ui`
 **Implements:** `docs/architecture.md` (document window layout), ADR-023 (editor modes)
 **Constrains:** #617 (window minimum width)
@@ -204,27 +204,61 @@ Follows the established app-level store pattern (`LTCRoutingStore`,
 - Design tokens: all new spacing/sizing goes through `DS`
   (`TokenConformanceTests` fails on hardcoded literals).
 
-## Open risk — programmatic sidebar width
+## Resolved risk — programmatic sidebar width (spike, 2026-07-31)
 
 `NavigationSplitView`'s sidebar is natively draggable within
-`.navigationSplitViewColumnWidth(min:ideal:max:)`, but SwiftUI offers **no
-supported way to read the user's dragged width back, nor to set it
-imperatively** when applying a preset. The single-value
-`.navigationSplitViewColumnWidth(_:)` pins the width exactly — which would
-apply a preset correctly but disable user dragging.
+`.navigationSplitViewColumnWidth(min:ideal:max:)`, but SwiftUI offers no
+documented way to read the user's dragged width back, nor to set it
+imperatively when applying a preset. The single-value
+`.navigationSplitViewColumnWidth(_:)` pins the width exactly.
 
-This needs a spike before Task 1 is written. Three outcomes, in order of
-preference:
+Three candidate outcomes were spiked against a standalone app reproducing this
+window's exact structure (ranged sidebar + plain-`HStack` detail). Results:
 
-1. Toggling between the pinned and ranged modifier applies a preset and then
-   returns control to the user. If this works cleanly, the full scope stands.
-2. Reaching the backing `NSSplitViewController` through an `NSViewRepresentable`
-   probe. **Only acceptable if it is read/write of width alone** — it must not
-   change the split view's constraint participation, or #617 returns.
-3. **Fallback, requires your sign-off:** phase A presets capture the inspector
-   width, inspector collapse, and sidebar collapse, but *not* the sidebar width,
-   which stays under macOS's own per-window restoration. Everything else in the
-   spec is unaffected.
+**Outcome 1 — toggle the pinned and ranged modifiers: rejected.** Pinning does
+move the sidebar (240 → 300), but switching back to the ranged modifier snaps it
+straight back to the *ideal*, discarding the applied width. Applying a preset
+this way would visibly undo itself.
+
+**Outcome 2 — `NSSplitView.setPosition(_:ofDividerAt:)` via an
+`NSViewRepresentable` probe: adopted.** The probe walks up from a zero-size view
+in the sidebar and finds the split view seven levels up (delegate
+`SwiftUI.NavigationSplitViewController`). Measured behaviour:
+
+| Check | Result |
+|---|---|
+| Applying a width | `setPosition(300)` → sidebar 300, SwiftUI geometry follows |
+| Reading the width back | `GeometryReader` in the sidebar reports it live |
+| Survives SwiftUI re-renders | yes (5 consecutive) |
+| Survives inspector resize / hide / show | yes — the phase-A actions |
+| Survives ordinary window resizes | yes (1400 → 1300 kept 300) |
+| Effect on window minimum width | none — `contentMinSize` 1149, well under 1280 |
+
+It writes the divider position and nothing else: no delegate is installed and no
+constraint participation changes, so the #617 mechanism cannot re-engage. That
+is exactly the "read/write of width alone" bar this outcome had to clear.
+
+Two caveats carried into the plan:
+
+- **The 8pt inset must be measured, not assumed.** The SwiftUI-reported sidebar
+  width is consistently 8pt less than the split position (240↔248, 292↔300,
+  257↔265). Derive the offset at runtime from the live pair; do not hardcode 8.
+- **Forcing the window below its own minimum resets the divider to the ideal.**
+  Only reachable programmatically — the window manager will not let a user
+  resize below `minSize` — so no mitigation is planned. If it ever surfaces,
+  re-asserting `setPosition` after the resize was verified to restore it.
+
+**Outcome 3 (drop sidebar width from presets) is therefore not needed** and the
+full spec scope stands.
+
+### One manual check still outstanding
+
+The spike could not simulate a genuine divider drag (the synthetic-event
+coordinate mapping into the hosted split view was wrong, and perfecting it was
+not worth the effort). Native sidebar dragging is untouched by `setPosition` —
+nothing is installed that could disable it — but before Task 4 lands, confirm by
+hand in the shipping app that dragging the sidebar still works and behaves the
+same after a window resize.
 
 ## Acceptance criteria
 

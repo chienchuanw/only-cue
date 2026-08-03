@@ -90,7 +90,6 @@ struct DocumentView: View {
                         lyricsCursor: $lyricsCursor
                     )
                     .frame(width: currentPaneLayout.inspectorWidth)
-                    .accessibilityIdentifier("cueListInspector")
                 }
             }
             .animation(DS.Motion.quick, value: currentPaneLayout.isInspectorCollapsed)

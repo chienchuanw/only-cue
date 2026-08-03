@@ -33,8 +33,14 @@ struct DocumentView: View {
     /// DocumentView+Workspace.swift, which was split out to keep this file under
     /// SwiftLint's file_length cap. `private`/`fileprivate` can't reach across files.
     @SceneStorage("onlycue.workspaceLayout") var liveLayoutData = ""
+    /// -1 means "no pending apply". A sentinel rather than `CGFloat?` because
+    /// `@State` of an optional here reads worse at every call site than one
+    /// impossible width does. Accessed by the extension in
+    /// DocumentView+Workspace.swift — `private` can't reach across files.
+    @State var pendingSidebarWidthValue: CGFloat = -1
     /// Shared waveform zoom/scroll — waveform + LTC strip stay collinear (#669).
-    @State private var waveformZoom = WaveformZoomController()
+    /// `internal`, not `private`: used by the extension in DocumentView+LTCStrip.swift.
+    @State var waveformZoom = WaveformZoomController()
     @ObservedObject private var keymapStore = KeymapStore.shared
     /// Drives the main-view LTC strip's visibility — it appears whenever LTC
     /// routing is enabled. Observing the singleton here means flipping the
@@ -66,7 +72,14 @@ struct DocumentView: View {
     var body: some View {
         NavigationSplitView {
             ItemListPane(document: document, onDropURLs: importURLs)
-                .navigationSplitViewColumnWidth(min: 240, ideal: 240, max: 320)
+                .navigationSplitViewColumnWidth(
+                    min: SidebarMetrics.minWidth,
+                    ideal: SidebarMetrics.idealWidth,
+                    max: SidebarMetrics.maxWidth)
+                .sidebarWidthBridge(targetWidth: pendingSidebarWidth) { measured in
+                    if let pw = pendingSidebarWidth, abs(measured - pw) < 1 { pendingSidebarWidth = nil }
+                    updateLiveLayout { $0.sidebarWidth = measured }
+                }
         } detail: {
             // Plain HStack, NOT `.inspector` or `HSplitView` (#617): any
             // NSSplitView-backed split inside the detail column double-counts
@@ -368,29 +381,6 @@ enum DocumentAlert: Identifiable {
         switch self {
         case .unsupported(let message): "unsupported:\(message)"
         case let .relink(itemID, _): "relink:\(itemID.uuidString)"
-        }
-    }
-}
-
-extension DocumentView {
-
-    /// The per-clip LTC strip, shown in the main pane only when LTC routing is
-    /// enabled and a media item is active (per-media LTC, epic #231). In an
-    /// extension to keep the `DocumentView` body within the type-length limit.
-    @ViewBuilder
-    func ltcStripIfEnabled(_ activeItem: MediaItem?) -> some View {
-        if let activeItem, ltcRoutingStore.settings.isEnabled {
-            LTCStrip(
-                item: activeItem,
-                framerate: document.model.timecodeSettings.framerate,
-                duration: activeItem.media.duration,
-                engine: engine,
-                zoom: waveformZoom
-            )
-            // Match the waveform's *total* playhead-track inset (outer gutter +
-            // inner content inset) so the LTC playhead is collinear with the
-            // waveform playhead (#663). The transport bar below stays full-bleed.
-            .padding(.horizontal, PreviewLayout.playheadTrackInset)
         }
     }
 }

@@ -74,6 +74,31 @@ final class PaneLayoutTests: XCTestCase {
         XCTAssertGreaterThanOrEqual(clamped.inspectorWidth, 0)
     }
 
+    // MARK: - Sidebar inset (#714, spike caveat)
+
+    func test_dividerPosition_derivesTheInsetFromTheLivePair_ratherThanHardcodingIt() {
+        // The SwiftUI-reported sidebar width runs consistently under the
+        // NSSplitView divider position (240<->248, 292<->300, 257<->265 in the
+        // spike). The offset is derived from whatever pair is observed live,
+        // never assumed to be 8 — a future SwiftUI release may change it.
+        let inset = SidebarWidthBridge.inset(measuredWidth: 292, dividerPosition: 300)
+        XCTAssertEqual(inset, 8)
+        XCTAssertEqual(
+            SidebarWidthBridge.dividerPosition(forTargetWidth: 320, inset: inset),
+            328
+        )
+    }
+
+    func test_dividerPosition_withNoObservedPair_appliesTheTargetUnadjusted() {
+        // Before the first measurement there is no pair to derive from.
+        // Applying the raw target is off by the inset for one frame, then the
+        // measurement arrives and it settles — better than baking in a guess.
+        XCTAssertEqual(
+            SidebarWidthBridge.dividerPosition(forTargetWidth: 300, inset: nil),
+            300
+        )
+    }
+
     // MARK: - Codable
 
     func test_roundTrip_preservesEveryField() throws {

@@ -176,9 +176,12 @@ final class WorkspaceLayoutStoreTests: XCTestCase {
 
     func test_recordLiveLayout_withNoChange_doesNotRepersist() {
         let store = makeStore()
-        store.recordLiveLayout(.default)
+        var dragged = WorkspaceLayout.default
+        dragged[.cue].isInspectorCollapsed = true
+        store.recordLiveLayout(dragged)   // first call — state changes, writes
         let before = defaults.data(forKey: WorkspaceLayoutStore.storageKey)
-        store.recordLiveLayout(.default)
+        XCTAssertNotNil(before, "precondition: the first call must have written data")
+        store.recordLiveLayout(dragged)   // second call — identical state, must NOT rewrite
         XCTAssertEqual(defaults.data(forKey: WorkspaceLayoutStore.storageKey), before)
     }
 

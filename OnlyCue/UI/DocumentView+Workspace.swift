@@ -37,6 +37,15 @@ extension DocumentView {
         WorkspaceLayoutStore.shared.recordLiveLayout(workspace)
     }
 
+    /// The sidebar width a preset wants applied, or nil while the user is in
+    /// charge. Set for one apply cycle by `applyWorkspace(_:)` (Task 5) and
+    /// cleared as soon as the measurement confirms it landed, so a later native
+    /// drag is never fought.
+    var pendingSidebarWidth: CGFloat? {
+        get { pendingSidebarWidthValue < 0 ? nil : pendingSidebarWidthValue }
+        nonmutating set { pendingSidebarWidthValue = newValue ?? -1 }
+    }
+
     /// A binding the divider can drive directly.
     var inspectorWidthBinding: Binding<CGFloat> {
         Binding(

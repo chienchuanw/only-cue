@@ -29,6 +29,9 @@ struct DocumentView: View {
     /// (not `@AppStorage`): layout is a window-level property, so two open
     /// documents keep independent arrangements and macOS restores each window's
     /// own across relaunch (spec decision 9).
+    /// `internal`, not `private`: read/written by the extension in
+    /// DocumentView+Workspace.swift, which was split out to keep this file under
+    /// SwiftLint's file_length cap. `private`/`fileprivate` can't reach across files.
     @SceneStorage("onlycue.workspaceLayout") var liveLayoutData = ""
     /// Shared waveform zoom/scroll — waveform + LTC strip stay collinear (#669).
     @State private var waveformZoom = WaveformZoomController()

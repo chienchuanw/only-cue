@@ -26,4 +26,13 @@ extension Notification.Name {
     static let playbackRateInterlockReset = Notification.Name("OnlyCue.playbackRateInterlockReset")
     static let sendToMA2Requested = Notification.Name("OnlyCue.sendToMA2Requested")
     static let exportMA2PluginRequested = Notification.Name("OnlyCue.exportMA2PluginRequested")
+
+    // MARK: - Workspace (#714)
+
+    static let toggleInspectorRequested = Notification.Name("OnlyCue.toggleInspectorRequested")
+    static let workspaceSelected = Notification.Name("OnlyCue.workspaceSelected")
+    static let workspaceSaveAsRequested = Notification.Name("OnlyCue.workspaceSaveAsRequested")
+    static let workspaceOverwriteRequested = Notification.Name("OnlyCue.workspaceOverwriteRequested")
+    static let manageWorkspacesRequested = Notification.Name("OnlyCue.manageWorkspacesRequested")
+    static let workspaceResetRequested = Notification.Name("OnlyCue.workspaceResetRequested")
 }

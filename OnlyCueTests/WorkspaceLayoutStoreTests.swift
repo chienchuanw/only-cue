@@ -174,15 +174,23 @@ final class WorkspaceLayoutStoreTests: XCTestCase {
         XCTAssertTrue(makeStore().state.mostRecentLayout[.cue].isInspectorCollapsed)
     }
 
-    func test_recordLiveLayout_withNoChange_doesNotRepersist() {
-        let store = makeStore()
+    func test_recordLiveLayout_withNoChange_doesNotRepersist() throws {
+        let counting = try XCTUnwrap(WriteCountingDefaults(suiteName: suiteName))
+        counting.removePersistentDomain(forName: suiteName)
+        let store = WorkspaceLayoutStore(defaults: counting)
+
         var dragged = WorkspaceLayout.default
         dragged[.cue].isInspectorCollapsed = true
-        store.recordLiveLayout(dragged)   // first call — state changes, writes
-        let before = defaults.data(forKey: WorkspaceLayoutStore.storageKey)
-        XCTAssertNotNil(before, "precondition: the first call must have written data")
-        store.recordLiveLayout(dragged)   // second call — identical state, must NOT rewrite
-        XCTAssertEqual(defaults.data(forKey: WorkspaceLayoutStore.storageKey), before)
+        store.recordLiveLayout(dragged)            // real change → persists once
+        let writesAfterFirst = counting.setCount
+        XCTAssertEqual(writesAfterFirst, 1, "the first change must persist exactly once")
+
+        store.recordLiveLayout(dragged)            // identical state → must NOT write again
+        XCTAssertEqual(
+            counting.setCount,
+            writesAfterFirst,
+            "a redundant recordLiveLayout must not repersist (apply's equality guard)"
+        )
     }
 
     // MARK: - Reset
@@ -197,5 +205,18 @@ final class WorkspaceLayoutStoreTests: XCTestCase {
         XCTAssertEqual(store.state.presets, [.default])
         XCTAssertNil(store.state.selectedName)
         XCTAssertEqual(store.state.mostRecentLayout, .default)
+    }
+}
+
+/// Counts `set(_:forKey:)` calls so a test can prove a redundant mutation
+/// does NOT re-persist. Byte-equality can't: a deterministic JSON encoder
+/// re-emits identical bytes, so only a call count distinguishes
+/// "guard fired, no write" from "guard skipped, wrote identical bytes".
+private final class WriteCountingDefaults: UserDefaults {
+    private(set) var setCount = 0
+    override init?(suiteName: String?) { super.init(suiteName: suiteName) }
+    override func set(_ value: Any?, forKey defaultName: String) {
+        setCount += 1
+        super.set(value, forKey: defaultName)
     }
 }

@@ -25,6 +25,11 @@ struct DocumentView: View {
     /// The editor mode — per-window working state, restored across relaunch.
     @SceneStorage("onlycue.editorMode") private var editorModeRaw = EditorMode.cue.rawValue
     @SceneStorage("onlycue.showGoTypeID") var showGoTypeIDRaw = ""
+    /// The window's live pane arrangement, per editor mode. `@SceneStorage`
+    /// (not `@AppStorage`): layout is a window-level property, so two open
+    /// documents keep independent arrangements and macOS restores each window's
+    /// own across relaunch (spec decision 9).
+    @SceneStorage("onlycue.workspaceLayout") var liveLayoutData = ""
     /// Shared waveform zoom/scroll — waveform + LTC strip stay collinear (#669).
     @State private var waveformZoom = WaveformZoomController()
     @ObservedObject private var keymapStore = KeymapStore.shared
@@ -64,25 +69,28 @@ struct DocumentView: View {
             // NSSplitView-backed split inside the detail column double-counts
             // the sidebar into the window's minimum width (~+249pt) and holds
             // the inspector at its ideal/max instead of its minimum, pinning
-            // the populated window at 1416pt — past the 1280pt design width —
-            // so it could never fit 1280-class displays. Verified empirically
-            // by bisecting all pane content to `Color.clear`: the floor only
-            // fell when the inner split view was gone. The inspector is
-            // permanently visible, so the only split feature lost is dragging
-            // the 340–400pt divider; the frame contract below still lets the
-            // inspector compress 360 → 340 before the editor gives up width.
+            // the populated window at 1416pt — past the 1280pt design width.
+            // Verified empirically by bisecting all pane content to
+            // `Color.clear`. The divider below restores the drag that comment
+            // named as the only casualty, WITHOUT restoring the split view:
+            // the gesture writes a width into scene storage, which feeds the
+            // same frame contract that was already here (#714).
             HStack(spacing: 0) {
                 mainPane
-                Divider()
-                ModeAwareInspector(
-                    document: document,
-                    engine: engine,
-                    editorMode: editorMode,
-                    cueSelection: $cueSelection,
-                    lyricsCursor: $lyricsCursor
-                )
-                .cueListInspectorPaneWidth()
+                if !currentPaneLayout.isInspectorCollapsed {
+                    InspectorDivider(width: inspectorWidthBinding)
+                    ModeAwareInspector(
+                        document: document,
+                        engine: engine,
+                        editorMode: editorMode,
+                        cueSelection: $cueSelection,
+                        lyricsCursor: $lyricsCursor
+                    )
+                    .frame(width: currentPaneLayout.inspectorWidth)
+                    .accessibilityIdentifier("cueListInspector")
+                }
             }
+            .animation(DS.Motion.quick, value: currentPaneLayout.isInspectorCollapsed)
         }
         // Figma 318:1236: the titlebar subtitle is the editor mode, not the
         // active media item name (the active clip is already shown in the
@@ -111,6 +119,9 @@ struct DocumentView: View {
         }
         .manageTypesSheet(document: document)
         .timecodeSettingsSheet(document: document)
+        .onReceive(NotificationCenter.default.publisher(for: .toggleInspectorRequested)) { _ in
+            updateLiveLayout { $0.isInspectorCollapsed.toggle() }
+        }
         .onReceive(NotificationCenter.default.publisher(for: .editorModeChangeRequested)) { note in
             if let mode = note.object as? EditorMode { editorModeRaw = mode.rawValue }
         }

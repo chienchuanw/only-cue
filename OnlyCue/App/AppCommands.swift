@@ -167,6 +167,14 @@ struct AppCommands: Commands {
 
             Divider()
 
+            Button("Hide Inspector") {
+                NotificationCenter.default.post(name: .toggleInspectorRequested, object: nil)
+            }
+            .keyboardShortcut("i", modifiers: [.command, .option])
+            .accessibilityIdentifier("toggleInspectorMenuItem")
+
+            Divider()
+
             Button(showNotesOverlay ? "Hide Notes Overlay" : "Show Notes Overlay") {
                 showNotesOverlay.toggle()
             }

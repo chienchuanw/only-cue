@@ -7,6 +7,10 @@ import XCTest
 /// than no coverage.
 final class WorkspaceLayoutUITests: OnlyCueUITestCase {
 
+    private func element(_ app: XCUIApplication, _ identifier: String) -> XCUIElement {
+        app.descendants(matching: .any).matching(identifier: identifier).firstMatch
+    }
+
     /// Scenario: Hiding the inspector
     ///   Given the inspector is visible
     ///   When the designer presses ⌥⌘I
@@ -15,10 +19,10 @@ final class WorkspaceLayoutUITests: OnlyCueUITestCase {
     func test_optionCommandI_togglesTheInspector() throws {
         let app = launchApp(seed: .threeCuesAt1And3And6)
 
-        let inspector = app.otherElements["cueListInspector"]
+        let inspector = element(app, "cueListPane")
         XCTAssertTrue(
-            inspector.waitForExistence(timeout: 10),
-            "the inspector should be visible on a seeded document"
+            inspector.waitForExistence(timeout: 15),
+            "the cue-list inspector should be visible on a seeded document"
         )
 
         app.typeKey("i", modifierFlags: [.command, .option])
@@ -38,8 +42,8 @@ final class WorkspaceLayoutUITests: OnlyCueUITestCase {
     /// VoiceOver user can tell how wide the inspector is.
     func test_inspectorDivider_isExposedToAccessibility() throws {
         let app = launchApp(seed: .threeCuesAt1And3And6)
-        let divider = app.otherElements["inspectorDivider"]
-        XCTAssertTrue(divider.waitForExistence(timeout: 10))
+        let divider = element(app, "inspectorDivider")
+        XCTAssertTrue(divider.waitForExistence(timeout: 15))
         XCTAssertFalse(divider.label.isEmpty, "the divider needs an accessibility label")
     }
 

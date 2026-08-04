@@ -10,6 +10,14 @@ typealias LTCAudioReaderError = AudioSampleReader.Error
 /// rather than the generator. Thin wrapper over `AudioSampleReader`.
 enum LTCAudioReader {
 
+    /// The winning channel and its decoded frames from a `detectTimecodes` scan.
+    struct DetectionResult: Sendable {
+        /// Zero-based index of the channel whose biphase signal decoded as corroborated LTC.
+        let channel: Int
+        /// The decoded frames recovered from that channel.
+        let frames: [LTCDecoder.DecodedFrame]
+    }
+
     /// Sample rate of the mono stream handed to the decoder.
     static let sampleRate: Double = AudioSampleReader.sampleRate
 
@@ -41,16 +49,16 @@ enum LTCAudioReader {
     /// The first *corroborated* channel wins (see `isCorroborated`); an
     /// uncorroborated frame is discarded, not returned as a last resort — a
     /// chance hit in an ordinary music file would otherwise relabel the
-    /// transport `FILE`, which is worse than showing nothing. Returns an empty
-    /// array when the file carries no LTC, which is a real answer worth
-    /// caching, not a failure.
+    /// transport `FILE`, which is worse than showing nothing. Returns `nil`
+    /// when the file carries no LTC, which is a real answer worth caching,
+    /// not a failure.
     ///
     /// Throws `CancellationError` if the enclosing task is cancelled — the user
     /// switching clips mid-scan. Callers must not cache a cancelled result.
     static func detectTimecodes(
         from url: URL,
         windows: [TimeInterval] = scanWindows
-    ) async throws -> [LTCDecoder.DecodedFrame] {
+    ) async throws -> DetectionResult? {
         let channels = max(1, try await AudioSampleReader.channelCount(of: url))
         for window in windows {
             try Task.checkCancellation()
@@ -65,10 +73,10 @@ enum LTCAudioReader {
                 try Task.checkCancellation()
                 let samples = AudioSampleReader.channel(channel, of: channels, in: interleaved)
                 let decoded = LTCDecoder.decode(samples: samples, sampleRate: sampleRate)
-                if isCorroborated(decoded) { return decoded }
+                if isCorroborated(decoded) { return DetectionResult(channel: channel, frames: decoded) }
             }
         }
-        return []
+        return nil
     }
 
     /// Whether `frames` are trustworthy enough to relabel the transport `FILE`

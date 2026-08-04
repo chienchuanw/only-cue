@@ -157,8 +157,10 @@ enum MediaImporter {
                 let resolution = try Bookmarks.resolve(item.media.bookmarkData)
                 let didAccess = resolution.url.startAccessingSecurityScopedResource()
                 defer { if didAccess { resolution.url.stopAccessingSecurityScopedResource() } }
-                let frames = try await LTCAudioReader.detectTimecodes(from: resolution.url)
-                return StripedTimecodeTrack(decodedFrames: frames, sampleRate: LTCAudioReader.sampleRate)
+                guard let detection = try await LTCAudioReader.detectTimecodes(from: resolution.url) else {
+                    return nil
+                }
+                return StripedTimecodeTrack(detection: detection, sampleRate: LTCAudioReader.sampleRate)
             } catch {
                 return nil
             }

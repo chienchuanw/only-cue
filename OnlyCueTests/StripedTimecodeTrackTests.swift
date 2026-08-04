@@ -66,6 +66,31 @@ final class StripedTimecodeTrackTests: XCTestCase {
         XCTAssertEqual(track.timecode(atPlaybackSeconds: 0.1), tc(0, 1, 0, 3, .fps30drop))
     }
 
+    func test_initFromDetection_capturesChannelIndex() {
+        let frame = LTCDecoder.DecodedFrame(timecode: tc(1, 0, 0, 10), startSample: 4_800)
+        let detection = LTCAudioReader.DetectionResult(channel: 3, frames: [frame])
+        let track = StripedTimecodeTrack(detection: detection, sampleRate: 48_000)
+        XCTAssertEqual(track?.ltcChannel, 3)
+        XCTAssertEqual(track?.anchorTimecode, tc(1, 0, 0, 10))
+    }
+
+    func test_initFromDetection_emptyFrames_isNil() {
+        let detection = LTCAudioReader.DetectionResult(channel: 1, frames: [])
+        XCTAssertNil(StripedTimecodeTrack(detection: detection, sampleRate: 48_000))
+    }
+
+    func test_initFromDetection_zeroSampleRate_isNil() {
+        let frame = LTCDecoder.DecodedFrame(timecode: tc(0, 0, 0, 0), startSample: 0)
+        let detection = LTCAudioReader.DetectionResult(channel: 0, frames: [frame])
+        XCTAssertNil(StripedTimecodeTrack(detection: detection, sampleRate: 0))
+    }
+
+    func test_initFromFrames_defaultsLtcChannelToZero() {
+        let frame = LTCDecoder.DecodedFrame(timecode: tc(1, 0, 0, 0), startSample: 0)
+        let track = StripedTimecodeTrack(decodedFrames: [frame], sampleRate: 48_000)
+        XCTAssertEqual(track?.ltcChannel, 0, "legacy init without channel info defaults to 0")
+    }
+
     func test_roundTrip_fromLTCFrameStreamThroughDecoder() {
         let start = tc(10, 20, 30, 5, .fps25)
         let samples = LTCFrameStream(startTimecode: start, sampleRate: 48_000).samples(frameCount: 8)

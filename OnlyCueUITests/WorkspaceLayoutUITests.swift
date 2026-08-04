@@ -52,3 +52,29 @@ final class WorkspaceLayoutUITests: OnlyCueUITestCase {
         return XCTWaiter().wait(for: [gone], timeout: timeout) == .completed
     }
 }
+
+extension WorkspaceLayoutUITests {
+
+    /// Scenario: the Workspace submenu is reachable and lists the built-in
+    /// Default preset with the lifecycle commands.
+    func test_viewMenu_exposesTheWorkspaceSubmenu() throws {
+        let app = launchApp(seed: .threeCuesAt1And3And6)
+        XCTAssertTrue(app.staticTexts["currentTimeReadout"].waitForExistence(timeout: 10))
+
+        let viewMenu = app.menuBars.menuBarItems["View"]
+        XCTAssertTrue(viewMenu.waitForExistence(timeout: 5))
+        viewMenu.click()
+
+        let workspace = app.menuBars.menuItems["Workspace"]
+        XCTAssertTrue(workspace.waitForExistence(timeout: 5), "View ▸ Workspace should exist")
+        workspace.hover()
+
+        XCTAssertTrue(app.menuBars.menuItems["Default"].waitForExistence(timeout: 5))
+        XCTAssertTrue(app.menuBars.menuItems["Save Current Layout As…"].exists)
+        XCTAssertTrue(app.menuBars.menuItems["Manage Workspaces…"].exists)
+        XCTAssertTrue(app.menuBars.menuItems["Reset to Default"].exists)
+
+        // Close the menu so the app terminates cleanly.
+        app.typeKey(.escape, modifierFlags: [])
+    }
+}

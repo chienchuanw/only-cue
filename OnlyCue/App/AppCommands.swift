@@ -11,6 +11,10 @@ struct AppCommands: Commands {
     @AppStorage("autoScrollWaveform") private var autoScrollWaveform = true
     @ObservedObject private var keymapStore = KeymapStore.shared
     @ObservedObject private var ltcRoutingStore = LTCRoutingStore.shared
+    /// `internal`, not `private`: read by the workspace menu helpers in
+    /// `AppCommands+Workspace.swift`, which was split out to keep this file
+    /// under SwiftLint's `file_length` cap. `private` can't reach across files.
+    @ObservedObject var workspaceStore = WorkspaceLayoutStore.shared
     @FocusedValue(\.currentPlaybackMode) private var currentPlaybackMode
 
     private func shortcut(_ action: KeymapAction) -> KeyboardShortcut {
@@ -172,6 +176,10 @@ struct AppCommands: Commands {
             }
             .keyboardShortcut("i", modifiers: [.command, .option])
             .accessibilityIdentifier("toggleInspectorMenuItem")
+
+            Divider()
+
+            workspaceMenu
 
             Divider()
 

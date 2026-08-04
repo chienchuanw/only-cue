@@ -95,14 +95,27 @@ final class LTCAudioReaderTests: XCTestCase {
         )
         defer { try? FileManager.default.removeItem(at: url) }
 
-        let decoded = try await LTCAudioReader.detectTimecodes(from: url)
-        let first = try XCTUnwrap(decoded.first?.timecode)
+        let detection = try await LTCAudioReader.detectTimecodes(from: url)
+        let result = try XCTUnwrap(detection)
+        let first = try XCTUnwrap(result.frames.first?.timecode)
         XCTAssertEqual(first.rate, .fps25)
         // The leading partial frame may be clipped, same one-frame slack the
         // mono round-trip test allows.
         XCTAssertLessThanOrEqual(first.frameCount - start.frameCount, 1)
         XCTAssertGreaterThanOrEqual(first.frameCount, start.frameCount)
-        XCTAssertGreaterThanOrEqual(decoded.count, 8)
+        XCTAssertGreaterThanOrEqual(result.frames.count, 8)
+        // LTC is on channel index 1 (right channel); channel 0 is music.
+        XCTAssertEqual(result.channel, 1, "detection must report the channel carrying LTC")
+    }
+
+    // A file with no LTC on any channel must yield nil — no channel index.
+    func test_detectTimecodes_noLTC_returnsNil() async throws {
+        let silence = [Float](repeating: 0, count: 48_000)
+        let url = try writeWav(channels: [silence, silence], sampleRate: 48_000)
+        defer { try? FileManager.default.removeItem(at: url) }
+
+        let result = try await LTCAudioReader.detectTimecodes(from: url)
+        XCTAssertNil(result, "a file with no LTC must return nil, not a channel index")
     }
 
     // The headline case, and the one the `AVChannelLayoutKey` code exists for:
@@ -124,11 +137,13 @@ final class LTCAudioReaderTests: XCTestCase {
         )
         defer { try? FileManager.default.removeItem(at: url) }
 
-        let decoded = try await LTCAudioReader.detectTimecodes(from: url)
-        let first = try XCTUnwrap(decoded.first?.timecode)
+        let detection6 = try await LTCAudioReader.detectTimecodes(from: url)
+        let result = try XCTUnwrap(detection6)
+        let first = try XCTUnwrap(result.frames.first?.timecode)
         XCTAssertEqual(first.rate, .fps25)
         XCTAssertLessThanOrEqual(first.frameCount - start.frameCount, 1)
         XCTAssertGreaterThanOrEqual(first.frameCount, start.frameCount)
+        XCTAssertEqual(result.channel, 5, "LTC is on the last (index 5) of 6 channels")
 
         // Non-vacuity: the down-mix of the same file finds nothing.
         let downmixed = try await LTCAudioReader.decodeTimecodes(from: url)
@@ -142,7 +157,7 @@ final class LTCAudioReaderTests: XCTestCase {
         let url = try writeWav(ltc, sampleRate: 48_000)
         defer { try? FileManager.default.removeItem(at: url) }
 
-        let task = Task { try await LTCAudioReader.detectTimecodes(from: url) }
+        let task = Task<LTCAudioReader.DetectionResult?, Error> { try await LTCAudioReader.detectTimecodes(from: url) }
         task.cancel()
         do {
             _ = try await task.value
@@ -186,8 +201,8 @@ final class LTCAudioReaderTests: XCTestCase {
         let ungated = try await LTCAudioReader.decodeTimecodes(from: url)
         XCTAssertEqual(ungated.count, 1)
 
-        let decoded = try await LTCAudioReader.detectTimecodes(from: url)
-        XCTAssertTrue(decoded.isEmpty, "a lone uncorroborated frame must not be returned")
+        let result = try await LTCAudioReader.detectTimecodes(from: url)
+        XCTAssertNil(result, "a lone uncorroborated frame must not be returned")
     }
 
     func test_channel_slicesInterleavedSamplesAndPassesMonoThrough() {
@@ -222,13 +237,14 @@ final class LTCAudioReaderTests: XCTestCase {
         defer { try? FileManager.default.removeItem(at: url) }
 
         let narrow = try await LTCAudioReader.detectTimecodes(from: url, windows: [10])
-        XCTAssertTrue(
-            narrow.isEmpty,
+        XCTAssertNil(
+            narrow,
             "the 10 s window alone must not find it — otherwise this test proves nothing"
         )
-        let decoded = try await LTCAudioReader.detectTimecodes(from: url)
-        XCTAssertEqual(try XCTUnwrap(decoded.first?.timecode).rate, .fps25)
-        XCTAssertGreaterThanOrEqual(decoded.count, 20)
+        let detectionWide = try await LTCAudioReader.detectTimecodes(from: url)
+        let result = try XCTUnwrap(detectionWide)
+        XCTAssertEqual(try XCTUnwrap(result.frames.first?.timecode).rate, .fps25)
+        XCTAssertGreaterThanOrEqual(result.frames.count, 20)
     }
 
     func test_readMonoSamples_roundTripsThroughWrittenFile() async throws {

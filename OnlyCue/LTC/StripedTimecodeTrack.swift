@@ -17,14 +17,34 @@ struct StripedTimecodeTrack: Equatable, Sendable {
     let anchorTimecode: Timecode
     /// Playback position, in seconds, that `anchorTimecode` corresponds to.
     let anchorPlaybackSeconds: TimeInterval
+    /// Zero-based index of the audio channel that carries the LTC signal.
+    /// Used by downstream features (music-only playback, music-only waveform) to
+    /// exclude the timecode channel from the output.
+    let ltcChannel: Int
 
-    init(anchorTimecode: Timecode, anchorPlaybackSeconds: TimeInterval) {
+    init(anchorTimecode: Timecode, anchorPlaybackSeconds: TimeInterval, ltcChannel: Int = 0) {
         self.anchorTimecode = anchorTimecode
         self.anchorPlaybackSeconds = anchorPlaybackSeconds
+        self.ltcChannel = ltcChannel
+    }
+
+    /// Anchor on the detected channel's first decoded frame. `nil` if no frames
+    /// were recovered (or `sampleRate <= 0`) — i.e. the file has no readable LTC.
+    init?(detection: LTCAudioReader.DetectionResult, sampleRate: Double) {
+        guard let first = detection.frames.first, sampleRate > 0 else { return nil }
+        self.init(
+            anchorTimecode: first.timecode,
+            anchorPlaybackSeconds: Double(first.startSample) / sampleRate,
+            ltcChannel: detection.channel
+        )
     }
 
     /// Anchor on the first decoded frame. `nil` if no frames were recovered (or
     /// `sampleRate <= 0`) — i.e. the file has no readable LTC.
+    ///
+    /// - Note: This initialiser does not know which channel the frames came from;
+    ///   it defaults `ltcChannel` to 0. Prefer `init?(detection:sampleRate:)` when
+    ///   the channel index is available (i.e. from `LTCAudioReader.detectTimecodes`).
     init?(decodedFrames: [LTCDecoder.DecodedFrame], sampleRate: Double) {
         guard let first = decodedFrames.first, sampleRate > 0 else { return nil }
         self.init(anchorTimecode: first.timecode, anchorPlaybackSeconds: Double(first.startSample) / sampleRate)

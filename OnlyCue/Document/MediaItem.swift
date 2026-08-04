@@ -1,6 +1,6 @@
 import Foundation
 
-struct MediaItem: Codable, Identifiable, Equatable {
+struct MediaItem: Identifiable, Equatable {
     var id: UUID
     var media: MediaReference
     var cues: [Cue]
@@ -19,6 +19,61 @@ struct MediaItem: Codable, Identifiable, Equatable {
     /// Last grandMA2 push destination for this clip (#683). nil until the clip
     /// is first pushed. Schema v17.
     var ma2PushTarget: MA2PushTarget?
+    /// Per-clip source-audio playback preference (#715). When `false` (the
+    /// default, "music-only"), the LTC timecode tone channel is muted during
+    /// playback so the audience hears only the music content. When `true`
+    /// ("original"), the file plays back as-is — timecode tone included.
+    /// This is a user-facing preference distinct from `ltcMuted`, which
+    /// controls LTC *output* (the encoder → console path) regardless of what
+    /// the speaker hears. Schema v19.
+    var playsOriginalSourceAudio: Bool = false
+}
+
+// MARK: - Codable
+
+extension MediaItem: Codable {
+
+    // Explicit CodingKeys so that new Bool fields with property defaults can
+    // use `decodeIfPresent` — Swift's synthesized `Decodable` throws on a
+    // missing required key even when a property default exists.
+    enum CodingKeys: String, CodingKey {
+        case id
+        case media
+        case cues
+        case startTimecodeFrames
+        case ltcMuted
+        case alternateName
+        case lyrics
+        case ma2PushTarget
+        case playsOriginalSourceAudio
+    }
+
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        id = try container.decode(UUID.self, forKey: .id)
+        media = try container.decode(MediaReference.self, forKey: .media)
+        cues = try container.decode([Cue].self, forKey: .cues)
+        startTimecodeFrames = try container.decodeIfPresent(Int.self, forKey: .startTimecodeFrames) ?? 0
+        ltcMuted = try container.decodeIfPresent(Bool.self, forKey: .ltcMuted) ?? false
+        alternateName = try container.decodeIfPresent(String.self, forKey: .alternateName)
+        lyrics = try container.decodeIfPresent(Lyrics.self, forKey: .lyrics) ?? .empty
+        ma2PushTarget = try container.decodeIfPresent(MA2PushTarget.self, forKey: .ma2PushTarget)
+        // v18 documents lack this key; default to false (music-only).
+        playsOriginalSourceAudio = try container.decodeIfPresent(Bool.self, forKey: .playsOriginalSourceAudio) ?? false
+    }
+
+    func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        try container.encode(id, forKey: .id)
+        try container.encode(media, forKey: .media)
+        try container.encode(cues, forKey: .cues)
+        try container.encode(startTimecodeFrames, forKey: .startTimecodeFrames)
+        try container.encode(ltcMuted, forKey: .ltcMuted)
+        try container.encodeIfPresent(alternateName, forKey: .alternateName)
+        try container.encode(lyrics, forKey: .lyrics)
+        try container.encodeIfPresent(ma2PushTarget, forKey: .ma2PushTarget)
+        try container.encode(playsOriginalSourceAudio, forKey: .playsOriginalSourceAudio)
+    }
 }
 
 extension MediaItem {

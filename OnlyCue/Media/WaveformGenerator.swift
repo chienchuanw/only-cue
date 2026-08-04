@@ -157,6 +157,14 @@ private struct RMSAccumulator {
     /// Number of contributing channels per frame (1 for the mono path, or
     /// `totalChannels - 1` for the music-only path). Used when normalising the
     /// RMS denominator so the scale is comparable across paths.
+    ///
+    /// **Denominator asymmetry note:** the mono `ingest(samples:)` helper divides
+    /// mid-stream bucket closures by `samplesInBucket` alone and never reads this
+    /// field (it is always 1 on the mono path). Only the multi-channel
+    /// `ingest(interleavedSamples:...)` path uses `musicChannelsPerFrame` in its
+    /// denominator. If a future refactor merges these two paths, the mid-stream
+    /// bucket closure must NOT blindly apply `musicChannelsPerFrame` to the mono
+    /// path — doing so would silently introduce a 2× denominator error there.
     let musicChannelsPerFrame: Int
     private(set) var peaks: [Float]
     private var bucketIndex = 0
@@ -210,6 +218,10 @@ private struct RMSAccumulator {
 
     mutating func finalize() -> [Float] {
         if bucketIndex < resolution && samplesInBucket > 0 {
+            // `musicChannelsPerFrame` is 1 on the mono path (see property note
+            // above), so this formula is correct for both paths: on mono it
+            // reduces to `samplesInBucket`; on the multi-channel path it divides
+            // by frames × contributing-channels to obtain the true per-sample RMS.
             let denom = Float(samplesInBucket) * Float(musicChannelsPerFrame)
             peaks[bucketIndex] = (bucketSumSq / denom).squareRoot()
         }

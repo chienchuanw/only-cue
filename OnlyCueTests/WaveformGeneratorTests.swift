@@ -153,7 +153,10 @@ final class WaveformGeneratorTests: XCTestCase {
         let allMax = allChannelPeaks.max() ?? 0
         let musicMax = musicOnlyPeaks.max() ?? 0
         XCTAssertGreaterThan(allMax, 0.5, "all-channel peaks must reflect the loud ch1 tone")
-        XCTAssertGreaterThan(musicMax, 0.5, "music-only peaks normalized to ch0 content must reach 1.0 after normalization")
+        // Normalization scales any non-silent result to max ≈ 1.0, so the real
+        // assertion is that the normalized max reaches that ceiling — this is the
+        // property we actually want to document, not the vacuous "> 0.5" bound.
+        XCTAssertEqual(musicMax, 1.0, accuracy: 0.01, "music-only peaks must be normalized to 1.0")
         // The raw (pre-normalization) content of ch0 is ~10× quieter than ch1, so
         // with both channels the mix is dominated by ch1; excluding ch1 gives a
         // different shape. We assert the bucket arrays are not identical.

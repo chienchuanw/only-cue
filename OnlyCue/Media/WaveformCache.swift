@@ -15,8 +15,8 @@ struct WaveformCache {
         return Self(directory: base.appendingPathComponent("OnlyCue/peaks", isDirectory: true))
     }()
 
-    func read(assetHash: String, resolution: Int) -> [Float]? {
-        let url = entryURL(assetHash: assetHash, resolution: resolution)
+    func read(assetHash: String, resolution: Int, excludingChannel: Int? = nil) -> [Float]? {
+        let url = entryURL(assetHash: assetHash, resolution: resolution, excludingChannel: excludingChannel)
         guard let data = try? Data(contentsOf: url) else { return nil }
         let count = data.count / MemoryLayout<Float32>.size
         guard count == resolution else { return nil }
@@ -25,12 +25,15 @@ struct WaveformCache {
         }
     }
 
-    func write(_ peaks: [Float], assetHash: String, resolution: Int) throws {
+    func write(_ peaks: [Float], assetHash: String, resolution: Int, excludingChannel: Int? = nil) throws {
         try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
         let data = peaks.withUnsafeBufferPointer { buffer in
             Data(buffer: buffer)
         }
-        try data.write(to: entryURL(assetHash: assetHash, resolution: resolution), options: .atomic)
+        try data.write(
+            to: entryURL(assetHash: assetHash, resolution: resolution, excludingChannel: excludingChannel),
+            options: .atomic
+        )
     }
 
     /// Bumped to v2 when peaks became per-file normalized (issue #538), and to
@@ -41,8 +44,15 @@ struct WaveformCache {
 
     /// Internal (not private) so tests can locate a specific cache entry without
     /// hard-coding the on-disk filename format (which embeds `formatVersion`).
-    func entryURL(assetHash: String, resolution: Int) -> URL {
-        directory.appendingPathComponent("\(assetHash)-\(resolution)-v\(Self.formatVersion).peaks")
+    ///
+    /// When `excludingChannel` is non-nil the filename includes an `xc<N>` suffix
+    /// so a music-only render (e.g. `xc1` = "exclude channel 1") never collides
+    /// with the all-channel downmix entry for the same file and resolution.
+    func entryURL(assetHash: String, resolution: Int, excludingChannel: Int? = nil) -> URL {
+        let channelSuffix = excludingChannel.map { "-xc\($0)" } ?? ""
+        return directory.appendingPathComponent(
+            "\(assetHash)-\(resolution)\(channelSuffix)-v\(Self.formatVersion).peaks"
+        )
     }
 
     static func fileHash(_ url: URL) throws -> String {

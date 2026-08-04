@@ -50,6 +50,55 @@ final class WaveformCacheTests: XCTestCase {
         XCTAssertNotEqual(hashA, hashB)
     }
 
+    // MARK: - Channel exclusion cache keys (#715)
+
+    func test_entryURL_withExcludedChannel_differsFromDefaultKey() {
+        let cache = makeIsolatedCache()
+        let defaultURL = cache.entryURL(assetHash: "abc", resolution: 32, excludingChannel: nil)
+        let musicOnlyURL = cache.entryURL(assetHash: "abc", resolution: 32, excludingChannel: 1)
+        XCTAssertNotEqual(
+            defaultURL,
+            musicOnlyURL,
+            "music-only render (excludingChannel: 1) must not collide with all-channel render"
+        )
+    }
+
+    func test_entryURL_sameExcludedChannel_isStable() {
+        let cache = makeIsolatedCache()
+        let urlFirst = cache.entryURL(assetHash: "abc", resolution: 32, excludingChannel: 1)
+        let urlSecond = cache.entryURL(assetHash: "abc", resolution: 32, excludingChannel: 1)
+        XCTAssertEqual(urlFirst, urlSecond, "same exclusion must produce the same cache URL (no collision)")
+    }
+
+    func test_entryURL_differentExcludedChannels_differ() {
+        let cache = makeIsolatedCache()
+        let ch1 = cache.entryURL(assetHash: "abc", resolution: 32, excludingChannel: 1)
+        let ch0 = cache.entryURL(assetHash: "abc", resolution: 32, excludingChannel: 0)
+        XCTAssertNotEqual(ch1, ch0, "excluding ch0 vs ch1 must produce different cache keys")
+    }
+
+    func test_writeThenRead_withExcludedChannel_roundTrips() throws {
+        let cache = makeIsolatedCache()
+        let peaks: [Float] = [0.1, 0.9, 0.5]
+
+        try cache.write(peaks, assetHash: "xyz", resolution: 3, excludingChannel: 1)
+        let recovered = cache.read(assetHash: "xyz", resolution: 3, excludingChannel: 1)
+
+        XCTAssertEqual(recovered, peaks)
+    }
+
+    func test_writeThenRead_excludedChannelDoesNotCollideWithDefault() throws {
+        let cache = makeIsolatedCache()
+        let defaultPeaks: [Float] = [0.0, 0.5, 1.0]
+        let musicPeaks: [Float] = [0.2, 0.4, 0.6]
+
+        try cache.write(defaultPeaks, assetHash: "xyz", resolution: 3, excludingChannel: nil)
+        try cache.write(musicPeaks, assetHash: "xyz", resolution: 3, excludingChannel: 1)
+
+        XCTAssertEqual(cache.read(assetHash: "xyz", resolution: 3, excludingChannel: nil), defaultPeaks)
+        XCTAssertEqual(cache.read(assetHash: "xyz", resolution: 3, excludingChannel: 1), musicPeaks)
+    }
+
     private func makeIsolatedCache() -> WaveformCache {
         let directory = FileManager.default.temporaryDirectory
             .appendingPathComponent("waveform-cache-test-\(UUID().uuidString)")

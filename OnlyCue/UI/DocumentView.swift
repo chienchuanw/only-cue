@@ -38,6 +38,11 @@ struct DocumentView: View {
     /// impossible width does. Accessed by the extension in
     /// DocumentView+Workspace.swift — `private` can't reach across files.
     @State var pendingSidebarWidthValue: CGFloat = -1
+    /// The window's content width, measured live so preset application can
+    /// clamp against what is actually there (spec decision 8).
+    /// `internal`, not `private`: written by the background modifier in
+    /// DocumentView+Workspace.swift.
+    @State var availableWindowWidth: CGFloat = 0
     /// Shared waveform zoom/scroll — waveform + LTC strip stay collinear (#669).
     /// `internal`, not `private`: used by the extension in DocumentView+LTCStrip.swift.
     @State var waveformZoom = WaveformZoomController()
@@ -156,6 +161,7 @@ struct DocumentView: View {
         .midiInputHost(engine: engine, document: document, undoManager: undoManager, editorMode: editorMode, showGoTypeID: showGoTypeID)
         .ltcOutput(engine: engine, document: document)
         .environment(\.projectFramerate, document.model.timecodeSettings.framerate)
+        .workspaceHosted(for: self)
     }
 
     private var mainPane: some View {

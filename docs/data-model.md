@@ -71,7 +71,7 @@ UTType: `com.onlycue.cuelist`, conforms to `public.data`. Finder Kind: "OnlyCue 
 
 ```swift
 struct ProjectModel: Codable {
-    static let currentSchemaVersion = 14
+    static let currentSchemaVersion = 19
 
     var schemaVersion: Int
     var id: UUID
@@ -107,12 +107,14 @@ struct CuePointType: Codable, Identifiable, Equatable {
 
 struct MediaItem: Codable, Identifiable, Equatable {
     var id: UUID
-    var media: MediaReference     // non-optional — items only exist after import
+    var media: MediaReference          // non-optional — items only exist after import
     var cues: [Cue]
-    var startTimecodeFrames: Int  // since v10; per-clip start timecode
-    var ltcMuted: Bool            // since v10; per-clip LTC channel mute
-    var alternateName: String?    // since v12; per-clip display-name override
-    var lyrics: Lyrics            // since v13; timestamped lyrics (ADR-022)
+    var startTimecodeFrames: Int       // since v10; per-clip start timecode
+    var ltcMuted: Bool                 // since v10; per-clip LTC output channel mute
+    var alternateName: String?         // since v12; per-clip display-name override
+    var lyrics: Lyrics                 // since v13; timestamped lyrics (ADR-022)
+    var ma2PushTarget: MA2PushTarget?  // since v17; last MA2 push destination (#683)
+    var playsOriginalSourceAudio: Bool // since v19; false = music-only (default), true = play with timecode tone (#715)
 }
 
 struct LyricLine: Codable, Identifiable, Equatable {
@@ -202,10 +204,12 @@ enum MediaKind: String, Codable {
 | `tempoMap` (per `MediaItem`) | Since v8. A `TempoMap` of `TempoSection`s — an empty map means "no tempo grid". Persisted per media item. The map is normalized on construction: sections sorted by `startSeconds`, de-duplicated by start (last wins), the first section forced to `startSeconds == 0`, and each section's `downbeatOffsetSeconds` reduced into `[0, barDuration)`. `bpm` is clamped to `[20, 400]` and `beatsPerBar` to `>= 1`. It is a visual + snap aid only — it does not move cues (ADR-020). Mutated via `CueCommands` (epic #199); the DSP tempo analyzer can seed a section's `bpm` + `downbeatOffsetSeconds`. v7 → v8 migration seeds an empty map on every item. |
 | `playbackMode` | Since v15. End-of-media transport policy — `"playOnce"` (default; transport pauses at end of media), `"loop"` (seek to 0 and continue, rate preserved), or `"autoNext"` (advance `activeItemID` to the next item in `items[]` and resume playback; stops at the end of the list). Set via the Playback menu and routed through `CueCommands.setPlaybackMode`. Loop and Auto-Next transitions are *suppressed* while LTC output is enabled — the dispatcher posts `.ltcInterlockEngaged` and leaves the mode unchanged so it resumes when LTC is disabled. v14 → v15 seeds `.playOnce` so existing documents preserve the pre-v15 behavior. |
 | `item.lyrics` | Since v13; `LyricLine.time` made optional at v14. A `Lyrics` — `[LyricLine]` in authoring order plus `offsetSeconds`. Empty (`.empty`) means no lyrics. A reference / playback-HUD layer decoupled from cues (ADR-022). `LyricLine.time` is song-relative and **optional** — `nil` means the line is *unplaced* (text but no timestamp yet); `placedLines` / `unplacedLines` split the array. `offsetSeconds` is the media time the song begins at; `effectiveTime = time + offset` for placed lines. Authored directly on the waveform in Lyric mode (ADR-023), routed through `CueCommands` (`setLyrics` / `setLyricsOffset` / `setLyricLines` / `pasteLyrics` / `placeLyricLine` / `unplaceLyricLine` / `deleteLyricLine`). v12 → v13 seeds an empty `Lyrics`; v13 → v14 makes `time` optional. |
+| `item.ma2PushTarget` | Since v17. Optional `MA2PushTarget` — the last grandMA2 push destination for this clip (#683). `nil` until the clip is first pushed. `MA2PushTarget` holds the console address and executor number. v16 → v17 migration leaves it `nil` for all existing items. |
+| `item.playsOriginalSourceAudio` | Since v19. `Bool`, default `false`. User-facing per-clip source-audio playback preference (#715). `false` = music-only: the LTC timecode tone channel is muted during playback so the audience hears only the music content. `true` = original: the file plays back as-is, timecode tone included. Distinct from `ltcMuted`, which gates the LTC *output* (encoder → console path). v18 → v19 migration seeds `false` on all existing items. |
 
 ## Versioning policy
 
-- `schemaVersion: 15` is the current file. We will **never** mutate v15 semantics; new fields go in v16.
+- `schemaVersion: 19` is the current file. We will **never** mutate v19 semantics; new fields go in v20.
 - Adding optional fields → old readers ignore unknown keys via `Codable`; no version bump required.
 - Adding a required field, or removing / repurposing a field → bump `schemaVersion` and write a migration.
 - Migrations are pure functions `(JSONvN) -> ProjectModel`, applied during `ProjectModel.decode(from:)`. Pre-v4 chains run `assignCueNumbersBySort` so cues land with sequential `cueNumber` values; every chain backfills `fadeTime = .symmetric(0)` at the cue boundary so pre-v5 sources land with a valid `fadeTime`; every chain drops the legacy per-cue `colorHex` at the boundary so any pre-v6 source lands with color resolving via the Type; every chain seeds `timecodeSettings = .default` so any pre-v7 source lands with valid timecode settings; and every chain lands an empty `tempoMap` on every item so any pre-v8 source has a valid (empty) tempo map:
@@ -219,7 +223,10 @@ enum MediaKind: String, Codable {
   - **v12 → current**: keeps everything; seeds an empty `Lyrics` on every item (`MediaItem.lyrics`, ADR-022). The intervening v8–v11 schema bumps (from earlier epics) are additive in the same way.
   - **v13 → current**: keeps everything; `LyricLine.time` became optional (`nil` = unplaced, ADR-023). A v13 lyric line always wrote a concrete `time`, which decodes straight into the optional. Delegates to the v14 migration so the post-v14 `playbackMode` default is seeded uniformly.
   - **v14 → current**: keeps every top-level field; seeds `playbackMode = .playOnce` on every document so existing `.cuelist` files preserve the pre-v15 "stop at end of media" behavior.
-- v15 is a one-way upgrade: every prior build (v1 through v14) cannot open v15 files.
+  - **v16 → current**: keeps everything; adds `playbackMode = .playOnce` (same as v15 migration) when loading a v16 document that omits it.
+  - **v17 → current**: keeps everything; `MA2PushTarget` gains optional `sequenceName` — missing key decodes to `nil`.
+  - **v18 → current**: keeps everything; seeds `playsOriginalSourceAudio = false` on every item (missing key → `false`, music-only default).
+- v19 is a one-way upgrade: every prior build (v1 through v18) cannot open v19 files.
 
 ## Bookmark behavior
 

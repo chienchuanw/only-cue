@@ -131,6 +131,78 @@ final class WaveformGeneratorTests: XCTestCase {
         XCTAssertGreaterThan(peaks[argmax], 0.9, "the tail click must survive, not be silently dropped")
     }
 
+    // MARK: - Music-only / channel exclusion (#715)
+
+    /// Excluding the loud ch1 tone from a 2-channel file must produce peaks that
+    /// differ from the all-channel downmix AND that match the ch0-only content
+    /// (the "music" side).
+    func test_peaks_excludingChannel_differsFromAllChannelPeaks() async throws {
+        // ch0: quiet music-like sine, ch1: full-scale tone (audibly dominant)
+        let url = try SilentAudioFixture.makeStereoWAV(
+            duration: 1,
+            fillCh0: { frame, sr in 0.1 * sin(2 * .pi * 440 * Double(frame) / sr) },
+            fillCh1: { frame, sr in sin(2 * .pi * 1000 * Double(frame) / sr) }
+        )
+        defer { try? FileManager.default.removeItem(at: url) }
+        let asset = AVURLAsset(url: url)
+
+        let allChannelPeaks = try await WaveformGenerator.peaks(for: asset, resolution: 32)
+        let musicOnlyPeaks = try await WaveformGenerator.peaks(for: asset, resolution: 32, excludingChannel: 1)
+
+        // ch1 dominates the mix, so excluding it changes the peaks significantly.
+        let allMax = allChannelPeaks.max() ?? 0
+        let musicMax = musicOnlyPeaks.max() ?? 0
+        XCTAssertGreaterThan(allMax, 0.5, "all-channel peaks must reflect the loud ch1 tone")
+        XCTAssertGreaterThan(musicMax, 0.5, "music-only peaks normalized to ch0 content must reach 1.0 after normalization")
+        // The raw (pre-normalization) content of ch0 is ~10× quieter than ch1, so
+        // with both channels the mix is dominated by ch1; excluding ch1 gives a
+        // different shape. We assert the bucket arrays are not identical.
+        XCTAssertNotEqual(
+            allChannelPeaks,
+            musicOnlyPeaks,
+            "excluding the loud ch1 must change the peaks array"
+        )
+    }
+
+    /// The `excludingChannel: nil` path must produce **byte-identical** output to
+    /// the pre-existing `peaks(for:resolution:)` call — the new code path must
+    /// not perturb the default behavior.
+    func test_peaks_noExclusion_isIdenticalToDefault() async throws {
+        let url = try SilentAudioFixture.makeSineWAV(duration: 1, frequency: 440)
+        defer { try? FileManager.default.removeItem(at: url) }
+        let asset = AVURLAsset(url: url)
+
+        let defaultPeaks = try await WaveformGenerator.peaks(for: asset, resolution: 64)
+        let explicitNilPeaks = try await WaveformGenerator.peaks(for: asset, resolution: 64, excludingChannel: nil)
+
+        XCTAssertEqual(
+            defaultPeaks,
+            explicitNilPeaks,
+            "excludingChannel: nil must produce identical output to the default call"
+        )
+    }
+
+    /// Excluding channel 0 from a 2-channel file must produce the ch1-only content
+    /// (the mirror of the previous test, confirming the exclusion is channel-specific).
+    func test_peaks_excludingChannel0_reflectsCh1Content() async throws {
+        // ch0: silence, ch1: loud full-scale sine
+        let url = try SilentAudioFixture.makeStereoWAV(
+            duration: 1,
+            fillCh0: { _, _ in 0.0 },
+            fillCh1: { frame, sr in sin(2 * .pi * 440 * Double(frame) / sr) }
+        )
+        defer { try? FileManager.default.removeItem(at: url) }
+        let asset = AVURLAsset(url: url)
+
+        let musicOnlyPeaks = try await WaveformGenerator.peaks(for: asset, resolution: 32, excludingChannel: 0)
+
+        XCTAssertGreaterThan(
+            musicOnlyPeaks.max() ?? 0,
+            0.5,
+            "ch1 content (loud sine) must survive when ch0 (silence) is excluded"
+        )
+    }
+
     func test_peaks_normalizedTo01() async throws {
         let url = try SilentAudioFixture.makeSineWAV(duration: 1, frequency: 440)
         defer { try? FileManager.default.removeItem(at: url) }

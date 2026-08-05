@@ -343,15 +343,20 @@ extension PreviewPane {
     }
 
     /// Small badge shown in the top-leading corner of the waveform well when
-    /// LTC is detected on the active clip. Displays the detected start timecode.
+    /// LTC is detected on the active clip. Names the LTC channel, its muted
+    /// state, and the detected start timecode.
     /// Absent when `stripedTimecode` is nil (no LTC detected).
     fileprivate func ltcDetectedBadge(track: StripedTimecodeTrack) -> some View {
-        let displayString = track.anchorTimecode.displayString
+        let badgeText = LTCBadgeLabel.text(
+            channel: track.ltcChannel,
+            channelCount: nil,   // not cheaply available here; index mapping covers the common stereo case
+            startTimecode: track.anchorTimecode.displayString
+        )
         return HStack(spacing: DS.Space.xs) {
             Image(systemName: "timecode")
                 .font(DS.Text.monoSmall)
                 .foregroundStyle(DS.Color.textSecondary)
-            Text(displayString)
+            Text(badgeText)
                 .font(DS.Text.monoSmall)
                 .foregroundStyle(DS.Color.textSecondary)
         }
@@ -360,7 +365,7 @@ extension PreviewPane {
         .background(DS.Color.panel.opacity(0.9))
         .clipShape(RoundedRectangle(cornerRadius: DS.Radius.sm))
         .accessibilityIdentifier("ltcDetectedBadge")
-        .accessibilityLabel("LTC detected — start \(displayString)")
-        .help("LTC detected — start \(displayString)")
+        .accessibilityLabel(badgeText)
+        .help(badgeText)
     }
 }

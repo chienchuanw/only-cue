@@ -10,6 +10,9 @@ import SwiftUI
 struct WaveformLoadKey: Hashable {
     let url: URL
     let excludingChannel: Int?
+    /// Whether the "Split Channels" toggle is on. Part of the key so flipping the
+    /// toggle re-fires the load task, populating (or clearing) `lanePeaks` (#720).
+    let split: Bool
 }
 
 struct WaveformContainer: View {
@@ -48,6 +51,9 @@ struct WaveformContainer: View {
     // zoom controller's auto-follow gate; synced on appear and on change so a
     // media load (which resets zoom/offset) can't silently flip it back on.
     @AppStorage("autoScrollWaveform") var autoScrollWaveform = true
+    /// "Split Channels" preference (#720), default off. When on, the waveform is
+    /// rendered as stacked per-channel lanes instead of a single downmix.
+    @AppStorage("splitWaveformChannels") private var splitChannels = false
 
     @State var pinchBaseline: CGFloat = 1
     @State var isHoveringWaveform = false
@@ -75,7 +81,11 @@ struct WaveformContainer: View {
                     .accessibilityIdentifier("waveformLoading")
             }
         }
-        .task(id: WaveformLoadKey(url: asset.url, excludingChannel: stripedTimecode?.ltcChannel)) {
+        .task(id: WaveformLoadKey(
+            url: asset.url,
+            excludingChannel: stripedTimecode?.ltcChannel,
+            split: splitChannels
+        )) {
             await load()
         }
         .onAppear { zoom.followsPlayhead = autoScrollWaveform }

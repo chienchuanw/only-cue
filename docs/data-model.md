@@ -105,7 +105,8 @@ struct CuePointType: Codable, Identifiable, Equatable {
     var isExportEnabled: Bool           // reserved for the export filter (#34)
 }
 
-struct MediaItem: Codable, Identifiable, Equatable {
+// Codable conformance (init(from:)/encode(to:)) lives in an extension — hand-written for migration safety.
+struct MediaItem: Identifiable, Equatable {
     var id: UUID
     var media: MediaReference          // non-optional — items only exist after import
     var cues: [Cue]

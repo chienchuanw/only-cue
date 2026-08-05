@@ -111,6 +111,42 @@ final class CueCommandsTimecodeTests: XCTestCase {
         XCTAssertFalse(undo.canUndo)
     }
 
+    // MARK: - setPlaysOriginalSourceAudio
+
+    func test_setPlaysOriginalSourceAudio_flipsField_andIsUndoable() throws {
+        let doc = CueListDocument()
+        let item = Self.fixtureItem()
+        doc.model.items = [item]
+        let undo = makeUndoManager()
+
+        CueCommands.setPlaysOriginalSourceAudio(itemID: item.id, playsOriginal: true, document: doc, undoManager: undo)
+        XCTAssertTrue(doc.model.items[0].playsOriginalSourceAudio)
+
+        undo.undo()
+        XCTAssertFalse(doc.model.items[0].playsOriginalSourceAudio)
+        undo.redo()
+        XCTAssertTrue(doc.model.items[0].playsOriginalSourceAudio)
+    }
+
+    func test_setPlaysOriginalSourceAudio_noOpWhenUnchanged_registersNoUndo() throws {
+        let doc = CueListDocument()
+        let item = Self.fixtureItem()
+        doc.model.items = [item]
+        let undo = makeUndoManager()
+
+        // Default is false; calling with false is unchanged — no undo registered.
+        CueCommands.setPlaysOriginalSourceAudio(itemID: item.id, playsOriginal: false, document: doc, undoManager: undo)
+        XCTAssertFalse(undo.canUndo)
+        XCTAssertFalse(doc.model.items[0].playsOriginalSourceAudio)
+    }
+
+    func test_setPlaysOriginalSourceAudio_unknownItemID_isANoOp() throws {
+        let doc = CueListDocument()
+        let undo = makeUndoManager()
+        CueCommands.setPlaysOriginalSourceAudio(itemID: UUID(), playsOriginal: true, document: doc, undoManager: undo)
+        XCTAssertFalse(undo.canUndo)
+    }
+
     private static func fixtureItem() -> MediaItem {
         MediaItem(
             id: UUID(),

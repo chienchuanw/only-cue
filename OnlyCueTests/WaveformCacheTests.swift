@@ -120,6 +120,61 @@ final class WaveformCacheTests: XCTestCase {
         )
     }
 
+    // MARK: - Per-channel cache keys (#720)
+
+    func test_perChannel_writeThenRead_roundTripsEachChannel() throws {
+        let cache = makeIsolatedCache()
+        let ch0Peaks: [Float] = [0.1, 0.2, 0.3]
+        let ch1Peaks: [Float] = [0.7, 0.8, 0.9]
+
+        try cache.write(ch0Peaks, assetHash: "abc", resolution: 3, channel: 0)
+        try cache.write(ch1Peaks, assetHash: "abc", resolution: 3, channel: 1)
+
+        let recoveredCh0 = cache.read(assetHash: "abc", resolution: 3, channel: 0)
+        let recoveredCh1 = cache.read(assetHash: "abc", resolution: 3, channel: 1)
+
+        XCTAssertEqual(recoveredCh0, ch0Peaks, "channel 0 peaks should round-trip")
+        XCTAssertEqual(recoveredCh1, ch1Peaks, "channel 1 peaks should round-trip")
+        XCTAssertNotEqual(recoveredCh0, recoveredCh1, "channel 0 and channel 1 entries must be distinct")
+    }
+
+    func test_perChannel_doesNotCollideWithCombinedEntry() throws {
+        let cache = makeIsolatedCache()
+        let combinedPeaks: [Float] = [0.0, 0.5, 1.0]
+        let ch0Peaks: [Float] = [0.1, 0.2, 0.3]
+
+        try cache.write(combinedPeaks, assetHash: "abc", resolution: 3)
+        try cache.write(ch0Peaks, assetHash: "abc", resolution: 3, channel: 0)
+
+        XCTAssertEqual(
+            cache.read(assetHash: "abc", resolution: 3),
+            combinedPeaks,
+            "combined entry must not be overwritten by channel 0"
+        )
+        XCTAssertEqual(
+            cache.read(assetHash: "abc", resolution: 3, channel: 0),
+            ch0Peaks,
+            "channel 0 entry must not be overwritten by combined"
+        )
+    }
+
+    func test_perChannel_doesNotCollideWithExcludingChannelEntry() {
+        let cache = makeIsolatedCache()
+        let channelURL = cache.entryURL(assetHash: "abc", resolution: 32, channel: 0)
+        let excludingURL = cache.entryURL(assetHash: "abc", resolution: 32, excludingChannel: 0)
+        let combinedURL = cache.entryURL(assetHash: "abc", resolution: 32)
+        XCTAssertNotEqual(
+            channelURL,
+            excludingURL,
+            "channel: 0 key must not collide with excludingChannel: 0 key"
+        )
+        XCTAssertNotEqual(
+            channelURL,
+            combinedURL,
+            "channel: 0 key must not collide with combined key"
+        )
+    }
+
     private func makeIsolatedCache() -> WaveformCache {
         let directory = FileManager.default.temporaryDirectory
             .appendingPathComponent("waveform-cache-test-\(UUID().uuidString)")

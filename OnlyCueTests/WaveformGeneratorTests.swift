@@ -257,6 +257,24 @@ final class WaveformGeneratorTests: XCTestCase {
         }
     }
 
+    // MARK: - Per-channel peak generation (#720)
+
+    /// One normalized peak array per non-excluded channel; the split view draws each lane.
+    func test_channelPeaks_returnsOnePerMusicChannel_excludingLTC() async throws {
+        let asset = try Self.twoChannelFixture(music: 0, ltcLike: 1)
+        let lanes = try await WaveformGenerator.channelPeaks(for: asset, resolution: 200, excludingChannel: 1)
+        XCTAssertEqual(lanes.count, 1)                 // only the music channel remains
+        XCTAssertEqual(lanes[0].count, 200)
+        // With no exclusion on a 2-ch file, both channels come back:
+        let both = try await WaveformGenerator.channelPeaks(for: asset, resolution: 200, excludingChannel: nil)
+        XCTAssertEqual(both.count, 2)
+        XCTAssertNotEqual(both[0], both[1])            // distinct L/R content
+        // Mono fallback: a mono asset yields exactly one lane == the downmix.
+        let mono = try await Self.monoFixture()
+        let monoLanes = try await WaveformGenerator.channelPeaks(for: mono, resolution: 200, excludingChannel: nil)
+        XCTAssertEqual(monoLanes.count, 1)
+    }
+
     // MARK: - Fixtures
 
     /// A 2-channel WAV with a quiet music-like sine on the `music` channel and a
@@ -283,6 +301,12 @@ final class WaveformGeneratorTests: XCTestCase {
     /// Full-scale ~1 kHz square as an LTC stand-in (LTC is a biphase square).
     static let squareFill: (Int, Double) -> Double = { frame, sr in
         sin(2 * .pi * 1000 * Double(frame) / sr) >= 0 ? 1.0 : -1.0
+    }
+
+    /// A mono WAV asset filled with a 440 Hz sine — the simplest non-silent single-channel fixture.
+    static func monoFixture(duration: TimeInterval = 1) async throws -> AVAsset {
+        let url = try SilentAudioFixture.makeSineWAV(duration: duration, frequency: 440)
+        return AVURLAsset(url: url)
     }
 
     /// Peaks for a mono WAV filled with `fill` — the per-channel reference shape.

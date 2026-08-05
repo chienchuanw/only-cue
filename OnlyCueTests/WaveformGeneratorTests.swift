@@ -261,17 +261,19 @@ final class WaveformGeneratorTests: XCTestCase {
 
     /// One normalized peak array per non-excluded channel; the split view draws each lane.
     func test_channelPeaks_returnsOnePerMusicChannel_excludingLTC() async throws {
-        let asset = try Self.twoChannelFixture(music: 0, ltcLike: 1)
+        let url = try Self.twoChannelFixture(music: 0, ltcLike: 1)
+        defer { try? FileManager.default.removeItem(at: url) }
+        let asset = AVURLAsset(url: url)
         let lanes = try await WaveformGenerator.channelPeaks(for: asset, resolution: 200, excludingChannel: 1)
         XCTAssertEqual(lanes.count, 1)                 // only the music channel remains
         XCTAssertEqual(lanes[0].count, 200)
         // With no exclusion on a 2-ch file, both channels come back:
-        let both = try await WaveformGenerator.channelPeaks(for: asset, resolution: 200, excludingChannel: nil)
+        let both = try await WaveformGenerator.channelPeaks(for: asset, resolution: 200, excludingChannel: Optional<Int>.none)
         XCTAssertEqual(both.count, 2)
         XCTAssertNotEqual(both[0], both[1])            // distinct L/R content
         // Mono fallback: a mono asset yields exactly one lane == the downmix.
-        let mono = try await Self.monoFixture()
-        let monoLanes = try await WaveformGenerator.channelPeaks(for: mono, resolution: 200, excludingChannel: nil)
+        let monoAsset = try await Self.monoFixture()
+        let monoLanes = try await WaveformGenerator.channelPeaks(for: monoAsset, resolution: 200, excludingChannel: Optional<Int>.none)
         XCTAssertEqual(monoLanes.count, 1)
     }
 

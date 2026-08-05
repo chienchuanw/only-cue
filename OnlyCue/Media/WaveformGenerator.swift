@@ -45,6 +45,102 @@ enum WaveformGenerator {
         return normalized(accumulator.finalize())
     }
 
+    /// Per-channel peak generation: returns one normalized peak array per
+    /// non-excluded channel, in ascending channel order. Mono files or an
+    /// out-of-range `excludingChannel` fall back to a single-element array
+    /// equal to `monoDownmixPeaks` so callers can treat the result uniformly.
+    /// Each inner array has length `resolution`.
+    static func channelPeaks(
+        for asset: AVAsset,
+        resolution: Int,
+        excludingChannel: Int?
+    ) async throws -> [[Float]] {
+        guard resolution > 0 else { return [] }
+        guard let track = try await asset.loadTracks(withMediaType: .audio).first else {
+            return [[Float](repeating: 0, count: resolution)]
+        }
+        let channelCount = try await sourceChannelCount(track: track)
+        guard channelCount > 1 else {
+            return [try await monoDownmixPeaks(asset: asset, track: track, resolution: resolution)]
+        }
+        let keptChannels = keptChannelIndices(total: channelCount, excluding: excludingChannel)
+        guard !keptChannels.isEmpty else {
+            return [try await monoDownmixPeaks(asset: asset, track: track, resolution: resolution)]
+        }
+        return try await perChannelPeaks(
+            asset: asset,
+            track: track,
+            resolution: resolution,
+            channelCount: channelCount,
+            keptChannels: keptChannels
+        )
+    }
+
+    /// Returns channel indices to keep, in ascending order, optionally omitting one.
+    private static func keptChannelIndices(total: Int, excluding: Int?) -> [Int] {
+        guard let excl = excluding, excl >= 0, excl < total else { return Array(0..<total) }
+        return (0..<total).filter { $0 != excl }
+    }
+
+    /// Reads `channelCount` channels interleaved and accumulates a separate
+    /// `RMSAccumulator` per entry in `keptChannels`. Returns one normalized
+    /// peak array per kept channel, in the same order.
+    private static func perChannelPeaks(
+        asset: AVAsset,
+        track: AVAssetTrack,
+        resolution: Int,
+        channelCount: Int,
+        keptChannels: [Int]
+    ) async throws -> [[Float]] {
+        let reader = try makeReader(asset: asset, track: track, channels: channelCount)
+        guard reader.startReading() else { throw WaveformError.readerFailed }
+        guard let output = reader.outputs.first as? AVAssetReaderTrackOutput else {
+            throw WaveformError.readerFailed
+        }
+        let totalSamples = try await estimatedSampleCount(asset: asset, resolution: resolution)
+        let spb = max(totalSamples / resolution, 1)
+        // Parallel arrays: keptChannels[i] ↔ accumulators[i].
+        var accumulators = keptChannels.map { _ in
+            RMSAccumulator(resolution: resolution, samplesPerBucket: spb, musicChannelsPerFrame: 1)
+        }
+        while let buffer = output.copyNextSampleBuffer() {
+            try Task.checkCancellation()
+            try ingestBuffer(buffer, into: &accumulators, keptChannels: keptChannels, channelCount: channelCount)
+            CMSampleBufferInvalidate(buffer)
+        }
+        if reader.status == .failed { throw WaveformError.readerFailed }
+        return accumulators.indices.map { idx in normalized(accumulators[idx].finalize()) }
+    }
+
+    /// Copies `buffer` and feeds each kept channel's sample to its accumulator.
+    private static func ingestBuffer(
+        _ buffer: CMSampleBuffer,
+        into accumulators: inout [RMSAccumulator],
+        keptChannels: [Int],
+        channelCount: Int
+    ) throws {
+        guard let blockBuffer = CMSampleBufferGetDataBuffer(buffer) else { return }
+        let length = CMBlockBufferGetDataLength(blockBuffer)
+        var data = Data(count: length)
+        data.withUnsafeMutableBytes { rawBuffer in
+            guard let baseAddress = rawBuffer.baseAddress else { return }
+            CMBlockBufferCopyDataBytes(blockBuffer, atOffset: 0, dataLength: length, destination: baseAddress)
+        }
+        data.withUnsafeBytes { rawBuffer in
+            let samples = rawBuffer.bindMemory(to: Int16.self)
+            var frameStart = samples.startIndex
+            while frameStart < samples.endIndex {
+                for (idx, ch) in keptChannels.enumerated() {
+                    let si = frameStart + ch
+                    guard si < samples.endIndex else { break }
+                    accumulators[idx].ingestSingleSample(Float(samples[si]) / Float(Int16.max))
+                }
+                for idx in accumulators.indices { accumulators[idx].advanceFrame() }
+                frameStart += channelCount
+            }
+        }
+    }
+
     /// Channel-exclusion path: read all N channels interleaved as Int16, then
     /// sum only the non-excluded channels into each RMS bucket. Falls back to
     /// the mono downmix when the file is mono or the index is out of range.
@@ -213,6 +309,25 @@ private struct RMSAccumulator {
                 channelCount: channelCount,
                 excludingChannel: excluded
             )
+        }
+    }
+
+    /// Add one sample's squared value to the current bucket (per-channel path).
+    /// Call `advanceFrame()` after processing all kept channels in a frame.
+    mutating func ingestSingleSample(_ value: Float) {
+        bucketSumSq += value * value
+    }
+
+    /// Close the current bucket if it is full after one interleaved frame has been
+    /// contributed. `samplesInBucket` counts frames, matching the mono path.
+    mutating func advanceFrame() {
+        samplesInBucket += 1
+        if samplesInBucket >= samplesPerBucket && bucketIndex < resolution {
+            let denom = Float(samplesInBucket) * Float(musicChannelsPerFrame)
+            peaks[bucketIndex] = (bucketSumSq / denom).squareRoot()
+            bucketIndex += 1
+            samplesInBucket = 0
+            bucketSumSq = 0
         }
     }
 

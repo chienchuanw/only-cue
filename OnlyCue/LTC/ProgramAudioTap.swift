@@ -7,13 +7,17 @@ import MediaToolbox
 private final class ProgramTapContext {
     let ring: ProgramAudioRingBuffer
     let renderSampleRate: Double
+    /// LTC channel to exclude (music-only mode). `nil` = no exclusion, so the
+    /// source buffer feeds the downmix untouched — byte-identical to the original.
+    let ltcChannel: Int?
     var converter: AVAudioConverter?
     var sourceFormat: AVAudioFormat?
     var outputFormat: AVAudioFormat?
 
-    init(ring: ProgramAudioRingBuffer, renderSampleRate: Double) {
+    init(ring: ProgramAudioRingBuffer, renderSampleRate: Double, ltcChannel: Int?) {
         self.ring = ring
         self.renderSampleRate = renderSampleRate
+        self.ltcChannel = ltcChannel
     }
 }
 
@@ -33,12 +37,14 @@ final class ProgramAudioTap {
 
     private let ring: ProgramAudioRingBuffer
     private let renderSampleRate: Double
+    private let ltcChannel: Int?
     private weak var item: AVPlayerItem?
     private var tap: MTAudioProcessingTap?
 
-    init(ring: ProgramAudioRingBuffer, renderSampleRate: Double) {
+    init(ring: ProgramAudioRingBuffer, renderSampleRate: Double, ltcChannel: Int? = nil) {
         self.ring = ring
         self.renderSampleRate = renderSampleRate > 0 ? renderSampleRate : 48_000
+        self.ltcChannel = ltcChannel
     }
 
     /// Install the tap onto `item`'s first audio track. No-op if the item has no
@@ -51,7 +57,7 @@ final class ProgramAudioTap {
         let audioTracks = try? await item.asset.loadTracks(withMediaType: .audio)
         guard let track = audioTracks?.first else { return }
 
-        let context = ProgramTapContext(ring: ring, renderSampleRate: renderSampleRate)
+        let context = ProgramTapContext(ring: ring, renderSampleRate: renderSampleRate, ltcChannel: ltcChannel)
         let clientInfo = Unmanaged.passRetained(context).toOpaque()
         var callbacks = MTAudioProcessingTapCallbacks(
             version: kMTAudioProcessingTapCallbacksVersion_0,
@@ -152,6 +158,13 @@ private func programTapProcess(
           let inBuffer = AVAudioPCMBuffer(pcmFormat: source, bufferListNoCopy: bufferListInOut)
     else { return }
     inBuffer.frameLength = AVAudioFrameCount(numberFramesOut.pointee)
+
+    // Music-only mode: drop the LTC channel and center the music BEFORE the
+    // N→stereo downmix, so the routed Track channels carry no LTC tone. No-op
+    // when `ltcChannel` is nil (default) — the byte-identical original path.
+    if let ltcChannel = context.ltcChannel {
+        MusicOnlyMixer.applyInPlace(to: inBuffer, excludingChannel: ltcChannel)
+    }
 
     let outCapacity = AVAudioFrameCount(
         (Double(inBuffer.frameLength) * output.sampleRate / source.sampleRate).rounded(.up)

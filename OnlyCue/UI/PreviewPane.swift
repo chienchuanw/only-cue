@@ -30,6 +30,7 @@ struct PreviewPane: View {
     var activeCueTypeID: CuePointType.ID?
 
     @Environment(\.undoManager) private var undoManager
+    @Environment(\.stripedTimecode) private var stripedTimecode
     @State private var waveformURL: URL?
     @AppStorage("showNotesOverlay") private var showNotesOverlay = false
     @AppStorage("showLyricsOverlay") private var showLyricsOverlay = false
@@ -64,6 +65,12 @@ struct PreviewPane: View {
             // a large empty box.
             .frame(maxWidth: .infinity, minHeight: 180, maxHeight: .infinity)
             .clipShape(RoundedRectangle(cornerRadius: DS.Radius.sm))
+            .overlay(alignment: .topLeading) {
+                if let track = stripedTimecode {
+                    ltcDetectedBadge(track: track)
+                        .padding(DS.Space.sm)
+                }
+            }
             .accessibilityIdentifier("previewPane")
             .task(id: waveformSourceKey) { await resolveWaveformURL() }
             // Bottom stack — the Notes Overlay (when its position is bottom)
@@ -333,5 +340,27 @@ extension PreviewPane {
     fileprivate func ghostLyricLine(for item: MediaItem) -> LyricLine? {
         guard editorMode.lyricsEditable, let id = ghostLyricLineID(for: item) else { return nil }
         return item.lyrics.unplacedLines.first { $0.id == id }
+    }
+
+    /// Small badge shown in the top-leading corner of the waveform well when
+    /// LTC is detected on the active clip. Displays the detected start timecode.
+    /// Absent when `stripedTimecode` is nil (no LTC detected).
+    fileprivate func ltcDetectedBadge(track: StripedTimecodeTrack) -> some View {
+        let displayString = track.anchorTimecode.displayString
+        return HStack(spacing: DS.Space.xs) {
+            Image(systemName: "timecode")
+                .font(DS.Text.monoSmall)
+                .foregroundStyle(DS.Color.textSecondary)
+            Text(displayString)
+                .font(DS.Text.monoSmall)
+                .foregroundStyle(DS.Color.textSecondary)
+        }
+        .padding(.horizontal, DS.Space.sm)
+        .padding(.vertical, DS.Space.xs)
+        .background(DS.Color.panel.opacity(0.9))
+        .clipShape(RoundedRectangle(cornerRadius: DS.Radius.sm))
+        .accessibilityIdentifier("ltcDetectedBadge")
+        .accessibilityLabel("LTC detected — start \(displayString)")
+        .help("LTC detected — start \(displayString)")
     }
 }

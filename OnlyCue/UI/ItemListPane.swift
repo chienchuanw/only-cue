@@ -46,13 +46,14 @@ struct ItemListPane: View {
             MediaEditSheet(
                 item: editing.item,
                 framerate: document.model.timecodeSettings.framerate,
-                onSave: { alt, frames, muted in
+                onSave: { alt, frames, muted, playsOriginal in
                     CueCommands.updateMediaItem(
                         id: editing.item.id,
                         edit: MediaItemEdit(
                             alternateName: alt,
                             startTimecodeFrames: frames,
-                            ltcMuted: muted
+                            ltcMuted: muted,
+                            playsOriginalSourceAudio: playsOriginal
                         ),
                         document: document,
                         undoManager: undoManager
@@ -134,6 +135,15 @@ struct ItemListPane: View {
                         }
                         .accessibilityIdentifier("contextMenuToggleLTCMute")
                     }
+                    Button(item.playsOriginalSourceAudio ? "Play Music Only" : "Play Original Source Audio (with timecode)") {
+                        CueCommands.setPlaysOriginalSourceAudio(
+                            itemID: item.id,
+                            playsOriginal: !item.playsOriginalSourceAudio,
+                            document: document,
+                            undoManager: undoManager
+                        )
+                    }
+                    .accessibilityIdentifier("contextMenuToggleSourceAudioMode")
                     Divider()
                     Button(role: .destructive) {
                         CueCommands.removeItem(id: item.id, document: document, undoManager: undoManager)

@@ -42,7 +42,11 @@ struct WaveformContainer: View {
     var onPlaceLyricAtMediaTime: (TimeInterval) -> Void = { _ in }
 
     @State private var peaks: [Float]?
-    @State private var failed = false
+    /// Per-channel peak arrays, one lane per kept channel (ascending channel
+    /// order), populated only while `splitChannels` is on (#720). nil when off —
+    /// the OFF path renders the single `peaks` array, byte-identical to pre-#720.
+    @State var lanePeaks: [[Float]]?
+    @State var failed = false
     @State var loadedDuration: TimeInterval = 0
     @State var scrub = ScrubController()
     @State private var seekTask: Task<Void, Never>?
@@ -181,8 +185,14 @@ struct WaveformContainer: View {
             // Audit §9.1: Show mode dims the waveform peaks to convey the
             // "show-running" locked state while leaving cue markers and the
             // seek surface at full contrast.
-            WaveformView(peaks: peaks)
-                .opacity(editorMode == .show ? 0.45 : 1)
+            Group {
+                if splitChannels, let lanePeaks {
+                    WaveformLanesView(lanes: lanePeaks, height: height)
+                } else {
+                    WaveformView(peaks: peaks)
+                }
+            }
+            .opacity(editorMode == .show ? 0.45 : 1)
             tempoGridOverlay()
             timeRulerOverlay()
             if let engine, loadedDuration > 0 {
@@ -248,13 +258,20 @@ struct WaveformContainer: View {
         scrollOffset = targetOffset
     }
 
-    private func load() async {
-        peaks = nil
-        failed = false
+    /// Resets zoom/scroll to 1× at the origin — run at the start of every load so
+    /// a fresh clip (or a toggle-driven reload) starts from a clean viewport.
+    private func resetZoomAndOffset() {
         var resetOffset = scrollOffset
         zoom.reset(scrollOffset: &resetOffset)
         scrollOffset = resetOffset
         pinchBaseline = 1
+    }
+
+    private func load() async {
+        peaks = nil
+        lanePeaks = nil
+        failed = false
+        resetZoomAndOffset()
 
         let cache = WaveformCache.shared
         let target = resolution
@@ -279,6 +296,9 @@ struct WaveformContainer: View {
                 excludingChannel: excludingChannel
             ) {
                 peaks = cached
+                if splitChannels {
+                    await loadLanes(hash: hash, resolution: target, excludingChannel: excludingChannel, cache: cache)
+                }
                 return
             }
 
@@ -289,17 +309,10 @@ struct WaveformContainer: View {
             )
             if Task.isCancelled { return }
             peaks = generated
-
-            if let hash {
-                Task.detached(priority: .background) {
-                    try? cache.write(
-                        generated,
-                        assetHash: hash,
-                        resolution: target,
-                        excludingChannel: excludingChannel
-                    )
-                }
+            if splitChannels {
+                await loadLanes(hash: hash, resolution: target, excludingChannel: excludingChannel, cache: cache)
             }
+            cacheDownmix(generated, hash: hash, resolution: target, excludingChannel: excludingChannel, cache: cache)
         } catch is CancellationError {
             return
         } catch {

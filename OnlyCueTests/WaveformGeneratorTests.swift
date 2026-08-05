@@ -228,13 +228,19 @@ final class WaveformGeneratorTests: XCTestCase {
         let excludingMusic = try await WaveformGenerator.peaks(for: asset, resolution: 200, excludingChannel: 0)
         XCTAssertNotEqual(musicOnly, excludingMusic, "excluding ch1 (LTC) must differ from excluding ch0 (music)")
 
-        // After per-file normalization both arrays hit max 1.0, so the shape — not
-        // the peak height — is what separates them; assert the arrays differ AND
-        // that the music-only max does not exceed the square-only max.
-        XCTAssertLessThan(
-            musicOnly.max() ?? 0,
-            (excludingMusic.max() ?? 0) + 0.001,
-            "music-only's loudest bucket must not exceed the LTC square's full-scale block"
+        // After per-file normalization both arrays hit max 1.0, so peak height
+        // cannot discriminate them — the per-bucket *shape* must. Render mono
+        // references for each channel's own content and assert the music-only
+        // peaks correlate more with the music channel than with the LTC square.
+        let musicRef = try await Self.monoPeaks(fill: Self.musicFill, resolution: 200)
+        let squareRef = try await Self.monoPeaks(fill: Self.squareFill, resolution: 200)
+        let corrWithMusic = Self.correlation(musicOnly, musicRef)
+        let corrWithSquare = Self.correlation(musicOnly, squareRef)
+        XCTAssertGreaterThan(
+            corrWithMusic,
+            corrWithSquare,
+            "music-only peaks must match the music channel's shape (corr \(corrWithMusic)) "
+                + "more than the LTC square's (corr \(corrWithSquare))"
         )
     }
 
@@ -262,17 +268,49 @@ final class WaveformGeneratorTests: XCTestCase {
         ltcLike: Int,
         duration: TimeInterval = 1
     ) throws -> URL {
-        let sine: (Int, Double) -> Double = { frame, sr in
-            0.1 * sin(2 * .pi * 440 * Double(frame) / sr)
-        }
-        // Full-scale ~1 kHz square as an LTC stand-in (LTC is a biphase square).
-        let square: (Int, Double) -> Double = { frame, sr in
-            sin(2 * .pi * 1000 * Double(frame) / sr) >= 0 ? 1.0 : -1.0
-        }
-        return try SilentAudioFixture.makeStereoWAV(
+        try SilentAudioFixture.makeStereoWAV(
             duration: duration,
-            fillCh0: music == 0 ? sine : square,
-            fillCh1: ltcLike == 1 ? square : sine
+            fillCh0: music == 0 ? musicFill : squareFill,
+            fillCh1: ltcLike == 1 ? squareFill : musicFill
         )
+    }
+
+    /// Quiet 440 Hz music-like sine (the "music" channel content).
+    static let musicFill: (Int, Double) -> Double = { frame, sr in
+        0.1 * sin(2 * .pi * 440 * Double(frame) / sr)
+    }
+
+    /// Full-scale ~1 kHz square as an LTC stand-in (LTC is a biphase square).
+    static let squareFill: (Int, Double) -> Double = { frame, sr in
+        sin(2 * .pi * 1000 * Double(frame) / sr) >= 0 ? 1.0 : -1.0
+    }
+
+    /// Peaks for a mono WAV filled with `fill` — the per-channel reference shape.
+    static func monoPeaks(
+        fill: @escaping (Int, Double) -> Double,
+        resolution: Int,
+        duration: TimeInterval = 1
+    ) async throws -> [Float] {
+        let url = try SilentAudioFixture.makeCustomWAV(duration: duration, fill: fill)
+        defer { try? FileManager.default.removeItem(at: url) }
+        return try await WaveformGenerator.peaks(for: AVURLAsset(url: url), resolution: resolution)
+    }
+
+    /// Pearson correlation between two equal-length bucket arrays. Returns 0 when
+    /// either has zero variance (a flat, uninformative envelope).
+    static func correlation(_ lhs: [Float], _ rhs: [Float]) -> Double {
+        guard lhs.count == rhs.count, !lhs.isEmpty else { return 0 }
+        let left = lhs.map(Double.init), right = rhs.map(Double.init)
+        let meanLeft = left.reduce(0, +) / Double(left.count)
+        let meanRight = right.reduce(0, +) / Double(right.count)
+        var cov = 0.0, varLeft = 0.0, varRight = 0.0
+        for index in left.indices {
+            let dLeft = left[index] - meanLeft, dRight = right[index] - meanRight
+            cov += dLeft * dRight
+            varLeft += dLeft * dLeft
+            varRight += dRight * dRight
+        }
+        guard varLeft > 0, varRight > 0 else { return 0 }
+        return cov / (varLeft.squareRoot() * varRight.squareRoot())
     }
 }

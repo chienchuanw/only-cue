@@ -34,7 +34,7 @@ final class CueCommandsUpdateMediaItemTests: XCTestCase {
 
         CueCommands.updateMediaItem(
             id: itemA.id,
-            edit: MediaItemEdit(alternateName: "Intro", startTimecodeFrames: 600, ltcMuted: true),
+            edit: MediaItemEdit(alternateName: "Intro", startTimecodeFrames: 600, ltcMuted: true, playsOriginalSourceAudio: false),
             document: doc,
             undoManager: nil
         )
@@ -52,7 +52,7 @@ final class CueCommandsUpdateMediaItemTests: XCTestCase {
 
         CueCommands.updateMediaItem(
             id: itemA.id,
-            edit: MediaItemEdit(alternateName: "X", startTimecodeFrames: 1, ltcMuted: true),
+            edit: MediaItemEdit(alternateName: "X", startTimecodeFrames: 1, ltcMuted: true, playsOriginalSourceAudio: false),
             document: doc,
             undoManager: nil
         )
@@ -71,7 +71,7 @@ final class CueCommandsUpdateMediaItemTests: XCTestCase {
 
         CueCommands.updateMediaItem(
             id: itemA.id,
-            edit: MediaItemEdit(alternateName: "Intro", startTimecodeFrames: 600, ltcMuted: true),
+            edit: MediaItemEdit(alternateName: "Intro", startTimecodeFrames: 600, ltcMuted: true, playsOriginalSourceAudio: false),
             document: doc,
             undoManager: undo
         )
@@ -92,7 +92,7 @@ final class CueCommandsUpdateMediaItemTests: XCTestCase {
 
         CueCommands.updateMediaItem(
             id: UUID(),
-            edit: MediaItemEdit(alternateName: "X", startTimecodeFrames: 999, ltcMuted: true),
+            edit: MediaItemEdit(alternateName: "X", startTimecodeFrames: 999, ltcMuted: true, playsOriginalSourceAudio: false),
             document: doc,
             undoManager: nil
         )

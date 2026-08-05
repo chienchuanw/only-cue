@@ -72,4 +72,29 @@ extension CueCommands {
         }
         undoManager?.setActionName(muted ? "Mute LTC" : "Unmute LTC")
     }
+
+    /// Toggle the per-clip source-audio mode flag, undoably. When
+    /// `playsOriginal` is `true` the clip plays its original source audio
+    /// (timecode channel audible); when `false` (the default) the detected
+    /// timecode channel is muted so only music is heard. No-op when the value
+    /// is unchanged or the item ID is unknown.
+    static func setPlaysOriginalSourceAudio(
+        itemID: MediaItem.ID,
+        playsOriginal: Bool,
+        document: CueListDocument,
+        undoManager: UndoManager?
+    ) {
+        guard let index = document.model.items.firstIndex(where: { $0.id == itemID }) else { return }
+        let previous = document.model.items[index].playsOriginalSourceAudio
+        guard previous != playsOriginal else { return }
+
+        undoManager?.beginUndoGrouping()
+        defer { undoManager?.endUndoGrouping() }
+
+        document.model.items[index].playsOriginalSourceAudio = playsOriginal
+        undoManager?.registerUndo(withTarget: document) { doc in
+            Self.setPlaysOriginalSourceAudio(itemID: itemID, playsOriginal: previous, document: doc, undoManager: undoManager)
+        }
+        undoManager?.setActionName(playsOriginal ? "Play Original Source Audio" : "Play Music Only")
+    }
 }

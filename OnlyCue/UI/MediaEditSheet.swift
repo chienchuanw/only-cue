@@ -19,6 +19,11 @@ struct MediaEditSheet: View {
     @State private var mutedDraft: Bool = false
     @State private var playsOriginalDraft: Bool = false
     @State private var tcInvalid: Bool = false
+    /// The detected LTC channel for this clip, decoded async (and run-cached) via
+    /// `MediaImporter.stripedTimecode`. Passed to the preview so its waveform
+    /// excludes the timecode channel and shows music only (#715/#720) — matching
+    /// the main `WaveformContainer`. nil until detection resolves / when no LTC.
+    @State private var ltcChannel: Int?
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
@@ -29,7 +34,8 @@ struct MediaEditSheet: View {
 
             MediaPreviewStrip(
                 kind: item.media.kind,
-                bookmarkData: item.media.bookmarkData
+                bookmarkData: item.media.bookmarkData,
+                excludingChannel: ltcChannel
             )
 
             HStack(spacing: 8) {
@@ -102,6 +108,9 @@ struct MediaEditSheet: View {
         }
         .frame(width: 460)
         .onAppear { syncDraftsFromItem() }
+        .task(id: item.id) {
+            ltcChannel = await MediaImporter.stripedTimecode(for: item)?.ltcChannel
+        }
     }
 
     private func syncDraftsFromItem() {

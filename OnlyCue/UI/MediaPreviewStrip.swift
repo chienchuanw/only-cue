@@ -8,6 +8,10 @@ struct MediaPreviewStrip: View {
 
     let kind: MediaKind
     let bookmarkData: Data
+    /// The detected LTC channel index to omit from the audio waveform so the
+    /// preview shows music only (#715/#720), mirroring `WaveformContainer`. nil
+    /// when no LTC is detected → byte-identical to the all-channel downmix.
+    var excludingChannel: Int?
     var height: CGFloat = 72
 
     private static let waveformResolution = 1_200
@@ -26,7 +30,12 @@ struct MediaPreviewStrip: View {
     private var content: some View {
         switch MediaPreviewPlan.make(kind: kind, bookmarkData: bookmarkData) {
         case .waveform(let url):
-            WaveformPreview(url: url, resolution: Self.waveformResolution, fallback: fallback)
+            WaveformPreview(
+                url: url,
+                resolution: Self.waveformResolution,
+                excludingChannel: excludingChannel,
+                fallback: fallback
+            )
         case .poster(let url):
             VideoPosterPreview(url: url, maxPixelSize: Self.posterMaxPixelSize, fallback: fallback)
         case .unavailable:
@@ -47,6 +56,7 @@ struct MediaPreviewStrip: View {
 private struct WaveformPreview<Fallback: View>: View {
     let url: URL
     let resolution: Int
+    let excludingChannel: Int?
     let fallback: Fallback
 
     @State private var peaks: [Float]?
@@ -70,15 +80,19 @@ private struct WaveformPreview<Fallback: View>: View {
         let scoped = url.startAccessingSecurityScopedResource()
         defer { if scoped { url.stopAccessingSecurityScopedResource() } }
         guard let hash = try? WaveformCache.fileHash(url) else { failed = true; return }
-        if let cached = WaveformCache.shared.read(assetHash: hash, resolution: resolution) {
+        if let cached = WaveformCache.shared.read(
+            assetHash: hash, resolution: resolution, excludingChannel: excludingChannel
+        ) {
             peaks = cached
             return
         }
         do {
             let generated = try await WaveformGenerator.peaks(
-                for: AVURLAsset(url: url), resolution: resolution
+                for: AVURLAsset(url: url), resolution: resolution, excludingChannel: excludingChannel
             )
-            try? WaveformCache.shared.write(generated, assetHash: hash, resolution: resolution)
+            try? WaveformCache.shared.write(
+                generated, assetHash: hash, resolution: resolution, excludingChannel: excludingChannel
+            )
             peaks = generated
         } catch {
             failed = true

@@ -2,6 +2,16 @@ import AVFoundation
 import QuartzCore
 import SwiftUI
 
+/// Load key for `WaveformContainer`'s generation task. Captures both the asset
+/// URL and the detected LTC channel index so the task re-fires when async LTC
+/// detection resolves after the clip loads. Without the channel in the key the
+/// waveform renders all-channel on first load and never refreshes to music-only
+/// when detection arrives (#715).
+struct WaveformLoadKey: Hashable {
+    let url: URL
+    let excludingChannel: Int?
+}
+
 struct WaveformContainer: View {
 
     let asset: AVURLAsset
@@ -45,6 +55,11 @@ struct WaveformContainer: View {
     /// Device pixel scale — the follow offset is snapped to this grid so the
     /// waveform envelope translates without sub-pixel resampling (shimmer, #677).
     @Environment(\.displayScale) var displayScale
+    /// The LTC track detected on the active clip — nil when no LTC is present.
+    /// Used to exclude the timecode channel from the rendered waveform peaks so
+    /// the display shows music only (#715). The nil path is byte-identical to
+    /// the pre-#715 all-channel downmix (Task 3 guarantee).
+    @Environment(\.stripedTimecode) private var stripedTimecode
 
     var body: some View {
         Group {
@@ -60,7 +75,9 @@ struct WaveformContainer: View {
                     .accessibilityIdentifier("waveformLoading")
             }
         }
-        .task(id: asset.url) { await load() }
+        .task(id: WaveformLoadKey(url: asset.url, excludingChannel: stripedTimecode?.ltcChannel)) {
+            await load()
+        }
         .onAppear { zoom.followsPlayhead = autoScrollWaveform }
         .onChange(of: autoScrollWaveform) { _, enabled in zoom.followsPlayhead = enabled }
         // When playback stops, persist the last follow offset into the stored
@@ -232,6 +249,9 @@ struct WaveformContainer: View {
         let cache = WaveformCache.shared
         let target = resolution
         let url = asset.url
+        // Capture at task-start so the three call sites use a consistent value
+        // even if the environment updates mid-load. nil when no LTC is detected.
+        let excludingChannel = stripedTimecode?.ltcChannel
 
         do {
             let hash: String? = await Task.detached(priority: .userInitiated) {
@@ -243,18 +263,31 @@ struct WaveformContainer: View {
             let cmDuration = try await asset.load(.duration)
             loadedDuration = CMTimeGetSeconds(cmDuration)
 
-            if let hash, let cached = cache.read(assetHash: hash, resolution: target) {
+            if let hash, let cached = cache.read(
+                assetHash: hash,
+                resolution: target,
+                excludingChannel: excludingChannel
+            ) {
                 peaks = cached
                 return
             }
 
-            let generated = try await WaveformGenerator.peaks(for: asset, resolution: target)
+            let generated = try await WaveformGenerator.peaks(
+                for: asset,
+                resolution: target,
+                excludingChannel: excludingChannel
+            )
             if Task.isCancelled { return }
             peaks = generated
 
             if let hash {
                 Task.detached(priority: .background) {
-                    try? cache.write(generated, assetHash: hash, resolution: target)
+                    try? cache.write(
+                        generated,
+                        assetHash: hash,
+                        resolution: target,
+                        excludingChannel: excludingChannel
+                    )
                 }
             }
         } catch is CancellationError {

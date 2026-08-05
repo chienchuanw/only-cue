@@ -131,7 +131,15 @@ private struct LTCOutputHost: ViewModifier {
 
     private func installTap(on item: AVPlayerItem) {
         removeTap()
-        let tap = ProgramAudioTap(ring: programRing, renderSampleRate: output.currentRenderSampleRate ?? 48_000)
+        // Music-only mode: exclude the striped LTC channel from the program audio
+        // fed to the routed Track channels — the same decision the plain path makes.
+        let musicOnlyChannel = (document.model.activeItem?.playsOriginalSourceAudio == false)
+            ? stripedTrack?.ltcChannel : nil
+        let tap = ProgramAudioTap(
+            ring: programRing,
+            renderSampleRate: output.currentRenderSampleRate ?? 48_000,
+            ltcChannel: musicOnlyChannel
+        )
         programTap = tap
         Task { @MainActor in
             // Bail if a teardown/replace happened while the asset's tracks loaded.

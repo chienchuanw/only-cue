@@ -132,57 +132,12 @@ private func musicOnlyTapProcess(
     let status = MTAudioProcessingTapGetSourceAudio(tap, numberFrames, bufferListInOut, flagsOut, nil, numberFramesOut)
     guard status == noErr,
           numberFramesOut.pointee > 0,
-          let source = context.sourceFormat else { return }
+          let source = context.sourceFormat,
+          let buffer = AVAudioPCMBuffer(pcmFormat: source, bufferListNoCopy: bufferListInOut)
+    else { return }
+    buffer.frameLength = AVAudioFrameCount(numberFramesOut.pointee)
 
-    let frameCount = Int(numberFramesOut.pointee)
-    let channelCount = Int(source.channelCount)
-    let ltcChannel = context.ltcChannel
-    // Defensive — the host already gates this, but the tap must be safe. Nothing
-    // to mute with one channel or an out-of-range LTC index.
-    guard channelCount > 1, ltcChannel >= 0, ltcChannel < channelCount else { return }
-
-    let buffers = UnsafeMutableAudioBufferListPointer(bufferListInOut)
-    if source.isInterleaved {
-        muteInterleaved(buffers, frameCount: frameCount, channelCount: channelCount, ltcChannel: ltcChannel)
-    } else {
-        muteNonInterleaved(buffers, frameCount: frameCount, channelCount: channelCount, ltcChannel: ltcChannel)
-    }
-}
-
-/// Interleaved layout: one buffer, samples strided by channel count (see
-/// `AudioSampleReader.channel(_:of:in:)` for the stride pattern).
-private func muteInterleaved(
-    _ buffers: UnsafeMutableAudioBufferListPointer, frameCount: Int, channelCount: Int, ltcChannel: Int
-) {
-    guard buffers.count >= 1, let raw = buffers[0].mData else { return }
-    let interleavedCount = frameCount * channelCount
-    let samples = raw.bindMemory(to: Float.self, capacity: interleavedCount)
-    var channels = [[Float]](repeating: [], count: channelCount)
-    for channel in 0..<channelCount {
-        channels[channel] = stride(from: channel, to: interleavedCount, by: channelCount).map { samples[$0] }
-    }
-    let mixed = MusicOnlyMixer.centered(channels: channels, excludingChannel: ltcChannel)
-    for channel in 0..<channelCount {
-        for frame in 0..<frameCount { samples[frame * channelCount + channel] = mixed[channel][frame] }
-    }
-}
-
-/// Non-interleaved layout: one buffer per channel, each contiguous floats.
-private func muteNonInterleaved(
-    _ buffers: UnsafeMutableAudioBufferListPointer, frameCount: Int, channelCount: Int, ltcChannel: Int
-) {
-    guard buffers.count >= channelCount else { return }
-    var pointers: [UnsafeMutablePointer<Float>] = []
-    pointers.reserveCapacity(channelCount)
-    var channels = [[Float]](repeating: [], count: channelCount)
-    for channel in 0..<channelCount {
-        guard let raw = buffers[channel].mData else { return }
-        let samples = raw.bindMemory(to: Float.self, capacity: frameCount)
-        pointers.append(samples)
-        channels[channel] = Array(UnsafeBufferPointer(start: samples, count: frameCount))
-    }
-    let mixed = MusicOnlyMixer.centered(channels: channels, excludingChannel: ltcChannel)
-    for channel in 0..<channelCount {
-        for frame in 0..<frameCount { pointers[channel][frame] = mixed[channel][frame] }
-    }
+    // Shared, unit-tested transform (`MusicOnlyMixerBufferTests`). Its own guards
+    // no-op on mono / out-of-range LTC index, so the tap needs no extra gating.
+    MusicOnlyMixer.applyInPlace(to: buffer, excludingChannel: context.ltcChannel)
 }

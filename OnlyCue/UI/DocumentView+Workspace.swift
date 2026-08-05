@@ -72,6 +72,9 @@ extension DocumentView {
         // not enough, it has to be pushed through the bridge (Task 4).
         let pane = applied[editorMode]
         pendingSidebarWidth = pane.isSidebarCollapsed ? 0 : pane.sidebarWidth
+        // Drive the native sidebar too: the width bridge only sizes the sidebar
+        // while shown; hiding it is the native `columnVisibility` binding's job.
+        columnVisibility = SidebarVisibility.visibility(isCollapsed: pane.isSidebarCollapsed)
     }
 
     /// Snapshots this window's current arrangement under `name`.
@@ -200,5 +203,30 @@ extension View {
                 selectedWorkspaceName: { WorkspaceLayoutStore.shared.state.selectedName },
                 toggleInspector: { view.updateLiveLayout { $0.isInspectorCollapsed.toggle() } }
             )
+    }
+
+    /// Keeps `DocumentView.columnVisibility` (the native sidebar) and the live
+    /// layout's `isSidebarCollapsed` in sync, both directions. Split out of
+    /// `DocumentView.body` to keep DocumentView.swift under the file_length cap.
+    ///
+    /// No feedback loop: each `onChange` fires only on a real value change, and
+    /// `updateLiveLayout`/the store's equality guard make a same-value write a
+    /// no-op — so restore → capture-onChange writes the same flag and settles.
+    func sidebarVisibilitySync(for view: DocumentView) -> some View {
+        self
+            // Seed on window open so a restored collapsed layout hides correctly.
+            .onAppear {
+                view.columnVisibility = SidebarVisibility.visibility(
+                    isCollapsed: view.currentPaneLayout.isSidebarCollapsed
+                )
+            }
+            // Capture: native ⌃⌘S → live layout (remembered / captured on Save-As).
+            .onChange(of: view.columnVisibility) { _, newValue in
+                view.updateLiveLayout { $0.isSidebarCollapsed = SidebarVisibility.isCollapsed(newValue) }
+            }
+            // Restore: live layout / applied preset → native sidebar.
+            .onChange(of: view.currentPaneLayout.isSidebarCollapsed) { _, collapsed in
+                view.columnVisibility = SidebarVisibility.visibility(isCollapsed: collapsed)
+            }
     }
 }

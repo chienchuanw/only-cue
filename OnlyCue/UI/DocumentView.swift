@@ -16,6 +16,12 @@ struct DocumentView: View {
     @State var pendingAlert: DocumentAlert?
     @State var seekTask: Task<Void, Never>?
     @State private var showOverlayAppearance = false
+    /// Native `NavigationSplitView` sidebar visibility. Per-window `@State`
+    /// (each document window owns its own), bound below so ⌃⌘S / an applied
+    /// preset can hide or show the sidebar. `internal`, not `private`: the
+    /// capture/restore `onChange`es live in DocumentView+Workspace.swift to keep
+    /// this file under SwiftLint's file_length cap.
+    @State var columnVisibility: NavigationSplitViewVisibility = .all
     @State var cueSelection: Set<Cue.ID> = []
     /// The unplaced-lyric-queue cursor — UI working state for placement.
     @State private var lyricsCursor = LyricsAuthoringCursor()
@@ -75,7 +81,7 @@ struct DocumentView: View {
     }
 
     var body: some View {
-        NavigationSplitView {
+        NavigationSplitView(columnVisibility: $columnVisibility) {
             ItemListPane(document: document, onDropURLs: importURLs)
                 .navigationSplitViewColumnWidth(
                     min: SidebarMetrics.minWidth,
@@ -159,6 +165,7 @@ struct DocumentView: View {
         .ltcOutput(engine: engine, document: document)
         .environment(\.projectFramerate, document.model.timecodeSettings.framerate)
         .workspaceHosted(for: self)
+        .sidebarVisibilitySync(for: self)
     }
 
     private var mainPane: some View {

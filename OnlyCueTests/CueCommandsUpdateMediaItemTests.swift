@@ -109,11 +109,50 @@ final class CueCommandsUpdateMediaItemTests: XCTestCase {
 
         CueCommands.updateMediaItem(
             id: itemA.id,
-            edit: MediaItemEdit(alternateName: nil, startTimecodeFrames: -10, ltcMuted: false),
+            edit: MediaItemEdit(alternateName: nil, startTimecodeFrames: -10, ltcMuted: false, playsOriginalSourceAudio: false),
             document: doc,
             undoManager: nil
         )
 
         XCTAssertEqual(doc.model.items.first?.startTimecodeFrames, 0)
+    }
+
+    func test_updateMediaItem_playsOriginalSourceAudio_roundTrips_andUndoRestores() {
+        let itemA = makeItem(name: "a.wav")
+        let doc = makeDocument(items: [itemA])
+        let undo = UndoManager()
+        undo.groupsByEvent = false
+
+        CueCommands.updateMediaItem(
+            id: itemA.id,
+            edit: MediaItemEdit(alternateName: nil, startTimecodeFrames: 0, ltcMuted: false, playsOriginalSourceAudio: true),
+            document: doc,
+            undoManager: undo
+        )
+
+        XCTAssertEqual(doc.model.items.first?.playsOriginalSourceAudio, true)
+        XCTAssertTrue(undo.canUndo)
+
+        undo.undo()
+        XCTAssertEqual(doc.model.items.first?.playsOriginalSourceAudio, false)
+        XCTAssertTrue(undo.canRedo)
+    }
+
+    func test_updateMediaItem_playsOriginalSourceAudio_noOpWhenAlreadyMatches() {
+        let itemA = makeItem(name: "a.wav")
+        let doc = makeDocument(items: [itemA])
+        let undo = UndoManager()
+        undo.groupsByEvent = false
+
+        // Default playsOriginalSourceAudio is false — sending false is a no-op.
+        CueCommands.updateMediaItem(
+            id: itemA.id,
+            edit: MediaItemEdit(alternateName: nil, startTimecodeFrames: 0, ltcMuted: false, playsOriginalSourceAudio: false),
+            document: doc,
+            undoManager: undo
+        )
+
+        XCTAssertFalse(undo.canUndo)
+        XCTAssertEqual(doc.model.items.first?.playsOriginalSourceAudio, false)
     }
 }

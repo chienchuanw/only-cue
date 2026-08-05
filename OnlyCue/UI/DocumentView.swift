@@ -139,9 +139,6 @@ struct DocumentView: View {
         }
         .manageTypesSheet(document: document)
         .timecodeSettingsSheet(document: document)
-        .onReceive(NotificationCenter.default.publisher(for: .toggleInspectorRequested)) { _ in
-            updateLiveLayout { $0.isInspectorCollapsed.toggle() }
-        }
         .onReceive(NotificationCenter.default.publisher(for: .editorModeChangeRequested)) { note in
             if let mode = note.object as? EditorMode { editorModeRaw = mode.rawValue }
         }

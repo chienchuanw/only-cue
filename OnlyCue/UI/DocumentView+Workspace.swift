@@ -1,3 +1,4 @@
+import AppKit
 import SwiftUI
 
 /// Workspace layout helpers for `DocumentView` (#714).
@@ -88,14 +89,31 @@ private struct WorkspaceMenuReceiver: ViewModifier {
     let applyWorkspace: (WorkspaceLayout) -> Void
     let captureCurrentWorkspace: (String) -> WorkspaceLayout
     let selectedWorkspaceName: () -> String?
+    let toggleInspector: () -> Void
 
     @ObservedObject private var store = WorkspaceLayoutStore.shared
     @State private var namePrompt: WorkspaceNamePrompt?
     @State private var isManaging = false
+    @State private var isFrontmost = false
+
+    /// Document windows currently open. `NSApp.windows` includes panels and
+    /// the menu-bar window, so filter to those that can be a document.
+    private var openDocumentWindowCount: Int {
+        NSApp.windows.filter { $0.isVisible && $0.canBecomeMain }.count
+    }
+
+    private var handlesNotifications: Bool {
+        WindowScope.shouldHandle(
+            isFrontmost: isFrontmost,
+            openWindowCount: openDocumentWindowCount
+        )
+    }
 
     func body(content: Content) -> some View {
         content
+            .frontmostWindowGate(isFrontmost: $isFrontmost)
             .onReceive(NotificationCenter.default.publisher(for: .workspaceSelected)) { note in
+                guard handlesNotifications else { return }
                 guard let name = note.object as? String,
                       let preset = store.state.presets.first(where: { $0.name == name })
                 else { return }
@@ -103,19 +121,27 @@ private struct WorkspaceMenuReceiver: ViewModifier {
                 applyWorkspace(preset)
             }
             .onReceive(NotificationCenter.default.publisher(for: .workspaceSaveAsRequested)) { _ in
+                guard handlesNotifications else { return }
                 namePrompt = WorkspaceNamePrompt(kind: .saveAs, initialName: "")
             }
             .onReceive(NotificationCenter.default.publisher(for: .workspaceOverwriteRequested)) { _ in
+                guard handlesNotifications else { return }
                 guard let name = selectedWorkspaceName(), name != WorkspaceLayout.defaultName
                 else { return }
                 store.overwrite(name: name, with: captureCurrentWorkspace(name))
             }
             .onReceive(NotificationCenter.default.publisher(for: .manageWorkspacesRequested)) { _ in
+                guard handlesNotifications else { return }
                 isManaging = true
             }
             .onReceive(NotificationCenter.default.publisher(for: .workspaceResetRequested)) { _ in
+                guard handlesNotifications else { return }
                 store.resetToDefault()
                 applyWorkspace(.default)
+            }
+            .onReceive(NotificationCenter.default.publisher(for: .toggleInspectorRequested)) { _ in
+                guard handlesNotifications else { return }
+                toggleInspector()
             }
             .sheet(item: $namePrompt) { prompt in
                 WorkspaceNameSheet(prompt: prompt) { name in
@@ -132,13 +158,15 @@ extension View {
     func workspaceMenuReceiver(
         applyWorkspace: @escaping (WorkspaceLayout) -> Void,
         captureCurrentWorkspace: @escaping (String) -> WorkspaceLayout,
-        selectedWorkspaceName: @escaping () -> String?
+        selectedWorkspaceName: @escaping () -> String?,
+        toggleInspector: @escaping () -> Void
     ) -> some View {
         modifier(
             WorkspaceMenuReceiver(
                 applyWorkspace: applyWorkspace,
                 captureCurrentWorkspace: captureCurrentWorkspace,
-                selectedWorkspaceName: selectedWorkspaceName
+                selectedWorkspaceName: selectedWorkspaceName,
+                toggleInspector: toggleInspector
             )
         )
     }
@@ -169,7 +197,8 @@ extension View {
             .workspaceMenuReceiver(
                 applyWorkspace: { view.applyWorkspace($0, availableWidth: view.availableWindowWidth) },
                 captureCurrentWorkspace: { view.captureCurrentWorkspace(named: $0) },
-                selectedWorkspaceName: { WorkspaceLayoutStore.shared.state.selectedName }
+                selectedWorkspaceName: { WorkspaceLayoutStore.shared.state.selectedName },
+                toggleInspector: { view.updateLiveLayout { $0.isInspectorCollapsed.toggle() } }
             )
     }
 }

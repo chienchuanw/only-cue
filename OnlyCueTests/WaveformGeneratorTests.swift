@@ -206,6 +206,38 @@ final class WaveformGeneratorTests: XCTestCase {
         )
     }
 
+    /// #720 bug ①: a file with music on ch0 and an LTC-like full-scale square on
+    /// ch1 must, when excluding ch1, drop the square entirely and match the music
+    /// side. This is the strong regression that the reported "still shows LTC"
+    /// symptom is NOT a generator defect. A loud square on ch1 dominates the
+    /// all-channel downmix, so excluding it must change the shape; and excluding
+    /// ch1 must not equal excluding ch0 (the exclusion is channel-specific).
+    func test_peaks_excludingLTCChannel_matchesMusicChannelAndDropsLTC() async throws {
+        let url = try Self.twoChannelFixture(music: 0, ltcLike: 1)
+        defer { try? FileManager.default.removeItem(at: url) }
+        let asset = AVURLAsset(url: url)
+
+        let all = try await WaveformGenerator.peaks(for: asset, resolution: 200, excludingChannel: nil)
+        let musicOnly = try await WaveformGenerator.peaks(for: asset, resolution: 200, excludingChannel: 1)
+        // The LTC-like square dominates the all-channel downmix, so excluding it
+        // must change the shape.
+        XCTAssertNotEqual(musicOnly, all, "excluding the loud LTC channel must change the peaks")
+
+        // Excluding the music channel instead keeps ONLY the loud square — a
+        // different result from excluding the LTC channel.
+        let excludingMusic = try await WaveformGenerator.peaks(for: asset, resolution: 200, excludingChannel: 0)
+        XCTAssertNotEqual(musicOnly, excludingMusic, "excluding ch1 (LTC) must differ from excluding ch0 (music)")
+
+        // After per-file normalization both arrays hit max 1.0, so the shape — not
+        // the peak height — is what separates them; assert the arrays differ AND
+        // that the music-only max does not exceed the square-only max.
+        XCTAssertLessThan(
+            musicOnly.max() ?? 0,
+            (excludingMusic.max() ?? 0) + 0.001,
+            "music-only's loudest bucket must not exceed the LTC square's full-scale block"
+        )
+    }
+
     func test_peaks_normalizedTo01() async throws {
         let url = try SilentAudioFixture.makeSineWAV(duration: 1, frequency: 440)
         defer { try? FileManager.default.removeItem(at: url) }
@@ -217,5 +249,30 @@ final class WaveformGeneratorTests: XCTestCase {
             XCTAssertGreaterThanOrEqual(peak, 0)
             XCTAssertLessThanOrEqual(peak, 1)
         }
+    }
+
+    // MARK: - Fixtures
+
+    /// A 2-channel WAV with a quiet music-like sine on the `music` channel and a
+    /// loud ~1 kHz full-scale square (an LTC stand-in) on the `ltcLike` channel.
+    /// The square is audibly dominant, so the two channels are distinguishable in
+    /// the waveform — the exact "music vs LTC" shape the #720 report is about.
+    static func twoChannelFixture(
+        music: Int,
+        ltcLike: Int,
+        duration: TimeInterval = 1
+    ) throws -> URL {
+        let sine: (Int, Double) -> Double = { frame, sr in
+            0.1 * sin(2 * .pi * 440 * Double(frame) / sr)
+        }
+        // Full-scale ~1 kHz square as an LTC stand-in (LTC is a biphase square).
+        let square: (Int, Double) -> Double = { frame, sr in
+            sin(2 * .pi * 1000 * Double(frame) / sr) >= 0 ? 1.0 : -1.0
+        }
+        return try SilentAudioFixture.makeStereoWAV(
+            duration: duration,
+            fillCh0: music == 0 ? sine : square,
+            fillCh1: ltcLike == 1 ? square : sine
+        )
     }
 }

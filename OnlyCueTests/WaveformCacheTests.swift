@@ -99,6 +99,27 @@ final class WaveformCacheTests: XCTestCase {
         XCTAssertEqual(cache.read(assetHash: "xyz", resolution: 3, excludingChannel: 1), musicPeaks)
     }
 
+    /// #720 bug ①: guard the exact collision that would show all-channel data on a
+    /// music-only read — a write under `excludingChannel: 1` must be UNREADABLE
+    /// under `excludingChannel: nil` (and vice-versa), not merely a different URL.
+    /// Without this, the container's music-only read could serve a stale
+    /// all-channel entry and the waveform would still look like LTC.
+    func test_read_underOtherExclusionKey_returnsNil() throws {
+        let cache = makeIsolatedCache()
+
+        try cache.write([0.2, 0.4, 0.6], assetHash: "abc", resolution: 3, excludingChannel: 1)
+        XCTAssertNil(
+            cache.read(assetHash: "abc", resolution: 3, excludingChannel: nil),
+            "a music-only (xc1) write must not be readable as an all-channel entry"
+        )
+
+        try cache.write([0.1, 0.5, 0.9], assetHash: "def", resolution: 3, excludingChannel: nil)
+        XCTAssertNil(
+            cache.read(assetHash: "def", resolution: 3, excludingChannel: 1),
+            "an all-channel write must not be readable as a music-only (xc1) entry"
+        )
+    }
+
     private func makeIsolatedCache() -> WaveformCache {
         let directory = FileManager.default.temporaryDirectory
             .appendingPathComponent("waveform-cache-test-\(UUID().uuidString)")

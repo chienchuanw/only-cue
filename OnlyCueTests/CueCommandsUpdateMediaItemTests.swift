@@ -27,14 +27,14 @@ final class CueCommandsUpdateMediaItemTests: XCTestCase {
         return doc
     }
 
-    func test_updateMediaItem_setsAllThreeFields_inOneStep() {
+    func test_updateMediaItem_setsAllFourFields_inOneStep() {
         let itemA = makeItem(name: "a.wav")
         let itemB = makeItem(name: "b.wav")
         let doc = makeDocument(items: [itemA, itemB])
 
         CueCommands.updateMediaItem(
             id: itemA.id,
-            edit: MediaItemEdit(alternateName: "Intro", startTimecodeFrames: 600, ltcMuted: true, playsOriginalSourceAudio: false),
+            edit: MediaItemEdit(alternateName: "Intro", startTimecodeFrames: 600, ltcMuted: true, playsOriginalSourceAudio: true),
             document: doc,
             undoManager: nil
         )
@@ -43,6 +43,7 @@ final class CueCommandsUpdateMediaItemTests: XCTestCase {
         XCTAssertEqual(updated?.alternateName, "Intro")
         XCTAssertEqual(updated?.startTimecodeFrames, 600)
         XCTAssertEqual(updated?.ltcMuted, true)
+        XCTAssertEqual(updated?.playsOriginalSourceAudio, true)
     }
 
     func test_updateMediaItem_doesNotTouchOtherItems() {

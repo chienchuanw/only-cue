@@ -76,6 +76,18 @@ enum WaveformGenerator {
         )
     }
 
+    /// The true channel indices `channelPeaks` renders as lanes, in the same
+    /// ascending order — lets a caller key each lane's cache entry by its TRUE
+    /// (exclusion-independent) channel index. `nil` for mono / collapsed-to-
+    /// downmix files, where no per-channel index applies (don't per-channel cache).
+    static func keptChannelIndices(for asset: AVAsset, excludingChannel: Int?) async throws -> [Int]? {
+        guard let track = try await asset.loadTracks(withMediaType: .audio).first else { return nil }
+        let channelCount = try await sourceChannelCount(track: track)
+        guard channelCount > 1 else { return nil }
+        let kept = keptChannelIndices(total: channelCount, excluding: excludingChannel)
+        return kept.isEmpty ? nil : kept
+    }
+
     /// Returns channel indices to keep, in ascending order, optionally omitting one.
     private static func keptChannelIndices(total: Int, excluding: Int?) -> [Int] {
         guard let excl = excluding, excl >= 0, excl < total else { return Array(0..<total) }

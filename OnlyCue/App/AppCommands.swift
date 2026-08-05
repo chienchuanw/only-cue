@@ -9,6 +9,7 @@ struct AppCommands: Commands {
     @AppStorage("showLyricsOverlay") private var showLyricsOverlay = false
     @AppStorage("pauseAtEachCue") private var pauseAtEachCue = false
     @AppStorage("autoScrollWaveform") private var autoScrollWaveform = true
+    @AppStorage("splitWaveformChannels") private var splitWaveformChannels = false
     @ObservedObject private var keymapStore = KeymapStore.shared
     @ObservedObject private var ltcRoutingStore = LTCRoutingStore.shared
     /// `internal`, not `private`: read by the workspace menu helpers in
@@ -21,25 +22,6 @@ struct AppCommands: Commands {
         keymapStore.keymap.chord(for: action).keyboardShortcut
             ?? Keymap.default.chord(for: action).keyboardShortcut
             ?? KeyboardShortcut(KeyEquivalent("/"), modifiers: .command)
-    }
-
-    /// Renders one Playback Mode menu item with a leading checkmark when this
-    /// mode is the active document's current selection. The macOS SwiftUI
-    /// renderer maps `Image(systemName: "checkmark")` leading a `Label` to the
-    /// underlying `NSMenuItem.state`, which XCUITest reads as `value == "1"`.
-    @ViewBuilder
-    private func playbackModeItem(_ mode: PlaybackMode, title: String, id: String) -> some View {
-        let isActive = (currentPlaybackMode ?? .playOnce) == mode
-        Button {
-            NotificationCenter.default.post(name: .setPlaybackModeRequested, object: mode)
-        } label: {
-            if isActive {
-                Label(title, systemImage: "checkmark")
-            } else {
-                Text(title)
-            }
-        }
-        .accessibilityIdentifier(id)
     }
 
     var body: some Commands {
@@ -222,6 +204,11 @@ struct AppCommands: Commands {
                 }
             }
             .accessibilityIdentifier("toggleAutoScrollWaveformMenuItem")
+
+            Button(splitWaveformChannels ? "Combine Channels" : "Split Channels") {
+                splitWaveformChannels.toggle()
+            }
+            .accessibilityIdentifier("toggleSplitChannelsMenuItem")
         }
 
         CommandMenu("Cue") {
@@ -350,10 +337,30 @@ struct AppCommands: Commands {
 
 }
 
-// Static helpers live in an extension so they don't count toward the struct's
-// SwiftLint `type_body_length` budget — same "extract at the cap" pattern the
-// codebase uses elsewhere (e.g. OSCServerHost / ExportSheetPresenter).
+// Static helpers and view-builder helpers live in an extension so they don't
+// count toward the struct's SwiftLint `type_body_length` budget — same
+// "extract at the cap" pattern the codebase uses elsewhere (e.g.
+// OSCServerHost / ExportSheetPresenter).
 private extension AppCommands {
+
+    /// Renders one Playback Mode menu item with a leading checkmark when this
+    /// mode is the active document's current selection. The macOS SwiftUI
+    /// renderer maps `Image(systemName: "checkmark")` leading a `Label` to the
+    /// underlying `NSMenuItem.state`, which XCUITest reads as `value == "1"`.
+    @ViewBuilder
+    func playbackModeItem(_ mode: PlaybackMode, title: String, id: String) -> some View {
+        let isActive = (currentPlaybackMode ?? .playOnce) == mode
+        Button {
+            NotificationCenter.default.post(name: .setPlaybackModeRequested, object: mode)
+        } label: {
+            if isActive {
+                Label(title, systemImage: "checkmark")
+            } else {
+                Text(title)
+            }
+        }
+        .accessibilityIdentifier(id)
+    }
 
     static func newDocumentFromTemplate() {
         do {

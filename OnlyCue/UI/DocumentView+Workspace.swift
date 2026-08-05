@@ -173,22 +173,3 @@ extension View {
             )
     }
 }
-
-// MARK: - Task 6 placeholders
-
-struct WorkspaceNamePrompt: Identifiable {
-    enum Kind { case saveAs, rename(String) }
-    let id = UUID()
-    let kind: Kind
-    let initialName: String
-}
-
-struct WorkspaceNameSheet: View {
-    let prompt: WorkspaceNamePrompt
-    let onCommit: (String) -> Void
-    var body: some View { EmptyView() }
-}
-
-struct ManageWorkspacesSheet: View {
-    var body: some View { EmptyView() }
-}

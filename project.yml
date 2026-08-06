@@ -42,6 +42,9 @@ targets:
         INFOPLIST_FILE: OnlyCue/Resources/Info.plist
         CODE_SIGN_STYLE: Automatic
         CODE_SIGN_IDENTITY: "-"
+        # Extract Text("…")/String(localized:) keys into Localizable.xcstrings on
+        # build so the String Catalog stays in sync (zh-Hant localization).
+        SWIFT_EMIT_LOC_STRINGS: YES
     preBuildScripts:
       - name: SwiftLint
         script: |

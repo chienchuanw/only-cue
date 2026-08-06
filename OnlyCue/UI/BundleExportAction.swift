@@ -35,11 +35,11 @@ enum BundleExportAction {
         }
 
         let panel = NSSavePanel()
-        panel.nameFieldStringValue = model.name.isEmpty ? "Untitled" : model.name
+        panel.nameFieldStringValue = model.name.isEmpty ? String(localized: "Untitled") : model.name
         panel.canCreateDirectories = true
-        panel.prompt = "Export"
-        panel.nameFieldLabel = "Bundle Name:"
-        panel.message = "Choose where to save the bundle folder."
+        panel.prompt = String(localized: "Export")
+        panel.nameFieldLabel = String(localized: "Bundle Name:")
+        panel.message = String(localized: "Choose where to save the bundle folder.")
         guard panel.runModal() == .OK, let destination = panel.url else { return }
 
         do {
@@ -47,7 +47,7 @@ enum BundleExportAction {
         } catch {
             // Don't leave a half-written bundle behind on a mid-copy failure.
             try? FileManager.default.removeItem(at: destination)
-            presentError(message: "The bundle could not be exported.")
+            presentError(message: String(localized: "The bundle could not be exported."))
         }
     }
 
@@ -70,14 +70,14 @@ enum BundleExportAction {
         let alert = NSAlert()
         alert.alertStyle = .warning
         alert.messageText = count == 1
-            ? "1 media file can’t be included"
-            : "\(count) media files can’t be included"
-        alert.informativeText = """
+            ? String(localized: "1 media file can’t be included")
+            : String(localized: "\(count) media files can’t be included")
+        alert.informativeText = String(localized: """
         These files couldn’t be located on this Mac, so they won’t be in the \
         bundle and the recipient will need to relink them. Export the rest anyway?
-        """
-        alert.addButton(withTitle: "Continue")
-        alert.addButton(withTitle: "Cancel")
+        """)
+        alert.addButton(withTitle: String(localized: "Continue"))
+        alert.addButton(withTitle: String(localized: "Cancel"))
         return alert.runModal() == .alertFirstButtonReturn
     }
 
@@ -85,9 +85,9 @@ enum BundleExportAction {
     private static func presentError(message: String) {
         let alert = NSAlert()
         alert.alertStyle = .warning
-        alert.messageText = "Bundle Export Failed"
+        alert.messageText = String(localized: "Bundle Export Failed")
         alert.informativeText = message
-        alert.addButton(withTitle: "OK")
+        alert.addButton(withTitle: String(localized: "OK"))
         alert.runModal()
     }
 }

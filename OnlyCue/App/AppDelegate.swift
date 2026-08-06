@@ -73,7 +73,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             rootView: StartView(onOpenProject: { [weak self] in self?.closeWelcomeWindow() })
         )
         let window = NSWindow(contentViewController: hosting)
-        window.title = "Welcome to OnlyCue"
+        window.title = String(localized: "Welcome to OnlyCue")
         window.styleMask = [.titled, .closable]
         window.setContentSize(NSSize(width: StartWindowMetrics.width, height: StartWindowMetrics.height))
         window.center()

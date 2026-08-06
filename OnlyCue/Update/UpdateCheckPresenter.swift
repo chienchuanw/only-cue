@@ -27,15 +27,15 @@ final class UpdateCheckPresenter {
         switch result {
         case .updateAvailable(let release):
             let latest = release.version.map(String.init(describing:)) ?? release.tagName
-            alert.messageText = "Update Available"
-            var info = "OnlyCue \(latest) is available — you have \(AppVersion.currentString)."
+            alert.messageText = String(localized: "Update Available")
+            var info = String(localized: "OnlyCue \(latest) is available — you have \(AppVersion.currentString).")
             if let body = release.body, !body.isEmpty {
                 info += "\n\n" + String(body.prefix(500))
             }
             alert.informativeText = info
-            alert.addButton(withTitle: "Download")
-            alert.addButton(withTitle: "Release Notes…")
-            alert.addButton(withTitle: "Later")
+            alert.addButton(withTitle: String(localized: "Download"))
+            alert.addButton(withTitle: String(localized: "Release Notes…"))
+            alert.addButton(withTitle: String(localized: "Later"))
             switch alert.runModal() {
             case .alertFirstButtonReturn: NSWorkspace.shared.open(release.downloadURL)
             case .alertSecondButtonReturn: NSWorkspace.shared.open(release.htmlURL)
@@ -43,23 +43,23 @@ final class UpdateCheckPresenter {
             }
 
         case .upToDate(let current):
-            alert.messageText = "You're up to date"
-            alert.informativeText = "OnlyCue \(current) is the latest release."
-            alert.addButton(withTitle: "OK")
+            alert.messageText = String(localized: "You're up to date")
+            alert.informativeText = String(localized: "OnlyCue \(current) is the latest release.")
+            alert.addButton(withTitle: String(localized: "OK"))
             alert.runModal()
 
         case .runningNewerBuild(let current, let latest):
-            alert.messageText = "You're up to date"
+            alert.messageText = String(localized: "You're up to date")
             alert.informativeText =
-                "You're running a newer build (\(current)) than the latest release (\(latest))."
-            alert.addButton(withTitle: "OK")
+                String(localized: "You're running a newer build (\(current)) than the latest release (\(latest)).")
+            alert.addButton(withTitle: String(localized: "OK"))
             alert.runModal()
 
         case .failed(let message):
             alert.alertStyle = .warning
-            alert.messageText = "Couldn't check for updates"
+            alert.messageText = String(localized: "Couldn't check for updates")
             alert.informativeText = message
-            alert.addButton(withTitle: "OK")
+            alert.addButton(withTitle: String(localized: "OK"))
             alert.runModal()
         }
     }

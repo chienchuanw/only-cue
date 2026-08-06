@@ -216,10 +216,10 @@ struct MA2PluginExportSheet: View {
 
     private func save(_ bundle: MA2PluginBundle) {
         let panel = NSSavePanel()
-        panel.title = "Export grandMA2 plugin"
+        panel.title = String(localized: "Export grandMA2 plugin")
         panel.nameFieldStringValue = bundle.manifestFilename
-        panel.prompt = "Export"
-        panel.message = "Both the .xml and its _PLUGIN.lua are written next to each other."
+        panel.prompt = String(localized: "Export")
+        panel.message = String(localized: "Both the .xml and its _PLUGIN.lua are written next to each other.")
         guard panel.runModal() == .OK, let url = panel.url else { return }
         do {
             try MA2PluginWriter.write(bundle, toDirectory: url.deletingLastPathComponent())

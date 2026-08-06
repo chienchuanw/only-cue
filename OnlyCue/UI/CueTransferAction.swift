@@ -27,7 +27,7 @@ enum CueTransferAction {
         do {
             try CueListTransfer.encode(export).write(to: url)
         } catch {
-            presentError(message: "The cue list could not be exported.")
+            presentError(message: String(localized: "The cue list could not be exported."))
         }
     }
 
@@ -52,7 +52,7 @@ enum CueTransferAction {
             presentError(message: message(for: error))
             return
         } catch {
-            presentError(message: "The cue list file could not be read.")
+            presentError(message: String(localized: "The cue list file could not be read."))
             return
         }
 
@@ -81,16 +81,16 @@ enum CueTransferAction {
     @MainActor
     private static func confirmMismatch(export: CueListExport, item: MediaItem) -> Bool {
         let alert = NSAlert()
-        alert.messageText = "This cue list is from a different song"
-        alert.informativeText = """
+        alert.messageText = String(localized: "This cue list is from a different song")
+        alert.informativeText = String(localized: """
         The cue list was exported from “\(export.sourceMedia.displayName)” \
         (\(formatted(export.sourceMedia.duration))). The selected song is \
         “\(item.resolvedName)” (\(formatted(item.media.duration))).
 
         Import the cues anyway?
-        """
-        alert.addButton(withTitle: "Import")
-        alert.addButton(withTitle: "Cancel")
+        """)
+        alert.addButton(withTitle: String(localized: "Import"))
+        alert.addButton(withTitle: String(localized: "Cancel"))
         return alert.runModal() == .alertFirstButtonReturn
     }
 
@@ -99,11 +99,11 @@ enum CueTransferAction {
     @MainActor
     private static func conflictChoice() -> Bool? {
         let alert = NSAlert()
-        alert.messageText = "This song already has cues"
-        alert.informativeText = "Replace the existing cues with the imported ones, or add the imported cues alongside them?"
-        alert.addButton(withTitle: "Replace")  // .alertFirstButtonReturn
-        alert.addButton(withTitle: "Add")      // .alertSecondButtonReturn
-        alert.addButton(withTitle: "Cancel")   // .alertThirdButtonReturn
+        alert.messageText = String(localized: "This song already has cues")
+        alert.informativeText = String(localized: "Replace the existing cues with the imported ones, or add the imported cues alongside them?")
+        alert.addButton(withTitle: String(localized: "Replace"))  // .alertFirstButtonReturn
+        alert.addButton(withTitle: String(localized: "Add"))      // .alertSecondButtonReturn
+        alert.addButton(withTitle: String(localized: "Cancel"))   // .alertThirdButtonReturn
         switch alert.runModal() {
         case .alertFirstButtonReturn: return true
         case .alertSecondButtonReturn: return false
@@ -115,18 +115,18 @@ enum CueTransferAction {
     private static func presentError(message: String) {
         let alert = NSAlert()
         alert.alertStyle = .warning
-        alert.messageText = "Cue List Import Failed"
+        alert.messageText = String(localized: "Cue List Import Failed")
         alert.informativeText = message
-        alert.addButton(withTitle: "OK")
+        alert.addButton(withTitle: String(localized: "OK"))
         alert.runModal()
     }
 
     private static func message(for error: CueListTransfer.TransferError) -> String {
         switch error {
         case .unsupportedFormatVersion:
-            return "This cue list was created by a newer version of OnlyCue and can't be opened."
+            return String(localized: "This cue list was created by a newer version of OnlyCue and can't be opened.")
         case .malformedPayload:
-            return "The file is not a valid OnlyCue cue list."
+            return String(localized: "The file is not a valid OnlyCue cue list.")
         }
     }
 

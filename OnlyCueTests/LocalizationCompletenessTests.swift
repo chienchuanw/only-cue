@@ -46,21 +46,10 @@ final class LocalizationCompletenessTests: XCTestCase {
 
     // MARK: - Catalog location
 
-    /// `OnlyCue/Resources/Localizable.xcstrings`, resolved from this test file's
-    /// compile-time path by walking up to the `project.yml` marker — robust to
-    /// the self-hosted CI runner's `_work/<repo>/<repo>/…` layout, mirroring
-    /// `TokenConformanceTests`.
+    /// `OnlyCue/Resources/Localizable.xcstrings`, resolved via the shared
+    /// `repoRoot()` test helper (walks up to the `project.yml` marker).
     private func catalogURL() throws -> URL {
-        var dir = URL(fileURLWithPath: #filePath).deletingLastPathComponent()
-        let fileManager = FileManager.default
-        while dir.path != "/" {
-            if fileManager.fileExists(atPath: dir.appendingPathComponent("project.yml").path) {
-                return dir
-                    .appendingPathComponent("OnlyCue/Resources/Localizable.xcstrings")
-            }
-            dir.deleteLastPathComponent()
-        }
-        throw XCTSkip("could not locate project.yml from \(#filePath)")
+        try repoRoot().appendingPathComponent("OnlyCue/Resources/Localizable.xcstrings")
     }
 
     private func loadCatalog() throws -> Catalog {

@@ -41,7 +41,7 @@ Never bundle spec/design files into feature or bug-fix commits — commit specs 
 - **Spec-Driven**: every issue cites the `docs/` section it implements. PRs link the spec section in the OnlyCue verification footer.
 - **TDD**: write the failing test first, see it red, then implement to green. Commit the failing test as a separate commit when practical.
 - **BDD**: acceptance criteria use Gherkin (Given/When/Then) and are mirrored in `OnlyCueUITests/` where they describe user-visible behavior.
-- **No direct mutations of `ProjectModel`**. UI and other layers go through `Commands/CueCommands.swift`. This is the seam for undo, future collaboration, and AI-suggested cues.
+- **No direct mutations of `ProjectModel`**. UI and other layers go through the `CueCommands` family (`OnlyCue/Commands/CueCommands.swift` and its `CueCommands+*.swift` extensions — `+Grid`, `+Media`, `+Playback`, `+MA2`, `+Timecode`, etc.). This is the seam for undo, future collaboration, and AI-suggested cues.
 
 ## Branching
 
@@ -67,7 +67,11 @@ If you add a new source folder under `OnlyCue/`, add it as a `sources` path in `
 - `docs/` — vision, MVP scope, architecture, data model, build sequence, verification, roadmap, ADRs.
 - `docs/superpowers/specs/` — approved specs.
 - `docs/superpowers/plans/` — implementation plans + reusable artifacts (issue body markdown, setup scripts).
-- `OnlyCue/` — app source (created by issue #1).
+- `OnlyCue/` — app source, organized by subsystem:
+  - `App/` — entry point and lifecycle; `Document/` — `ProjectModel`, schema, and migrations (currently at v19); `Commands/` — the `CueCommands` mutation seam.
+  - `UI/` — SwiftUI views and the `DS` design-system tokens (`UI/DesignSystem/`); `Media/` — media import and waveform; `Tempo/` — tempo / beat grid.
+  - Show-control integrations: `MA2/` (grandMA2), `MIDI/`, `OSC/`, `LTC/` (linear timecode).
+  - `Update/` — in-app updates; `Resources/`, `Utilities/` — assets and shared helpers.
 - `OnlyCueTests/`, `OnlyCueUITests/` — tests.
 
 ## SwiftUI / UI conventions
@@ -84,6 +88,7 @@ When capturing screenshots for README/docs, always use real screenshots via XCTe
 - Do not embed media in `.cuelist` files; reference via security-scoped bookmarks (ADR-006).
 - Do not change `ProjectModel` schema without bumping `schemaVersion` and adding a migration (`docs/data-model.md`).
 - Do not lower the macOS deployment target below 14.0 (ADR-001).
+- The main document window is dark-only (ADR-029) — do not add a light-mode surface. Main-window views consume `DS.*` design tokens (`OnlyCue/UI/DesignSystem/`) rather than raw color / spacing / font literals, enforced by `TokenConformanceTests` (ADR-024/ADR-029).
 
 ## Agent skills
 
@@ -97,4 +102,4 @@ Canonical triage vocabulary — `needs-triage`, `needs-info`, `ready-for-agent`,
 
 ### Domain docs
 
-Single-context — one `CONTEXT.md` at the repo root; ADRs in `docs/decisions.md`. See `docs/agents/domain.md`.
+Single-context — an optional `CONTEXT.md` at the repo root (the domain glossary, created lazily when terms actually get resolved; it may not exist yet); ADRs in `docs/decisions.md`. See `docs/agents/domain.md`.

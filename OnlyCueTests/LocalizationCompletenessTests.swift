@@ -8,6 +8,16 @@ private struct Catalog: Decodable {
 
 private struct Entry: Decodable {
     let extractionState: String?
+    let localizations: [String: Localization]?
+}
+
+private struct Localization: Decodable {
+    let stringUnit: StringUnit?
+}
+
+private struct StringUnit: Decodable {
+    let state: String
+    let value: String
 }
 
 /// Phase 1 (keys-exist mode) localization gate.
@@ -103,6 +113,32 @@ final class LocalizationCompletenessTests: XCTestCase {
             Localizable.xcstrings has stale entries (keys no longer referenced in \
             code). Prune them from the catalog:
             """ + "\n" + stale.joined(separator: "\n")
+        )
+    }
+
+    /// Phase 2 require-translation gate: every entry must carry a non-empty
+    /// `zh-Hant` translation in the `translated` state. Keep-English glossary
+    /// terms (Cue, Executor, MA2, …) satisfy this with their value left equal to
+    /// the English key but still explicitly marked `translated` — an intentional
+    /// confirmation, not an accidental gap.
+    func testEveryEntryIsTranslatedIntoTraditionalChinese() throws {
+        let catalog = try loadCatalog()
+        var problems: [String] = []
+        for (key, entry) in catalog.strings {
+            guard let unit = entry.localizations?["zh-Hant"]?.stringUnit else {
+                problems.append("\(key) — no zh-Hant localization")
+                continue
+            }
+            if unit.value.isEmpty {
+                problems.append("\(key) — empty zh-Hant value")
+            } else if unit.state != "translated" {
+                problems.append("\(key) — zh-Hant state is '\(unit.state)', must be 'translated'")
+            }
+        }
+        XCTAssertTrue(
+            problems.isEmpty,
+            "zh-Hant translations incomplete (\(problems.count) of \(catalog.strings.count)):\n"
+                + problems.sorted().prefix(40).joined(separator: "\n")
         )
     }
 }

@@ -3,6 +3,9 @@ options:
   deploymentTarget:
     macOS: "14.0"
   developmentLanguage: en
+  # zh-Hant must be a known region or the String Catalog's zh-Hant column is
+  # not compiled into the app bundle (zh-Hant localization, #724).
+  knownRegions: [Base, en, zh-Hant]
   groupSortPosition: top
   createIntermediateGroups: true
   generateEmptyDirectories: true

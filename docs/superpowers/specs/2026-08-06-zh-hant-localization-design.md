@@ -1,7 +1,7 @@
 # 繁體中文 (zh-Hant) localization — design
 
-**Status:** approved (grill/brainstorm 2026-08-06)
-**Spec section implemented:** TBD link in the OnlyCue verification footer of the implementing PR(s); for now, this file is the spec.
+**Status:** implemented — Phase 1 (#723, PR #725) and Phase 2 (#724, PR #726) both merged.
+**Spec section implemented:** this file is the spec; see the OnlyCue verification footer of PR #725 (Phase 1) and PR #726 (Phase 2).
 
 ## Problem
 
@@ -45,7 +45,7 @@ We want OnlyCue fully usable in **繁體中文 (zh-Hant)** for Taiwanese lightin
 
 ## Delivery — two phases
 
-### Phase 1 — localization-ready (English-only, no behavior change)
+### Phase 1 — localization-ready (English-only, no behavior change) — done (#723, PR #725)
 
 - Add a String Catalog (`Localizable.xcstrings`) and wire it into `project.yml` (add `knownRegions` / resource so xcodegen includes it); keep `developmentLanguage: en`.
 - Create repo-root `CONTEXT.md` with the keep-English glossary.
@@ -53,11 +53,13 @@ We want OnlyCue fully usable in **繁體中文 (zh-Hant)** for Taiwanese lightin
 - Add the completeness test in **keys-exist mode** (every user-facing key is present in the catalog; no assertion about zh-Hant yet).
 - Wide, mechanical, English-only diff. Safe to merge alone; app behaves identically.
 
-### Phase 2 — the Chinese feature
+### Phase 2 — the Chinese feature — done (#724, PR #726)
 
 - Add the **General** Preferences tab with the System/English/繁體中文 picker, persisted to `AppleLanguages` (default: System), plus the "Relaunch to apply?" alert and relaunch action.
 - Add `zh-Hant` to the catalog and fill translations per the glossary (draft → maintainer review).
 - Flip the completeness test to **require translation** — red on any missing / `needs_review` zh-Hant entry.
+
+Follow-up (#727): model keep-English glossary terms with `shouldTranslate: false` rather than `state: translated` with an English value, so the completeness gate can distinguish intentional-English from forgotten translations.
 
 ## Verification (TDD)
 

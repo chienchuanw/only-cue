@@ -34,8 +34,6 @@ struct GeneralSettingsView: View {
         .alert("Relaunch to apply?", isPresented: $showingRelaunchAlert) {
             Button("Relaunch") { AppRelauncher.relaunch() }
             Button("Later", role: .cancel) {}
-        } message: {
-            Text("The new language takes effect after OnlyCue restarts.")
         }
     }
 

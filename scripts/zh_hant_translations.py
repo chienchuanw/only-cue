@@ -317,7 +317,6 @@ T = {
     "The cue list was exported from \"%@\" (%@). The selected song is \"%@\" (%@).\n\nImport the cues anyway?":
         "此 cue list 匯出自「%@」（%@）。所選的歌曲是「%@」（%@）。\n\n仍要匯入這些 cue 嗎？",
     "The file is not a valid OnlyCue cue list.": "此檔案不是有效的 OnlyCue cue list。",
-    "The new language takes effect after OnlyCue restarts.": "新的語言會在 OnlyCue 重新啟動後生效。",
     "The workspace is removed. Windows keep their current arrangement.":
         "工作區已移除。視窗會維持目前的排列。",
     "These files couldn't be located on this Mac, so no bookmarks will be written for them. Export the rest anyway?":

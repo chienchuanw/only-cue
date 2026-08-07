@@ -56,9 +56,9 @@ struct StartView: View {
                     .foregroundStyle(DS.Color.textSecondary)
             }
             VStack(alignment: .leading, spacing: DS.Space.sm) {
-                actionButton("New Project", id: "New Project", systemImage: "plus.square") { newDocument() }
-                actionButton("New from Template…", id: "New from Template…", systemImage: "doc.on.doc") { newFromTemplate() }
-                actionButton("Open Other…", id: "Open Other…", systemImage: "folder") { openOther() }
+                actionButton("New Project", systemImage: "plus.square") { newDocument() }
+                actionButton("New from Template…", systemImage: "doc.on.doc") { newFromTemplate() }
+                actionButton("Open Other…", systemImage: "folder") { openOther() }
             }
             Spacer()
         }
@@ -66,7 +66,6 @@ struct StartView: View {
 
     private func actionButton(
         _ titleKey: LocalizedStringKey,
-        id: String,
         systemImage: String,
         action: @escaping () -> Void
     ) -> some View {
@@ -75,7 +74,6 @@ struct StartView: View {
         }
         .buttonStyle(.plain)
         .foregroundStyle(DS.Color.textPrimary)
-        .accessibilityIdentifier("startAction.\(id)")
     }
 
     private var recentsPane: some View {

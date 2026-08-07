@@ -100,7 +100,9 @@ enum CueTransferAction {
     private static func conflictChoice() -> Bool? {
         let alert = NSAlert()
         alert.messageText = String(localized: "This song already has cues")
-        alert.informativeText = String(localized: "Replace the existing cues with the imported ones, or add the imported cues alongside them?")
+        alert.informativeText = String(
+            localized: "Replace the existing cues with the imported ones, or add the imported cues alongside them?"
+        )
         alert.addButton(withTitle: String(localized: "Replace"))  // .alertFirstButtonReturn
         alert.addButton(withTitle: String(localized: "Add"))      // .alertSecondButtonReturn
         alert.addButton(withTitle: String(localized: "Cancel"))   // .alertThirdButtonReturn

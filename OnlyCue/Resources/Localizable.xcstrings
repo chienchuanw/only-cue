@@ -3150,6 +3150,56 @@
           }
         }
       }
+    },
+    "When on, OnlyCue generates SMPTE LTC and sends it — plus the media’s audio on the Track channels — to the chosen output device. The media’s normal audio output is muted while LTC is on.": {
+      "localizations": {
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "開啟時，OnlyCue 會產生 SMPTE LTC 並將其送出 — 連同媒體在 Track 聲道上的音訊 — 到所選的輸出裝置。LTC 開啟期間，媒體的一般音訊輸出會被靜音。"
+          }
+        }
+      }
+    },
+    "New Project": {
+      "localizations": {
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "新增專案"
+          }
+        }
+      }
+    },
+    "Sets the LTC signal level independently of the music — raise it if a decoder drops frames. It can’t exceed the Mac’s system output volume; for full independence, route LTC to an audio-interface channel.": {
+      "localizations": {
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "獨立於音樂設定 LTC 訊號電平 — 若解碼器掉格可調高。它無法超過 Mac 的系統輸出音量；若要完全獨立，請將 LTC 路由到音訊介面的聲道。"
+          }
+        }
+      }
+    },
+    "The LTC generator plays onto the channel assigned “LTC”. A 4-channel interface can carry LTC on one channel and stereo track audio on two others.": {
+      "localizations": {
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "LTC 產生器會在指派為「LTC」的聲道上播放。4 聲道的音訊介面可用一個聲道傳送 LTC，另外兩個傳送立體聲 track 音訊。"
+          }
+        }
+      }
+    },
+    "Open Other…": {
+      "localizations": {
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "開啟其他…"
+          }
+        }
+      }
     }
   },
   "version": "1.0"

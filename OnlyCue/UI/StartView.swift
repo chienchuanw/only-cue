@@ -56,21 +56,26 @@ struct StartView: View {
                     .foregroundStyle(DS.Color.textSecondary)
             }
             VStack(alignment: .leading, spacing: DS.Space.sm) {
-                actionButton("New Project", systemImage: "plus.square") { newDocument() }
-                actionButton("New from Template…", systemImage: "doc.on.doc") { newFromTemplate() }
-                actionButton("Open Other…", systemImage: "folder") { openOther() }
+                actionButton("New Project", id: "New Project", systemImage: "plus.square") { newDocument() }
+                actionButton("New from Template…", id: "New from Template…", systemImage: "doc.on.doc") { newFromTemplate() }
+                actionButton("Open Other…", id: "Open Other…", systemImage: "folder") { openOther() }
             }
             Spacer()
         }
     }
 
-    private func actionButton(_ title: String, systemImage: String, action: @escaping () -> Void) -> some View {
+    private func actionButton(
+        _ titleKey: LocalizedStringKey,
+        id: String,
+        systemImage: String,
+        action: @escaping () -> Void
+    ) -> some View {
         Button(action: action) {
-            Label(title, systemImage: systemImage).font(DS.Text.body)
+            Label(titleKey, systemImage: systemImage).font(DS.Text.body)
         }
         .buttonStyle(.plain)
         .foregroundStyle(DS.Color.textPrimary)
-        .accessibilityIdentifier("startAction.\(title)")
+        .accessibilityIdentifier("startAction.\(id)")
     }
 
     private var recentsPane: some View {

@@ -65,9 +65,11 @@ struct AudioSettingsView: View {
                 }
             }
             footnote(
-                "When on, OnlyCue generates SMPTE LTC and sends it — plus the media’s audio on the "
-                + "Track channels — to the chosen output device. The media’s normal audio output is "
-                + "muted while LTC is on."
+                """
+                When on, OnlyCue generates SMPTE LTC and sends it — plus the media’s audio on the \
+                Track channels — to the chosen output device. The media’s normal audio output is \
+                muted while LTC is on.
+                """
             )
         }
     }
@@ -89,9 +91,11 @@ struct AudioSettingsView: View {
                 }
             }
             footnote(
-                "Sets the LTC signal level independently of the music — raise it if a decoder "
-                + "drops frames. It can’t exceed the Mac’s system output volume; for full "
-                + "independence, route LTC to an audio-interface channel."
+                """
+                Sets the LTC signal level independently of the music — raise it if a decoder \
+                drops frames. It can’t exceed the Mac’s system output volume; for full \
+                independence, route LTC to an audio-interface channel.
+                """
             )
         }
     }
@@ -130,8 +134,10 @@ struct AudioSettingsView: View {
                 .padding(.vertical, DS.Space.sm)
             }
             footnote(
-                "The LTC generator plays onto the channel assigned “LTC”. "
-                + "A 4-channel interface can carry LTC on one channel and stereo track audio on two others."
+                """
+                The LTC generator plays onto the channel assigned “LTC”. \
+                A 4-channel interface can carry LTC on one channel and stereo track audio on two others.
+                """
             )
         }
     }
@@ -207,8 +213,8 @@ struct AudioSettingsView: View {
         DS.Color.border.frame(height: 1)
     }
 
-    private func footnote(_ text: String) -> some View {
-        Text(text)
+    private func footnote(_ textKey: LocalizedStringKey) -> some View {
+        Text(textKey)
             .font(.caption)
             .foregroundStyle(DS.Color.textSecondary)
             .frame(maxWidth: .infinity, alignment: .leading)

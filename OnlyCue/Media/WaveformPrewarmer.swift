@@ -21,7 +21,7 @@ enum WaveformPrewarmer {
     private static func prewarmOne(_ item: MediaItem, resolution: Int) async {
         guard let bookmark = try? Bookmarks.resolve(item.media.bookmarkData) else { return }
         let url = bookmark.url
-        guard let hash = try? WaveformCache.fileHash(url) else { return }
+        guard let hash = try? WaveformCache.fastFingerprint(url) else { return }
         if WaveformCache.shared.read(assetHash: hash, resolution: resolution) != nil {
             return
         }

@@ -3,7 +3,8 @@ import CoreGraphics
 import Foundation
 
 /// PNG disk cache for video poster frames. Mirrors `WaveformCache`: keyed by
-/// source-file SHA256 (reuse `WaveformCache.fileHash`) plus the max pixel size.
+/// source-file fast fingerprint (reuse `WaveformCache.fastFingerprint`) plus the
+/// max pixel size.
 struct VideoPosterCache {
 
     let directory: URL

@@ -79,7 +79,7 @@ private struct WaveformPreview<Fallback: View>: View {
     private func load() async {
         let scoped = url.startAccessingSecurityScopedResource()
         defer { if scoped { url.stopAccessingSecurityScopedResource() } }
-        guard let hash = try? WaveformCache.fileHash(url) else { failed = true; return }
+        guard let hash = try? WaveformCache.fastFingerprint(url) else { failed = true; return }
         if let cached = WaveformCache.shared.read(
             assetHash: hash, resolution: resolution, excludingChannel: excludingChannel
         ) {
@@ -127,7 +127,7 @@ private struct VideoPosterPreview<Fallback: View>: View {
     private func load() async {
         let scoped = url.startAccessingSecurityScopedResource()
         defer { if scoped { url.stopAccessingSecurityScopedResource() } }
-        guard let hash = try? WaveformCache.fileHash(url) else { failed = true; return }
+        guard let hash = try? WaveformCache.fastFingerprint(url) else { failed = true; return }
         let sizeKey = Int(maxPixelSize)
         if let cached = VideoPosterCache.shared.read(assetHash: hash, maxPixelSize: sizeKey) {
             image = cached

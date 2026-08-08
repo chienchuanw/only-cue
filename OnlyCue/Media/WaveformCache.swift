@@ -104,7 +104,7 @@ struct WaveformCache {
         let size = try handle.seekToEnd()
 
         var hasher = SHA256()
-        withUnsafeBytes(of: size.littleEndian) { hasher.update(data: Data($0)) }
+        withUnsafeBytes(of: size.littleEndian) { hasher.update(bufferPointer: $0) }
 
         let chunk = fingerprintChunk
         if size <= UInt64(2 * chunk) {

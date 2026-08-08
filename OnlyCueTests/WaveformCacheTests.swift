@@ -25,18 +25,20 @@ final class WaveformCacheTests: XCTestCase {
         XCTAssertNil(cache.read(assetHash: "h1", resolution: 4))
     }
 
-    func test_fileHash_isStableForSameContents() throws {
+    // MARK: - fast fingerprint (#731)
+
+    func test_fastFingerprint_isStableForSameContents() throws {
         let url = try SilentAudioFixture.makeWAV(duration: 1)
         defer { try? FileManager.default.removeItem(at: url) }
 
-        let first = try WaveformCache.fileHash(url)
-        let second = try WaveformCache.fileHash(url)
+        let first = try WaveformCache.fastFingerprint(url)
+        let second = try WaveformCache.fastFingerprint(url)
 
         XCTAssertEqual(first, second)
         XCTAssertFalse(first.isEmpty)
     }
 
-    func test_fileHash_differsAcrossDifferentContents() throws {
+    func test_fastFingerprint_differsAcrossDifferentContents() throws {
         let urlA = try SilentAudioFixture.makeWAV(duration: 1)
         let urlB = try SilentAudioFixture.makeSineWAV(duration: 1, frequency: 440)
         defer {
@@ -44,10 +46,65 @@ final class WaveformCacheTests: XCTestCase {
             try? FileManager.default.removeItem(at: urlB)
         }
 
-        let hashA = try WaveformCache.fileHash(urlA)
-        let hashB = try WaveformCache.fileHash(urlB)
+        let hashA = try WaveformCache.fastFingerprint(urlA)
+        let hashB = try WaveformCache.fastFingerprint(urlB)
 
         XCTAssertNotEqual(hashA, hashB)
+    }
+
+    /// The fingerprint must not depend on filesystem metadata like mtime — a
+    /// `touch` that leaves content unchanged must not invalidate the cache
+    /// (spec §1: "內容沒變不該重算").
+    func test_fastFingerprint_independentOfModificationTime() throws {
+        let url = try makeRawFile(bytes: Data((0..<4096).map { UInt8($0 & 0xFF) }))
+        defer { try? FileManager.default.removeItem(at: url) }
+
+        let before = try WaveformCache.fastFingerprint(url)
+        try FileManager.default.setAttributes(
+            [.modificationDate: Date(timeIntervalSince1970: 0)],
+            ofItemAtPath: url.path
+        )
+        let after = try WaveformCache.fastFingerprint(url)
+
+        XCTAssertEqual(before, after, "fingerprint must not depend on mtime")
+    }
+
+    /// Documents the deliberately-accepted tradeoff (spec §1): the fingerprint
+    /// hashes only the head and tail, so two large files with identical size and
+    /// identical first/last 1MB but a differing middle collide. This both proves
+    /// the read is constant-time (head+tail only, never the middle) and pins the
+    /// accepted false-hit that the user signed off on (no "regenerate" escape).
+    func test_fastFingerprint_ignoresMiddleBytes() throws {
+        let urlA = try makeRawFile(bytes: headMiddleTail(middle: 0xAA))
+        let urlB = try makeRawFile(bytes: headMiddleTail(middle: 0xBB))
+        defer {
+            try? FileManager.default.removeItem(at: urlA)
+            try? FileManager.default.removeItem(at: urlB)
+        }
+
+        XCTAssertEqual(
+            try WaveformCache.fastFingerprint(urlA),
+            try WaveformCache.fastFingerprint(urlB),
+            "only head+tail are hashed, so a middle-only difference collides by design"
+        )
+    }
+
+    /// File size is part of the key: two files with identical head and tail but
+    /// different total length must not collide.
+    func test_fastFingerprint_differsWhenSizeDiffers() throws {
+        let chunk = 1 << 20
+        let urlA = try makeRawFile(bytes: headMiddleTail(middle: 0x00, middleCount: chunk))
+        let urlB = try makeRawFile(bytes: headMiddleTail(middle: 0x00, middleCount: 2 * chunk))
+        defer {
+            try? FileManager.default.removeItem(at: urlA)
+            try? FileManager.default.removeItem(at: urlB)
+        }
+
+        XCTAssertNotEqual(
+            try WaveformCache.fastFingerprint(urlA),
+            try WaveformCache.fastFingerprint(urlB),
+            "file size must be part of the fingerprint"
+        )
     }
 
     // MARK: - Channel exclusion cache keys (#715)
@@ -182,5 +239,25 @@ final class WaveformCacheTests: XCTestCase {
             try? FileManager.default.removeItem(at: directory)
         }
         return WaveformCache(directory: directory)
+    }
+
+    /// Writes `bytes` to a fresh temp file and returns its URL.
+    private func makeRawFile(bytes: Data) throws -> URL {
+        let url = FileManager.default.temporaryDirectory
+            .appendingPathComponent("fingerprint-test-\(UUID().uuidString).bin")
+        try bytes.write(to: url)
+        return url
+    }
+
+    /// A blob larger than 2× the 1MB fingerprint chunk, so the fingerprint takes
+    /// its head/tail path: a fixed 1MB head, a `middle`-filled body of
+    /// `middleCount` bytes, and a fixed 1MB tail. Varying `middle` changes only
+    /// the ignored region; varying `middleCount` changes the total size.
+    private func headMiddleTail(middle: UInt8, middleCount: Int = 1 << 20) -> Data {
+        let chunk = 1 << 20
+        var data = Data(repeating: 0x01, count: chunk)
+        data.append(Data(repeating: middle, count: middleCount))
+        data.append(Data(repeating: 0x02, count: chunk))
+        return data
     }
 }

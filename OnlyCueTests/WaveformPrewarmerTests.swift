@@ -17,7 +17,7 @@ final class WaveformPrewarmerTests: XCTestCase {
         )
         let resolution = WaveformPrewarmer.defaultResolution
 
-        let hash = try WaveformCache.fileHash(url)
+        let hash = try WaveformCache.fastFingerprint(url)
         let cacheURL = WaveformCache.shared.entryURL(assetHash: hash, resolution: resolution)
         try? FileManager.default.removeItem(at: cacheURL)
         XCTAssertNil(WaveformCache.shared.read(assetHash: hash, resolution: resolution))
@@ -42,7 +42,7 @@ final class WaveformPrewarmerTests: XCTestCase {
 
         await WaveformPrewarmer.prewarm(items: [item], resolution: resolution)
 
-        let hash = try WaveformCache.fileHash(url)
+        let hash = try WaveformCache.fastFingerprint(url)
         let cacheURL = WaveformCache.shared.entryURL(assetHash: hash, resolution: resolution)
         let firstMtime = (try FileManager.default.attributesOfItem(atPath: cacheURL.path))[.modificationDate] as? Date
 

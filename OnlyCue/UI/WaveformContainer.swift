@@ -282,7 +282,7 @@ struct WaveformContainer: View {
 
         do {
             let hash: String? = await Task.detached(priority: .userInitiated) {
-                try? WaveformCache.fileHash(url)
+                try? WaveformCache.fastFingerprint(url)
             }.value
 
             if Task.isCancelled { return }

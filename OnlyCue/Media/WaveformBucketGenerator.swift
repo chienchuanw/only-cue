@@ -160,6 +160,97 @@ extension WaveformGenerator {
         }
     }
 
+    /// Per-channel bucket generation: one un-normalized (peak+RMS) bucket array
+    /// per non-excluded channel, in ascending channel order — the split-channel
+    /// lanes (#720) rendered with the #734 dual envelope. Mono files, an
+    /// out-of-range exclusion, or a collapsed kept-set fall back to a single
+    /// downmix lane so callers treat the result uniformly.
+    ///
+    /// Deliberately NOT routed through `WaveformBucketCoordinator`: unlike the
+    /// downmix, per-channel lanes are never prewarmed, so there is no concurrent
+    /// production to coalesce — the coordinator would add machinery for nothing.
+    static func channelBuckets(
+        for asset: AVAsset,
+        bucketMillis: Int = defaultBucketMillis,
+        excludingChannel: Int?
+    ) async throws -> [[WaveformBucket]] {
+        guard let track = try await asset.loadTracks(withMediaType: .audio).first else {
+            let count = try await bucketCount(asset: asset, bucketMillis: bucketMillis)
+            return [Array(repeating: WaveformBucket(peak: 0, rms: 0), count: count)]
+        }
+        let totalChannels = try await sourceChannelCount(track: track)
+        let keptChannels = keptChannelIndices(total: totalChannels, excluding: excludingChannel)
+        guard totalChannels > 1, !keptChannels.isEmpty else {
+            return [try await buckets(for: asset, bucketMillis: bucketMillis)]
+        }
+        return try await produceChannelBuckets(
+            asset: asset,
+            track: track,
+            bucketMillis: bucketMillis,
+            totalChannels: totalChannels,
+            keptChannels: keptChannels
+        )
+    }
+
+    /// Reads all `totalChannels` interleaved once and accumulates a separate
+    /// peak+RMS bucket series per kept channel (parallel to `keptChannels`).
+    private static func produceChannelBuckets(
+        asset: AVAsset,
+        track: AVAssetTrack,
+        bucketMillis: Int,
+        totalChannels: Int,
+        keptChannels: [Int]
+    ) async throws -> [[WaveformBucket]] {
+        let framesPerBucket = max(Int(analysisSampleRate * Double(bucketMillis) / 1000), 1)
+        let reader = try makeReader(
+            asset: asset, track: track, channels: totalChannels, sampleRate: analysisSampleRate
+        )
+        guard reader.startReading(),
+              let output = reader.outputs.first as? AVAssetReaderTrackOutput else {
+            throw WaveformError.readerFailed
+        }
+        var accumulators = keptChannels.map { _ in BucketAccumulator(framesPerBucket: framesPerBucket) }
+        while let buffer = output.copyNextSampleBuffer() {
+            try Task.checkCancellation()
+            ingestChannels(buffer, into: &accumulators, keptChannels: keptChannels, channelCount: totalChannels)
+            CMSampleBufferInvalidate(buffer)
+        }
+        if reader.status == .failed { throw WaveformError.readerFailed }
+        for index in accumulators.indices { accumulators[index].finalizeTail() }
+        return accumulators.map(\.buckets)
+    }
+
+    /// Feeds each kept channel's sample of every interleaved frame to its own
+    /// accumulator, advancing all accumulators one frame in lockstep so the lanes
+    /// share one time base.
+    private static func ingestChannels(
+        _ buffer: CMSampleBuffer,
+        into accumulators: inout [BucketAccumulator],
+        keptChannels: [Int],
+        channelCount: Int
+    ) {
+        guard let blockBuffer = CMSampleBufferGetDataBuffer(buffer) else { return }
+        let length = CMBlockBufferGetDataLength(blockBuffer)
+        var data = Data(count: length)
+        data.withUnsafeMutableBytes { raw in
+            guard let base = raw.baseAddress else { return }
+            CMBlockBufferCopyDataBytes(blockBuffer, atOffset: 0, dataLength: length, destination: base)
+        }
+        data.withUnsafeBytes { raw in
+            let samples = raw.bindMemory(to: Int16.self)
+            var frameStart = samples.startIndex
+            while frameStart < samples.endIndex {
+                for (index, channel) in keptChannels.enumerated() {
+                    let sampleIndex = frameStart + channel
+                    guard sampleIndex < samples.endIndex else { break }
+                    accumulators[index].addSample(Float(samples[sampleIndex]) / sampleScale)
+                }
+                for index in accumulators.indices { accumulators[index].endFrame() }
+                frameStart += channelCount
+            }
+        }
+    }
+
     private static func bucketCount(asset: AVAsset, bucketMillis: Int) async throws -> Int {
         let duration = try await asset.load(.duration)
         let seconds = max(CMTimeGetSeconds(duration), 0)

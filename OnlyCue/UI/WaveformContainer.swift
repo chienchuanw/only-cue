@@ -46,10 +46,10 @@ struct WaveformContainer: View {
     /// Un-normalized peak+RMS buckets — normalization is applied at render time
     /// by `WaveformView` (#734), so a partial stream stays self-consistent.
     @State var buckets: [WaveformBucket]?
-    /// Per-channel peak arrays, one lane per kept channel (ascending channel
+    /// Per-channel bucket arrays, one lane per kept channel (ascending channel
     /// order), populated only while `splitChannels` is on (#720). nil when off —
-    /// the OFF path renders the single `peaks` array, byte-identical to pre-#720.
-    @State var lanePeaks: [[Float]]?
+    /// the OFF path renders the single `buckets` array (#734).
+    @State var laneBuckets: [[WaveformBucket]]?
     @State var failed = false
     @State var loadedDuration: TimeInterval = 0
     @State var scrub = ScrubController()
@@ -190,8 +190,8 @@ struct WaveformContainer: View {
             // "show-running" locked state while leaving cue markers and the
             // seek surface at full contrast.
             Group {
-                if splitChannels, let lanePeaks {
-                    WaveformLanesView(lanes: lanePeaks, height: height)
+                if splitChannels, let laneBuckets {
+                    WaveformLanesView(lanes: laneBuckets, height: height)
                 } else {
                     WaveformView(buckets: buckets)
                 }
@@ -273,12 +273,11 @@ struct WaveformContainer: View {
 
     private func load() async {
         buckets = nil
-        lanePeaks = nil
+        laneBuckets = nil
         failed = false
         resetZoomAndOffset()
 
         let cache = WaveformCache.shared
-        let target = resolution
         let url = asset.url
         // Capture at task-start so the three call sites use a consistent value
         // even if the environment updates mid-load. nil when no LTC is detected.
@@ -302,7 +301,7 @@ struct WaveformContainer: View {
             ) {
                 buckets = cached
                 if splitChannels {
-                    await loadLanes(hash: hash, resolution: target, excludingChannel: excludingChannel, cache: cache)
+                    await loadLanes(hash: hash, bucketMillis: bucketMillis, excludingChannel: excludingChannel, cache: cache)
                 }
                 return
             }
@@ -315,7 +314,7 @@ struct WaveformContainer: View {
             if Task.isCancelled { return }
             buckets = streamed
             if splitChannels {
-                await loadLanes(hash: hash, resolution: target, excludingChannel: excludingChannel, cache: cache)
+                await loadLanes(hash: hash, bucketMillis: bucketMillis, excludingChannel: excludingChannel, cache: cache)
             }
             cacheBuckets(streamed, hash: hash, bucketMillis: bucketMillis, excludingChannel: excludingChannel, cache: cache)
         } catch is CancellationError {

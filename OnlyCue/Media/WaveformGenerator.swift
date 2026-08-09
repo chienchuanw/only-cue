@@ -88,8 +88,10 @@ enum WaveformGenerator {
         return kept.isEmpty ? nil : kept
     }
 
-    /// Returns channel indices to keep, in ascending order, optionally omitting one.
-    private static func keptChannelIndices(total: Int, excluding: Int?) -> [Int] {
+    /// Returns channel indices to keep, in ascending order, optionally omitting
+    /// one. Internal so the bucket engine's per-channel path shares the same
+    /// exclusion logic (`WaveformBucketGenerator.channelBuckets`).
+    static func keptChannelIndices(total: Int, excluding: Int?) -> [Int] {
         guard let excl = excluding, excl >= 0, excl < total else { return Array(0..<total) }
         return (0..<total).filter { $0 != excl }
     }

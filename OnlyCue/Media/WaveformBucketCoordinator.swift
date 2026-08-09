@@ -73,10 +73,9 @@ actor WaveformBucketCoordinator {
     }
 
     private func broadcast(key: String, snapshot: [WaveformBucket]) {
-        guard var session = sessions[key] else { return }
-        session.latest = snapshot
-        sessions[key] = session
-        for continuation in session.subscribers.values {
+        guard let subscribers = sessions[key]?.subscribers else { return }
+        sessions[key]?.latest = snapshot
+        for continuation in subscribers.values {
             continuation.yield(snapshot)
         }
     }
@@ -90,13 +89,9 @@ actor WaveformBucketCoordinator {
     }
 
     private func unsubscribe(key: String, id: UUID) {
-        guard var session = sessions[key] else { return }
-        session.subscribers[id] = nil
-        if session.subscribers.isEmpty {
-            session.producer?.cancel()
-            sessions[key] = nil
-        } else {
-            sessions[key] = session
-        }
+        sessions[key]?.subscribers[id] = nil
+        guard let session = sessions[key], session.subscribers.isEmpty else { return }
+        session.producer?.cancel()
+        sessions[key] = nil
     }
 }

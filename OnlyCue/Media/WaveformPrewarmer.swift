@@ -21,7 +21,11 @@ enum WaveformPrewarmer {
         await withTaskGroup(of: Void.self) { group in
             var iterator = items.makeIterator()
 
-            @Sendable func scheduleNext() -> Bool {
+            // Not `@Sendable`: this runs synchronously inside the task-group
+            // closure and never escapes, so it can drive the mutable iterator and
+            // the `inout group` directly. Marking it `@Sendable` would force those
+            // captures across a concurrency boundary and fail the Swift-6 checks.
+            func scheduleNext() -> Bool {
                 guard let item = iterator.next() else { return false }
                 group.addTask(priority: .background) {
                     await prewarmOne(item, bucketMillis: bucketMillis)

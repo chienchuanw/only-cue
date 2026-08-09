@@ -44,14 +44,14 @@ final class UpdateCheckPresenter {
 
         case .upToDate(let current):
             alert.messageText = String(localized: "You're up to date")
-            alert.informativeText = String(localized: "OnlyCue \(current) is the latest release.")
+            alert.informativeText = String(localized: "OnlyCue \(current.description) is the latest release.")
             alert.addButton(withTitle: String(localized: "OK"))
             alert.runModal()
 
         case .runningNewerBuild(let current, let latest):
             alert.messageText = String(localized: "You're up to date")
             alert.informativeText =
-                String(localized: "You're running a newer build (\(current)) than the latest release (\(latest)).")
+                String(localized: "You're running a newer build (\(current.description)) than the latest release (\(latest.description)).")
             alert.addButton(withTitle: String(localized: "OK"))
             alert.runModal()
 

@@ -73,23 +73,22 @@ extension WaveformContainer {
         }
     }
 
-    /// Persists the freshly-generated single-`peaks` (downmix / music-only) array
-    /// to the cache off the main actor — a no-op when the file hash is absent.
-    /// Behavior is unchanged from the inline write it replaced (extracted only to
-    /// keep `load()` under the `function_body_length` cap).
-    func cacheDownmix(
-        _ generated: [Float],
+    /// Persists the freshly-generated downmix / music-only bucket array to the v4
+    /// bucket cache off the main actor — a no-op when the file hash is absent
+    /// (#733). Extracted to keep `load()` under the `function_body_length` cap.
+    func cacheBuckets(
+        _ buckets: [WaveformBucket],
         hash: String?,
-        resolution: Int,
+        bucketMillis: Int,
         excludingChannel: Int?,
         cache: WaveformCache
     ) {
-        guard let hash else { return }
+        guard let hash, !buckets.isEmpty else { return }
         Task.detached(priority: .background) {
-            try? cache.write(
-                generated,
+            try? cache.writeBuckets(
+                buckets,
                 assetHash: hash,
-                resolution: resolution,
+                bucketMillis: bucketMillis,
                 excludingChannel: excludingChannel
             )
         }

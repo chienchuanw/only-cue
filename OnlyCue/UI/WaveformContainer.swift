@@ -41,7 +41,9 @@ struct WaveformContainer: View {
     var ghostLyricLine: LyricLine?
     var onPlaceLyricAtMediaTime: (TimeInterval) -> Void = { _ in }
 
-    @State private var peaks: [Float]?
+    /// Internal (not private) so the bucket-streaming extension
+    /// (`WaveformContainer+Buckets.swift`) can repaint it progressively (#733).
+    @State var peaks: [Float]?
     /// Per-channel peak arrays, one lane per kept channel (ascending channel
     /// order), populated only while `splitChannels` is on (#720). nil when off —
     /// the OFF path renders the single `peaks` array, byte-identical to pre-#720.
@@ -290,29 +292,30 @@ struct WaveformContainer: View {
             let cmDuration = try await asset.load(.duration)
             loadedDuration = CMTimeGetSeconds(cmDuration)
 
-            if let hash, let cached = cache.read(
+            let bucketMillis = WaveformGenerator.defaultBucketMillis
+            if let hash, let cached = cache.readBuckets(
                 assetHash: hash,
-                resolution: target,
+                bucketMillis: bucketMillis,
                 excludingChannel: excludingChannel
             ) {
-                peaks = cached
+                peaks = WaveformBucket.normalizedRMS(cached)
                 if splitChannels {
                     await loadLanes(hash: hash, resolution: target, excludingChannel: excludingChannel, cache: cache)
                 }
                 return
             }
 
-            let generated = try await WaveformGenerator.peaks(
-                for: asset,
-                resolution: target,
-                excludingChannel: excludingChannel
+            // Cache miss: stream buckets progressively (16 ms throttle) via the
+            // coordinator, which shares the decode with any in-flight prewarm.
+            let buckets = try await streamBuckets(
+                url: url, bucketMillis: bucketMillis, excludingChannel: excludingChannel, hash: hash
             )
             if Task.isCancelled { return }
-            peaks = generated
+            peaks = WaveformBucket.normalizedRMS(buckets)
             if splitChannels {
                 await loadLanes(hash: hash, resolution: target, excludingChannel: excludingChannel, cache: cache)
             }
-            cacheDownmix(generated, hash: hash, resolution: target, excludingChannel: excludingChannel, cache: cache)
+            cacheBuckets(buckets, hash: hash, bucketMillis: bucketMillis, excludingChannel: excludingChannel, cache: cache)
         } catch is CancellationError {
             return
         } catch {

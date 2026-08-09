@@ -113,6 +113,48 @@ final class WaveformBucketGeneratorTests: XCTestCase {
         XCTAssertEqual(last.count, collected.count, "final streamed snapshot must equal the collected result")
     }
 
+    // MARK: - Per-channel buckets (#720 split lanes on the #734 dual envelope)
+
+    /// One un-normalized bucket array per non-excluded channel, ascending order —
+    /// the split-channel lanes. Excluding the LTC channel leaves only the music
+    /// lane; with no exclusion both channels come back with distinct content.
+    func test_channelBuckets_returnsOnePerMusicChannel_excludingLTC() async throws {
+        // ch0: quiet 440 Hz music sine; ch1: full-scale 1 kHz square (LTC stand-in).
+        let url = try SilentAudioFixture.makeStereoWAV(
+            duration: 1,
+            fillCh0: { frame, sampleRate in 0.1 * sin(2 * .pi * 440 * Double(frame) / sampleRate) },
+            fillCh1: { frame, sampleRate in sin(2 * .pi * 1000 * Double(frame) / sampleRate) >= 0 ? 1.0 : -1.0 }
+        )
+        defer { try? FileManager.default.removeItem(at: url) }
+        let asset = AVURLAsset(url: url)
+
+        let musicOnly = try await WaveformGenerator.channelBuckets(
+            for: asset, bucketMillis: 10, excludingChannel: 1
+        )
+        XCTAssertEqual(musicOnly.count, 1, "excluding the LTC channel leaves one music lane")
+        XCTAssertFalse(musicOnly[0].isEmpty)
+
+        let both = try await WaveformGenerator.channelBuckets(
+            for: asset, bucketMillis: 10, excludingChannel: nil
+        )
+        XCTAssertEqual(both.count, 2, "no exclusion → one lane per channel")
+        XCTAssertEqual(both[0].count, both[1].count, "lanes share one time base")
+        let musicPeak = both[0].map(\.peak).max() ?? 0
+        let ltcPeak = both[1].map(\.peak).max() ?? 0
+        XCTAssertGreaterThan(ltcPeak, musicPeak, "per-channel content, not a shared downmix")
+    }
+
+    func test_channelBuckets_mono_returnsSingleDownmixLane() async throws {
+        let url = try SilentAudioFixture.makeSineWAV(duration: 1, frequency: 440)
+        defer { try? FileManager.default.removeItem(at: url) }
+
+        let lanes = try await WaveformGenerator.channelBuckets(
+            for: AVURLAsset(url: url), bucketMillis: 10, excludingChannel: nil
+        )
+        XCTAssertEqual(lanes.count, 1)
+        XCTAssertFalse(lanes[0].isEmpty)
+    }
+
     // MARK: - Performance baseline (#732 acceptance: track generation time)
 
     /// Not an assertion — an `XCTMetric` baseline so a future regression in the

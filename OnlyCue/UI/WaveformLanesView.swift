@@ -28,21 +28,21 @@ enum WaveformLaneLayout {
 
 // MARK: - View
 
-/// Renders one `WaveformView` per channel stacked vertically, each occupying
-/// an equal share of `height` with `DS.Space.xs` gaps between lanes.
+/// Renders one dual-envelope `WaveformView` per channel stacked vertically, each
+/// occupying an equal share of `height` with `DS.Space.xs` gaps between lanes.
 ///
-/// A single lane is visually identical to a bare `WaveformView(peaks:)` at
+/// A single lane is visually identical to a bare `WaveformView(buckets:)` at
 /// full `height` — no gap is applied and the frame equals `totalHeight`.
 struct WaveformLanesView: View {
 
-    let lanes: [[Float]]
+    let lanes: [[WaveformBucket]]
     let height: CGFloat
 
     /// Gap between lanes — uses the xs (4 pt) spacing token so adjacent
     /// waveforms read as a tight group, not isolated panels.
     private let gap: CGFloat = DS.Space.xs
 
-    init(lanes: [[Float]], height: CGFloat) {
+    init(lanes: [[WaveformBucket]], height: CGFloat) {
         self.lanes = lanes
         self.height = height
     }
@@ -54,8 +54,8 @@ struct WaveformLanesView: View {
             gap: gap
         )
         VStack(spacing: gap) {
-            ForEach(Array(lanes.enumerated()), id: \.offset) { index, peaks in
-                WaveformView(peaks: peaks)
+            ForEach(Array(lanes.enumerated()), id: \.offset) { index, lane in
+                WaveformView(buckets: lane)
                     .frame(height: laneHeight)
                     .accessibilityIdentifier("waveformLane.\(index)")
             }

@@ -47,6 +47,9 @@ extension WaveformContainer {
 
         // Miss (or mono/unhashed): regenerate the whole set, then cache each lane
         // under its true channel index when we have both a hash and the indices.
+        // Unlike the downmix (`streamBuckets`, progressive + coordinator-coalesced),
+        // lanes generate one-shot: they are never prewarmed, so there is no
+        // concurrent production to coalesce.
         let generated: [[WaveformBucket]]
         do {
             generated = try await WaveformGenerator.channelBuckets(

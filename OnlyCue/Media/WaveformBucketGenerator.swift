@@ -131,15 +131,7 @@ extension WaveformGenerator {
         readerChannels: Int,
         excluding excluded: Int?
     ) {
-        guard let blockBuffer = CMSampleBufferGetDataBuffer(buffer) else { return }
-        let length = CMBlockBufferGetDataLength(blockBuffer)
-        var data = Data(count: length)
-        data.withUnsafeMutableBytes { raw in
-            guard let base = raw.baseAddress else { return }
-            CMBlockBufferCopyDataBytes(blockBuffer, atOffset: 0, dataLength: length, destination: base)
-        }
-        data.withUnsafeBytes { raw in
-            let samples = raw.bindMemory(to: Int16.self)
+        withInt16Samples(of: buffer) { samples in
             if excluded == nil {
                 for sample in samples {
                     accumulator.addSample(Float(sample) / sampleScale)
@@ -160,11 +152,31 @@ extension WaveformGenerator {
         }
     }
 
+    /// Copies the interleaved Int16 PCM block out of `buffer` and hands it to
+    /// `body` as a typed buffer — the shared unsafe-extraction prologue for both
+    /// the downmix (`ingest`) and per-channel (`ingestChannels`) sample loops.
+    private static func withInt16Samples(
+        of buffer: CMSampleBuffer,
+        _ body: (UnsafeBufferPointer<Int16>) -> Void
+    ) {
+        guard let blockBuffer = CMSampleBufferGetDataBuffer(buffer) else { return }
+        let length = CMBlockBufferGetDataLength(blockBuffer)
+        var data = Data(count: length)
+        data.withUnsafeMutableBytes { raw in
+            guard let base = raw.baseAddress else { return }
+            CMBlockBufferCopyDataBytes(blockBuffer, atOffset: 0, dataLength: length, destination: base)
+        }
+        data.withUnsafeBytes { raw in
+            body(raw.bindMemory(to: Int16.self))
+        }
+    }
+
     /// Per-channel bucket generation: one un-normalized (peak+RMS) bucket array
     /// per non-excluded channel, in ascending channel order — the split-channel
     /// lanes (#720) rendered with the #734 dual envelope. Mono files, an
     /// out-of-range exclusion, or a collapsed kept-set fall back to a single
-    /// downmix lane so callers treat the result uniformly.
+    /// downmix lane so callers treat the result uniformly; a file with no audio
+    /// track yields one flat-silence lane.
     ///
     /// Deliberately NOT routed through `WaveformBucketCoordinator`: unlike the
     /// downmix, per-channel lanes are never prewarmed, so there is no concurrent
@@ -229,15 +241,7 @@ extension WaveformGenerator {
         keptChannels: [Int],
         channelCount: Int
     ) {
-        guard let blockBuffer = CMSampleBufferGetDataBuffer(buffer) else { return }
-        let length = CMBlockBufferGetDataLength(blockBuffer)
-        var data = Data(count: length)
-        data.withUnsafeMutableBytes { raw in
-            guard let base = raw.baseAddress else { return }
-            CMBlockBufferCopyDataBytes(blockBuffer, atOffset: 0, dataLength: length, destination: base)
-        }
-        data.withUnsafeBytes { raw in
-            let samples = raw.bindMemory(to: Int16.self)
+        withInt16Samples(of: buffer) { samples in
             var frameStart = samples.startIndex
             while frameStart < samples.endIndex {
                 for (index, channel) in keptChannels.enumerated() {

@@ -21,7 +21,6 @@ struct WaveformContainer: View {
     /// The horizontal-zoom controller. Injected (not `@State`-owned) so the LTC
     /// strip can share the same instance and stay zoom/scroll-synced (#669).
     var zoom: WaveformZoomController
-    var resolution: Int = 12_000
     var cues: [Cue] = []
     var tempoGrid: DerivedTempoGrid = DerivedTempoGrid(segments: [])
     var resolveColorHex: (Cue) -> String? = { _ in nil }

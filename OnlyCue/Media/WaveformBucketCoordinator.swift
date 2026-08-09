@@ -20,6 +20,15 @@ actor WaveformBucketCoordinator {
 
     private var sessions: [String: Session] = [:]
 
+    /// The coalescing key shared by the prewarmer and the foreground container so
+    /// they attach to the SAME in-flight production (a drifting key would silently
+    /// double-decode). Falls back to the URL when no content fingerprint is known.
+    static func cacheKey(hash: String?, url: URL, bucketMillis: Int, excludingChannel: Int?) -> String {
+        let base = hash ?? url.absoluteString
+        let channel = excludingChannel.map(String.init) ?? "none"
+        return "\(base)-\(bucketMillis)ms-xc\(channel)"
+    }
+
     /// A progressive bucket stream for `key`. If a production for `key` is already
     /// in flight, this attaches to it (replaying the latest snapshot) instead of
     /// starting a second one; otherwise `produce` is invoked exactly once.

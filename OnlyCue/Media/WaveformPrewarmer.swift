@@ -1,32 +1,61 @@
 import AVFoundation
 
-/// Best-effort, background-priority cache warming so the user's first click on
-/// a freshly-imported item hits a populated `WaveformCache`. Failures (missing
-/// file, stale bookmark, decode error) are swallowed; the foreground load path
-/// in `WaveformContainer` will surface them when it runs for real.
+/// Best-effort, background-priority cache warming so the user's first click on a
+/// freshly-imported item hits a populated bucket cache (#733). Warms EVERY item
+/// on import (甲), but with a bounded concurrency so importing a batch of large
+/// files can't saturate CPU/disk. Production goes through
+/// `WaveformBucketCoordinator`, so a foreground open of a still-warming file
+/// attaches to the same decode instead of starting a second one.
+///
+/// Failures (missing file, stale bookmark, decode error) are swallowed; the
+/// foreground load path in `WaveformContainer` surfaces them when it runs.
 enum WaveformPrewarmer {
 
-    static let defaultResolution = 512
+    static let defaultBucketMillis = WaveformGenerator.defaultBucketMillis
 
-    static func prewarm(items: [MediaItem], resolution: Int = defaultResolution) async {
+    /// Max files decoded at once. Keeps a batch import of large work tapes from
+    /// pinning every core in the background.
+    static let maxConcurrent = 3
+
+    static func prewarm(items: [MediaItem], bucketMillis: Int = defaultBucketMillis) async {
         await withTaskGroup(of: Void.self) { group in
-            for item in items {
+            var iterator = items.makeIterator()
+
+            @Sendable func scheduleNext() -> Bool {
+                guard let item = iterator.next() else { return false }
                 group.addTask(priority: .background) {
-                    await prewarmOne(item, resolution: resolution)
+                    await prewarmOne(item, bucketMillis: bucketMillis)
                 }
+                return true
             }
+
+            for _ in 0..<maxConcurrent where scheduleNext() {}
+            while await group.next() != nil { _ = scheduleNext() }
         }
     }
 
-    private static func prewarmOne(_ item: MediaItem, resolution: Int) async {
+    private static func prewarmOne(_ item: MediaItem, bucketMillis: Int) async {
         guard let bookmark = try? Bookmarks.resolve(item.media.bookmarkData) else { return }
         let url = bookmark.url
         guard let hash = try? WaveformCache.fastFingerprint(url) else { return }
-        if WaveformCache.shared.read(assetHash: hash, resolution: resolution) != nil {
+        if WaveformCache.shared.readBuckets(assetHash: hash, bucketMillis: bucketMillis) != nil {
             return
         }
-        let asset = AVURLAsset(url: url)
-        guard let peaks = try? await WaveformGenerator.peaks(for: asset, resolution: resolution) else { return }
-        try? WaveformCache.shared.write(peaks, assetHash: hash, resolution: resolution)
+
+        let key = WaveformBucketCoordinator.cacheKey(
+            hash: hash, url: url, bucketMillis: bucketMillis, excludingChannel: nil
+        )
+        let stream = WaveformBucketCoordinator.shared.stream(for: key) {
+            WaveformGenerator.bucketStream(for: AVURLAsset(url: url), bucketMillis: bucketMillis)
+        }
+
+        var latest: [WaveformBucket] = []
+        do {
+            for try await snapshot in stream { latest = snapshot }
+        } catch {
+            return
+        }
+        guard !latest.isEmpty else { return }
+        try? WaveformCache.shared.writeBuckets(latest, assetHash: hash, bucketMillis: bucketMillis)
     }
 }

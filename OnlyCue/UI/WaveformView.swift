@@ -19,17 +19,20 @@ struct WaveformView: View {
 
     static let minHairline: CGFloat = 0.5
 
-    /// Opacity of the peak-outline layer. Same achromatic hue as the body, just
-    /// fainter, so transients read as a light "halo" beyond the solid loudness
-    /// body. Drawn UNDER the opaque body so that where `peak == rms` the body
-    /// fully occludes it — collapsing to the pre-#734 single filled envelope.
-    static let peakOutlineOpacity: Double = 0.5
+    /// Opacity of the peak-fill layer. Same achromatic hue as the body, just
+    /// fainter, so transients read as a soft halo beyond the solid loudness body.
+    /// Drawn UNDER the opaque body so that where `peak == rms` the body fully
+    /// occludes it — collapsing to the pre-#734 single filled envelope. Kept low
+    /// so a brickwall master (peaks near full-scale everywhere) reads as a faint
+    /// halo around the RMS body, not a saturated grey slab (#739).
+    static let peakFillOpacity: Double = 0.32
 
     /// Fraction of the half-height the loudest (normalized 1.0) peak is allowed
     /// to fill. Below 1 so the envelope leaves a margin and never touches the
     /// well's top/bottom edge — normalized peaks otherwise slam a loud master
-    /// flush against the boundary (issue #628).
-    static let verticalFillRatio: CGFloat = 0.85
+    /// flush against the boundary (issue #628); tightened for #739 so a
+    /// near-full-scale peak keeps clear headroom instead of looking cut off.
+    static let verticalFillRatio: CGFloat = 0.80
 
     /// Mirrored half-height (above and below the midline) for a normalized
     /// `peak` in a well of half-height `midY`. Clamped to a minimum hairline so
@@ -95,7 +98,7 @@ struct WaveformView: View {
             // body covers the outline exactly (pre-#734 single-envelope look).
             context.fill(
                 envelopePath(values: envelope.peak, midY: midY, width: size.width),
-                with: .color(color.opacity(Self.peakOutlineOpacity))
+                with: .color(color.opacity(Self.peakFillOpacity))
             )
             context.fill(
                 envelopePath(values: envelope.rms, midY: midY, width: size.width),

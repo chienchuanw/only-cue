@@ -17,20 +17,11 @@ struct WaveformBucket: Equatable, Sendable {
 
 extension WaveformBucket {
 
-    /// Below this RMS the buckets are treated as silence and left flat (mirrors
+    /// Below this peak the buckets are treated as silence and left flat (mirrors
     /// `WaveformGenerator`'s silence floor, ≈ −80 dBFS): avoids amplifying the
-    /// noise floor and dividing by zero.
+    /// noise floor and dividing by zero when the render-time normalizer
+    /// (`WaveformView.normalizedEnvelope`) divides by the loaded peak-max.
     static let silenceFloor: Float = 1e-4
-
-    /// Adapts un-normalized buckets to the single normalized RMS `[Float]` the
-    /// current renderer consumes — the #733 "normalize-on-read" seam that keeps
-    /// the app on the existing single-envelope renderer until the dual-envelope,
-    /// render-time-normalized renderer arrives in #734.
-    static func normalizedRMS(_ buckets: [WaveformBucket]) -> [Float] {
-        let rms = buckets.map(\.rms)
-        guard let maxRMS = rms.max(), maxRMS > silenceFloor else { return rms }
-        return rms.map { $0 / maxRMS }
-    }
 }
 
 extension WaveformGenerator {

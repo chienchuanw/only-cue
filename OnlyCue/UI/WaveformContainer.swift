@@ -43,7 +43,9 @@ struct WaveformContainer: View {
 
     /// Internal (not private) so the bucket-streaming extension
     /// (`WaveformContainer+Buckets.swift`) can repaint it progressively (#733).
-    @State var peaks: [Float]?
+    /// Un-normalized peak+RMS buckets — normalization is applied at render time
+    /// by `WaveformView` (#734), so a partial stream stays self-consistent.
+    @State var buckets: [WaveformBucket]?
     /// Per-channel peak arrays, one lane per kept channel (ascending channel
     /// order), populated only while `splitChannels` is on (#720). nil when off —
     /// the OFF path renders the single `peaks` array, byte-identical to pre-#720.
@@ -75,8 +77,8 @@ struct WaveformContainer: View {
 
     var body: some View {
         Group {
-            if let peaks {
-                loaded(peaks: peaks)
+            if let buckets {
+                loaded(buckets: buckets)
             } else if failed {
                 Text("Could not generate waveform")
                     .font(.callout)
@@ -109,8 +111,8 @@ struct WaveformContainer: View {
     }
 
     @ViewBuilder
-    private func loaded(peaks: [Float]) -> some View {
-        waveformBody(peaks: peaks)
+    private func loaded(buckets: [WaveformBucket]) -> some View {
+        waveformBody(buckets: buckets)
             // The waveform's inner content inset — shared with the LTC strip via
             // `PreviewLayout` so the two playhead tracks coincide (#663).
             .padding(.horizontal, PreviewLayout.trackContentInset)
@@ -130,7 +132,7 @@ struct WaveformContainer: View {
     }
 
     @ViewBuilder
-    private func waveformBody(peaks: [Float]) -> some View {
+    private func waveformBody(buckets: [WaveformBucket]) -> some View {
         GeometryReader { proxy in
             let width = proxy.size.width
             let height = proxy.size.height
@@ -143,7 +145,7 @@ struct WaveformContainer: View {
             HorizontalScrollWheelReader(
                 onScroll: { dx in manualScroll(dx: dx, viewportWidth: width) },
                 content: {
-                    offsetScrollContent(peaks: peaks, width: width, contentWidth: contentWidth, height: height)
+                    offsetScrollContent(buckets: buckets, width: width, contentWidth: contentWidth, height: height)
                 }
             )
             .gesture(magnifyGesture(viewportWidth: width))
@@ -178,7 +180,7 @@ struct WaveformContainer: View {
     /// frame, so the wide waveform Canvas is not re-rasterized 60×/s at high zoom
     /// (#681). The playhead — the only per-frame element — is `playheadLayer`.
     func staticScrollContent(
-        peaks: [Float],
+        buckets: [WaveformBucket],
         width: CGFloat,
         contentWidth: CGFloat,
         height: CGFloat
@@ -191,7 +193,7 @@ struct WaveformContainer: View {
                 if splitChannels, let lanePeaks {
                     WaveformLanesView(lanes: lanePeaks, height: height)
                 } else {
-                    WaveformView(peaks: peaks)
+                    WaveformView(buckets: buckets)
                 }
             }
             .opacity(editorMode == .show ? 0.45 : 1)
@@ -270,7 +272,7 @@ struct WaveformContainer: View {
     }
 
     private func load() async {
-        peaks = nil
+        buckets = nil
         lanePeaks = nil
         failed = false
         resetZoomAndOffset()
@@ -298,7 +300,7 @@ struct WaveformContainer: View {
                 bucketMillis: bucketMillis,
                 excludingChannel: excludingChannel
             ) {
-                peaks = WaveformBucket.normalizedRMS(cached)
+                buckets = cached
                 if splitChannels {
                     await loadLanes(hash: hash, resolution: target, excludingChannel: excludingChannel, cache: cache)
                 }
@@ -307,15 +309,15 @@ struct WaveformContainer: View {
 
             // Cache miss: stream buckets progressively (16 ms throttle) via the
             // coordinator, which shares the decode with any in-flight prewarm.
-            let buckets = try await streamBuckets(
+            let streamed = try await streamBuckets(
                 url: url, bucketMillis: bucketMillis, excludingChannel: excludingChannel, hash: hash
             )
             if Task.isCancelled { return }
-            peaks = WaveformBucket.normalizedRMS(buckets)
+            buckets = streamed
             if splitChannels {
                 await loadLanes(hash: hash, resolution: target, excludingChannel: excludingChannel, cache: cache)
             }
-            cacheBuckets(buckets, hash: hash, bucketMillis: bucketMillis, excludingChannel: excludingChannel, cache: cache)
+            cacheBuckets(streamed, hash: hash, bucketMillis: bucketMillis, excludingChannel: excludingChannel, cache: cache)
         } catch is CancellationError {
             return
         } catch {

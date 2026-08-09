@@ -13,11 +13,11 @@ extension WaveformContainer {
     /// pixel-snapped so the envelope translates without shimmer. Otherwise the
     /// stored offset (manual scroll / zoom / 1×) is used.
     @ViewBuilder
-    func offsetScrollContent(peaks: [Float], width: CGFloat, contentWidth: CGFloat, height: CGFloat) -> some View {
+    func offsetScrollContent(buckets: [WaveformBucket], width: CGFloat, contentWidth: CGFloat, height: CGFloat) -> some View {
         // Build the heavy static layer ONCE, here — not inside the per-frame
         // TimelineView — so its wide Canvas is rasterized once and only
         // translated each frame (#681).
-        let base = staticScrollContent(peaks: peaks, width: width, contentWidth: contentWidth, height: height)
+        let base = staticScrollContent(buckets: buckets, width: width, contentWidth: contentWidth, height: height)
         if isFollowing(viewportWidth: width) {
             // One renderedTime sample per frame drives both the offset and the
             // playhead (via `overrideTime`) — no cross-view desync jitter (#681).

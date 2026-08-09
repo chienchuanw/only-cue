@@ -70,8 +70,11 @@ struct WaveformView: View {
     static func normalizedEnvelope(buckets: [WaveformBucket], count: Int) -> (rms: [Float], peak: [Float]) {
         let peakColumns = WaveformPeakBucketer.bucket(peaks: buckets.map(\.peak), into: count)
         let rmsColumns = WaveformPeakBucketer.bucketRMS(buckets.map(\.rms), into: count)
-        guard let maxPeak = buckets.map(\.peak).max(), maxPeak > WaveformBucket.silenceFloor else {
-            return (rmsColumns.map { _ in 0 }, peakColumns.map { _ in 0 })
+        // The peak collapse takes the max per column, so `peakColumns.max()` IS
+        // the global peak-max of the loaded buckets — no separate pass over the
+        // source needed.
+        guard let maxPeak = peakColumns.max(), maxPeak > WaveformBucket.silenceFloor else {
+            return (Array(repeating: 0, count: rmsColumns.count), Array(repeating: 0, count: peakColumns.count))
         }
         return (rmsColumns.map { $0 / maxPeak }, peakColumns.map { $0 / maxPeak })
     }

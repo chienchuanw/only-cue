@@ -33,8 +33,8 @@ final class FigmaFidelityTests: XCTestCase {
 
     /// Achromatic waveform (ADR-024 / Figma 318:1254): a DS neutral, not the accent.
     func test_waveformIsAchromatic() {
-        XCTAssertEqual(WaveformView(peaks: []).color, DS.Color.textSecondary)
-        XCTAssertNotEqual(WaveformView(peaks: []).color, DS.Color.cueIndigo)
+        XCTAssertEqual(WaveformView(buckets: []).color, DS.Color.textSecondary)
+        XCTAssertNotEqual(WaveformView(buckets: []).color, DS.Color.cueIndigo)
     }
 
     /// Preview video/waveform split (Figma 318:1639): the waveform band is a

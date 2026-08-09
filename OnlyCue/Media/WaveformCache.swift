@@ -15,82 +15,12 @@ struct WaveformCache {
         return Self(directory: base.appendingPathComponent("OnlyCue/peaks", isDirectory: true))
     }()
 
-    func read(assetHash: String, resolution: Int, excludingChannel: Int? = nil) -> [Float]? {
-        let url = entryURL(assetHash: assetHash, resolution: resolution, excludingChannel: excludingChannel)
-        guard let data = try? Data(contentsOf: url) else { return nil }
-        let count = data.count / MemoryLayout<Float32>.size
-        guard count == resolution else { return nil }
-        return data.withUnsafeBytes { buffer in
-            Array(buffer.bindMemory(to: Float32.self))
-        }
-    }
+    // MARK: - Bucket cache (v4, #732/#734)
 
-    func read(assetHash: String, resolution: Int, channel: Int) -> [Float]? {
-        let url = entryURL(assetHash: assetHash, resolution: resolution, channel: channel)
-        guard let data = try? Data(contentsOf: url) else { return nil }
-        let count = data.count / MemoryLayout<Float32>.size
-        guard count == resolution else { return nil }
-        return data.withUnsafeBytes { buffer in
-            Array(buffer.bindMemory(to: Float32.self))
-        }
-    }
-
-    func write(_ peaks: [Float], assetHash: String, resolution: Int, excludingChannel: Int? = nil) throws {
-        try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
-        let data = peaks.withUnsafeBufferPointer { buffer in
-            Data(buffer: buffer)
-        }
-        try data.write(
-            to: entryURL(assetHash: assetHash, resolution: resolution, excludingChannel: excludingChannel),
-            options: .atomic
-        )
-    }
-
-    func write(_ peaks: [Float], assetHash: String, resolution: Int, channel: Int) throws {
-        try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
-        let data = peaks.withUnsafeBufferPointer { buffer in
-            Data(buffer: buffer)
-        }
-        try data.write(
-            to: entryURL(assetHash: assetHash, resolution: resolution, channel: channel),
-            options: .atomic
-        )
-    }
-
-    /// Bumped to v2 when peaks became per-file normalized (issue #538), and to
-    /// v3 when the envelope became per-bucket RMS energy rather than peak (issue
-    /// #632). The version is part of the cache key so previously-cached peak
-    /// arrays are ignored and regenerated as RMS rather than served stale.
-    private static let formatVersion = 3
-
-    /// Internal (not private) so tests can locate a specific cache entry without
-    /// hard-coding the on-disk filename format (which embeds `formatVersion`).
-    ///
-    /// When `excludingChannel` is non-nil the filename includes an `xc<N>` suffix
-    /// so a music-only render (e.g. `xc1` = "exclude channel 1") never collides
-    /// with the all-channel downmix entry for the same file and resolution.
-    func entryURL(assetHash: String, resolution: Int, excludingChannel: Int? = nil) -> URL {
-        let channelSuffix = excludingChannel.map { "-xc\($0)" } ?? ""
-        return directory.appendingPathComponent(
-            "\(assetHash)-\(resolution)\(channelSuffix)-v\(Self.formatVersion).peaks"
-        )
-    }
-
-    /// Overload for per-channel peak arrays. The `-ch<N>` suffix is distinct
-    /// from the `-xc<N>` (excludingChannel) suffix and from the combined key,
-    /// so channel 0 peaks, music-only (xc0) peaks, and the downmix never collide.
-    func entryURL(assetHash: String, resolution: Int, channel: Int) -> URL {
-        directory.appendingPathComponent(
-            "\(assetHash)-\(resolution)-ch\(channel)-v\(Self.formatVersion).peaks"
-        )
-    }
-
-    // MARK: - Bucket cache (v4, #732)
-
-    /// Separate from `formatVersion` (the legacy pre-normalized `[Float]` peaks):
-    /// buckets store two un-normalized Float32s each (peak, rms) at a time-based
-    /// resolution. Bumped independently so an old peaks cache is not invalidated
-    /// while both formats coexist during the #729 rollout.
+    /// Buckets store two un-normalized Float32s each (peak, rms) at a time-based
+    /// resolution. v4 is the sole on-disk format since #734 retired the legacy
+    /// pre-normalized `[Float]` peaks cache (v1–v3). The `bv` filename token is
+    /// kept so the v4 bucket entries written during the #729 rollout stay valid.
     private static let bucketFormatVersion = 4
 
     /// Reads the cached bucket array for `bucketMillis`, or nil on a miss or a

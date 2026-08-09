@@ -24,7 +24,8 @@ final class WaveformViewEnvelopeTests: XCTestCase {
         XCTAssertEqual(env.rms.count, env.peak.count)
         for index in env.rms.indices {
             XCTAssertLessThanOrEqual(
-                env.rms[index], env.peak[index] + 1e-6,
+                env.rms[index],
+                env.peak[index] + 1e-6,
                 "RMS body column \(index) spilled past the peak outline — divisor not shared"
             )
         }
@@ -42,14 +43,18 @@ final class WaveformViewEnvelopeTests: XCTestCase {
         ]
         let env = WaveformView.normalizedEnvelope(buckets: buckets, count: 3)
 
-        XCTAssertEqual(env.peak.max() ?? 0, 1.0, accuracy: 1e-6,
-                       "the loudest peak must reach 1.0 under the shared divisor")
+        XCTAssertEqual(
+            env.peak.max() ?? 0,
+            1.0,
+            accuracy: 1e-6,
+            "the loudest peak must reach 1.0 under the shared divisor"
+        )
         // RMS scaled by the SAME 0.8 divisor, not by its own max (0.5).
         XCTAssertEqual(env.rms[1], 0.5 / 0.8, accuracy: 1e-6)
         XCTAssertEqual(env.rms[2], 0.4 / 0.8, accuracy: 1e-6)
     }
 
-    func test_normalizedEnvelope_renderTimeEqualsGlobalMax_whenFullyLoaded() {
+    func test_normalizedEnvelope_renderTimeEqualsGlobalMax_whenFullyLoaded() throws {
         // Spec §5: normalizing by "max of loaded" on the full set is identical to
         // dividing the raw collapse by the global peak max — no end-of-load snap.
         let buckets = (0..<20).map { index in
@@ -60,7 +65,7 @@ final class WaveformViewEnvelopeTests: XCTestCase {
 
         let rawPeak = WaveformPeakBucketer.bucket(peaks: buckets.map(\.peak), into: count)
         let rawRMS = WaveformPeakBucketer.bucketRMS(buckets.map(\.rms), into: count)
-        let globalMax = buckets.map(\.peak).max()!
+        let globalMax = try XCTUnwrap(buckets.map(\.peak).max())
         for index in env.peak.indices {
             XCTAssertEqual(env.peak[index], rawPeak[index] / globalMax, accuracy: 1e-6)
             XCTAssertEqual(env.rms[index], rawRMS[index] / globalMax, accuracy: 1e-6)

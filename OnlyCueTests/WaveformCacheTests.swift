@@ -232,6 +232,66 @@ final class WaveformCacheTests: XCTestCase {
         )
     }
 
+    // MARK: - Bucket cache v4 (#732)
+
+    func test_buckets_writeThenRead_roundTrips() throws {
+        let cache = makeIsolatedCache()
+        let buckets = [
+            WaveformBucket(peak: 0.9, rms: 0.6),
+            WaveformBucket(peak: 0.2, rms: 0.1),
+            WaveformBucket(peak: 1.0, rms: 0.707)
+        ]
+
+        try cache.writeBuckets(buckets, assetHash: "h", bucketMillis: 10)
+        let recovered = cache.readBuckets(assetHash: "h", bucketMillis: 10)
+
+        XCTAssertEqual(recovered, buckets)
+    }
+
+    func test_readBuckets_missing_returnsNil() {
+        let cache = makeIsolatedCache()
+        XCTAssertNil(cache.readBuckets(assetHash: "nope", bucketMillis: 10))
+    }
+
+    /// A bucket entry stores un-normalized values verbatim — the cache must not
+    /// clamp or scale (normalization is a render-time concern, #734).
+    func test_buckets_storeUnnormalizedVerbatim() throws {
+        let cache = makeIsolatedCache()
+        let buckets = [WaveformBucket(peak: 0.25, rms: 0.18)]
+
+        try cache.writeBuckets(buckets, assetHash: "q", bucketMillis: 10)
+
+        XCTAssertEqual(cache.readBuckets(assetHash: "q", bucketMillis: 10)?.first, buckets.first)
+    }
+
+    func test_bucketEntryURL_differentBucketMillis_differ() {
+        let cache = makeIsolatedCache()
+        let ten = cache.bucketEntryURL(assetHash: "h", bucketMillis: 10, excludingChannel: nil)
+        let five = cache.bucketEntryURL(assetHash: "h", bucketMillis: 5, excludingChannel: nil)
+        XCTAssertNotEqual(ten, five, "bucket width is part of the key")
+    }
+
+    func test_bucketEntryURL_excludingChannel_and_channel_areDistinct() {
+        let cache = makeIsolatedCache()
+        let base = cache.bucketEntryURL(assetHash: "h", bucketMillis: 10, excludingChannel: nil)
+        let xc1 = cache.bucketEntryURL(assetHash: "h", bucketMillis: 10, excludingChannel: 1)
+        let ch1 = cache.bucketEntryURL(assetHash: "h", bucketMillis: 10, channel: 1)
+        XCTAssertNotEqual(base, xc1, "music-only (xc1) must not collide with the downmix")
+        XCTAssertNotEqual(base, ch1, "per-channel (ch1) must not collide with the downmix")
+        XCTAssertNotEqual(xc1, ch1, "xc1 and ch1 must not collide with each other")
+    }
+
+    /// A truncated / corrupt entry (byte length not a whole number of buckets)
+    /// must be treated as a miss, not decoded into garbage.
+    func test_readBuckets_corruptLength_returnsNil() throws {
+        let cache = makeIsolatedCache()
+        try FileManager.default.createDirectory(at: cache.directory, withIntermediateDirectories: true)
+        let url = cache.bucketEntryURL(assetHash: "h", bucketMillis: 10, excludingChannel: nil)
+        try Data([0x01, 0x02, 0x03]).write(to: url)  // 3 bytes: not a multiple of 8
+
+        XCTAssertNil(cache.readBuckets(assetHash: "h", bucketMillis: 10))
+    }
+
     private func makeIsolatedCache() -> WaveformCache {
         let directory = FileManager.default.temporaryDirectory
             .appendingPathComponent("waveform-cache-test-\(UUID().uuidString)")

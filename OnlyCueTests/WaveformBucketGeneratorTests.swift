@@ -113,6 +113,25 @@ final class WaveformBucketGeneratorTests: XCTestCase {
         XCTAssertEqual(last.count, collected.count, "final streamed snapshot must equal the collected result")
     }
 
+    // MARK: - Performance baseline (#732 acceptance: track generation time)
+
+    /// Not an assertion — an `XCTMetric` baseline so a future regression in the
+    /// 8 kHz decode / per-sample loop shows up as a measured slowdown.
+    func test_perf_bucketGeneration() throws {
+        let url = try SilentAudioFixture.makeSineWAV(duration: 5, frequency: 440)
+        defer { try? FileManager.default.removeItem(at: url) }
+        let asset = AVURLAsset(url: url)
+
+        measure {
+            let done = expectation(description: "buckets generated")
+            Task {
+                _ = try? await WaveformGenerator.buckets(for: asset, bucketMillis: 10)
+                done.fulfill()
+            }
+            wait(for: [done], timeout: 30)
+        }
+    }
+
     func test_bucketStream_cancellation_stopsWithoutError() async throws {
         let url = try SilentAudioFixture.makeSineWAV(duration: 3, frequency: 440)
         defer { try? FileManager.default.removeItem(at: url) }

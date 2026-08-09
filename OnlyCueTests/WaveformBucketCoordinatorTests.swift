@@ -15,11 +15,11 @@ final class WaveformBucketCoordinatorTests: XCTestCase {
 
         async let first = drain(coordinator.stream(for: "same", produce: slowProduce(calls)))
         async let second = drain(coordinator.stream(for: "same", produce: slowProduce(calls)))
-        let (a, b) = try await (first, second)
+        let (firstResult, secondResult) = try await (first, second)
 
         XCTAssertEqual(calls.count, 1, "one shared production, not one per subscriber")
-        XCTAssertEqual(a.count, 5, "subscriber A receives the full sequence")
-        XCTAssertEqual(b.count, 5, "subscriber B receives the full sequence")
+        XCTAssertEqual(firstResult.count, 5, "subscriber A receives the full sequence")
+        XCTAssertEqual(secondResult.count, 5, "subscriber B receives the full sequence")
     }
 
     /// Distinct keys are independent — each gets its own production.

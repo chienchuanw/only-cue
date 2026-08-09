@@ -28,4 +28,28 @@ enum WaveformPeakBucketer {
         }
         return result
     }
+
+    /// Downsamples like `bucket`, but takes each bucket's **RMS** (√mean of
+    /// squares) instead of its max — the loudness-faithful body of the dual
+    /// envelope (#734), so a brickwall master's overview keeps visible dynamics
+    /// instead of collapsing to a solid block (#632). Pairs with `bucket` (max),
+    /// which stays the transient outline. Same edge-case contract as `bucket`.
+    static func bucketRMS(_ values: [Float], into width: Int) -> [Float] {
+        guard !values.isEmpty, width > 0 else { return [] }
+        guard width < values.count else { return values }
+
+        let perBucket = Int((Double(values.count) / Double(width)).rounded(.up))
+        var result: [Float] = []
+        result.reserveCapacity(width)
+        var start = 0
+        for _ in 0..<width {
+            guard start < values.count else { break }
+            let end = min(start + perBucket, values.count)
+            let slice = values[start..<end]
+            let meanSquare = slice.reduce(Float(0)) { $0 + $1 * $1 } / Float(slice.count)
+            result.append(meanSquare.squareRoot())
+            start = end
+        }
+        return result
+    }
 }

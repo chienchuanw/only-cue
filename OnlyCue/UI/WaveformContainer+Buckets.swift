@@ -6,12 +6,12 @@ import SwiftUI
 /// own file so `WaveformContainer.swift` stays under the `file_length` cap.
 extension WaveformContainer {
 
-    /// Consumes the coalesced bucket stream for this asset, repainting `peaks` at
-    /// most every 16 ms (a progressive "still working" feel without flooding the
-    /// UI), and returns the final bucket set. Normalization is applied on read via
-    /// `normalizedRMS` (the #733 adapter; render-time normalization + the dual
-    /// envelope arrive in #734). Runs on the MainActor (SwiftUI `View`), so each
-    /// awaited resumption is safe to assign `@State` from.
+    /// Consumes the coalesced bucket stream for this asset, repainting `buckets`
+    /// at most every 16 ms (a progressive "still working" feel without flooding
+    /// the UI), and returns the final bucket set. The raw (un-normalized) snapshot
+    /// is published; `WaveformView` normalizes at render time (#734). Runs on the
+    /// MainActor (SwiftUI `View`), so each awaited resumption is safe to assign
+    /// `@State` from.
     func streamBuckets(
         url: URL,
         bucketMillis: Int,
@@ -34,7 +34,7 @@ extension WaveformContainer {
             latest = snapshot
             let now = ContinuousClock.now
             if now - lastPaint >= .milliseconds(16) {
-                peaks = WaveformBucket.normalizedRMS(snapshot)
+                buckets = snapshot
                 lastPaint = now
             }
         }

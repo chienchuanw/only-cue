@@ -113,39 +113,6 @@ final class WaveformBucketGeneratorTests: XCTestCase {
         XCTAssertEqual(last.count, collected.count, "final streamed snapshot must equal the collected result")
     }
 
-    // MARK: - Normalize-on-read adapter (#733: buckets → renderer's [Float])
-
-    /// The adapter feeds the existing single-envelope renderer by taking the RMS
-    /// channel and normalizing to its own max — reproducing the pre-bucket
-    /// per-file normalization behaviour until the dual-envelope renderer (#734).
-    func test_normalizedRMS_scalesToOwnMax() {
-        let buckets = [WaveformBucket(peak: 0.3, rms: 0.1), WaveformBucket(peak: 0.6, rms: 0.2)]
-
-        let out = WaveformBucket.normalizedRMS(buckets)
-
-        XCTAssertEqual(out[0], 0.5, accuracy: 1e-5)
-        XCTAssertEqual(out[1], 1.0, accuracy: 1e-5)
-    }
-
-    func test_normalizedRMS_silence_staysZero() {
-        let buckets = [WaveformBucket(peak: 0, rms: 0), WaveformBucket(peak: 0, rms: 0)]
-
-        XCTAssertEqual(WaveformBucket.normalizedRMS(buckets), [0, 0])
-    }
-
-    func test_normalizedRMS_isWithinUnitRange() {
-        let out = WaveformBucket.normalizedRMS([
-            WaveformBucket(peak: 1, rms: 0.4),
-            WaveformBucket(peak: 1, rms: 0.8)
-        ])
-
-        for value in out {
-            XCTAssertGreaterThanOrEqual(value, 0)
-            XCTAssertLessThanOrEqual(value, 1)
-        }
-        XCTAssertEqual(out.max() ?? 0, 1.0, accuracy: 1e-5)
-    }
-
     // MARK: - Performance baseline (#732 acceptance: track generation time)
 
     /// Not an assertion — an `XCTMetric` baseline so a future regression in the

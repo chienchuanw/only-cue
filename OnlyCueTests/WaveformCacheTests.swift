@@ -3,28 +3,6 @@ import XCTest
 
 final class WaveformCacheTests: XCTestCase {
 
-    func test_writeThenRead_roundTripsPeaks() throws {
-        let cache = makeIsolatedCache()
-        let peaks: [Float] = [0.0, 0.25, 0.5, 0.75, 1.0]
-
-        try cache.write(peaks, assetHash: "abc123", resolution: 5)
-        let recovered = cache.read(assetHash: "abc123", resolution: 5)
-
-        XCTAssertEqual(recovered, peaks)
-    }
-
-    func test_read_missingEntry_returnsNil() {
-        let cache = makeIsolatedCache()
-        XCTAssertNil(cache.read(assetHash: "nope", resolution: 32))
-    }
-
-    func test_read_resolutionMismatch_returnsNil() throws {
-        let cache = makeIsolatedCache()
-        try cache.write([0.1, 0.2, 0.3], assetHash: "h1", resolution: 3)
-
-        XCTAssertNil(cache.read(assetHash: "h1", resolution: 4))
-    }
-
     // MARK: - fast fingerprint (#731)
 
     func test_fastFingerprint_isStableForSameContents() throws {
@@ -107,131 +85,6 @@ final class WaveformCacheTests: XCTestCase {
         )
     }
 
-    // MARK: - Channel exclusion cache keys (#715)
-
-    func test_entryURL_withExcludedChannel_differsFromDefaultKey() {
-        let cache = makeIsolatedCache()
-        let defaultURL = cache.entryURL(assetHash: "abc", resolution: 32, excludingChannel: nil)
-        let musicOnlyURL = cache.entryURL(assetHash: "abc", resolution: 32, excludingChannel: 1)
-        XCTAssertNotEqual(
-            defaultURL,
-            musicOnlyURL,
-            "music-only render (excludingChannel: 1) must not collide with all-channel render"
-        )
-    }
-
-    func test_entryURL_sameExcludedChannel_isStable() {
-        let cache = makeIsolatedCache()
-        let urlFirst = cache.entryURL(assetHash: "abc", resolution: 32, excludingChannel: 1)
-        let urlSecond = cache.entryURL(assetHash: "abc", resolution: 32, excludingChannel: 1)
-        XCTAssertEqual(urlFirst, urlSecond, "same exclusion must produce the same cache URL (no collision)")
-    }
-
-    func test_entryURL_differentExcludedChannels_differ() {
-        let cache = makeIsolatedCache()
-        let ch1 = cache.entryURL(assetHash: "abc", resolution: 32, excludingChannel: 1)
-        let ch0 = cache.entryURL(assetHash: "abc", resolution: 32, excludingChannel: 0)
-        XCTAssertNotEqual(ch1, ch0, "excluding ch0 vs ch1 must produce different cache keys")
-    }
-
-    func test_writeThenRead_withExcludedChannel_roundTrips() throws {
-        let cache = makeIsolatedCache()
-        let peaks: [Float] = [0.1, 0.9, 0.5]
-
-        try cache.write(peaks, assetHash: "xyz", resolution: 3, excludingChannel: 1)
-        let recovered = cache.read(assetHash: "xyz", resolution: 3, excludingChannel: 1)
-
-        XCTAssertEqual(recovered, peaks)
-    }
-
-    func test_writeThenRead_excludedChannelDoesNotCollideWithDefault() throws {
-        let cache = makeIsolatedCache()
-        let defaultPeaks: [Float] = [0.0, 0.5, 1.0]
-        let musicPeaks: [Float] = [0.2, 0.4, 0.6]
-
-        try cache.write(defaultPeaks, assetHash: "xyz", resolution: 3, excludingChannel: nil)
-        try cache.write(musicPeaks, assetHash: "xyz", resolution: 3, excludingChannel: 1)
-
-        XCTAssertEqual(cache.read(assetHash: "xyz", resolution: 3, excludingChannel: nil), defaultPeaks)
-        XCTAssertEqual(cache.read(assetHash: "xyz", resolution: 3, excludingChannel: 1), musicPeaks)
-    }
-
-    /// #720 bug ①: guard the exact collision that would show all-channel data on a
-    /// music-only read — a write under `excludingChannel: 1` must be UNREADABLE
-    /// under `excludingChannel: nil` (and vice-versa), not merely a different URL.
-    /// Without this, the container's music-only read could serve a stale
-    /// all-channel entry and the waveform would still look like LTC.
-    func test_read_underOtherExclusionKey_returnsNil() throws {
-        let cache = makeIsolatedCache()
-
-        try cache.write([0.2, 0.4, 0.6], assetHash: "abc", resolution: 3, excludingChannel: 1)
-        XCTAssertNil(
-            cache.read(assetHash: "abc", resolution: 3, excludingChannel: nil),
-            "a music-only (xc1) write must not be readable as an all-channel entry"
-        )
-
-        try cache.write([0.1, 0.5, 0.9], assetHash: "def", resolution: 3, excludingChannel: nil)
-        XCTAssertNil(
-            cache.read(assetHash: "def", resolution: 3, excludingChannel: 1),
-            "an all-channel write must not be readable as a music-only (xc1) entry"
-        )
-    }
-
-    // MARK: - Per-channel cache keys (#720)
-
-    func test_perChannel_writeThenRead_roundTripsEachChannel() throws {
-        let cache = makeIsolatedCache()
-        let ch0Peaks: [Float] = [0.1, 0.2, 0.3]
-        let ch1Peaks: [Float] = [0.7, 0.8, 0.9]
-
-        try cache.write(ch0Peaks, assetHash: "abc", resolution: 3, channel: 0)
-        try cache.write(ch1Peaks, assetHash: "abc", resolution: 3, channel: 1)
-
-        let recoveredCh0 = cache.read(assetHash: "abc", resolution: 3, channel: 0)
-        let recoveredCh1 = cache.read(assetHash: "abc", resolution: 3, channel: 1)
-
-        XCTAssertEqual(recoveredCh0, ch0Peaks, "channel 0 peaks should round-trip")
-        XCTAssertEqual(recoveredCh1, ch1Peaks, "channel 1 peaks should round-trip")
-        XCTAssertNotEqual(recoveredCh0, recoveredCh1, "channel 0 and channel 1 entries must be distinct")
-    }
-
-    func test_perChannel_doesNotCollideWithCombinedEntry() throws {
-        let cache = makeIsolatedCache()
-        let combinedPeaks: [Float] = [0.0, 0.5, 1.0]
-        let ch0Peaks: [Float] = [0.1, 0.2, 0.3]
-
-        try cache.write(combinedPeaks, assetHash: "abc", resolution: 3)
-        try cache.write(ch0Peaks, assetHash: "abc", resolution: 3, channel: 0)
-
-        XCTAssertEqual(
-            cache.read(assetHash: "abc", resolution: 3),
-            combinedPeaks,
-            "combined entry must not be overwritten by channel 0"
-        )
-        XCTAssertEqual(
-            cache.read(assetHash: "abc", resolution: 3, channel: 0),
-            ch0Peaks,
-            "channel 0 entry must not be overwritten by combined"
-        )
-    }
-
-    func test_perChannel_doesNotCollideWithExcludingChannelEntry() {
-        let cache = makeIsolatedCache()
-        let channelURL = cache.entryURL(assetHash: "abc", resolution: 32, channel: 0)
-        let excludingURL = cache.entryURL(assetHash: "abc", resolution: 32, excludingChannel: 0)
-        let combinedURL = cache.entryURL(assetHash: "abc", resolution: 32)
-        XCTAssertNotEqual(
-            channelURL,
-            excludingURL,
-            "channel: 0 key must not collide with excludingChannel: 0 key"
-        )
-        XCTAssertNotEqual(
-            channelURL,
-            combinedURL,
-            "channel: 0 key must not collide with combined key"
-        )
-    }
-
     // MARK: - Bucket cache v4 (#732)
 
     func test_buckets_writeThenRead_roundTrips() throws {
@@ -251,6 +104,24 @@ final class WaveformCacheTests: XCTestCase {
     func test_readBuckets_missing_returnsNil() {
         let cache = makeIsolatedCache()
         XCTAssertNil(cache.readBuckets(assetHash: "nope", bucketMillis: 10))
+    }
+
+    /// #715/#720 read-path guard in bucket form: the downmix, a music-only (xc1)
+    /// render, and a per-channel (ch0) lane all round-trip under one hash without
+    /// colliding — a music-only read must never serve the all-channel entry.
+    func test_readBuckets_exclusionAndChannelKeys_roundTripWithoutCollision() throws {
+        let cache = makeIsolatedCache()
+        let downmix = [WaveformBucket(peak: 0.9, rms: 0.5)]
+        let musicOnly = [WaveformBucket(peak: 0.4, rms: 0.2)]
+        let channel0 = [WaveformBucket(peak: 0.1, rms: 0.05)]
+
+        try cache.writeBuckets(downmix, assetHash: "h", bucketMillis: 10, excludingChannel: nil)
+        try cache.writeBuckets(musicOnly, assetHash: "h", bucketMillis: 10, excludingChannel: 1)
+        try cache.writeBuckets(channel0, assetHash: "h", bucketMillis: 10, channel: 0)
+
+        XCTAssertEqual(cache.readBuckets(assetHash: "h", bucketMillis: 10, excludingChannel: nil), downmix)
+        XCTAssertEqual(cache.readBuckets(assetHash: "h", bucketMillis: 10, excludingChannel: 1), musicOnly)
+        XCTAssertEqual(cache.readBuckets(assetHash: "h", bucketMillis: 10, channel: 0), channel0)
     }
 
     /// A bucket entry stores un-normalized values verbatim — the cache must not

@@ -125,17 +125,3 @@ struct WaveformView: View {
         return path
     }
 }
-
-extension WaveformView {
-
-    /// Transitional bridge from the legacy single normalized-peak `[Float]` API
-    /// to the dual-envelope renderer: each peak becomes a bucket with `rms ==
-    /// peak`, so the body and outline coincide and the render matches the
-    /// pre-#734 single filled envelope. Lets the split-channel lanes and the
-    /// Edit-Media preview keep compiling until they migrate to real buckets
-    /// (#734 steps 3–4); removed once no caller passes `[Float]`.
-    init(peaks: [Float], color: Color = DS.Color.textSecondary) {
-        self.buckets = peaks.map { WaveformBucket(peak: $0, rms: $0) }
-        self.color = color
-    }
-}

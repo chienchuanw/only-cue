@@ -14,7 +14,6 @@ struct MediaPreviewStrip: View {
     var excludingChannel: Int?
     var height: CGFloat = 72
 
-    private static let waveformResolution = 1_200
     private static let posterMaxPixelSize: CGFloat = 512
 
     var body: some View {
@@ -32,7 +31,7 @@ struct MediaPreviewStrip: View {
         case .waveform(let url):
             WaveformPreview(
                 url: url,
-                resolution: Self.waveformResolution,
+                bucketMillis: WaveformGenerator.defaultBucketMillis,
                 excludingChannel: excludingChannel,
                 fallback: fallback
             )
@@ -51,23 +50,25 @@ struct MediaPreviewStrip: View {
     }
 }
 
-/// Loads (cache -> generate -> cache) and renders an audio waveform at a
-/// modal-sized resolution. Reuses `WaveformCache`/`WaveformGenerator`.
+/// Loads (cache -> generate -> cache) and renders an audio waveform with the
+/// dual envelope. Shares the v4 bucket cache with `WaveformContainer` — same
+/// hash + `bucketMillis` + exclusion key — so the modal preview and the main
+/// timeline never decode the same file twice.
 private struct WaveformPreview<Fallback: View>: View {
     let url: URL
-    let resolution: Int
+    let bucketMillis: Int
     let excludingChannel: Int?
     let fallback: Fallback
 
-    @State private var peaks: [Float]?
+    @State private var buckets: [WaveformBucket]?
     @State private var failed = false
 
     var body: some View {
         Group {
             if failed {
                 fallback
-            } else if let peaks {
-                WaveformView(peaks: peaks)
+            } else if let buckets {
+                WaveformView(buckets: buckets)
                     .padding(.vertical, 6)
             } else {
                 ProgressView().controlSize(.small)
@@ -80,20 +81,20 @@ private struct WaveformPreview<Fallback: View>: View {
         let scoped = url.startAccessingSecurityScopedResource()
         defer { if scoped { url.stopAccessingSecurityScopedResource() } }
         guard let hash = try? WaveformCache.fastFingerprint(url) else { failed = true; return }
-        if let cached = WaveformCache.shared.read(
-            assetHash: hash, resolution: resolution, excludingChannel: excludingChannel
+        if let cached = WaveformCache.shared.readBuckets(
+            assetHash: hash, bucketMillis: bucketMillis, excludingChannel: excludingChannel
         ) {
-            peaks = cached
+            buckets = cached
             return
         }
         do {
-            let generated = try await WaveformGenerator.peaks(
-                for: AVURLAsset(url: url), resolution: resolution, excludingChannel: excludingChannel
+            let generated = try await WaveformGenerator.buckets(
+                for: AVURLAsset(url: url), bucketMillis: bucketMillis, excludingChannel: excludingChannel
             )
-            try? WaveformCache.shared.write(
-                generated, assetHash: hash, resolution: resolution, excludingChannel: excludingChannel
+            try? WaveformCache.shared.writeBuckets(
+                generated, assetHash: hash, bucketMillis: bucketMillis, excludingChannel: excludingChannel
             )
-            peaks = generated
+            buckets = generated
         } catch {
             failed = true
         }

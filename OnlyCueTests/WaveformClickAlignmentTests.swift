@@ -25,18 +25,19 @@ final class WaveformClickAlignmentTests: XCTestCase {
     }
 
     func test_endToEnd_clickColumnX_matchesPlayheadXAtClickTime() async throws {
-        // Full pipeline: 20s WAV with a click at exactly 10.000s → peaks →
-        // downsample to an 800pt-wide view → the drawn column of the click vs
-        // where the playhead sits at 10.000s. They must agree within one
-        // column width, or the waveform lies about when things sound.
+        // Full pipeline: 20s WAV with a click at exactly 10.000s → buckets →
+        // collapse the PEAK channel to an 800pt-wide view → the drawn column of
+        // the click vs where the playhead sits at 10.000s. They must agree within
+        // one column width, or the waveform lies about when things sound. The
+        // peak channel (not RMS) is what surfaces the transient the user aims at.
         let url = try SilentAudioFixture.makeClickWAV(duration: 20, clickAt: 10)
         defer { try? FileManager.default.removeItem(at: url) }
         let asset = AVURLAsset(url: url)
         let width: CGFloat = 800
         let duration: TimeInterval = 20
 
-        let peaks = try await WaveformGenerator.peaks(for: asset, resolution: 2000)
-        let columns = WaveformPeakBucketer.bucket(peaks: peaks, into: Int(width))
+        let buckets = try await WaveformGenerator.buckets(for: asset, bucketMillis: 10)
+        let columns = WaveformPeakBucketer.bucket(peaks: buckets.map(\.peak), into: Int(width))
         let argmax = try XCTUnwrap(columns.indices.max(by: { columns[$0] < columns[$1] }))
         let clickX = WaveformView.columnX(index: argmax, count: columns.count, width: width)
         let playheadX = CueMarkersGeometry.position(forTime: 10, width: width, duration: duration)

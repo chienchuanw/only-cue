@@ -33,4 +33,28 @@ final class WaveformPeakBucketerTests: XCTestCase {
     func test_zeroWidth_returnsEmpty() {
         XCTAssertEqual(WaveformPeakBucketer.bucket(peaks: [0.1, 0.2], into: 0), [])
     }
+
+    // MARK: - RMS (energy-average) collapse for the dual envelope (#734)
+
+    /// The RMS collapse averages energy within a bucket (√mean(x²)), unlike the
+    /// max collapse — a full-scale-square vs sparse-spike bucket must read lower.
+    func test_bucketRMS_averagesEnergyNotMax() {
+        // One bucket of [1, 0, 0, 0]: max is 1.0, RMS is √(1/4) = 0.5.
+        XCTAssertEqual(WaveformPeakBucketer.bucketRMS([1, 0, 0, 0], into: 1)[0], 0.5, accuracy: 1e-6)
+    }
+
+    func test_bucketRMS_twoBuckets_perBucketEnergy() {
+        // [0.6, 0.8] into 1 -> √((0.36+0.64)/2) = √0.5 ≈ 0.7071.
+        XCTAssertEqual(WaveformPeakBucketer.bucketRMS([0.6, 0.8], into: 1)[0], 0.70710677, accuracy: 1e-6)
+    }
+
+    func test_bucketRMS_widthGreaterThanCount_returnsInputUnchanged() {
+        let values: [Float] = [0.3, 0.6]
+        XCTAssertEqual(WaveformPeakBucketer.bucketRMS(values, into: 10), values)
+    }
+
+    func test_bucketRMS_empty_and_zeroWidth_returnEmpty() {
+        XCTAssertEqual(WaveformPeakBucketer.bucketRMS([], into: 4), [])
+        XCTAssertEqual(WaveformPeakBucketer.bucketRMS([0.1, 0.2], into: 0), [])
+    }
 }

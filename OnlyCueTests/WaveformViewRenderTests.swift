@@ -40,7 +40,8 @@ final class WaveformViewRenderTests: XCTestCase {
         XCTAssertLessThan(topEdge, 0.15, "the loudest peak must leave visible headroom, not touch the top edge")
         XCTAssertGreaterThan(peakBand, 0.15, "the peak layer must still be visible above the body (two-tone)")
         XCTAssertLessThan(
-            peakBand, 0.33,
+            peakBand,
+            0.33,
             "the peak fill must be a FAINT halo, not a full-strength slab (measured \(peakBand))"
         )
         XCTAssertGreaterThan(body, peakBand + 0.20, "the RMS body must clearly lead the fainter peak layer")
@@ -63,11 +64,6 @@ final class WaveformViewRenderTests: XCTestCase {
         attachment.name = "waveform-dual-envelope"
         attachment.lifetime = .keepAlways
         add(attachment)
-
-        let url = FileManager.default.temporaryDirectory
-            .appendingPathComponent("onlycue-waveform-after.png")
-        try? png.write(to: url)
-        print("WROTE_SCREENSHOT \(url.path)")
     }
 
     /// Realistic material resembling a full loud track zoomed out: near-flat

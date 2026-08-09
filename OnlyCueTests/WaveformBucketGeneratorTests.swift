@@ -47,22 +47,22 @@ final class WaveformBucketGeneratorTests: XCTestCase {
         }
     }
 
-    /// The sparse-full-scale region (peak 1.0, RMS 0.5) must keep peak≈1 while its
-    /// RMS drops to ≈0.5 — the two values must be *separable*, which is the whole
-    /// point of storing both (peak finds the transient, RMS shows loudness).
+    /// A full-scale 200 Hz sine (well below the 8 kHz analysis path's 4 kHz
+    /// Nyquist) has peak ≈ 1.0 but RMS ≈ 0.707 — the two values must be *separable*,
+    /// which is the whole point of storing both (peak finds the transient, RMS
+    /// shows loudness). A signal above Nyquist is deliberately not used here: the
+    /// resampler would low-pass it away (that is correct engine behaviour).
     func test_buckets_capturePeakAndRMSSeparately() async throws {
-        let url = try SilentAudioFixture.makeCustomWAV(duration: 2) { frame, _ in
-            // Fire a full-scale sample every 4th frame: peak 1.0, RMS 0.5.
-            frame % 4 == 0 ? 1.0 : 0.0
-        }
+        let url = try SilentAudioFixture.makeSineWAV(duration: 2, frequency: 200, amplitude: 1.0)
         defer { try? FileManager.default.removeItem(at: url) }
 
         let buckets = try await WaveformGenerator.buckets(for: AVURLAsset(url: url), bucketMillis: 10)
         let midPeak = buckets[buckets.count / 2].peak
         let midRMS = buckets[buckets.count / 2].rms
 
-        XCTAssertEqual(midPeak, 1.0, accuracy: 0.05, "peak must catch the full-scale transient")
-        XCTAssertEqual(midRMS, 0.5, accuracy: 0.1, "RMS must reflect the lower energy, not the peak")
+        XCTAssertEqual(midPeak, 1.0, accuracy: 0.1, "peak must catch the full-scale crest")
+        XCTAssertEqual(midRMS, 0.707, accuracy: 0.1, "RMS of a full-scale sine is ~0.707, distinct from its peak")
+        XCTAssertGreaterThan(midPeak, midRMS * 1.2, "peak and RMS must be separable, not the same number")
     }
 
     // MARK: - Un-normalized (render-time normalization is #734)

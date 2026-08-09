@@ -200,15 +200,20 @@ enum WaveformGenerator {
         return peaks.map { $0 / maxPeak }
     }
 
-    private static func makeReader(
+    /// Internal (not private) so the #732 bucket engine
+    /// (`WaveformBucketGenerator.swift`) can build a reader at its own analysis
+    /// sample rate. `sampleRate` defaults to the legacy 44.1 kHz so existing
+    /// callers are unchanged.
+    static func makeReader(
         asset: AVAsset,
         track: AVAssetTrack,
-        channels: Int
+        channels: Int,
+        sampleRate: Double = Self.outputSampleRate
     ) throws -> AVAssetReader {
         let reader = try AVAssetReader(asset: asset)
         var settings: [String: Any] = [
             AVFormatIDKey: kAudioFormatLinearPCM,
-            AVSampleRateKey: Self.outputSampleRate,
+            AVSampleRateKey: sampleRate,
             AVNumberOfChannelsKey: channels,
             AVLinearPCMBitDepthKey: 16,
             AVLinearPCMIsBigEndianKey: false,
@@ -236,7 +241,8 @@ enum WaveformGenerator {
 
     /// The number of channels in `track`'s first format description, or 1 when
     /// the count cannot be determined (safe fallback: mono downmix).
-    private static func sourceChannelCount(track: AVAssetTrack) async throws -> Int {
+    /// Internal (not private) so the #732 bucket engine can reuse it.
+    static func sourceChannelCount(track: AVAssetTrack) async throws -> Int {
         let descriptions: [CMFormatDescription]
         do {
             descriptions = try await track.load(.formatDescriptions)

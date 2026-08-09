@@ -25,6 +25,9 @@ extension WaveformGenerator {
     /// Default bucket width in milliseconds (#729 spec §3).
     static let defaultBucketMillis = 10
 
+    /// Int16 → normalized Float divisor (full-scale = 1.0).
+    private static let sampleScale = Float(Int16.max)
+
     /// Collects the full bucket array by draining `bucketStream`. Convenience for
     /// callers that don't need progressive delivery.
     static func buckets(
@@ -128,10 +131,9 @@ extension WaveformGenerator {
         }
         data.withUnsafeBytes { raw in
             let samples = raw.bindMemory(to: Int16.self)
-            let scale = Float(Int16.max)
             if excluded == nil {
                 for sample in samples {
-                    accumulator.addSample(Float(sample) / scale)
+                    accumulator.addSample(Float(sample) / sampleScale)
                     accumulator.endFrame()
                 }
             } else {
@@ -140,7 +142,7 @@ extension WaveformGenerator {
                     for channel in 0..<readerChannels where channel != excluded {
                         let index = frameStart + channel
                         guard index < samples.endIndex else { break }
-                        accumulator.addSample(Float(samples[index]) / scale)
+                        accumulator.addSample(Float(samples[index]) / sampleScale)
                     }
                     accumulator.endFrame()
                     frameStart += readerChannels

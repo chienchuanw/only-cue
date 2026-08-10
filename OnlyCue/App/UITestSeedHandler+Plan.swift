@@ -16,6 +16,7 @@ extension UITestSeedHandler {
         case silentAudioShort   // silent-30s.m4a
         case silentAudioLong    // silent-450s.m4a (7:30 — spans the set-list cues)
         case toneAudioLong      // tone-450s.m4a (7:30, amplitude-modulated — renders a real waveform)
+        case toneStereoClip     // tone-stereo-60s.m4a (60s, distinct L/R tones — renders split-channel lanes)
         case silentVideo        // silent-video-90s.mov
 
         var resource: (name: String, ext: String) {
@@ -23,6 +24,7 @@ extension UITestSeedHandler {
             case .silentAudioShort: return ("silent-30s", "m4a")
             case .silentAudioLong: return ("silent-450s", "m4a")
             case .toneAudioLong: return ("tone-450s", "m4a")
+            case .toneStereoClip: return ("tone-stereo-60s", "m4a")
             case .silentVideo: return ("silent-video-90s", "mov")
             }
         }
@@ -92,6 +94,18 @@ extension UITestSeedHandler {
             return [legacyAudioItem(cues: [CueSpec(time: 1)], lyrics: songWithLyrics())]
         case "lyrics-with-placed-lines":
             return [legacyAudioItem(cues: [CueSpec(time: 1)], lyrics: lyricsWithPlacedLines())]
+        case "split-channels":
+            // A single active stereo clip so the preview pane can render the
+            // per-channel waveform lanes (#720) for the Figma split-channel
+            // calibration reference (#728). Two cues make it read as populated.
+            return [ItemSeed(
+                displayName: "tone-stereo-60s.m4a",
+                kind: .audio,
+                duration: 60,
+                fixture: .toneStereoClip,
+                isActive: true,
+                cues: [CueSpec(time: 12), CueSpec(time: 34)]
+            )]
         default:
             throw NSError(
                 domain: "UITestSeedHandler",

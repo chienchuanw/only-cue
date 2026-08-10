@@ -153,10 +153,37 @@ of the session but not yet confirmed run.**
 - ADRs to write (deferred): Windows dark-only; no-sandbox/portable-path media;
   C#-core + golden-vector contract; Inter as Windows brand font.
 
+## Progress update — 2026-08-11 (macOS calibration session)
+
+**Wedge UNBLOCKED (confirmed):** `sudo automationmodetool enable-automationmode-without-authentication`
+cleared it permanently (see the `onlycue-automation-mode-wedge` memory). XCUITest
+runs locally again — screenshot capture is no longer blocked.
+
+**Figma scope correction:** the file was NOT stale. `get_metadata` with no nodeId
+lists only *loaded* pages, which misread it as near-empty. The file actually has 5
+pages incl. a healthy `Foundations` and a `Screens` page with ~23 frames. Full
+token system present. See the new `onlycue-figma-calibration` memory.
+
+**Done this session:**
+- Foundations diffs closed: added `radius/xl`=12 + text styles `Small` / `Mono/Label`
+  / `Mono/Micro` (match `DSText`/`DS`).
+- 4 new dark-mode screenshot tests — General / MIDI / grandMA2 settings + MA2 Push
+  sheet → **PR #745 / issue #744**. (Split-channel capture deferred: needs a
+  stereo-with-content audio fixture; current fixtures are mono or silent.)
+- Built 4 Figma screens (General / grandMA2 / MIDI settings + MA2 Push sheet) on the
+  `Screens` page, grouped in section "Settings & Sheets — calibration (#728)", all
+  validated dark via `get_screenshot`. Fixed the stale tab bar on the existing Audio
+  frame (4-tab Audio/Keyboard/Timecode/OSC → the real 6-tab set).
+- GOTCHA banked: new auto-layout/frame nodes default to a white fill (clear it);
+  validate dark frames with `get_screenshot`, not the plugin `node.screenshot()`.
+
+**Remaining macOS calibration:** split-channel waveform screen (blocked on fixture);
+decide whether the 4 new frames should move next to the existing Screens content.
+
 ## Task list snapshot
 
-- [x] Figma: Foundations — dark tokens (audited, healthy; small diffs pending)
-- [ ] Figma: 重建元件庫到 dark tokens (mostly moot — already dark; re-scope to small diffs)
-- [~] Figma: macOS Screens (gap list done; pixel calibration blocked on wedge)
+- [x] Figma: Foundations — dark tokens (audited healthy; `radius/xl` + 3 text styles DONE)
+- [x] Figma: 重建元件庫到 dark tokens (moot — already dark)
+- [~] Figma: macOS Screens (settings tabs + MA2 push built & dark; split-channel waveform pending)
 - [ ] Figma: Windows Screens (M1–M4) — the big remaining UI task
 - [ ] M0: Windows C# scaffold + golden-vector bridge + CI

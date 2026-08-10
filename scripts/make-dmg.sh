@@ -1,6 +1,8 @@
 #!/usr/bin/env bash
 # Package OnlyCue.app into a drag-install DMG.
 # Run after scripts/build-release.sh.
+#   The window background is committed art (scripts/dmg-assets/); regenerate it
+#   with ./scripts/generate-dmg-background.swift after changing the design.
 #
 # Two modes (RELEASE_MODE env var, matched to build-release.sh):
 #   unsigned   Plain DMG, no signing or notarization. Default.
@@ -51,12 +53,20 @@ DMG_PATH="$BUILD_DIR/OnlyCue-${VERSION}.dmg"
 log "Building DMG for OnlyCue $VERSION"
 rm -f "$DMG_PATH"
 
+BG_PNG="scripts/dmg-assets/dmg-background.png"
+BG_2X="scripts/dmg-assets/dmg-background@2x.png"
+[[ -f "$BG_PNG" && -f "$BG_2X" ]] || fail "DMG background art missing. Run ./scripts/generate-dmg-background.swift"
+BG_TIFF="$BUILD_DIR/dmg-background.tiff"
+log "Composing Retina background TIFF"
+tiffutil -cathidpicheck "$BG_PNG" "$BG_2X" -out "$BG_TIFF"
+
 create-dmg \
     --volname "OnlyCue $VERSION" \
-    --window-size 540 380 \
-    --icon-size 96 \
-    --icon "OnlyCue.app" 140 200 \
-    --app-drop-link 400 200 \
+    --background "$BG_TIFF" \
+    --window-size 600 400 \
+    --icon-size 112 \
+    --icon "OnlyCue.app" 168 165 \
+    --app-drop-link 432 165 \
     --hide-extension "OnlyCue.app" \
     --no-internet-enable \
     "$DMG_PATH" \

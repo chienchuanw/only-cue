@@ -1,0 +1,1173 @@
+{
+  "cases" : [
+    {
+      "expect" : {
+        "display" : "00:00:00:00",
+        "frameCount" : 0,
+        "frames" : 0,
+        "hours" : 0,
+        "minutes" : 0,
+        "seconds" : 0,
+        "valid" : true
+      },
+      "input" : {
+        "frameCount" : 0
+      },
+      "op" : "fromFrameCount",
+      "rate" : "24"
+    },
+    {
+      "expect" : {
+        "display" : "00:00:00:01",
+        "frameCount" : 1,
+        "frames" : 1,
+        "hours" : 0,
+        "minutes" : 0,
+        "seconds" : 0,
+        "valid" : true
+      },
+      "input" : {
+        "frameCount" : 1
+      },
+      "op" : "fromFrameCount",
+      "rate" : "24"
+    },
+    {
+      "expect" : {
+        "display" : "00:00:00:23",
+        "frameCount" : 23,
+        "frames" : 23,
+        "hours" : 0,
+        "minutes" : 0,
+        "seconds" : 0,
+        "valid" : true
+      },
+      "input" : {
+        "frameCount" : 23
+      },
+      "op" : "fromFrameCount",
+      "rate" : "24"
+    },
+    {
+      "expect" : {
+        "display" : "00:00:01:00",
+        "frameCount" : 24,
+        "frames" : 0,
+        "hours" : 0,
+        "minutes" : 0,
+        "seconds" : 1,
+        "valid" : true
+      },
+      "input" : {
+        "frameCount" : 24
+      },
+      "op" : "fromFrameCount",
+      "rate" : "24"
+    },
+    {
+      "expect" : {
+        "display" : "00:00:59:23",
+        "frameCount" : 1439,
+        "frames" : 23,
+        "hours" : 0,
+        "minutes" : 0,
+        "seconds" : 59,
+        "valid" : true
+      },
+      "input" : {
+        "frameCount" : 1439
+      },
+      "op" : "fromFrameCount",
+      "rate" : "24"
+    },
+    {
+      "expect" : {
+        "display" : "00:01:00:00",
+        "frameCount" : 1440,
+        "frames" : 0,
+        "hours" : 0,
+        "minutes" : 1,
+        "seconds" : 0,
+        "valid" : true
+      },
+      "input" : {
+        "frameCount" : 1440
+      },
+      "op" : "fromFrameCount",
+      "rate" : "24"
+    },
+    {
+      "expect" : {
+        "display" : "00:10:00:00",
+        "frameCount" : 14400,
+        "frames" : 0,
+        "hours" : 0,
+        "minutes" : 10,
+        "seconds" : 0,
+        "valid" : true
+      },
+      "input" : {
+        "frameCount" : 14400
+      },
+      "op" : "fromFrameCount",
+      "rate" : "24"
+    },
+    {
+      "expect" : {
+        "display" : "01:00:00:00",
+        "frameCount" : 86400,
+        "frames" : 0,
+        "hours" : 1,
+        "minutes" : 0,
+        "seconds" : 0,
+        "valid" : true
+      },
+      "input" : {
+        "frameCount" : 86400
+      },
+      "op" : "fromFrameCount",
+      "rate" : "24"
+    },
+    {
+      "expect" : {
+        "display" : "01:01:01:07",
+        "frameCount" : 87871,
+        "frames" : 7,
+        "hours" : 1,
+        "minutes" : 1,
+        "seconds" : 1,
+        "valid" : true
+      },
+      "input" : {
+        "frameCount" : 87871
+      },
+      "op" : "fromFrameCount",
+      "rate" : "24"
+    },
+    {
+      "expect" : {
+        "display" : "00:00:00:05",
+        "frameCount" : 5,
+        "frames" : 5,
+        "hours" : 0,
+        "minutes" : 0,
+        "seconds" : 0,
+        "valid" : true
+      },
+      "input" : {
+        "frameCount" : 2073605
+      },
+      "op" : "fromFrameCount",
+      "rate" : "24"
+    },
+    {
+      "expect" : {
+        "display" : "00:00:00:00",
+        "frameCount" : 0,
+        "frames" : 0,
+        "hours" : 0,
+        "minutes" : 0,
+        "seconds" : 0,
+        "valid" : true
+      },
+      "input" : {
+        "frameCount" : 0
+      },
+      "op" : "fromFrameCount",
+      "rate" : "25"
+    },
+    {
+      "expect" : {
+        "display" : "00:00:00:01",
+        "frameCount" : 1,
+        "frames" : 1,
+        "hours" : 0,
+        "minutes" : 0,
+        "seconds" : 0,
+        "valid" : true
+      },
+      "input" : {
+        "frameCount" : 1
+      },
+      "op" : "fromFrameCount",
+      "rate" : "25"
+    },
+    {
+      "expect" : {
+        "display" : "00:00:00:24",
+        "frameCount" : 24,
+        "frames" : 24,
+        "hours" : 0,
+        "minutes" : 0,
+        "seconds" : 0,
+        "valid" : true
+      },
+      "input" : {
+        "frameCount" : 24
+      },
+      "op" : "fromFrameCount",
+      "rate" : "25"
+    },
+    {
+      "expect" : {
+        "display" : "00:00:01:00",
+        "frameCount" : 25,
+        "frames" : 0,
+        "hours" : 0,
+        "minutes" : 0,
+        "seconds" : 1,
+        "valid" : true
+      },
+      "input" : {
+        "frameCount" : 25
+      },
+      "op" : "fromFrameCount",
+      "rate" : "25"
+    },
+    {
+      "expect" : {
+        "display" : "00:00:59:24",
+        "frameCount" : 1499,
+        "frames" : 24,
+        "hours" : 0,
+        "minutes" : 0,
+        "seconds" : 59,
+        "valid" : true
+      },
+      "input" : {
+        "frameCount" : 1499
+      },
+      "op" : "fromFrameCount",
+      "rate" : "25"
+    },
+    {
+      "expect" : {
+        "display" : "00:01:00:00",
+        "frameCount" : 1500,
+        "frames" : 0,
+        "hours" : 0,
+        "minutes" : 1,
+        "seconds" : 0,
+        "valid" : true
+      },
+      "input" : {
+        "frameCount" : 1500
+      },
+      "op" : "fromFrameCount",
+      "rate" : "25"
+    },
+    {
+      "expect" : {
+        "display" : "00:10:00:00",
+        "frameCount" : 15000,
+        "frames" : 0,
+        "hours" : 0,
+        "minutes" : 10,
+        "seconds" : 0,
+        "valid" : true
+      },
+      "input" : {
+        "frameCount" : 15000
+      },
+      "op" : "fromFrameCount",
+      "rate" : "25"
+    },
+    {
+      "expect" : {
+        "display" : "01:00:00:00",
+        "frameCount" : 90000,
+        "frames" : 0,
+        "hours" : 1,
+        "minutes" : 0,
+        "seconds" : 0,
+        "valid" : true
+      },
+      "input" : {
+        "frameCount" : 90000
+      },
+      "op" : "fromFrameCount",
+      "rate" : "25"
+    },
+    {
+      "expect" : {
+        "display" : "01:01:01:07",
+        "frameCount" : 91532,
+        "frames" : 7,
+        "hours" : 1,
+        "minutes" : 1,
+        "seconds" : 1,
+        "valid" : true
+      },
+      "input" : {
+        "frameCount" : 91532
+      },
+      "op" : "fromFrameCount",
+      "rate" : "25"
+    },
+    {
+      "expect" : {
+        "display" : "00:00:00:05",
+        "frameCount" : 5,
+        "frames" : 5,
+        "hours" : 0,
+        "minutes" : 0,
+        "seconds" : 0,
+        "valid" : true
+      },
+      "input" : {
+        "frameCount" : 2160005
+      },
+      "op" : "fromFrameCount",
+      "rate" : "25"
+    },
+    {
+      "expect" : {
+        "display" : "00:00:00:00",
+        "frameCount" : 0,
+        "frames" : 0,
+        "hours" : 0,
+        "minutes" : 0,
+        "seconds" : 0,
+        "valid" : true
+      },
+      "input" : {
+        "frameCount" : 0
+      },
+      "op" : "fromFrameCount",
+      "rate" : "30"
+    },
+    {
+      "expect" : {
+        "display" : "00:00:00:01",
+        "frameCount" : 1,
+        "frames" : 1,
+        "hours" : 0,
+        "minutes" : 0,
+        "seconds" : 0,
+        "valid" : true
+      },
+      "input" : {
+        "frameCount" : 1
+      },
+      "op" : "fromFrameCount",
+      "rate" : "30"
+    },
+    {
+      "expect" : {
+        "display" : "00:00:00:29",
+        "frameCount" : 29,
+        "frames" : 29,
+        "hours" : 0,
+        "minutes" : 0,
+        "seconds" : 0,
+        "valid" : true
+      },
+      "input" : {
+        "frameCount" : 29
+      },
+      "op" : "fromFrameCount",
+      "rate" : "30"
+    },
+    {
+      "expect" : {
+        "display" : "00:00:01:00",
+        "frameCount" : 30,
+        "frames" : 0,
+        "hours" : 0,
+        "minutes" : 0,
+        "seconds" : 1,
+        "valid" : true
+      },
+      "input" : {
+        "frameCount" : 30
+      },
+      "op" : "fromFrameCount",
+      "rate" : "30"
+    },
+    {
+      "expect" : {
+        "display" : "00:00:59:29",
+        "frameCount" : 1799,
+        "frames" : 29,
+        "hours" : 0,
+        "minutes" : 0,
+        "seconds" : 59,
+        "valid" : true
+      },
+      "input" : {
+        "frameCount" : 1799
+      },
+      "op" : "fromFrameCount",
+      "rate" : "30"
+    },
+    {
+      "expect" : {
+        "display" : "00:01:00:00",
+        "frameCount" : 1800,
+        "frames" : 0,
+        "hours" : 0,
+        "minutes" : 1,
+        "seconds" : 0,
+        "valid" : true
+      },
+      "input" : {
+        "frameCount" : 1800
+      },
+      "op" : "fromFrameCount",
+      "rate" : "30"
+    },
+    {
+      "expect" : {
+        "display" : "00:10:00:00",
+        "frameCount" : 18000,
+        "frames" : 0,
+        "hours" : 0,
+        "minutes" : 10,
+        "seconds" : 0,
+        "valid" : true
+      },
+      "input" : {
+        "frameCount" : 18000
+      },
+      "op" : "fromFrameCount",
+      "rate" : "30"
+    },
+    {
+      "expect" : {
+        "display" : "01:00:00:00",
+        "frameCount" : 108000,
+        "frames" : 0,
+        "hours" : 1,
+        "minutes" : 0,
+        "seconds" : 0,
+        "valid" : true
+      },
+      "input" : {
+        "frameCount" : 108000
+      },
+      "op" : "fromFrameCount",
+      "rate" : "30"
+    },
+    {
+      "expect" : {
+        "display" : "01:01:01:07",
+        "frameCount" : 109837,
+        "frames" : 7,
+        "hours" : 1,
+        "minutes" : 1,
+        "seconds" : 1,
+        "valid" : true
+      },
+      "input" : {
+        "frameCount" : 109837
+      },
+      "op" : "fromFrameCount",
+      "rate" : "30"
+    },
+    {
+      "expect" : {
+        "display" : "00:00:00:05",
+        "frameCount" : 5,
+        "frames" : 5,
+        "hours" : 0,
+        "minutes" : 0,
+        "seconds" : 0,
+        "valid" : true
+      },
+      "input" : {
+        "frameCount" : 2592005
+      },
+      "op" : "fromFrameCount",
+      "rate" : "30"
+    },
+    {
+      "expect" : {
+        "display" : "00:00:00;00",
+        "frameCount" : 0,
+        "frames" : 0,
+        "hours" : 0,
+        "minutes" : 0,
+        "seconds" : 0,
+        "valid" : true
+      },
+      "input" : {
+        "frameCount" : 0
+      },
+      "op" : "fromFrameCount",
+      "rate" : "30df"
+    },
+    {
+      "expect" : {
+        "display" : "00:00:00;01",
+        "frameCount" : 1,
+        "frames" : 1,
+        "hours" : 0,
+        "minutes" : 0,
+        "seconds" : 0,
+        "valid" : true
+      },
+      "input" : {
+        "frameCount" : 1
+      },
+      "op" : "fromFrameCount",
+      "rate" : "30df"
+    },
+    {
+      "expect" : {
+        "display" : "00:00:00;29",
+        "frameCount" : 29,
+        "frames" : 29,
+        "hours" : 0,
+        "minutes" : 0,
+        "seconds" : 0,
+        "valid" : true
+      },
+      "input" : {
+        "frameCount" : 29
+      },
+      "op" : "fromFrameCount",
+      "rate" : "30df"
+    },
+    {
+      "expect" : {
+        "display" : "00:00:01;00",
+        "frameCount" : 30,
+        "frames" : 0,
+        "hours" : 0,
+        "minutes" : 0,
+        "seconds" : 1,
+        "valid" : true
+      },
+      "input" : {
+        "frameCount" : 30
+      },
+      "op" : "fromFrameCount",
+      "rate" : "30df"
+    },
+    {
+      "expect" : {
+        "display" : "00:00:59;26",
+        "frameCount" : 1796,
+        "frames" : 26,
+        "hours" : 0,
+        "minutes" : 0,
+        "seconds" : 59,
+        "valid" : true
+      },
+      "input" : {
+        "frameCount" : 1796
+      },
+      "op" : "fromFrameCount",
+      "rate" : "30df"
+    },
+    {
+      "expect" : {
+        "display" : "00:00:59;27",
+        "frameCount" : 1797,
+        "frames" : 27,
+        "hours" : 0,
+        "minutes" : 0,
+        "seconds" : 59,
+        "valid" : true
+      },
+      "input" : {
+        "frameCount" : 1797
+      },
+      "op" : "fromFrameCount",
+      "rate" : "30df"
+    },
+    {
+      "expect" : {
+        "display" : "00:00:59;28",
+        "frameCount" : 1798,
+        "frames" : 28,
+        "hours" : 0,
+        "minutes" : 0,
+        "seconds" : 59,
+        "valid" : true
+      },
+      "input" : {
+        "frameCount" : 1798
+      },
+      "op" : "fromFrameCount",
+      "rate" : "30df"
+    },
+    {
+      "expect" : {
+        "display" : "00:00:59;29",
+        "frameCount" : 1799,
+        "frames" : 29,
+        "hours" : 0,
+        "minutes" : 0,
+        "seconds" : 59,
+        "valid" : true
+      },
+      "input" : {
+        "frameCount" : 1799
+      },
+      "op" : "fromFrameCount",
+      "rate" : "30df"
+    },
+    {
+      "expect" : {
+        "display" : "00:01:00;02",
+        "frameCount" : 1800,
+        "frames" : 2,
+        "hours" : 0,
+        "minutes" : 1,
+        "seconds" : 0,
+        "valid" : true
+      },
+      "input" : {
+        "frameCount" : 1800
+      },
+      "op" : "fromFrameCount",
+      "rate" : "30df"
+    },
+    {
+      "expect" : {
+        "display" : "00:09:59;29",
+        "frameCount" : 17981,
+        "frames" : 29,
+        "hours" : 0,
+        "minutes" : 9,
+        "seconds" : 59,
+        "valid" : true
+      },
+      "input" : {
+        "frameCount" : 17981
+      },
+      "op" : "fromFrameCount",
+      "rate" : "30df"
+    },
+    {
+      "expect" : {
+        "display" : "00:10:00;00",
+        "frameCount" : 17982,
+        "frames" : 0,
+        "hours" : 0,
+        "minutes" : 10,
+        "seconds" : 0,
+        "valid" : true
+      },
+      "input" : {
+        "frameCount" : 17982
+      },
+      "op" : "fromFrameCount",
+      "rate" : "30df"
+    },
+    {
+      "expect" : {
+        "display" : "00:10:00;01",
+        "frameCount" : 17983,
+        "frames" : 1,
+        "hours" : 0,
+        "minutes" : 10,
+        "seconds" : 0,
+        "valid" : true
+      },
+      "input" : {
+        "frameCount" : 17983
+      },
+      "op" : "fromFrameCount",
+      "rate" : "30df"
+    },
+    {
+      "expect" : {
+        "display" : "00:10:00;18",
+        "frameCount" : 18000,
+        "frames" : 18,
+        "hours" : 0,
+        "minutes" : 10,
+        "seconds" : 0,
+        "valid" : true
+      },
+      "input" : {
+        "frameCount" : 18000
+      },
+      "op" : "fromFrameCount",
+      "rate" : "30df"
+    },
+    {
+      "expect" : {
+        "display" : "01:00:03;18",
+        "frameCount" : 108000,
+        "frames" : 18,
+        "hours" : 1,
+        "minutes" : 0,
+        "seconds" : 3,
+        "valid" : true
+      },
+      "input" : {
+        "frameCount" : 108000
+      },
+      "op" : "fromFrameCount",
+      "rate" : "30df"
+    },
+    {
+      "expect" : {
+        "display" : "01:01:04;27",
+        "frameCount" : 109837,
+        "frames" : 27,
+        "hours" : 1,
+        "minutes" : 1,
+        "seconds" : 4,
+        "valid" : true
+      },
+      "input" : {
+        "frameCount" : 109837
+      },
+      "op" : "fromFrameCount",
+      "rate" : "30df"
+    },
+    {
+      "expect" : {
+        "display" : "00:01:26;19",
+        "frameCount" : 2597,
+        "frames" : 19,
+        "hours" : 0,
+        "minutes" : 1,
+        "seconds" : 26,
+        "valid" : true
+      },
+      "input" : {
+        "frameCount" : 2592005
+      },
+      "op" : "fromFrameCount",
+      "rate" : "30df"
+    },
+    {
+      "expect" : {
+        "display" : "00:00:00:00",
+        "frameCount" : 0,
+        "frames" : 0,
+        "hours" : 0,
+        "minutes" : 0,
+        "seconds" : 0,
+        "valid" : true
+      },
+      "input" : {
+        "totalSeconds" : 0
+      },
+      "op" : "fromTotalSeconds",
+      "rate" : "24"
+    },
+    {
+      "expect" : {
+        "display" : "00:00:01:00",
+        "frameCount" : 24,
+        "frames" : 0,
+        "hours" : 0,
+        "minutes" : 0,
+        "seconds" : 1,
+        "valid" : true
+      },
+      "input" : {
+        "totalSeconds" : 1
+      },
+      "op" : "fromTotalSeconds",
+      "rate" : "24"
+    },
+    {
+      "expect" : {
+        "display" : "00:00:01:12",
+        "frameCount" : 36,
+        "frames" : 12,
+        "hours" : 0,
+        "minutes" : 0,
+        "seconds" : 1,
+        "valid" : true
+      },
+      "input" : {
+        "totalSeconds" : 1.5
+      },
+      "op" : "fromTotalSeconds",
+      "rate" : "24"
+    },
+    {
+      "expect" : {
+        "display" : "00:01:00:00",
+        "frameCount" : 1440,
+        "frames" : 0,
+        "hours" : 0,
+        "minutes" : 1,
+        "seconds" : 0,
+        "valid" : true
+      },
+      "input" : {
+        "totalSeconds" : 60
+      },
+      "op" : "fromTotalSeconds",
+      "rate" : "24"
+    },
+    {
+      "expect" : {
+        "display" : "00:02:03:11",
+        "frameCount" : 2963,
+        "frames" : 11,
+        "hours" : 0,
+        "minutes" : 2,
+        "seconds" : 3,
+        "valid" : true
+      },
+      "input" : {
+        "totalSeconds" : 123.456
+      },
+      "op" : "fromTotalSeconds",
+      "rate" : "24"
+    },
+    {
+      "expect" : {
+        "display" : "00:00:00:00",
+        "frameCount" : 0,
+        "frames" : 0,
+        "hours" : 0,
+        "minutes" : 0,
+        "seconds" : 0,
+        "valid" : true
+      },
+      "input" : {
+        "totalSeconds" : 0
+      },
+      "op" : "fromTotalSeconds",
+      "rate" : "25"
+    },
+    {
+      "expect" : {
+        "display" : "00:00:01:00",
+        "frameCount" : 25,
+        "frames" : 0,
+        "hours" : 0,
+        "minutes" : 0,
+        "seconds" : 1,
+        "valid" : true
+      },
+      "input" : {
+        "totalSeconds" : 1
+      },
+      "op" : "fromTotalSeconds",
+      "rate" : "25"
+    },
+    {
+      "expect" : {
+        "display" : "00:00:01:13",
+        "frameCount" : 38,
+        "frames" : 13,
+        "hours" : 0,
+        "minutes" : 0,
+        "seconds" : 1,
+        "valid" : true
+      },
+      "input" : {
+        "totalSeconds" : 1.5
+      },
+      "op" : "fromTotalSeconds",
+      "rate" : "25"
+    },
+    {
+      "expect" : {
+        "display" : "00:01:00:00",
+        "frameCount" : 1500,
+        "frames" : 0,
+        "hours" : 0,
+        "minutes" : 1,
+        "seconds" : 0,
+        "valid" : true
+      },
+      "input" : {
+        "totalSeconds" : 60
+      },
+      "op" : "fromTotalSeconds",
+      "rate" : "25"
+    },
+    {
+      "expect" : {
+        "display" : "00:02:03:11",
+        "frameCount" : 3086,
+        "frames" : 11,
+        "hours" : 0,
+        "minutes" : 2,
+        "seconds" : 3,
+        "valid" : true
+      },
+      "input" : {
+        "totalSeconds" : 123.456
+      },
+      "op" : "fromTotalSeconds",
+      "rate" : "25"
+    },
+    {
+      "expect" : {
+        "display" : "00:00:00:00",
+        "frameCount" : 0,
+        "frames" : 0,
+        "hours" : 0,
+        "minutes" : 0,
+        "seconds" : 0,
+        "valid" : true
+      },
+      "input" : {
+        "totalSeconds" : 0
+      },
+      "op" : "fromTotalSeconds",
+      "rate" : "30"
+    },
+    {
+      "expect" : {
+        "display" : "00:00:01:00",
+        "frameCount" : 30,
+        "frames" : 0,
+        "hours" : 0,
+        "minutes" : 0,
+        "seconds" : 1,
+        "valid" : true
+      },
+      "input" : {
+        "totalSeconds" : 1
+      },
+      "op" : "fromTotalSeconds",
+      "rate" : "30"
+    },
+    {
+      "expect" : {
+        "display" : "00:00:01:15",
+        "frameCount" : 45,
+        "frames" : 15,
+        "hours" : 0,
+        "minutes" : 0,
+        "seconds" : 1,
+        "valid" : true
+      },
+      "input" : {
+        "totalSeconds" : 1.5
+      },
+      "op" : "fromTotalSeconds",
+      "rate" : "30"
+    },
+    {
+      "expect" : {
+        "display" : "00:01:00:00",
+        "frameCount" : 1800,
+        "frames" : 0,
+        "hours" : 0,
+        "minutes" : 1,
+        "seconds" : 0,
+        "valid" : true
+      },
+      "input" : {
+        "totalSeconds" : 60
+      },
+      "op" : "fromTotalSeconds",
+      "rate" : "30"
+    },
+    {
+      "expect" : {
+        "display" : "00:02:03:14",
+        "frameCount" : 3704,
+        "frames" : 14,
+        "hours" : 0,
+        "minutes" : 2,
+        "seconds" : 3,
+        "valid" : true
+      },
+      "input" : {
+        "totalSeconds" : 123.456
+      },
+      "op" : "fromTotalSeconds",
+      "rate" : "30"
+    },
+    {
+      "expect" : {
+        "display" : "00:00:00;00",
+        "frameCount" : 0,
+        "frames" : 0,
+        "hours" : 0,
+        "minutes" : 0,
+        "seconds" : 0,
+        "valid" : true
+      },
+      "input" : {
+        "totalSeconds" : 0
+      },
+      "op" : "fromTotalSeconds",
+      "rate" : "30df"
+    },
+    {
+      "expect" : {
+        "display" : "00:00:01;00",
+        "frameCount" : 30,
+        "frames" : 0,
+        "hours" : 0,
+        "minutes" : 0,
+        "seconds" : 1,
+        "valid" : true
+      },
+      "input" : {
+        "totalSeconds" : 1
+      },
+      "op" : "fromTotalSeconds",
+      "rate" : "30df"
+    },
+    {
+      "expect" : {
+        "display" : "00:00:01;15",
+        "frameCount" : 45,
+        "frames" : 15,
+        "hours" : 0,
+        "minutes" : 0,
+        "seconds" : 1,
+        "valid" : true
+      },
+      "input" : {
+        "totalSeconds" : 1.5
+      },
+      "op" : "fromTotalSeconds",
+      "rate" : "30df"
+    },
+    {
+      "expect" : {
+        "display" : "00:01:00;02",
+        "frameCount" : 1800,
+        "frames" : 2,
+        "hours" : 0,
+        "minutes" : 1,
+        "seconds" : 0,
+        "valid" : true
+      },
+      "input" : {
+        "totalSeconds" : 60
+      },
+      "op" : "fromTotalSeconds",
+      "rate" : "30df"
+    },
+    {
+      "expect" : {
+        "display" : "00:02:03;18",
+        "frameCount" : 3704,
+        "frames" : 18,
+        "hours" : 0,
+        "minutes" : 2,
+        "seconds" : 3,
+        "valid" : true
+      },
+      "input" : {
+        "totalSeconds" : 123.456
+      },
+      "op" : "fromTotalSeconds",
+      "rate" : "30df"
+    },
+    {
+      "expect" : {
+        "display" : "00:00:00:00",
+        "frameCount" : 0,
+        "frames" : 0,
+        "hours" : 0,
+        "minutes" : 0,
+        "seconds" : 0,
+        "valid" : true
+      },
+      "input" : {
+        "string" : "00:00:00:00"
+      },
+      "op" : "parse",
+      "rate" : "24"
+    },
+    {
+      "expect" : {
+        "display" : "01:02:03:04",
+        "frameCount" : 89356,
+        "frames" : 4,
+        "hours" : 1,
+        "minutes" : 2,
+        "seconds" : 3,
+        "valid" : true
+      },
+      "input" : {
+        "string" : "01:02:03:04"
+      },
+      "op" : "parse",
+      "rate" : "24"
+    },
+    {
+      "expect" : {
+        "display" : "10:20:30:12",
+        "frameCount" : 930762,
+        "frames" : 12,
+        "hours" : 10,
+        "minutes" : 20,
+        "seconds" : 30,
+        "valid" : true
+      },
+      "input" : {
+        "string" : "10:20:30:12"
+      },
+      "op" : "parse",
+      "rate" : "25"
+    },
+    {
+      "expect" : {
+        "display" : "23:59:59:29",
+        "frameCount" : 2591999,
+        "frames" : 29,
+        "hours" : 23,
+        "minutes" : 59,
+        "seconds" : 59,
+        "valid" : true
+      },
+      "input" : {
+        "string" : "23:59:59:29"
+      },
+      "op" : "parse",
+      "rate" : "30"
+    },
+    {
+      "expect" : {
+        "display" : "00:01:00;02",
+        "frameCount" : 1800,
+        "frames" : 2,
+        "hours" : 0,
+        "minutes" : 1,
+        "seconds" : 0,
+        "valid" : true
+      },
+      "input" : {
+        "string" : "00:01:00;02"
+      },
+      "op" : "parse",
+      "rate" : "30df"
+    },
+    {
+      "expect" : {
+        "valid" : false
+      },
+      "input" : {
+        "string" : "00:01:00;00"
+      },
+      "op" : "parse",
+      "rate" : "30df"
+    },
+    {
+      "expect" : {
+        "valid" : false
+      },
+      "input" : {
+        "string" : "00:00:00:30"
+      },
+      "op" : "parse",
+      "rate" : "30"
+    },
+    {
+      "expect" : {
+        "valid" : false
+      },
+      "input" : {
+        "string" : "nonsense"
+      },
+      "op" : "parse",
+      "rate" : "24"
+    }
+  ],
+  "contract" : "timecode",
+  "note" : "macOS-generated golden vectors for OnlyCue Timecode math. The C# OnlyCue.Core re-implementation must reproduce every case exactly. To regenerate after a deliberate Timecode change, delete golden/timecode-v1.json and re-run the test suite.",
+  "version" : 1
+}

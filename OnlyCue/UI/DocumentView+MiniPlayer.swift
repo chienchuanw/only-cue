@@ -10,8 +10,8 @@ import SwiftUI
 extension View {
     func miniPlayerHosted(for view: DocumentView) -> some View {
         let frontmost = Binding<Bool>(
-            get: { view.isMiniFrontmost },
-            set: { view.isMiniFrontmost = $0 }
+            get: { view.isMainWindowKey },
+            set: { view.isMainWindowKey = $0 }
         )
         return self
             .frontmostWindowGate(isFrontmost: frontmost)
@@ -62,7 +62,7 @@ extension DocumentView {
     /// Only the frontmost document window responds to the global toggle command.
     var miniHandlesNotifications: Bool {
         WindowScope.shouldHandle(
-            isFrontmost: isMiniFrontmost,
+            isFrontmost: isMainWindowKey,
             openWindowCount: openMiniDocumentWindowCount
         )
     }

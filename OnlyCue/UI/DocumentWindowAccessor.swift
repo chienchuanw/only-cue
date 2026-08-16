@@ -41,6 +41,10 @@ struct DocumentWindowAccessor: NSViewRepresentable {
         }
 
         func attach(to window: NSWindow) {
+            // This runs from the caller's `DispatchQueue.main.async`, by which
+            // point DocumentGroup has already installed its own window delegate,
+            // so this capture is non-nil and the save-prompt chain is preserved.
+            // Verified by manual smoke test (dirty doc -> close -> save sheet).
             previousDelegate = window.delegate   // capture BEFORE replacing
             window.delegate = self
         }

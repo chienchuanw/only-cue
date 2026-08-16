@@ -33,7 +33,11 @@ struct DocumentView: View {
     @SceneStorage("onlycue.showGoTypeID") var showGoTypeIDRaw = ""
     @State var miniController = MiniPlayerController()
     @State var miniContext = MiniPlayerContext()
-    @State var isMiniFrontmost = false
+    /// TRUE when THIS document's own main window currently holds key. (Named for
+    /// its true meaning — it does not track the Mini Player panel; the panel is
+    /// non-activating and never becomes key.) Published by `FrontmostWindowGate`
+    /// and used to scope broadcast notifications to the frontmost document.
+    @State var isMainWindowKey = false
     @AppStorage("onlycue.miniPlayerVisible") var miniPlayerVisible = false
     @State var miniKeyMonitor: Any?
     @State var isMainWindowCollapsed = false

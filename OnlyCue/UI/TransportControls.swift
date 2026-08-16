@@ -193,10 +193,7 @@ struct TransportControls: View {
                 .clipShape(RoundedRectangle(cornerRadius: DS.Radius.sm))
         }
         .buttonStyle(.plain)
-        // Dim + block at the list/cue boundary (#753): plain buttons don't dim
-        // on `.disabled` alone, so the opacity carries the visual affordance.
-        .disabled(!enabled)
-        .opacity(enabled ? 1 : 0.35)
+        .dsDisabledDim(!enabled)  // stop + dim at the list/cue boundary (#753)
         .help(help)
         .accessibilityIdentifier(id)
     }

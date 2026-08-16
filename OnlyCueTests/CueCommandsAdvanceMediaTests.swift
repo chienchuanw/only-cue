@@ -135,6 +135,26 @@ final class CueCommandsAdvanceMediaTests: XCTestCase {
         XCTAssertNil(CueCommands.previousMediaItemID(before: UUID(), in: []))
     }
 
+    // MARK: - Pure helper: canStepSong(_:activeID:in:)
+
+    func test_canStepSong_prevFalseAtFirst_trueInMiddle() {
+        let itemA = makeItem("a"), itemB = makeItem("b")
+        XCTAssertFalse(CueCommands.canStepSong(.previous, activeID: itemA.id, in: [itemA, itemB]))
+        XCTAssertTrue(CueCommands.canStepSong(.previous, activeID: itemB.id, in: [itemA, itemB]))
+    }
+
+    func test_canStepSong_nextTrueInMiddle_falseAtLast() {
+        let itemA = makeItem("a"), itemB = makeItem("b")
+        XCTAssertTrue(CueCommands.canStepSong(.next, activeID: itemA.id, in: [itemA, itemB]))
+        XCTAssertFalse(CueCommands.canStepSong(.next, activeID: itemB.id, in: [itemA, itemB]))
+    }
+
+    func test_canStepSong_falseForNilActive() {
+        let itemA = makeItem("a")
+        XCTAssertFalse(CueCommands.canStepSong(.previous, activeID: nil, in: [itemA]))
+        XCTAssertFalse(CueCommands.canStepSong(.next, activeID: nil, in: [itemA]))
+    }
+
     // MARK: - Command: stepMediaAndPlay
 
     func test_stepPrevious_movesActiveToPreviousAndInvokesPlay() async {

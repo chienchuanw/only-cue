@@ -31,20 +31,11 @@ struct MiniPlayerHostView: View {
             onPrevSong: { stepSong(.previous) },
             onNextSong: { stepSong(.next) },
             onGo: { performGo() },
-            canPrevSong: canStepSong(.previous),
-            canNextSong: canStepSong(.next),
+            canPrevSong: CueCommands.canStepSong(.previous, activeID: document.model.activeItemID, in: document.model.items),
+            canNextSong: CueCommands.canStepSong(.next, activeID: document.model.activeItemID, in: document.model.items),
             canPrevCue: hasCue(.previous),
             canNextCue: hasCue(.next)
         )
-    }
-
-    /// Whether a prev / next song exists to step to — list position only (#753).
-    private func canStepSong(_ direction: MediaItem.PlayheadStep) -> Bool {
-        guard let id = document.model.activeItemID else { return false }
-        switch direction {
-        case .previous: return CueCommands.previousMediaItemID(before: id, in: document.model.items) != nil
-        case .next: return CueCommands.nextMediaItemID(after: id, in: document.model.items) != nil
-        }
     }
 
     /// Whether a prev / next cue exists relative to the playhead (#753) — mirrors

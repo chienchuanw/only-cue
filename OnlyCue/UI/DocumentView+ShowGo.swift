@@ -62,13 +62,11 @@ extension DocumentView {
     /// transport's song-button disabled state — list-position only, independent
     /// of the playhead, so it is computed from the model rather than the engine.
     var canStepPrevSong: Bool {
-        guard let id = document.model.activeItemID else { return false }
-        return CueCommands.previousMediaItemID(before: id, in: document.model.items) != nil
+        CueCommands.canStepSong(.previous, activeID: document.model.activeItemID, in: document.model.items)
     }
 
     var canStepNextSong: Bool {
-        guard let id = document.model.activeItemID else { return false }
-        return CueCommands.nextMediaItemID(after: id, in: document.model.items) != nil
+        CueCommands.canStepSong(.next, activeID: document.model.activeItemID, in: document.model.items)
     }
 
     /// Show-mode GO (#645): seek to the next cue after the playhead and play.

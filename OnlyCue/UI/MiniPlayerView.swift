@@ -14,7 +14,15 @@ struct MiniPlayerView: View {
     var onPlayPause: () -> Void = {}
     var onPrevCue: () -> Void = {}
     var onNextCue: () -> Void = {}
+    var onPrevSong: () -> Void = {}
+    var onNextSong: () -> Void = {}
     var onGo: () -> Void = {}
+    /// Per-button boundary state (#753): song stops at the item-list edge, cue at
+    /// the first / last cue. Default true keeps previews/tests fully enabled.
+    var canPrevSong: Bool = true
+    var canNextSong: Bool = true
+    var canPrevCue: Bool = true
+    var canNextCue: Bool = true
 
     var body: some View {
         HStack(spacing: DS.Space.xl) {
@@ -35,8 +43,25 @@ struct MiniPlayerView: View {
     // MARK: - Transport
 
     private var transport: some View {
+        // Order mirrors the bottom transport (#753): song end-icons on the outer
+        // flanks, cue double-triangles inner, play centered.
         HStack(spacing: DS.Space.sm + 2) {
-            circleButton("backward.end.fill", size: 38, filled: false, label: "Previous cue", action: onPrevCue)
+            circleButton(
+                "backward.end.fill",
+                size: 38,
+                filled: false,
+                label: "Previous song",
+                enabled: canPrevSong,
+                action: onPrevSong
+            )
+            circleButton(
+                "backward.fill",
+                size: 38,
+                filled: false,
+                label: "Previous cue",
+                enabled: canPrevCue,
+                action: onPrevCue
+            )
             circleButton(
                 isPlaying ? "pause.fill" : "play.fill",
                 size: 46,
@@ -44,7 +69,22 @@ struct MiniPlayerView: View {
                 label: isPlaying ? "Pause" : "Play",
                 action: onPlayPause
             )
-            circleButton("forward.end.fill", size: 38, filled: false, label: "Next cue", action: onNextCue)
+            circleButton(
+                "forward.fill",
+                size: 38,
+                filled: false,
+                label: "Next cue",
+                enabled: canNextCue,
+                action: onNextCue
+            )
+            circleButton(
+                "forward.end.fill",
+                size: 38,
+                filled: false,
+                label: "Next song",
+                enabled: canNextSong,
+                action: onNextSong
+            )
             if model.showsGo {
                 Button(action: onGo) {
                     Text("GO")
@@ -66,6 +106,7 @@ struct MiniPlayerView: View {
         size: CGFloat,
         filled: Bool,
         label: String,
+        enabled: Bool = true,
         action: @escaping () -> Void
     ) -> some View {
         Button(action: action) {
@@ -78,6 +119,9 @@ struct MiniPlayerView: View {
             .frame(width: size, height: size)
         }
         .buttonStyle(.plain)
+        // Boundary dim/block (#753) — plain buttons need explicit opacity.
+        .disabled(!enabled)
+        .opacity(enabled ? 1 : 0.35)
         .accessibilityLabel(label)
     }
 

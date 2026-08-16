@@ -30,6 +30,47 @@ extension DocumentView {
         seekTask = Task { await engine.seek(to: target.time) }
     }
 
+    /// Steps the active media item to the previous / next song and plays it
+    /// immediately (#753). No-op at the list boundary (no wrap) — the transport
+    /// disables the button there. Routes through `CueCommands` (the mutation
+    /// seam) rather than touching `ProjectModel` directly.
+    func stepSong(_ direction: MediaItem.PlayheadStep) {
+        Task {
+            await CueCommands.stepMediaAndPlay(
+                direction,
+                document: document,
+                reloadAndPlay: { _ in await reloadActiveAndPlay() }
+            )
+        }
+    }
+
+    /// Loads the active media item and plays it, posting a relink alert on
+    /// failure. The production reload-and-play seam shared by Auto-Next
+    /// (`handleMediaDidReachEnd`) and manual song stepping (#753).
+    func reloadActiveAndPlay() async {
+        do {
+            try await MediaImporter.loadActive(into: document, engine: engine, documentDirectory: documentDirectory)
+            engine.play()
+        } catch {
+            if let item = document.model.activeItem {
+                pendingAlert = .relink(itemID: item.id, displayName: item.media.displayName)
+            }
+        }
+    }
+
+    /// Whether a previous / next song exists to step to (#753). Drives the
+    /// transport's song-button disabled state — list-position only, independent
+    /// of the playhead, so it is computed from the model rather than the engine.
+    var canStepPrevSong: Bool {
+        guard let id = document.model.activeItemID else { return false }
+        return CueCommands.previousMediaItemID(before: id, in: document.model.items) != nil
+    }
+
+    var canStepNextSong: Bool {
+        guard let id = document.model.activeItemID else { return false }
+        return CueCommands.nextMediaItemID(after: id, in: document.model.items) != nil
+    }
+
     /// Show-mode GO (#645): seek to the next cue after the playhead and play.
     /// No-op when there is no next cue. Not a `ProjectModel` mutation, so it
     /// drives the engine directly rather than going through `CueCommands`.

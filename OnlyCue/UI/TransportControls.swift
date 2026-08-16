@@ -18,6 +18,18 @@ struct TransportControls: View {
     /// Steps the playhead to the previous / next cue. Supplied by `DocumentView`.
     var onStepPrevCue: () -> Void = {}
     var onStepNextCue: () -> Void = {}
+    /// Steps to the previous / next song (media item) and plays it (#753).
+    /// Supplied by `DocumentView`.
+    var onStepPrevSong: () -> Void = {}
+    var onStepNextSong: () -> Void = {}
+    /// Whether a previous / next song exists — drives the song buttons' disabled
+    /// state so they stop at the list boundary (no wrap, #753).
+    var canStepPrevSong: Bool = true
+    var canStepNextSong: Bool = true
+    /// The active Show-mode cue-type filter (`DocumentView.showGoTypeID`): nil =
+    /// All cues. Kept equal to what `stepPlayhead` walks so the cue buttons
+    /// disable exactly when there is no prev/next cue to step to (#753).
+    var activeCueTypeID: CuePointType.ID?
     /// Show-mode GO — walk to the next cue and play. nil outside Show mode, which
     /// hides the GO button entirely. Supplied by `DocumentView` (#645).
     var onGo: (() -> Void)?
@@ -84,8 +96,24 @@ struct TransportControls: View {
     private var controlZone: some View {
         // No per-zone padding — the bar's container padding + 16pt zone gap
         // handle separation (Figma flat layout, #555).
+        // Order (Figma TransportControls 34:45, #753): song navigation on the
+        // outer flanks (end-icons), cue navigation inner (double-triangle),
+        // play centered. Song jumps whole media items; cue moves within one.
         HStack(spacing: Metrics.buttonGap) {
-            iconButton("backward.end.fill", id: "transportPrevCue", help: "Previous cue", action: onStepPrevCue)
+            iconButton(
+                "backward.end.fill",
+                id: "transportPrevSong",
+                help: "Previous song",
+                enabled: canStepPrevSong,
+                action: onStepPrevSong
+            )
+            iconButton(
+                "backward.fill",
+                id: "transportPrevCue",
+                help: "Previous cue",
+                enabled: hasPrevCue,
+                action: onStepPrevCue
+            )
             iconButton(
                 engine.isPlaying ? "pause.fill" : "play.fill",
                 id: "transportPlayPause",
@@ -94,11 +122,36 @@ struct TransportControls: View {
             ) {
                 engine.toggle()
             }
-            iconButton("forward.end.fill", id: "transportNextCue", help: "Next cue", action: onStepNextCue)
+            iconButton(
+                "forward.fill",
+                id: "transportNextCue",
+                help: "Next cue",
+                enabled: hasNextCue,
+                action: onStepNextCue
+            )
+            iconButton(
+                "forward.end.fill",
+                id: "transportNextSong",
+                help: "Next song",
+                enabled: canStepNextSong,
+                action: onStepNextSong
+            )
             if let onGo {
                 goButton(action: onGo)
             }
         }
+    }
+
+    /// Whether a prev / next cue exists relative to the playhead (#753). Read of
+    /// `engine.currentTime` keeps these live as playback moves, so the cue
+    /// buttons disable at the first / last cue. Mirrors `stepPlayhead`'s walk
+    /// (same `typeID` filter) so button state and action always agree.
+    private var hasPrevCue: Bool {
+        activeItem?.cue(steppingFrom: engine.currentTime, direction: .previous, typeID: activeCueTypeID) != nil
+    }
+
+    private var hasNextCue: Bool {
+        activeItem?.cue(steppingFrom: engine.currentTime, direction: .next, typeID: activeCueTypeID) != nil
     }
 
     /// The Show-mode GO button — a labelled, emphasised control (not a glyph),
@@ -122,6 +175,7 @@ struct TransportControls: View {
         id: String,
         help: String,
         primary: Bool = false,
+        enabled: Bool = true,
         action: @escaping () -> Void
     ) -> some View {
         let showsChrome = Self.buttonShowsChrome(primary: primary)
@@ -139,6 +193,10 @@ struct TransportControls: View {
                 .clipShape(RoundedRectangle(cornerRadius: DS.Radius.sm))
         }
         .buttonStyle(.plain)
+        // Dim + block at the list/cue boundary (#753): plain buttons don't dim
+        // on `.disabled` alone, so the opacity carries the visual affordance.
+        .disabled(!enabled)
+        .opacity(enabled ? 1 : 0.35)
         .help(help)
         .accessibilityIdentifier(id)
     }

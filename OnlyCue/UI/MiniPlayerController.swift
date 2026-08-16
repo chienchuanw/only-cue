@@ -53,6 +53,8 @@ final class MiniPlayerController {
 
     /// Tear down with the owning document window.
     func close() {
+        onUserClosedPanel = nil
+        panel?.delegate = nil
         panel?.close()
         panel = nil
     }

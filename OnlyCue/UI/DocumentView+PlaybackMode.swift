@@ -37,16 +37,7 @@ extension DocumentView {
             Task {
                 await CueCommands.advanceToNextMediaAndPlay(
                     document: document,
-                    reloadAndPlay: { _ in
-                        do {
-                            try await MediaImporter.loadActive(into: document, engine: engine, documentDirectory: documentDirectory)
-                            engine.play()
-                        } catch {
-                            if let item = document.model.activeItem {
-                                pendingAlert = .relink(itemID: item.id, displayName: item.media.displayName)
-                            }
-                        }
-                    }
+                    reloadAndPlay: { _ in await reloadActiveAndPlay() }
                 )
             }
         }

@@ -17,6 +17,9 @@ final class TransportControlsUITests: OnlyCueUITestCase {
         )
         XCTAssertTrue(app.buttons["transportPrevCue"].exists, "previous-cue control missing")
         XCTAssertTrue(app.buttons["transportNextCue"].exists, "next-cue control missing")
+        // Song navigation (#753) flanks the cue controls.
+        XCTAssertTrue(app.buttons["transportPrevSong"].exists, "previous-song control missing")
+        XCTAssertTrue(app.buttons["transportNextSong"].exists, "next-song control missing")
         XCTAssertTrue(app.staticTexts["currentTimeReadout"].exists, "current-time readout missing")
     }
 

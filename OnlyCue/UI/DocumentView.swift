@@ -202,6 +202,11 @@ struct DocumentView: View {
                         playbackMode: document.model.playbackMode,
                         onStepPrevCue: { stepPlayhead(.previous) },
                         onStepNextCue: { stepPlayhead(.next) },
+                        onStepPrevSong: { stepSong(.previous) },
+                        onStepNextSong: { stepSong(.next) },
+                        canStepPrevSong: canStepPrevSong,
+                        canStepNextSong: canStepNextSong,
+                        activeCueTypeID: showGoTypeID,
                         onGo: editorMode == .show ? { performGo() } : nil
                     )
                     // Pin the transport to its natural height: its internal

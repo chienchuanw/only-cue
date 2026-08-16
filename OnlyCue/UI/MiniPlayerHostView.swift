@@ -28,8 +28,53 @@ struct MiniPlayerHostView: View {
             onPlayPause: { engine.toggle() },
             onPrevCue: { step(.previous) },
             onNextCue: { step(.next) },
-            onGo: { performGo() }
+            onPrevSong: { stepSong(.previous) },
+            onNextSong: { stepSong(.next) },
+            onGo: { performGo() },
+            canPrevSong: canStepSong(.previous),
+            canNextSong: canStepSong(.next),
+            canPrevCue: hasCue(.previous),
+            canNextCue: hasCue(.next)
         )
+    }
+
+    /// Whether a prev / next song exists to step to — list position only (#753).
+    private func canStepSong(_ direction: MediaItem.PlayheadStep) -> Bool {
+        guard let id = document.model.activeItemID else { return false }
+        switch direction {
+        case .previous: return CueCommands.previousMediaItemID(before: id, in: document.model.items) != nil
+        case .next: return CueCommands.nextMediaItemID(after: id, in: document.model.items) != nil
+        }
+    }
+
+    /// Whether a prev / next cue exists relative to the playhead (#753) — mirrors
+    /// `step`'s walk so the button disables exactly when the seek would no-op.
+    private func hasCue(_ direction: MediaItem.PlayheadStep) -> Bool {
+        document.model.activeItem?.cue(
+            steppingFrom: engine.currentTime,
+            direction: direction,
+            typeID: context.showGoTypeID
+        ) != nil
+    }
+
+    /// Prev/next-song: switch media item and play immediately (#753) — routes
+    /// through `CueCommands`, mirroring `DocumentView.stepSong`. Relink failures
+    /// surface in the main window; the mini player just stays put.
+    private func stepSong(_ direction: MediaItem.PlayheadStep) {
+        Task {
+            await CueCommands.stepMediaAndPlay(
+                direction,
+                document: document,
+                reloadAndPlay: { _ in
+                    do {
+                        try await MediaImporter.loadActive(into: document, engine: engine)
+                        engine.play()
+                    } catch {
+                        // No relink UI in the mini panel — leave state unchanged.
+                    }
+                }
+            )
+        }
     }
 
     /// Prev/next-cue: seek only, honouring the Show-mode type filter — mirrors

@@ -69,6 +69,11 @@ extension UITestSeedHandler {
                 CuePointType(id: UUID(), name: "Azure", colorHex: "#4D96FF"),
                 CuePointType(id: UUID(), name: "Coral", colorHex: "#FF6B6B")
             ]
+        case "digit-media-typeselect":
+            // A single cue type bound to hotkey "1" so pressing the digit routes
+            // through `triggerHotkey(1)` and creates a cue — the behavior the
+            // media list's type-select used to swallow (#750).
+            return [CuePointType(id: UUID(), name: "General", colorHex: "#4ECDC4", hotkey: 1)]
         default:
             return [CuePointType(id: UUID(), name: "General", colorHex: "#4ECDC4")]
         }
@@ -81,6 +86,17 @@ extension UITestSeedHandler {
             return setListActISeeds()
         case "video-project":
             return videoProjectSeeds()
+        case "digit-media-typeselect":
+            // Three media whose names start with digits — exactly what makes the
+            // sidebar table's type-select match a digit keypress. The active item
+            // ("2_break") is NOT the one "1" would type-select to ("1_intro"), so
+            // an errant type-select would be observable; it starts cue-free so a
+            // created cue is unambiguous (#750).
+            return [
+                ItemSeed(displayName: "2_break.m4a", kind: .audio, duration: 30, fixture: .silentAudioShort, isActive: true, cues: []),
+                ItemSeed(displayName: "1_intro.m4a", kind: .audio, duration: 30, fixture: .silentAudioShort, cues: []),
+                ItemSeed(displayName: "3_finale.m4a", kind: .audio, duration: 30, fixture: .silentAudioShort, cues: [])
+            ]
         case "three-cues-1-3-6":
             return [legacyAudioItem(cues: [CueSpec(time: 1), CueSpec(time: 3), CueSpec(time: 6)])]
         case "three-cues-1-3-6-with-120bpm-tempo":

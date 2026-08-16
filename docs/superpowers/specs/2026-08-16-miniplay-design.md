@@ -82,3 +82,5 @@ panel, Windows.
 - **M2 — window + command:** `MiniPlayerController` (NSPanel) + `View` menu toggle
   + ⌘⌥M + position/visibility persistence + per-document lifecycle.
 - **M3 — polish:** empty-state, Show-mode GO wiring, screenshot baseline, a11y.
+
+> **Note:** the "closes with its document window" constraint in §Constraints is relaxed by `docs/superpowers/specs/2026-08-17-miniplayer-keyboard-and-collapse-design.md` (#743).

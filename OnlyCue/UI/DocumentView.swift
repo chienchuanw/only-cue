@@ -33,15 +33,19 @@ struct DocumentView: View {
     @SceneStorage("onlycue.showGoTypeID") var showGoTypeIDRaw = ""
     @State var miniController = MiniPlayerController()
     @State var miniContext = MiniPlayerContext()
-    @State var isMiniFrontmost = false
+    /// TRUE when THIS document's own main window currently holds key. (Named for
+    /// its true meaning — it does not track the Mini Player panel; the panel is
+    /// non-activating and never becomes key.) Published by `FrontmostWindowGate`
+    /// and used to scope broadcast notifications to the frontmost document.
+    @State var isMainWindowKey = false
     @AppStorage("onlycue.miniPlayerVisible") var miniPlayerVisible = false
-    /// The window's live pane arrangement, per editor mode. `@SceneStorage`
-    /// (not `@AppStorage`): layout is a window-level property, so two open
-    /// documents keep independent arrangements and macOS restores each window's
-    /// own across relaunch (spec decision 9).
-    /// `internal`, not `private`: read/written by the extension in
-    /// DocumentView+Workspace.swift, which was split out to keep this file under
-    /// SwiftLint's file_length cap. `private`/`fileprivate` can't reach across files.
+    @State var miniKeyMonitor: Any?
+    @State var isMainWindowCollapsed = false
+    @State var documentWindow: NSWindow?
+    @State var seekBox = SeekTaskBox()
+    /// The window's live pane arrangement per editor mode (`@SceneStorage` so two
+    /// open documents keep independent arrangements; restored across relaunch).
+    /// `internal` (not `private`): read/written by DocumentView+Workspace.swift.
     @SceneStorage("onlycue.workspaceLayout") var liveLayoutData = ""
     /// -1 means "no pending apply". A sentinel rather than `CGFloat?` because
     /// `@State` of an optional here reads worse at every call site than one
@@ -244,6 +248,14 @@ struct DocumentView: View {
                     onGo: { performGo() },
                     isEnabled: editorMode == .show && document.model.activeItem != nil
                 )
+                DocumentWindowAccessor(
+                    onResolve: { documentWindow = $0 },
+                    shouldCollapseOnClose: {
+                        MiniPlayerCollapse.onMainWindowClose(miniVisible: miniController.isVisible) == .collapseToMini
+                    },
+                    onCollapse: { collapseMainWindow() }
+                )
+                .frame(width: 0, height: 0)
             }
             .frame(width: 0, height: 0)
         }
@@ -370,20 +382,6 @@ extension DocumentView {
         )
     }
 
-    func jump(by seconds: TimeInterval) {
-        let target = max(0, engine.currentTime + seconds)
-        seekTask?.cancel()
-        seekTask = Task { await engine.seek(to: target) }
-    }
-
-    func addCueAtPlayhead() {
-        guard canCreateCue else { return } // no cue creation in Show mode (#592)
-        CueCommands.addCueAtPlayhead(
-            time: engine.currentTime,
-            document: document,
-            undoManager: undoManager
-        )
-    }
 }
 
 enum DocumentAlert: Identifiable {

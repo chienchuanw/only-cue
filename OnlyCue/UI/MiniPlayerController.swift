@@ -11,8 +11,40 @@ final class MiniPlayerController {
 
     private var panel: NSPanel?
     private static let width: CGFloat = 620
+    /// Marks every Mini Player panel so the front-most-among-minis lookup can
+    /// filter `NSApp.orderedWindows` precisely (not "any NSPanel").
+    private static let panelIdentifier = NSUserInterfaceItemIdentifier("OnlyCue.MiniPlayerPanel")
 
     var isVisible: Bool { panel?.isVisible ?? false }
+
+    /// Whether this controller's panel is the front-most *visible* Mini Player
+    /// panel across all open documents. This is the multi-document scoping
+    /// discriminator used by the key-monitor gate (#743): the Mini Player panels
+    /// are non-activating (they never become key), so key-window state cannot
+    /// pick a winner — front-to-back order in `NSApp.orderedWindows` does.
+    /// TRUE for the sole panel when a single document is open, and still TRUE
+    /// while this document's main window is collapsed (the panel stays visible).
+    var isFrontmostMiniPanel: Bool {
+        guard let panel, panel.isVisible else { return false }
+        let visibleMiniPanels = NSApp.orderedWindows.filter {
+            $0.identifier == Self.panelIdentifier && $0.isVisible
+        }
+        return visibleMiniPanels.first === panel
+    }
+
+    /// Invoked when the user dismisses the panel via its close (X) button.
+    /// Not invoked when `hide()` (orderOut) is called programmatically.
+    var onUserClosedPanel: (() -> Void)?
+
+    private lazy var panelDelegate = PanelDelegate { [weak self] in
+        self?.onUserClosedPanel?()
+    }
+
+    private final class PanelDelegate: NSObject, NSWindowDelegate {
+        let onClose: () -> Void
+        init(onClose: @escaping () -> Void) { self.onClose = onClose }
+        func windowWillClose(_ notification: Notification) { onClose() }
+    }
 
     func toggle(rootView: some View, title: String, autosaveName: String) {
         if isVisible {
@@ -39,6 +71,8 @@ final class MiniPlayerController {
 
     /// Tear down with the owning document window.
     func close() {
+        onUserClosedPanel = nil
+        panel?.delegate = nil
         panel?.close()
         panel = nil
     }
@@ -58,9 +92,11 @@ final class MiniPlayerController {
         panel.titlebarAppearsTransparent = true
         panel.isMovableByWindowBackground = true
         panel.isReleasedWhenClosed = false
+        panel.identifier = Self.panelIdentifier
         panel.contentViewController = hosting
         panel.setContentSize(hosting.view.fittingSize)
         panel.setFrameAutosaveName(autosaveName)
+        panel.delegate = panelDelegate
         return panel
     }
 }

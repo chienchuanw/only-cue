@@ -36,24 +36,57 @@ extension CueCommands {
         return items[next].id
     }
 
-    /// Advances `activeItemID` to the next item in `items[]` and triggers the
-    /// caller's reload-and-play side effect. No-op at the end of the list, for
-    /// nil `activeItemID`, or when the active id isn't in `items[]`.
+    /// Returns the id of the item immediately before `current` in `items`.
+    /// Returns nil when `current` is the first item, when `current` is not in
+    /// `items`, or when `items` is empty. Pure — no side effects.
+    static func previousMediaItemID(
+        before current: MediaItem.ID,
+        in items: [MediaItem]
+    ) -> MediaItem.ID? {
+        guard let index = items.firstIndex(where: { $0.id == current }) else { return nil }
+        let previous = index - 1
+        guard previous >= 0 else { return nil }
+        return items[previous].id
+    }
+
+    /// Steps `activeItemID` to the previous / next item in `items[]` and triggers
+    /// the caller's reload-and-play side effect. No-op at the list boundary (no
+    /// wrap), for nil `activeItemID`, or when the active id isn't in `items[]` —
+    /// the transport disables the button in those cases (#753).
     ///
-    /// Non-undoable on purpose. Cmd-Z mid-show snapping back to the just-
-    /// finished song is the wrong recovery path; the operator wants the
-    /// sidebar instead. Selection changes already bypass undo (see
+    /// Non-undoable on purpose, like `advanceToNextMediaAndPlay`: Cmd-Z snapping
+    /// back to the previous song is the wrong recovery path; the operator wants
+    /// the sidebar instead. Selection changes already bypass undo (see
     /// `setActiveItem(id:in:)` in `CueCommands+Items.swift`).
     ///
     /// `reloadAndPlay` is the production seam for `MediaImporter.loadActive`
     /// + `engine.play()`. Tests pass a spy closure.
-    static func advanceToNextMediaAndPlay(
+    static func stepMediaAndPlay(
+        _ direction: MediaItem.PlayheadStep,
         document: CueListDocument,
         reloadAndPlay: @MainActor (MediaItem.ID) async -> Void
     ) async {
         guard let current = document.model.activeItemID else { return }
-        guard let nextID = nextMediaItemID(after: current, in: document.model.items) else { return }
-        document.model.activeItemID = nextID
-        await reloadAndPlay(nextID)
+        let targetID: MediaItem.ID?
+        switch direction {
+        case .previous: targetID = previousMediaItemID(before: current, in: document.model.items)
+        case .next: targetID = nextMediaItemID(after: current, in: document.model.items)
+        }
+        guard let targetID else { return }
+        document.model.activeItemID = targetID
+        await reloadAndPlay(targetID)
+    }
+
+    /// Advances `activeItemID` to the next item in `items[]` and triggers the
+    /// caller's reload-and-play side effect. No-op at the end of the list, for
+    /// nil `activeItemID`, or when the active id isn't in `items[]`.
+    ///
+    /// The auto-next end-of-media path (`DocumentView+PlaybackMode`); thin
+    /// forward-only alias over `stepMediaAndPlay(.next:)`.
+    static func advanceToNextMediaAndPlay(
+        document: CueListDocument,
+        reloadAndPlay: @MainActor (MediaItem.ID) async -> Void
+    ) async {
+        await stepMediaAndPlay(.next, document: document, reloadAndPlay: reloadAndPlay)
     }
 }

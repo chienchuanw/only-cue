@@ -37,6 +37,7 @@ struct DocumentView: View {
     @AppStorage("onlycue.miniPlayerVisible") var miniPlayerVisible = false
     @State var miniKeyMonitor: Any?
     @State var isMainWindowCollapsed = false
+    @State var documentWindow: NSWindow?
     @State var seekBox = SeekTaskBox()
     /// The window's live pane arrangement per editor mode (`@SceneStorage` so two
     /// open documents keep independent arrangements; restored across relaunch).
@@ -243,6 +244,14 @@ struct DocumentView: View {
                     onGo: { performGo() },
                     isEnabled: editorMode == .show && document.model.activeItem != nil
                 )
+                DocumentWindowAccessor(
+                    onResolve: { documentWindow = $0 },
+                    shouldCollapseOnClose: {
+                        MiniPlayerCollapse.onMainWindowClose(miniVisible: miniController.isVisible) == .collapseToMini
+                    },
+                    onCollapse: { collapseMainWindow() }
+                )
+                .frame(width: 0, height: 0)
             }
             .frame(width: 0, height: 0)
         }

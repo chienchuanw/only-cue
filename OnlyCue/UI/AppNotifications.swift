@@ -35,4 +35,9 @@ extension Notification.Name {
     static let workspaceOverwriteRequested = Notification.Name("OnlyCue.workspaceOverwriteRequested")
     static let manageWorkspacesRequested = Notification.Name("OnlyCue.manageWorkspacesRequested")
     static let workspaceResetRequested = Notification.Name("OnlyCue.workspaceResetRequested")
+
+    // MARK: - Mini Player (#748)
+
+    /// Toggle the frontmost document's floating Mini Player panel.
+    static let toggleMiniPlayerRequested = Notification.Name("OnlyCue.toggleMiniPlayerRequested")
 }

@@ -29,6 +29,7 @@ struct MiniPlayerView: View {
         .padding(.vertical, DS.Space.md)
         .frame(maxWidth: .infinity, alignment: .leading)
         .background(DS.Color.surface)
+        .accessibilityIdentifier("miniPlayerBar")
     }
 
     // MARK: - Transport

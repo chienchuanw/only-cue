@@ -29,6 +29,27 @@ enum TableSelectionHighlightStyler {
         }
         return nil
     }
+
+    /// Walks up from `view` to the nearest enclosing `NSTableView` and makes it
+    /// refuse first responder, so the table never receives `keyDown` and its
+    /// built-in type-select can't swallow digit cue hotkeys (#750). Mouse-click
+    /// row selection is unaffected; keyboard row navigation and ⌫-to-delete are
+    /// intentionally given up on this list (media selection is mouse-first, and
+    /// Remove stays on the row context menu). Returns the table it changed, or
+    /// nil when there is none above `view`.
+    @discardableResult
+    @MainActor
+    static func disableTypeSelect(from view: NSView) -> NSTableView? {
+        var current: NSView? = view
+        while let node = current {
+            if let table = node as? NSTableView {
+                table.refusesFirstResponder = true
+                return table
+            }
+            current = node.superview
+        }
+        return nil
+    }
 }
 
 /// Zero-size AppKit probe hosted behind a `List` row that disables the
@@ -38,26 +59,45 @@ enum TableSelectionHighlightStyler {
 /// is reachable by the time the walk runs, and again on every SwiftUI update in
 /// case a table rebuild restored the blue.
 private final class SelectionHighlightProbeView: NSView {
+    /// When true, the probe also makes the enclosing table refuse first
+    /// responder to kill type-select (#750). Media lists opt in; the cue list
+    /// keeps only the highlight suppression.
+    var disablesTypeSelect = false
+
+    private func apply() {
+        TableSelectionHighlightStyler.disableSystemHighlight(from: self)
+        if disablesTypeSelect {
+            TableSelectionHighlightStyler.disableTypeSelect(from: self)
+        }
+    }
+
     override func viewDidMoveToWindow() {
         super.viewDidMoveToWindow()
-        TableSelectionHighlightStyler.disableSystemHighlight(from: self)
+        apply()
     }
 
     override func viewDidMoveToSuperview() {
         super.viewDidMoveToSuperview()
-        TableSelectionHighlightStyler.disableSystemHighlight(from: self)
+        apply()
     }
 }
 
 private struct PlainListSelectionProbe: NSViewRepresentable {
+    var disableTypeSelect = false
+
     func makeNSView(context: Context) -> NSView {
         let view = SelectionHighlightProbeView()
+        view.disablesTypeSelect = disableTypeSelect
         view.setAccessibilityHidden(true)
         return view
     }
 
     func updateNSView(_ nsView: NSView, context: Context) {
+        (nsView as? SelectionHighlightProbeView)?.disablesTypeSelect = disableTypeSelect
         TableSelectionHighlightStyler.disableSystemHighlight(from: nsView)
+        if disableTypeSelect {
+            TableSelectionHighlightStyler.disableTypeSelect(from: nsView)
+        }
     }
 }
 
@@ -65,7 +105,11 @@ extension View {
     /// Strips the macOS system selection highlight from the enclosing `List`'s
     /// `NSTableView` so only the custom row background shows (#679). Apply to a
     /// row inside a `List(selection:)`.
-    func plainListSelectionHighlight() -> some View {
-        background(PlainListSelectionProbe().frame(width: 0, height: 0))
+    ///
+    /// Pass `disableTypeSelect: true` to also make the table refuse first
+    /// responder, killing its built-in type-select so digit cue hotkeys aren't
+    /// swallowed by the media list (#750).
+    func plainListSelectionHighlight(disableTypeSelect: Bool = false) -> some View {
+        background(PlainListSelectionProbe(disableTypeSelect: disableTypeSelect).frame(width: 0, height: 0))
     }
 }

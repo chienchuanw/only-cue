@@ -11,41 +11,40 @@ import SwiftUI
 /// can't silently restore the blue.
 enum TableSelectionHighlightStyler {
 
-    /// Walks up the superview chain from `view` to the nearest enclosing
-    /// `NSTableView` and disables its system selection highlight. Returns the
-    /// table it styled, or nil when there is none above `view`. Walking *up*
-    /// from a per-row probe targets that row's own list — both panes share one
-    /// window, so a window-wide search could style the wrong table.
+    /// Disables the system selection highlight on the enclosing `NSTableView`
+    /// so only the custom row background shows (#679). Returns the table it
+    /// styled, or nil when there is none above `view`.
     @discardableResult
     @MainActor
     static func disableSystemHighlight(from view: NSView) -> NSTableView? {
-        var current: NSView? = view
-        while let node = current {
-            if let table = node as? NSTableView {
-                table.selectionHighlightStyle = .none
-                return table
-            }
-            current = node.superview
-        }
-        return nil
+        guard let table = enclosingTable(of: view) else { return nil }
+        table.selectionHighlightStyle = .none
+        return table
     }
 
-    /// Walks up from `view` to the nearest enclosing `NSTableView` and makes it
-    /// refuse first responder, so the table never receives `keyDown` and its
-    /// built-in type-select can't swallow digit cue hotkeys (#750). Mouse-click
-    /// row selection is unaffected; keyboard row navigation and ⌫-to-delete are
-    /// intentionally given up on this list (media selection is mouse-first, and
-    /// Remove stays on the row context menu). Returns the table it changed, or
-    /// nil when there is none above `view`.
+    /// Makes the enclosing `NSTableView` refuse first responder, so the table
+    /// never receives `keyDown` and its built-in type-select can't swallow digit
+    /// cue hotkeys (#750). Mouse-click row selection is unaffected; keyboard row
+    /// navigation and ⌫-to-delete are intentionally given up on this list (media
+    /// selection is mouse-first, and Remove stays on the row context menu).
+    /// Returns the table it changed, or nil when there is none above `view`.
     @discardableResult
     @MainActor
     static func disableTypeSelect(from view: NSView) -> NSTableView? {
+        guard let table = enclosingTable(of: view) else { return nil }
+        table.refusesFirstResponder = true
+        return table
+    }
+
+    /// Walks up the superview chain from `view` to the nearest enclosing
+    /// `NSTableView`. Walking *up* from a per-row probe targets that row's own
+    /// list — both panes share one window, so a window-wide search could reach
+    /// the wrong table.
+    @MainActor
+    private static func enclosingTable(of view: NSView) -> NSTableView? {
         var current: NSView? = view
         while let node = current {
-            if let table = node as? NSTableView {
-                table.refusesFirstResponder = true
-                return table
-            }
+            if let table = node as? NSTableView { return table }
             current = node.superview
         }
         return nil
@@ -64,7 +63,7 @@ private final class SelectionHighlightProbeView: NSView {
     /// keeps only the highlight suppression.
     var disablesTypeSelect = false
 
-    private func apply() {
+    func apply() {
         TableSelectionHighlightStyler.disableSystemHighlight(from: self)
         if disablesTypeSelect {
             TableSelectionHighlightStyler.disableTypeSelect(from: self)
@@ -93,11 +92,9 @@ private struct PlainListSelectionProbe: NSViewRepresentable {
     }
 
     func updateNSView(_ nsView: NSView, context: Context) {
-        (nsView as? SelectionHighlightProbeView)?.disablesTypeSelect = disableTypeSelect
-        TableSelectionHighlightStyler.disableSystemHighlight(from: nsView)
-        if disableTypeSelect {
-            TableSelectionHighlightStyler.disableTypeSelect(from: nsView)
-        }
+        guard let probe = nsView as? SelectionHighlightProbeView else { return }
+        probe.disablesTypeSelect = disableTypeSelect
+        probe.apply()
     }
 }
 

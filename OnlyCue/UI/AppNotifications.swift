@@ -40,4 +40,6 @@ extension Notification.Name {
 
     /// Toggle the frontmost document's floating Mini Player panel.
     static let toggleMiniPlayerRequested = Notification.Name("OnlyCue.toggleMiniPlayerRequested")
+    /// Restore the main window from the collapsed (mini-only) state.
+    static let showMainWindowRequested = Notification.Name("OnlyCue.showMainWindowRequested")
 }

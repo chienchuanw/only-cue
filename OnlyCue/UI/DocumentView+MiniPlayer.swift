@@ -19,6 +19,13 @@ extension View {
                 guard view.miniHandlesNotifications else { return }
                 view.toggleMiniPlayer()
             }
+            .onReceive(NotificationCenter.default.publisher(for: .showMainWindowRequested)) { _ in
+                guard view.miniHandlesNotifications, view.isMainWindowCollapsed else { return }
+                view.restoreMainWindow()
+                view.miniController.hide()
+                view.miniPlayerVisible = false
+                view.stopMiniKeyMonitor()
+            }
             .onChange(of: view.editorMode) { _, _ in view.syncMiniPlayerContext() }
             .onChange(of: view.showGoTypeIDRaw) { _, _ in view.syncMiniPlayerContext() }
             .onChange(of: view.document.model.activeItemID) { _, _ in view.updateMiniPlayerTitle() }

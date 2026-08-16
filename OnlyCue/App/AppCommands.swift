@@ -165,6 +165,11 @@ struct AppCommands: Commands {
             .keyboardShortcut("m", modifiers: [.command, .option])
             .accessibilityIdentifier("toggleMiniPlayerMenuItem")
 
+            Button("Show Main Window") {
+                NotificationCenter.default.post(name: .showMainWindowRequested, object: nil)
+            }
+            .accessibilityIdentifier("showMainWindowMenuItem")
+
             Divider()
 
             workspaceMenu

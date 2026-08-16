@@ -378,20 +378,6 @@ extension DocumentView {
         )
     }
 
-    func jump(by seconds: TimeInterval) {
-        let target = max(0, engine.currentTime + seconds)
-        seekTask?.cancel()
-        seekTask = Task { await engine.seek(to: target) }
-    }
-
-    func addCueAtPlayhead() {
-        guard canCreateCue else { return } // no cue creation in Show mode (#592)
-        CueCommands.addCueAtPlayhead(
-            time: engine.currentTime,
-            document: document,
-            undoManager: undoManager
-        )
-    }
 }
 
 enum DocumentAlert: Identifiable {

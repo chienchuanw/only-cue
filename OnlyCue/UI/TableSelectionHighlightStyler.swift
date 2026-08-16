@@ -1,14 +1,19 @@
 import SwiftUI
 
-/// Removes the macOS system selection highlight (the emphasized blue / reverse-
-/// video fill) from a SwiftUI `List`'s backing `NSTableView`, so only the
-/// custom `.listRowBackground` shows (#679). `List(selection:)` and all its
-/// behavior — keyboard navigation, shift/cmd multi-select, the focus ring — are
-/// untouched; only the drawing changes.
+/// AppKit introspection over a SwiftUI `List`'s backing `NSTableView`.
 ///
-/// SwiftUI exposes no API for this, hence the AppKit introspection. It is kept
+/// `disableSystemHighlight` removes the macOS system selection highlight (the
+/// emphasized blue / reverse-video fill) so only the custom `.listRowBackground`
+/// shows (#679); it is pure drawing — `List(selection:)` behavior (keyboard
+/// navigation, shift/cmd multi-select, the focus ring) is untouched.
+///
+/// `disableTypeSelect` goes further and makes the table refuse first responder
+/// (#750) — that intentionally *does* give up keyboard navigation / focus on
+/// that list, so it is opt-in per call site.
+///
+/// SwiftUI exposes no API for either, hence the introspection. It is kept
 /// deliberately small and re-applied on every view update so a table rebuild
-/// can't silently restore the blue.
+/// can't silently restore the blue or type-select.
 enum TableSelectionHighlightStyler {
 
     /// Disables the system selection highlight on the enclosing `NSTableView`

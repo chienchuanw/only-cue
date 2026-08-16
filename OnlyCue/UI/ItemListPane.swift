@@ -175,6 +175,10 @@ struct ItemListPane: View {
             .onDelete(perform: deleteAtOffsets)
         }
         .listStyle(.plain)
+        // ⌫ delete: reachable via VoiceOver/other focus, but not the plain
+        // keyboard on this list — its table refuses first responder to kill
+        // type-select (#750), so the surviving delete path is the row's Remove
+        // context-menu item. Kept wired for any responder that can still route it.
         .onDeleteCommand { deleteSelected() }
         .scrollContentBackground(.hidden)
     }

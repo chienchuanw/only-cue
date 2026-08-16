@@ -27,7 +27,10 @@ extension View {
             }
             .onAppear {
                 view.syncMiniPlayerContext()
-                if view.miniPlayerVisible { view.openMiniPlayer() }
+                if view.miniPlayerVisible {
+                    view.openMiniPlayer()
+                    view.startMiniKeyMonitor()
+                }
             }
             .onDisappear {
                 view.stopMiniKeyMonitor()

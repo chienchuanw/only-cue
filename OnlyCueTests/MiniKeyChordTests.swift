@@ -9,7 +9,10 @@ final class MiniKeyChordTests: XCTestCase {
     }
 
     func test_leftArrow() {
-        let left = String(UnicodeScalar(NSLeftArrowFunctionKey)!)
+        guard let scalar = UnicodeScalar(NSLeftArrowFunctionKey) else {
+            return XCTFail("NSLeftArrowFunctionKey is not a valid Unicode scalar")
+        }
+        let left = String(scalar)
         XCTAssertEqual(MiniKeyChord.from(charactersIgnoringModifiers: left, flags: []), KeyChord(key: "leftArrow"))
     }
 

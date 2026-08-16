@@ -36,9 +36,15 @@ struct MiniPlayerView: View {
 
     private var transport: some View {
         HStack(spacing: DS.Space.sm + 2) {
-            circleButton("backward.end.fill", size: 38, filled: false, action: onPrevCue)
-            circleButton(isPlaying ? "pause.fill" : "play.fill", size: 46, filled: true, action: onPlayPause)
-            circleButton("forward.end.fill", size: 38, filled: false, action: onNextCue)
+            circleButton("backward.end.fill", size: 38, filled: false, label: "Previous cue", action: onPrevCue)
+            circleButton(
+                isPlaying ? "pause.fill" : "play.fill",
+                size: 46,
+                filled: true,
+                label: isPlaying ? "Pause" : "Play",
+                action: onPlayPause
+            )
+            circleButton("forward.end.fill", size: 38, filled: false, label: "Next cue", action: onNextCue)
             if model.showsGo {
                 Button(action: onGo) {
                     Text("GO")
@@ -48,6 +54,7 @@ struct MiniPlayerView: View {
                         .background(Capsule().fill(DS.Color.cueIndigo))
                 }
                 .buttonStyle(.plain)
+                .accessibilityLabel("Go")
             }
         }
         .disabled(model.isEmpty)
@@ -58,6 +65,7 @@ struct MiniPlayerView: View {
         _ symbol: String,
         size: CGFloat,
         filled: Bool,
+        label: String,
         action: @escaping () -> Void
     ) -> some View {
         Button(action: action) {
@@ -70,6 +78,7 @@ struct MiniPlayerView: View {
             .frame(width: size, height: size)
         }
         .buttonStyle(.plain)
+        .accessibilityLabel(label)
     }
 
     // MARK: - Readouts

@@ -73,7 +73,27 @@ extension DocumentView {
         miniController.setTitle(miniPlayerTitle)
     }
 
+    /// Wire the close-button callback once so re-renders don't overwrite it.
+    private func setMiniClosedCallbackIfNeeded() {
+        guard miniController.onUserClosedPanel == nil else { return }
+        miniController.onUserClosedPanel = {
+            miniPlayerVisible = false
+            stopMiniKeyMonitor()
+            if MiniPlayerCollapse.onMiniClose(mainWindowHidden: isMainWindowCollapsed) == .restoreMainWindow {
+                restoreMainWindow()
+            }
+        }
+    }
+
     func toggleMiniPlayer() {
+        if miniController.isVisible && isMainWindowCollapsed {
+            miniController.hide()
+            miniPlayerVisible = false
+            stopMiniKeyMonitor()
+            restoreMainWindow()
+            return
+        }
+        setMiniClosedCallbackIfNeeded()
         syncMiniPlayerContext()
         miniController.toggle(
             rootView: miniPlayerRoot,
@@ -81,9 +101,11 @@ extension DocumentView {
             autosaveName: Self.miniAutosaveName
         )
         miniPlayerVisible = miniController.isVisible
+        if miniPlayerVisible { startMiniKeyMonitor() } else { stopMiniKeyMonitor() }
     }
 
     func openMiniPlayer() {
+        setMiniClosedCallbackIfNeeded()
         syncMiniPlayerContext()
         miniController.show(
             rootView: miniPlayerRoot,

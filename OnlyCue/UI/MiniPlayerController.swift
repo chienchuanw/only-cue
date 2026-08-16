@@ -14,6 +14,20 @@ final class MiniPlayerController {
 
     var isVisible: Bool { panel?.isVisible ?? false }
 
+    /// Invoked when the user dismisses the panel via its close (X) button.
+    /// Not invoked when `hide()` (orderOut) is called programmatically.
+    var onUserClosedPanel: (() -> Void)?
+
+    private lazy var panelDelegate = PanelDelegate { [weak self] in
+        self?.onUserClosedPanel?()
+    }
+
+    private final class PanelDelegate: NSObject, NSWindowDelegate {
+        let onClose: () -> Void
+        init(onClose: @escaping () -> Void) { self.onClose = onClose }
+        func windowWillClose(_ notification: Notification) { onClose() }
+    }
+
     func toggle(rootView: some View, title: String, autosaveName: String) {
         if isVisible {
             hide()
@@ -61,6 +75,7 @@ final class MiniPlayerController {
         panel.contentViewController = hosting
         panel.setContentSize(hosting.view.fittingSize)
         panel.setFrameAutosaveName(autosaveName)
+        panel.delegate = panelDelegate
         return panel
     }
 }

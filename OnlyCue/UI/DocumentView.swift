@@ -35,13 +35,12 @@ struct DocumentView: View {
     @State var miniContext = MiniPlayerContext()
     @State var isMiniFrontmost = false
     @AppStorage("onlycue.miniPlayerVisible") var miniPlayerVisible = false
-    /// The window's live pane arrangement, per editor mode. `@SceneStorage`
-    /// (not `@AppStorage`): layout is a window-level property, so two open
-    /// documents keep independent arrangements and macOS restores each window's
-    /// own across relaunch (spec decision 9).
-    /// `internal`, not `private`: read/written by the extension in
-    /// DocumentView+Workspace.swift, which was split out to keep this file under
-    /// SwiftLint's file_length cap. `private`/`fileprivate` can't reach across files.
+    @State var miniKeyMonitor: Any?
+    @State var isMainWindowCollapsed = false
+    @State var seekBox = SeekTaskBox()
+    /// The window's live pane arrangement per editor mode (`@SceneStorage` so two
+    /// open documents keep independent arrangements; restored across relaunch).
+    /// `internal` (not `private`): read/written by DocumentView+Workspace.swift.
     @SceneStorage("onlycue.workspaceLayout") var liveLayoutData = ""
     /// -1 means "no pending apply". A sentinel rather than `CGFloat?` because
     /// `@State` of an optional here reads worse at every call site than one

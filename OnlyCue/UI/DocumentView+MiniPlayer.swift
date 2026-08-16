@@ -22,11 +22,17 @@ extension View {
             .onChange(of: view.editorMode) { _, _ in view.syncMiniPlayerContext() }
             .onChange(of: view.showGoTypeIDRaw) { _, _ in view.syncMiniPlayerContext() }
             .onChange(of: view.document.model.activeItemID) { _, _ in view.updateMiniPlayerTitle() }
+            .onChange(of: view.miniPlayerVisible) { _, visible in
+                if visible { view.startMiniKeyMonitor() } else { view.stopMiniKeyMonitor() }
+            }
             .onAppear {
                 view.syncMiniPlayerContext()
                 if view.miniPlayerVisible { view.openMiniPlayer() }
             }
-            .onDisappear { view.miniController.close() }
+            .onDisappear {
+                view.stopMiniKeyMonitor()
+                view.miniController.close()
+            }
     }
 }
 
@@ -52,7 +58,7 @@ extension DocumentView {
     }
 
     private var miniPlayerRoot: MiniPlayerHostView {
-        MiniPlayerHostView(engine: engine, document: document, context: miniContext)
+        MiniPlayerHostView(engine: engine, document: document, context: miniContext, seekBox: seekBox)
     }
 
     func syncMiniPlayerContext() {

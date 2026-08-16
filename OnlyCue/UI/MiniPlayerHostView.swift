@@ -10,8 +10,9 @@ struct MiniPlayerHostView: View {
     let engine: PlayerEngine
     @ObservedObject var document: CueListDocument
     let context: MiniPlayerContext
-
-    @State private var seekBox = SeekTaskBox()
+    /// Shared seek-task box — owned by `DocumentView` so the key monitor and
+    /// the host buttons use one `SeekTaskBox`, preventing overlapping seeks (#743).
+    let seekBox: SeekTaskBox
 
     var body: some View {
         let actions = MiniPlaybackActions(

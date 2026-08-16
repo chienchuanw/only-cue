@@ -11,9 +11,16 @@ struct MiniPlayerHostView: View {
     @ObservedObject var document: CueListDocument
     let context: MiniPlayerContext
 
-    @State private var seekTask: Task<Void, Never>?
+    @State private var seekBox = SeekTaskBox()
 
     var body: some View {
+        let actions = MiniPlaybackActions(
+            engine: engine,
+            document: document,
+            context: context,
+            ltcEnabled: LTCRoutingStore.shared.settings.isEnabled,
+            seekTaskBox: seekBox
+        )
         let model = MiniPlayerModel.make(
             currentTime: engine.currentTime,
             item: document.model.activeItem,
@@ -25,12 +32,12 @@ struct MiniPlayerHostView: View {
         MiniPlayerView(
             model: model,
             isPlaying: engine.isPlaying,
-            onPlayPause: { engine.toggle() },
-            onPrevCue: { step(.previous) },
-            onNextCue: { step(.next) },
+            onPlayPause: { actions.playPause() },
+            onPrevCue: { actions.stepCue(.previous) },
+            onNextCue: { actions.stepCue(.next) },
             onPrevSong: { stepSong(.previous) },
             onNextSong: { stepSong(.next) },
-            onGo: { performGo() },
+            onGo: { actions.go() },
             canPrevSong: CueCommands.canStepSong(.previous, activeID: document.model.activeItemID, in: document.model.items),
             canNextSong: CueCommands.canStepSong(.next, activeID: document.model.activeItemID, in: document.model.items),
             canPrevCue: hasCue(.previous),
@@ -39,7 +46,7 @@ struct MiniPlayerHostView: View {
     }
 
     /// Whether a prev / next cue exists relative to the playhead (#753) — mirrors
-    /// `step`'s walk so the button disables exactly when the seek would no-op.
+    /// `MiniPlaybackActions.stepCue`'s walk so the button disables exactly when the seek would no-op.
     private func hasCue(_ direction: MediaItem.PlayheadStep) -> Bool {
         document.model.activeItem?.cue(
             steppingFrom: engine.currentTime,
@@ -68,32 +75,4 @@ struct MiniPlayerHostView: View {
         }
     }
 
-    /// Prev/next-cue: seek only, honouring the Show-mode type filter — mirrors
-    /// `DocumentView.stepPlayhead`.
-    private func step(_ direction: MediaItem.PlayheadStep) {
-        guard let item = document.model.activeItem,
-              let target = item.cue(
-                  steppingFrom: engine.currentTime,
-                  direction: direction,
-                  typeID: context.showGoTypeID
-              )
-        else { return }
-        seekTask?.cancel()
-        seekTask = Task { await engine.seek(to: target.time) }
-    }
-
-    /// Show-mode GO: seek to the next cue and play — mirrors `DocumentView.performGo`.
-    private func performGo() {
-        guard let item = document.model.activeItem,
-              case .seekAndPlay(let time) = item.showGoDecision(
-                  from: engine.currentTime,
-                  typeID: context.showGoTypeID
-              )
-        else { return }
-        seekTask?.cancel()
-        seekTask = Task {
-            await engine.seek(to: time)
-            engine.play()
-        }
-    }
 }

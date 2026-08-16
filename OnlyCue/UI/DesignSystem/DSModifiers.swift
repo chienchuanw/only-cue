@@ -43,6 +43,14 @@ extension View {
             .foregroundStyle(DS.Color.textTertiary)
     }
 
+    /// Disables + dims a plain control at a navigation boundary (#753). Plain
+    /// buttons don't visibly dim on `.disabled` alone, so the opacity carries
+    /// the affordance. Shared by the transport and mini-player skip buttons.
+    func dsDisabledDim(_ isDisabled: Bool) -> some View {
+        disabled(isDisabled)
+            .opacity(isDisabled ? 0.35 : 1)
+    }
+
     /// A 1 pt hairline divider on one edge.
     func dsHairline(edge: Edge) -> some View {
         overlay(alignment: edge.dsAlignment) {

@@ -119,9 +119,7 @@ struct MiniPlayerView: View {
             .frame(width: size, height: size)
         }
         .buttonStyle(.plain)
-        // Boundary dim/block (#753) — plain buttons need explicit opacity.
-        .disabled(!enabled)
-        .opacity(enabled ? 1 : 0.35)
+        .dsDisabledDim(!enabled)  // boundary dim/block (#753)
         .accessibilityLabel(label)
     }
 

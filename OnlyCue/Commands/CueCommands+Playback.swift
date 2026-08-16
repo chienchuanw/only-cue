@@ -49,6 +49,21 @@ extension CueCommands {
         return items[previous].id
     }
 
+    /// Whether a previous / next media item exists to step to (#753). Pure — the
+    /// single source of truth for both hosts' song-button disabled state, so the
+    /// main-window transport and the mini player can't drift.
+    static func canStepSong(
+        _ direction: MediaItem.PlayheadStep,
+        activeID: MediaItem.ID?,
+        in items: [MediaItem]
+    ) -> Bool {
+        guard let activeID else { return false }
+        switch direction {
+        case .previous: return previousMediaItemID(before: activeID, in: items) != nil
+        case .next: return nextMediaItemID(after: activeID, in: items) != nil
+        }
+    }
+
     /// Steps `activeItemID` to the previous / next item in `items[]` and triggers
     /// the caller's reload-and-play side effect. No-op at the list boundary (no
     /// wrap), for nil `activeItemID`, or when the active id isn't in `items[]` —

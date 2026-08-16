@@ -31,6 +31,10 @@ struct DocumentView: View {
     /// The editor mode — per-window working state, restored across relaunch.
     @SceneStorage("onlycue.editorMode") private var editorModeRaw = EditorMode.cue.rawValue
     @SceneStorage("onlycue.showGoTypeID") var showGoTypeIDRaw = ""
+    @State var miniController = MiniPlayerController()
+    @State var miniContext = MiniPlayerContext()
+    @State var isMiniFrontmost = false
+    @AppStorage("onlycue.miniPlayerVisible") var miniPlayerVisible = false
     /// The window's live pane arrangement, per editor mode. `@SceneStorage`
     /// (not `@AppStorage`): layout is a window-level property, so two open
     /// documents keep independent arrangements and macOS restores each window's
@@ -72,13 +76,6 @@ struct DocumentView: View {
     }
 
     var editorMode: EditorMode { EditorMode(rawValue: editorModeRaw) ?? .cue }
-
-    /// Whether a cue may be created right now: a media item is loaded and the
-    /// document is not in read-only Show mode (#592). Consulted by the keyboard
-    /// shortcut hosts and the add-cue actions.
-    var canCreateCue: Bool {
-        CueCreationGate.allows(editorMode: editorMode, hasActiveItem: document.model.activeItem != nil)
-    }
 
     var body: some View {
         NavigationSplitView(columnVisibility: $columnVisibility) {
@@ -166,6 +163,7 @@ struct DocumentView: View {
         .environment(\.projectFramerate, document.model.timecodeSettings.framerate)
         .workspaceHosted(for: self)
         .sidebarVisibilitySync(for: self)
+        .miniPlayerHosted(for: self)
     }
 
     private var mainPane: some View {

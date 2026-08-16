@@ -159,6 +159,12 @@ struct AppCommands: Commands {
             .keyboardShortcut("i", modifiers: [.command, .option])
             .accessibilityIdentifier("toggleInspectorMenuItem")
 
+            Button("Mini Player") {
+                NotificationCenter.default.post(name: .toggleMiniPlayerRequested, object: nil)
+            }
+            .keyboardShortcut("m", modifiers: [.command, .option])
+            .accessibilityIdentifier("toggleMiniPlayerMenuItem")
+
             Divider()
 
             workspaceMenu

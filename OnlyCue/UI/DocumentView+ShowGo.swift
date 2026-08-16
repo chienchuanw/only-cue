@@ -45,4 +45,11 @@ extension DocumentView {
             engine.play()
         }
     }
+
+    /// Whether a cue may be created right now: a media item is loaded and the
+    /// document is not in read-only Show mode (#592). Consulted by the keyboard
+    /// shortcut hosts and the add-cue actions.
+    var canCreateCue: Bool {
+        CueCreationGate.allows(editorMode: editorMode, hasActiveItem: document.model.activeItem != nil)
+    }
 }

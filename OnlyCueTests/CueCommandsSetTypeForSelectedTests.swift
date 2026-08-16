@@ -21,13 +21,14 @@ final class CueCommandsSetTypeForSelectedTests: XCTestCase {
         let document = makeDocument()
         let undo = makeUndoManager()
         let firstID = try XCTUnwrap(activeCues(document).first?.id)
+        let originalTypeByID = Dictionary(uniqueKeysWithValues: activeCues(document).map { ($0.id, $0.typeID) })
 
         CueCommands.setTypeForSelected([firstID], to: typeB, document: document, undoManager: undo)
 
         let byID = Dictionary(uniqueKeysWithValues: activeCues(document).map { ($0.id, $0.typeID) })
         XCTAssertEqual(byID[firstID], typeB)
         for cue in activeCues(document) where cue.id != firstID {
-            XCTAssertEqual(cue.typeID, typeA)
+            XCTAssertEqual(cue.typeID, originalTypeByID[cue.id])
         }
     }
 

@@ -127,29 +127,44 @@ extension CueListPane {
                     .accessibilityIdentifier("cueRowContextRenumberSelected")
             }
             Menu("Change Type") {
-                ForEach(document.model.cuePointTypes) { type in
-                    Button {
-                        guard type.id != cue.typeID else { return }
-                        CueCommands.setType(
-                            cueId: cue.id,
-                            to: type.id,
-                            document: document,
-                            undoManager: undoManager
-                        )
-                    } label: {
-                        Label {
-                            Text(type.name)
-                        } icon: {
-                            if type.id == cue.typeID {
-                                Image(systemName: "checkmark")
-                            }
-                        }
+                // Inline Picker (not a ForEach of Buttons): a native macOS
+                // NSMenu only renders its checkmark from NSMenuItem.state, which
+                // an inline Picker drives automatically — a Button's Label
+                // `icon:` slot is dropped, so the old ✓ never showed. The
+                // binding retypes the whole selection at once (#752).
+                Picker("Change Type", selection: changeTypeBinding(for: cue)) {
+                    ForEach(document.model.cuePointTypes) { type in
+                        Text(type.name).tag(Optional(type.id))
                     }
-                    .accessibilityIdentifier("cueRowContextChangeType-\(type.id)")
                 }
+                .pickerStyle(.inline)
+                .labelsHidden()
             }
             .accessibilityIdentifier("cueRowContextChangeType")
         }
+    }
+
+    /// Binding backing the "Change Type" picker. Targets follow the cursor:
+    /// right-clicking a row *inside* the selection retypes the whole selection,
+    /// otherwise just that row (#752). The getter returns the shared type when
+    /// every target agrees (so the native ✓ marks it) and `nil` when they
+    /// diverge (no ✓); the setter routes through the batch command.
+    func changeTypeBinding(for cue: Cue) -> Binding<CuePointType.ID?> {
+        let targetIDs: Set<Cue.ID> = selection.contains(cue.id) ? selection : [cue.id]
+        let targetTypes = Set(cues.filter { targetIDs.contains($0.id) }.map(\.typeID))
+        let unified: CuePointType.ID? = targetTypes.count == 1 ? targetTypes.first : nil
+        return Binding(
+            get: { unified },
+            set: { newValue in
+                guard let newValue else { return }
+                CueCommands.setTypeForSelected(
+                    targetIDs,
+                    to: newValue,
+                    document: document,
+                    undoManager: undoManager
+                )
+            }
+        )
     }
 
     /// Display label for sheet titles — "Cue 12 · Blackout" when numbered,

@@ -1,5 +1,4 @@
-import AppKit
-import SwiftUI
+import Foundation
 
 /// The single Mini Player playback-action seam (#743). Both the Mini Player's
 /// on-screen buttons and its keyboard monitor route through this, so button and

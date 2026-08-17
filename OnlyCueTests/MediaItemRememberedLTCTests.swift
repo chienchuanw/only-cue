@@ -30,7 +30,8 @@ final class MediaItemRememberedLTCTests: XCTestCase {
         // A nil value encodes without the key (encodeIfPresent); a v19 doc that
         // never had the key decodes to nil rather than throwing.
         let data = try JSONEncoder().encode(makeItem())
-        XCTAssertFalse(String(data: data, encoding: .utf8)!.contains("rememberedLTC"))
+        let json = try XCTUnwrap(String(data: data, encoding: .utf8))
+        XCTAssertFalse(json.contains("rememberedLTC"))
         XCTAssertNil(try JSONDecoder().decode(MediaItem.self, from: data).rememberedLTC)
     }
 }

@@ -124,6 +124,70 @@ final class MiniPlayerModelTests: XCTestCase {
         XCTAssertNil(model.nextCue)
     }
 
+    // MARK: - Progress bar (#758): progress fraction + length label
+
+    func test_progress_and_lengthLabel() {
+        let model = MiniPlayerModel.make(
+            currentTime: 30,
+            duration: 120,
+            item: item(),
+            timecodeSettings: settings,
+            cuePointTypes: types(),
+            editorMode: .cue
+        )
+        XCTAssertEqual(model.progress, 0.25, accuracy: 0.0001)
+        XCTAssertEqual(model.lengthLabel, "02:00")
+    }
+
+    func test_progress_clampsToOneWhenPastEnd() {
+        let model = MiniPlayerModel.make(
+            currentTime: 200,
+            duration: 120,
+            item: item(),
+            timecodeSettings: settings,
+            cuePointTypes: types(),
+            editorMode: .cue
+        )
+        XCTAssertEqual(model.progress, 1.0, accuracy: 0.0001)
+    }
+
+    func test_progress_zeroForZeroDuration() {
+        let model = MiniPlayerModel.make(
+            currentTime: 30,
+            duration: 0,
+            item: item(),
+            timecodeSettings: settings,
+            cuePointTypes: types(),
+            editorMode: .cue
+        )
+        XCTAssertEqual(model.progress, 0)
+    }
+
+    func test_lengthLabel_formatsMinutesSeconds() {
+        let model = MiniPlayerModel.make(
+            currentTime: 0,
+            duration: 204,
+            item: item(),
+            timecodeSettings: settings,
+            cuePointTypes: types(),
+            editorMode: .cue
+        )
+        XCTAssertEqual(model.lengthLabel, "03:24")
+    }
+
+    func test_empty_progressZeroAndLengthZero() {
+        let model = MiniPlayerModel.make(
+            currentTime: 0,
+            duration: 0,
+            item: nil,
+            timecodeSettings: settings,
+            cuePointTypes: types(),
+            editorMode: .cue
+        )
+        XCTAssertEqual(model.progress, 0)
+        XCTAssertEqual(model.lengthLabel, "00:00")
+    }
+
     // MARK: - Show mode: GO + type filter
 
     func test_showMode_showsGo() {

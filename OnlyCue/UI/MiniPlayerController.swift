@@ -1,16 +1,29 @@
 import AppKit
 import SwiftUI
 
-/// Owns the floating Mini Player `NSPanel` for one document window (#748).
-/// A non-activating, always-on-top utility panel: it floats above other apps
-/// and clicking its controls does not steal focus from whatever is frontmost —
-/// the behaviour a live operator wants. Fixed compact width; position is
-/// remembered via the frame autosave name.
+/// A floating Mini Player panel that can become key so clicking it focuses the
+/// panel and the playback keyboard shortcuts work (#761). Still always-on-top,
+/// but no longer `.nonactivatingPanel`: the operator's mental model is
+/// "select the Mini Player → the keyboard drives it". `canBecomeMain` stays
+/// false so the document window remains the main window (the key-monitor gate
+/// keys off `documentWindow.isKeyWindow`).
+final class KeyableMiniPanel: NSPanel {
+    override var canBecomeKey: Bool { true }
+    override var canBecomeMain: Bool { false }
+}
+
+/// Owns the floating Mini Player `NSPanel` for one document window (#748, #761).
+/// An always-on-top utility panel that floats above other apps and takes keyboard
+/// focus when clicked. Horizontally resizable within `MiniPlayerSize`; width and
+/// position are remembered via the frame autosave name.
 @MainActor
 final class MiniPlayerController {
 
     private var panel: NSPanel?
-    private static let width: CGFloat = 620
+
+    /// Test seam: the live panel, so its AppKit configuration (focus-on-click,
+    /// title-bar-only move, resizable width) can be asserted (#761).
+    var configuredPanel: NSPanel? { panel }
     /// Marks every Mini Player panel so the front-most-among-minis lookup can
     /// filter `NSApp.orderedWindows` precisely (not "any NSPanel").
     private static let panelIdentifier = NSUserInterfaceItemIdentifier("OnlyCue.MiniPlayerPanel")
@@ -78,10 +91,15 @@ final class MiniPlayerController {
     }
 
     private func makePanel(rootView: some View, autosaveName: String) -> NSPanel {
-        let hosting = NSHostingController(rootView: AnyView(rootView.frame(width: Self.width)))
-        let panel = NSPanel(
-            contentRect: NSRect(x: 0, y: 0, width: Self.width, height: 84),
-            styleMask: [.titled, .closable, .utilityWindow, .nonactivatingPanel],
+        // Host the body width-flexible so it reflows across the resize range; the
+        // panel — not a fixed `.frame(width:)` — governs the width now (#761).
+        let hosting = NSHostingController(rootView: AnyView(rootView))
+        let contentHeight = hosting.sizeThatFits(
+            in: NSSize(width: MiniPlayerSize.default, height: .greatestFiniteMagnitude)
+        ).height
+        let panel = KeyableMiniPanel(
+            contentRect: NSRect(x: 0, y: 0, width: MiniPlayerSize.default, height: contentHeight),
+            styleMask: [.titled, .closable, .utilityWindow, .resizable],
             backing: .buffered,
             defer: false
         )
@@ -90,12 +108,27 @@ final class MiniPlayerController {
         panel.hidesOnDeactivate = false
         panel.collectionBehavior = [.canJoinAllSpaces, .fullScreenAuxiliary]
         panel.titlebarAppearsTransparent = true
-        panel.isMovableByWindowBackground = true
+        // Only the title bar moves the window; the body is left to the scrub
+        // gesture so dragging the knob seeks instead of moving the panel (#761).
+        panel.isMovableByWindowBackground = false
         panel.isReleasedWhenClosed = false
         panel.identifier = Self.panelIdentifier
         panel.contentViewController = hosting
-        panel.setContentSize(hosting.view.fittingSize)
+        panel.setContentSize(NSSize(width: MiniPlayerSize.default, height: contentHeight))
+
+        // Lock height, allow horizontal resize within the policy range.
+        let frameHeight = panel.frame.height
+        panel.minSize = NSSize(width: MiniPlayerSize.min, height: frameHeight)
+        panel.maxSize = NSSize(width: MiniPlayerSize.max, height: frameHeight)
+
+        // Restore remembered frame, then clamp its width in case a stale autosave
+        // (e.g. the old fixed 620) falls outside the new range.
         panel.setFrameAutosaveName(autosaveName)
+        var frame = panel.frame
+        frame.size.width = MiniPlayerSize.clamp(frame.size.width)
+        frame.size.height = frameHeight
+        panel.setFrame(frame, display: false)
+
         panel.delegate = panelDelegate
         return panel
     }

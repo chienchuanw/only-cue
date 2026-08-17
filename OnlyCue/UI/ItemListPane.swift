@@ -60,7 +60,15 @@ struct ItemListPane: View {
                     )
                     editingItemID = nil
                 },
-                onCancel: { editingItemID = nil }
+                onCancel: { editingItemID = nil },
+                onRedetectLTC: {
+                    // Forget + drop the cache so the resolve re-scans from scratch.
+                    CueCommands.clearRememberedLTC(forItemID: editing.item.id, document: document)
+                    StripedTimecodeCache.shared.invalidate(editing.item.id)
+                },
+                onClearLTC: {
+                    CueCommands.clearRememberedLTC(forItemID: editing.item.id, document: document)
+                }
             )
         }
     }

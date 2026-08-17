@@ -13,17 +13,25 @@ struct MediaEditSheet: View {
     let framerate: SMPTEFramerate
     let onSave: (_ alternateName: String?, _ startFrames: Int, _ muted: Bool, _ playsOriginal: Bool) -> Void
     let onCancel: () -> Void
+    /// Force a fresh LTC scan for this clip (clears the cache + remembered value
+    /// so detection re-runs). Supplied by the presenter, which holds `document`.
+    var onRedetectLTC: () -> Void = {}
+    /// Forget this clip's remembered LTC (#754). Supplied by the presenter.
+    var onClearLTC: () -> Void = {}
 
     @State private var nameDraft: String = ""
     @State private var tcDraft: String = ""
     @State private var mutedDraft: Bool = false
     @State private var playsOriginalDraft: Bool = false
     @State private var tcInvalid: Bool = false
-    /// The detected LTC channel for this clip, decoded async (and run-cached) via
-    /// `MediaImporter.stripedTimecode`. Passed to the preview so its waveform
-    /// excludes the timecode channel and shows music only (#715/#720) — matching
-    /// the main `WaveformContainer`. nil until detection resolves / when no LTC.
-    @State private var ltcChannel: Int?
+    /// The resolved LTC for this clip (detected, or the remembered fallback, #754).
+    /// Drives the LTC status line, and its channel feeds the music-only preview.
+    @State private var resolvedTrack: StripedTimecodeTrack?
+    @State private var detecting = true
+    /// Bumped by Re-detect / Clear to re-run the resolve `.task`.
+    @State private var fetchToken = UUID()
+
+    private var ltcChannel: Int? { resolvedTrack?.ltcChannel }
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
@@ -86,11 +94,25 @@ struct MediaEditSheet: View {
                         .onChange(of: tcDraft) { _, _ in tcInvalid = false }
                         .accessibilityIdentifier("mediaEditStartTimecodeField")
                 }
-                Toggle("Mute LTC for this clip", isOn: $mutedDraft)
-                    .accessibilityIdentifier("mediaEditMuteToggle")
-                Toggle("Play original source audio (with timecode)", isOn: $playsOriginalDraft)
-                    .help("Off = music only (mutes the detected timecode channel)")
-                    .accessibilityIdentifier("mediaEditSourceAudioToggle")
+                Section("LTC") {
+                    LabeledContent("Status") {
+                        Text(ltcStatusText)
+                            .foregroundStyle(.secondary)
+                            .accessibilityIdentifier("mediaEditLTCStatus")
+                    }
+                    HStack {
+                        Button("Re-detect") { redetect() }
+                            .accessibilityIdentifier("mediaEditLTCRedetect")
+                        Button("Clear") { clearLTC() }
+                            .disabled(item.rememberedLTC == nil)
+                            .accessibilityIdentifier("mediaEditLTCClear")
+                    }
+                    Toggle("Mute LTC for this clip", isOn: $mutedDraft)
+                        .accessibilityIdentifier("mediaEditMuteToggle")
+                    Toggle("Play original source audio (with timecode)", isOn: $playsOriginalDraft)
+                        .help("Off = music only (mutes the detected timecode channel)")
+                        .accessibilityIdentifier("mediaEditSourceAudioToggle")
+                }
             }
             .padding(.horizontal, 20)
             .padding(.top, 12)
@@ -108,9 +130,31 @@ struct MediaEditSheet: View {
         }
         .frame(width: 460)
         .onAppear { syncDraftsFromItem() }
-        .task(id: item.id) {
-            ltcChannel = await MediaImporter.stripedTimecode(for: item)?.ltcChannel
+        .task(id: fetchToken) {
+            detecting = true
+            resolvedTrack = await MediaImporter.resolvedStripedTimecode(for: item)
+            detecting = false
         }
+    }
+
+    /// The LTC status line. "Remembered" whenever a persisted value exists (the
+    /// write-once truth); "Detected" for a fresh, not-yet-remembered hit.
+    private var ltcStatusText: String {
+        if detecting { return "Detecting…" }
+        guard let track = resolvedTrack else { return "Not found" }
+        let prefix = item.rememberedLTC == nil ? "Detected" : "Remembered"
+        let tc = track.timecode(atPlaybackSeconds: track.anchorPlaybackSeconds).displayString
+        return "\(prefix) · channel \(track.ltcChannel + 1) · \(tc)"
+    }
+
+    private func redetect() {
+        onRedetectLTC()          // presenter clears the cache + remembered value
+        fetchToken = UUID()      // re-run the resolve task against the fresh scan
+    }
+
+    private func clearLTC() {
+        onClearLTC()
+        fetchToken = UUID()
     }
 
     private func syncDraftsFromItem() {

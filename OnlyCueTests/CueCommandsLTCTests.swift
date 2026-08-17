@@ -29,9 +29,9 @@ final class CueCommandsLTCTests: XCTestCase {
     func test_rememberLTC_writesWhenNil() {
         let item = makeItem()
         let document = seed([item])
-        let t = track(channel: 1)
-        CueCommands.rememberLTC(t, forItemID: item.id, document: document)
-        XCTAssertEqual(document.model.items[0].rememberedLTC, t)
+        let remembered = track(channel: 1)
+        CueCommands.rememberLTC(remembered, forItemID: item.id, document: document)
+        XCTAssertEqual(document.model.items[0].rememberedLTC, remembered)
     }
 
     func test_rememberLTC_doesNotOverwriteExisting() {

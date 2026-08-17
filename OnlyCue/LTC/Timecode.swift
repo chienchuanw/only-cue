@@ -9,7 +9,7 @@ import Foundation
 /// top of every minute except every tenth minute — so `frameCount` is the
 /// *actual* number of frames elapsed since `00:00:00:00`, which is what an LTC
 /// signal and `PlayerEngine.currentTime` care about; the components are labels.
-struct Timecode: Equatable, Hashable, Sendable {
+struct Timecode: Equatable, Hashable, Sendable, Codable {
 
     let rate: SMPTEFramerate
     let hours: Int

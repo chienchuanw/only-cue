@@ -11,7 +11,7 @@ import Foundation
 /// present it takes priority over `ProjectTimecodeSettings`. The generator still
 /// emits the project-settings timecode (the epic's "the generator can override
 /// it"). Slaving playback *position* to incoming LTC is out of scope.
-struct StripedTimecodeTrack: Equatable, Sendable {
+struct StripedTimecodeTrack: Equatable, Sendable, Codable {
 
     /// Timecode at `anchorPlaybackSeconds` (the start of the first decoded frame).
     let anchorTimecode: Timecode

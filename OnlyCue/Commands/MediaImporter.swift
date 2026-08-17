@@ -149,6 +149,15 @@ enum MediaImporter {
     /// normally striped onto one channel of a delivery mix. The result — hit or
     /// miss — is cached for the run, so flipping between clips doesn't re-read
     /// audio (#712).
+    /// The LTC to use for `item`: the live detection, or the song's remembered
+    /// value when the heuristic scan comes up empty (#754). Every LTC consumer
+    /// (readout, detected badge, music-only muting, waveform) resolves through
+    /// this so a flaky scan can't silently drop them.
+    @MainActor
+    static func resolvedStripedTimecode(for item: MediaItem?) async -> StripedTimecodeTrack? {
+        LTCFallback.resolve(detected: await stripedTimecode(for: item), remembered: item?.rememberedLTC)
+    }
+
     @MainActor
     static func stripedTimecode(for item: MediaItem?) async -> StripedTimecodeTrack? {
         guard let item else { return nil }

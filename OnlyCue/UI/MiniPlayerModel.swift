@@ -29,6 +29,11 @@ struct MiniPlayerModel: Equatable {
     var nextCue: NextCue?
     /// GO is shown only when the document is in Show mode (pure mirror).
     var showsGo: Bool
+    /// Playhead position within the clip, 0…1 (0 when no media / unknown length).
+    /// Drives the Mini Player progress bar (#758).
+    var progress: Double
+    /// The clip length as `mm:ss`, shown at the progress bar's trailing end.
+    var lengthLabel: String
 
     /// Shown as the media name when no clip is active.
     static let emptyMediaName = "No media loaded"
@@ -39,6 +44,7 @@ struct MiniPlayerModel: Equatable {
     /// and `FadeTime.formatNumber`.
     static func make(
         currentTime: TimeInterval,
+        duration: TimeInterval = 0,
         item: MediaItem?,
         timecodeSettings: ProjectTimecodeSettings,
         cuePointTypes: [CuePointType],
@@ -59,7 +65,9 @@ struct MiniPlayerModel: Equatable {
                 framerateLabel: rate.shortDisplayName,
                 currentCue: nil,
                 nextCue: nil,
-                showsGo: showsGo
+                showsGo: showsGo,
+                progress: 0,
+                lengthLabel: clockLabel(0)
             )
         }
 
@@ -76,14 +84,12 @@ struct MiniPlayerModel: Equatable {
 
         let current = item.activeCue(at: currentTime, typeID: filterTypeID).map(display)
 
-        var next: NextCue?
-        if let upcoming = item.cue(steppingFrom: currentTime, direction: .next, typeID: filterTypeID) {
-            let interval = max(0, upcoming.time - currentTime)
-            next = NextCue(
+        let next = item.cue(steppingFrom: currentTime, direction: .next, typeID: filterTypeID).map { upcoming in
+            NextCue(
                 cue: display(upcoming),
                 countdown: TransportBar.countdownLabel(
                     mode: .time,
-                    interval: interval,
+                    interval: max(0, upcoming.time - currentTime),
                     activeTempo: nil,
                     rate: rate
                 )
@@ -97,7 +103,23 @@ struct MiniPlayerModel: Equatable {
             framerateLabel: rate.shortDisplayName,
             currentCue: current,
             nextCue: next,
-            showsGo: showsGo
+            showsGo: showsGo,
+            progress: progressFraction(currentTime, duration),
+            lengthLabel: clockLabel(duration)
         )
+    }
+
+    /// Playhead position as a 0…1 fraction, clamped; 0 when the length is
+    /// unknown (`duration <= 0`, e.g. before the asset loads).
+    static func progressFraction(_ currentTime: TimeInterval, _ duration: TimeInterval) -> Double {
+        guard duration > 0 else { return 0 }
+        return min(1, max(0, currentTime / duration))
+    }
+
+    /// Formats a duration as `mm:ss` (rounded). Clips are short, so hours are
+    /// folded into the minutes field.
+    static func clockLabel(_ seconds: TimeInterval) -> String {
+        let total = max(0, Int(seconds.rounded()))
+        return String(format: "%02d:%02d", total / 60, total % 60)
     }
 }

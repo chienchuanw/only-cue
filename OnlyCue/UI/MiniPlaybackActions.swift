@@ -62,6 +62,22 @@ struct MiniPlaybackActions {
         PlaybackRateController.apply(change, engine: engine, ltcEnabled: ltcEnabled)
     }
 
+    /// Absolute seek to a 0…1 fraction of the clip — the Mini Player progress
+    /// bar's scrub (#758). No-op until the asset's length is known. Reuses the
+    /// shared `seekTaskBox` so a scrub cancels any in-flight jump/cue seek.
+    func seek(toFraction fraction: Double) {
+        guard let target = Self.seekTarget(fraction: fraction, duration: engine.duration) else { return }
+        seekTaskBox.task?.cancel()
+        seekTaskBox.task = Task { await engine.seek(to: target) }
+    }
+
+    /// The seek time for a fraction, clamped to 0…1; nil when the length is
+    /// unknown (`duration <= 0`). Pure, so the clamp is unit-tested.
+    nonisolated static func seekTarget(fraction: Double, duration: TimeInterval) -> TimeInterval? {
+        guard duration > 0 else { return nil }
+        return min(1, max(0, fraction)) * duration
+    }
+
     nonisolated static func rateChange(for action: MiniPlaybackAction) -> PlaybackRateShortcuts.Change? {
         switch action {
         case .rateUp: return .up

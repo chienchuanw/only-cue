@@ -17,6 +17,8 @@ struct MiniPlayerView: View {
     var onPrevSong: () -> Void = {}
     var onNextSong: () -> Void = {}
     var onGo: () -> Void = {}
+    /// Absolute scrub from the progress bar — receives a 0…1 fraction (#758).
+    var onSeek: (Double) -> Void = { _ in }
     /// Per-button boundary state (#753): song stops at the item-list edge, cue at
     /// the first / last cue. Default true keeps previews/tests fully enabled.
     var canPrevSong: Bool = true
@@ -25,19 +27,66 @@ struct MiniPlayerView: View {
     var canNextCue: Bool = true
 
     var body: some View {
-        HStack(spacing: DS.Space.xl) {
-            transport
-            timecode
-            Rectangle()
-                .fill(DS.Color.border)
-                .frame(width: 1, height: 44)
-            cueBlock
+        VStack(spacing: DS.Space.sm) {
+            HStack(spacing: DS.Space.xl) {
+                transport
+                timecode
+                Rectangle()
+                    .fill(DS.Color.border)
+                    .frame(width: 1, height: 44)
+                cueBlock
+            }
+            progressBar
         }
         .padding(.horizontal, DS.Space.lg)
         .padding(.vertical, DS.Space.md)
         .frame(maxWidth: .infinity, alignment: .leading)
         .background(DS.Color.surface)
         .accessibilityIdentifier("miniPlayerBar")
+    }
+
+    // MARK: - Progress bar (#758)
+
+    /// Full-width playback progress bar: a `surfaceSunken` track, a `cueIndigo`
+    /// fill + knob at the playhead, and the clip length at the trailing end.
+    /// Tap or drag anywhere seeks live (0…1 fraction). Dimmed + inert when empty.
+    private var progressBar: some View {
+        HStack(spacing: DS.Space.sm) {
+            GeometryReader { geo in
+                let width = geo.size.width
+                ZStack(alignment: .leading) {
+                    Capsule().fill(DS.Color.surfaceSunken).frame(height: 4)
+                    Capsule()
+                        .fill(DS.Color.cueIndigo)
+                        .frame(width: max(0, width * model.progress), height: 4)
+                    if !model.isEmpty {
+                        Circle()
+                            .fill(DS.Color.cueIndigo)
+                            .frame(width: 11, height: 11)
+                            .offset(x: width * model.progress - 5.5)
+                    }
+                }
+                .frame(maxHeight: .infinity, alignment: .center)
+                .contentShape(Rectangle())
+                .gesture(
+                    DragGesture(minimumDistance: 0)
+                        .onChanged { value in
+                            guard !model.isEmpty, width > 0 else { return }
+                            onSeek(min(1, max(0, value.location.x / width)))
+                        }
+                )
+            }
+            .frame(height: 11)
+            Text(model.lengthLabel)
+                .font(DS.Text.mono)
+                .foregroundStyle(DS.Color.textTertiary)
+                .fixedSize()
+        }
+        .opacity(model.isEmpty ? 0.5 : 1)
+        .accessibilityElement()
+        .accessibilityLabel("Playback progress")
+        .accessibilityValue(model.lengthLabel)
+        .accessibilityIdentifier("miniPlayerProgress")
     }
 
     // MARK: - Transport

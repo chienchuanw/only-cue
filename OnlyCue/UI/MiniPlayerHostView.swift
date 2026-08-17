@@ -24,6 +24,7 @@ struct MiniPlayerHostView: View {
         )
         let model = MiniPlayerModel.make(
             currentTime: engine.currentTime,
+            duration: engine.duration,
             item: document.model.activeItem,
             timecodeSettings: document.model.timecodeSettings,
             cuePointTypes: document.model.cuePointTypes,
@@ -39,6 +40,7 @@ struct MiniPlayerHostView: View {
             onPrevSong: { stepSong(.previous) },
             onNextSong: { stepSong(.next) },
             onGo: { actions.go() },
+            onSeek: { actions.seek(toFraction: $0) },
             canPrevSong: CueCommands.canStepSong(.previous, activeID: document.model.activeItemID, in: document.model.items),
             canNextSong: CueCommands.canStepSong(.next, activeID: document.model.activeItemID, in: document.model.items),
             canPrevCue: hasCue(.previous),

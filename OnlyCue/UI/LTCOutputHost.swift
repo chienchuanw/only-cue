@@ -71,7 +71,9 @@ private struct LTCOutputHost: ViewModifier {
                 // Decode the active clip's striped LTC (shared cache), mirroring
                 // `StripedTimecodeHost`, then re-decide which tap to install.
                 stripedTrack = nil
-                let decoded = await MediaImporter.stripedTimecode(for: document.model.activeItem)
+                // Resolve via the remembered-LTC fallback (#754): a flaky scan
+                // must not drop the music-only tap and bleed the tone to the room.
+                let decoded = await MediaImporter.resolvedStripedTimecode(for: document.model.activeItem)
                 guard !Task.isCancelled else { return }
                 stripedTrack = decoded
                 refresh(playing: engine.isPlaying)

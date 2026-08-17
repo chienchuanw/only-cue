@@ -19,6 +19,7 @@ extension EnvironmentValues {
 
 private struct StripedTimecodeHost: ViewModifier {
     let item: MediaItem?
+    let document: CueListDocument
     @State private var track: StripedTimecodeTrack?
 
     func body(content: Content) -> some View {
@@ -34,13 +35,18 @@ private struct StripedTimecodeHost: ViewModifier {
                 // new file's name — and the readout says `FILE`, asserting the
                 // number came off the media on screen.
                 guard !Task.isCancelled else { return }
-                track = decoded
+                // Remember the first successful detection so a later flaky scan
+                // can fall back to it (#754); write-once via CueCommands.
+                if let decoded, let item, item.rememberedLTC == nil {
+                    CueCommands.rememberLTC(decoded, forItemID: item.id, document: document)
+                }
+                track = LTCFallback.resolve(detected: decoded, remembered: item?.rememberedLTC)
             }
     }
 }
 
 extension View {
-    func stripedTimecodeReader(item: MediaItem?) -> some View {
-        modifier(StripedTimecodeHost(item: item))
+    func stripedTimecodeReader(item: MediaItem?, document: CueListDocument) -> some View {
+        modifier(StripedTimecodeHost(item: item, document: document))
     }
 }

@@ -68,6 +68,7 @@ enum MediaImporter {
         // remembered about its LTC — including "none" — is now about a
         // different file (#712).
         StripedTimecodeCache.shared.invalidate(itemID)
+        CueCommands.clearRememberedLTC(forItemID: itemID, document: document)
         if document.model.activeItemID == itemID {
             try await loadActive(into: document, engine: engine)
         }

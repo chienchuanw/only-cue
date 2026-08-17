@@ -27,6 +27,11 @@ struct MediaItem: Identifiable, Equatable {
     /// controls LTC *output* (the encoder → console path) regardless of what
     /// the speaker hears. Schema v19.
     var playsOriginalSourceAudio: Bool = false
+    /// The song's remembered LTC (#754). Written once when detection first
+    /// succeeds; used as a fallback when a later heuristic scan fails (so the
+    /// music-only muting, FILE readout, and detected badge don't vanish). nil
+    /// until a successful detection or after Clear/relink. Schema v20.
+    var rememberedLTC: StripedTimecodeTrack?
 }
 
 // MARK: - Codable
@@ -46,6 +51,7 @@ extension MediaItem: Codable {
         case lyrics
         case ma2PushTarget
         case playsOriginalSourceAudio
+        case rememberedLTC
     }
 
     init(from decoder: Decoder) throws {
@@ -60,6 +66,8 @@ extension MediaItem: Codable {
         ma2PushTarget = try container.decodeIfPresent(MA2PushTarget.self, forKey: .ma2PushTarget)
         // v18 documents lack this key; default to false (music-only).
         playsOriginalSourceAudio = try container.decodeIfPresent(Bool.self, forKey: .playsOriginalSourceAudio) ?? false
+        // v19 documents lack this key; default to nil (no remembered LTC).
+        rememberedLTC = try container.decodeIfPresent(StripedTimecodeTrack.self, forKey: .rememberedLTC)
     }
 
     func encode(to encoder: Encoder) throws {
@@ -73,6 +81,7 @@ extension MediaItem: Codable {
         try container.encode(lyrics, forKey: .lyrics)
         try container.encodeIfPresent(ma2PushTarget, forKey: .ma2PushTarget)
         try container.encode(playsOriginalSourceAudio, forKey: .playsOriginalSourceAudio)
+        try container.encodeIfPresent(rememberedLTC, forKey: .rememberedLTC)
     }
 }
 

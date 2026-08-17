@@ -116,6 +116,7 @@ struct MediaItem: Identifiable, Equatable {
     var lyrics: Lyrics                 // since v13; timestamped lyrics (ADR-022)
     var ma2PushTarget: MA2PushTarget?  // since v17; last MA2 push destination (#683)
     var playsOriginalSourceAudio: Bool // since v19; false = music-only (default), true = play with timecode tone (#715)
+    var rememberedLTC: StripedTimecodeTrack? // since v20; persisted detected LTC, fallback when a scan fails (#754)
 }
 
 struct LyricLine: Codable, Identifiable, Equatable {
@@ -207,10 +208,11 @@ enum MediaKind: String, Codable {
 | `item.lyrics` | Since v13; `LyricLine.time` made optional at v14. A `Lyrics` — `[LyricLine]` in authoring order plus `offsetSeconds`. Empty (`.empty`) means no lyrics. A reference / playback-HUD layer decoupled from cues (ADR-022). `LyricLine.time` is song-relative and **optional** — `nil` means the line is *unplaced* (text but no timestamp yet); `placedLines` / `unplacedLines` split the array. `offsetSeconds` is the media time the song begins at; `effectiveTime = time + offset` for placed lines. Authored directly on the waveform in Lyric mode (ADR-023), routed through `CueCommands` (`setLyrics` / `setLyricsOffset` / `setLyricLines` / `pasteLyrics` / `placeLyricLine` / `unplaceLyricLine` / `deleteLyricLine`). v12 → v13 seeds an empty `Lyrics`; v13 → v14 makes `time` optional. |
 | `item.ma2PushTarget` | Since v17. Optional `MA2PushTarget` — the last grandMA2 push destination for this clip (#683). `nil` until the clip is first pushed. `MA2PushTarget` holds the console address and executor number. v16 → v17 migration leaves it `nil` for all existing items. |
 | `item.playsOriginalSourceAudio` | Since v19. `Bool`, default `false`. User-facing per-clip source-audio playback preference (#715). `false` = music-only: the LTC timecode tone channel is muted during playback so the audience hears only the music content. `true` = original: the file plays back as-is, timecode tone included. Distinct from `ltcMuted`, which gates the LTC *output* (encoder → console path). v18 → v19 migration seeds `false` on all existing items. |
+| `item.rememberedLTC` | Since v20. Optional `StripedTimecodeTrack` (`anchorTimecode` + `anchorPlaybackSeconds` + `ltcChannel`) — the song's remembered LTC (#754). Written **once** when heuristic detection first succeeds; used as a fallback when a later scan fails (the identifier is signal-based and can false-negative), so the music-only muting, `FILE` readout, and detected badge don't vanish. `nil` until a successful detection, and cleared on relink or the sheet's **Clear** action. A deliberate exception to "detected data is never authored" (ADR-031). v19 → v20 migration leaves it `nil` (missing key → `nil`). |
 
 ## Versioning policy
 
-- `schemaVersion: 19` is the current file. We will **never** mutate v19 semantics; new fields go in v20.
+- `schemaVersion: 20` is the current file. We will **never** mutate v20 semantics; new fields go in v21.
 - Adding optional fields → old readers ignore unknown keys via `Codable`; no version bump required.
 - Adding a required field, or removing / repurposing a field → bump `schemaVersion` and write a migration.
 - Migrations are pure functions `(JSONvN) -> ProjectModel`, applied during `ProjectModel.decode(from:)`. Pre-v4 chains run `assignCueNumbersBySort` so cues land with sequential `cueNumber` values; every chain backfills `fadeTime = .symmetric(0)` at the cue boundary so pre-v5 sources land with a valid `fadeTime`; every chain drops the legacy per-cue `colorHex` at the boundary so any pre-v6 source lands with color resolving via the Type; every chain seeds `timecodeSettings = .default` so any pre-v7 source lands with valid timecode settings; and every chain lands an empty `tempoMap` on every item so any pre-v8 source has a valid (empty) tempo map:
@@ -227,7 +229,8 @@ enum MediaKind: String, Codable {
   - **v16 → current**: keeps everything; adds `playbackMode = .playOnce` (same as v15 migration) when loading a v16 document that omits it.
   - **v17 → current**: keeps everything; `MA2PushTarget` gains optional `sequenceName` — missing key decodes to `nil`.
   - **v18 → current**: keeps everything; seeds `playsOriginalSourceAudio = false` on every item (missing key → `false`, music-only default).
-- v19 is a one-way upgrade: every prior build (v1 through v18) cannot open v19 files.
+  - **v19 → current**: keeps everything; `MediaItem` gains `rememberedLTC` (#754) — missing key decodes to `nil`.
+- v20 is a one-way upgrade: every prior build (v1 through v19) cannot open v20 files.
 
 ## Bookmark behavior
 

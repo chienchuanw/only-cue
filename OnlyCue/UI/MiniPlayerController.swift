@@ -94,11 +94,8 @@ final class MiniPlayerController {
         // Host the body width-flexible so it reflows across the resize range; the
         // panel — not a fixed `.frame(width:)` — governs the width now (#761).
         let hosting = NSHostingController(rootView: AnyView(rootView))
-        let contentHeight = hosting.sizeThatFits(
-            in: NSSize(width: MiniPlayerSize.default, height: .greatestFiniteMagnitude)
-        ).height
         let panel = KeyableMiniPanel(
-            contentRect: NSRect(x: 0, y: 0, width: MiniPlayerSize.default, height: contentHeight),
+            contentRect: NSRect(x: 0, y: 0, width: MiniPlayerSize.default, height: 84),
             styleMask: [.titled, .closable, .utilityWindow, .resizable],
             backing: .buffered,
             defer: false
@@ -114,19 +111,20 @@ final class MiniPlayerController {
         panel.isReleasedWhenClosed = false
         panel.identifier = Self.panelIdentifier
         panel.contentViewController = hosting
-        panel.setContentSize(NSSize(width: MiniPlayerSize.default, height: contentHeight))
 
-        // Lock height, allow horizontal resize within the policy range.
-        let frameHeight = panel.frame.height
-        panel.minSize = NSSize(width: MiniPlayerSize.min, height: frameHeight)
-        panel.maxSize = NSSize(width: MiniPlayerSize.max, height: frameHeight)
+        // Size to the body's intrinsic height at the default width, then lock the
+        // resulting frame height and allow horizontal resize within the range.
+        panel.setContentSize(NSSize(width: MiniPlayerSize.default, height: hosting.view.fittingSize.height))
+        let lockedHeight = panel.frame.height
+        panel.minSize = NSSize(width: MiniPlayerSize.min, height: lockedHeight)
+        panel.maxSize = NSSize(width: MiniPlayerSize.max, height: lockedHeight)
 
         // Restore remembered frame, then clamp its width in case a stale autosave
         // (e.g. the old fixed 620) falls outside the new range.
         panel.setFrameAutosaveName(autosaveName)
         var frame = panel.frame
         frame.size.width = MiniPlayerSize.clamp(frame.size.width)
-        frame.size.height = frameHeight
+        frame.size.height = lockedHeight
         panel.setFrame(frame, display: false)
 
         panel.delegate = panelDelegate

@@ -10,22 +10,22 @@ import XCTest
 @MainActor
 final class MiniPlayerControllerConfigTests: XCTestCase {
 
-    private func makeShownPanel() -> (MiniPlayerController, NSPanel) {
+    private func makeShownPanel() throws -> (MiniPlayerController, NSPanel) {
         let controller = MiniPlayerController()
         controller.show(
             rootView: Text("mini").frame(height: 60),
             title: "Clip.wav",
             autosaveName: "OnlyCue.MiniPlayerConfigTest"
         )
-        guard let panel = controller.configuredPanel else {
-            XCTFail("controller should expose its configured panel after show()")
-            return (controller, NSPanel())
-        }
+        let panel = try XCTUnwrap(
+            controller.configuredPanel,
+            "controller should expose its configured panel after show()"
+        )
         return (controller, panel)
     }
 
-    func test_panelIsKeyCapable_forClickToFocus() {
-        let (controller, panel) = makeShownPanel()
+    func test_panelIsKeyCapable_forClickToFocus() throws {
+        let (controller, panel) = try makeShownPanel()
         defer { controller.close() }
         XCTAssertTrue(panel.canBecomeKey, "clicking the Mini Player must be able to focus it")
         XCTAssertFalse(
@@ -34,8 +34,8 @@ final class MiniPlayerControllerConfigTests: XCTestCase {
         )
     }
 
-    func test_titleBarOnlyMove() {
-        let (controller, panel) = makeShownPanel()
+    func test_titleBarOnlyMove() throws {
+        let (controller, panel) = try makeShownPanel()
         defer { controller.close() }
         XCTAssertFalse(
             panel.isMovableByWindowBackground,
@@ -43,8 +43,8 @@ final class MiniPlayerControllerConfigTests: XCTestCase {
         )
     }
 
-    func test_resizableWidthClampedToPolicy() {
-        let (controller, panel) = makeShownPanel()
+    func test_resizableWidthClampedToPolicy() throws {
+        let (controller, panel) = try makeShownPanel()
         defer { controller.close() }
         XCTAssertTrue(panel.styleMask.contains(.resizable), "panel must be horizontally resizable")
         XCTAssertEqual(panel.minSize.width, MiniPlayerSize.min)
@@ -53,8 +53,8 @@ final class MiniPlayerControllerConfigTests: XCTestCase {
         XCTAssertGreaterThan(panel.minSize.height, 0)
     }
 
-    func test_stillFloatingOnTop() {
-        let (controller, panel) = makeShownPanel()
+    func test_stillFloatingOnTop() throws {
+        let (controller, panel) = try makeShownPanel()
         defer { controller.close() }
         XCTAssertTrue(panel.isFloatingPanel)
         XCTAssertEqual(panel.level, .floating)

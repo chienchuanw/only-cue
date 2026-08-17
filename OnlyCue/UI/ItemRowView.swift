@@ -25,6 +25,14 @@ struct ItemRowView: View {
                 .lineLimit(1)
                 .truncationMode(.tail)
                 .frame(maxWidth: .infinity, alignment: .leading)
+            // A song with remembered LTC (#754) gets a compact trailing tag, so
+            // the operator sees at a glance which clips carry timecode.
+            if item.rememberedLTC != nil {
+                Text("LTC")
+                    .font(DS.Text.monoLabel)
+                    .foregroundStyle(DS.Color.textSecondary)
+                    .accessibilityIdentifier("itemRowLTC")
+            }
             // The sidebar shows the clip *length* (a duration), so it uses the
             // compact m:ss form, not framerate SMPTE (ADR-028 amendment; Figma
             // 318:1238). The per-media start timecode (a position) stays SMPTE

@@ -15,6 +15,16 @@ ADR template:
 
 ---
 
+## ADR-031 — A song's detected LTC is remembered in the document
+
+**Date**: 2026-08-17
+**Status**: Accepted
+**Decision**: The result of LTC detection (`StripedTimecodeTrack`) is persisted per `MediaItem` as `rememberedLTC` (schema v20, #754), written once on the first successful scan and used as a fallback when a later scan fails.
+**Why**: `LTCAudioReader` is a signal heuristic ("tuned for clean signals", ≥2-corroborating-frame gate) that can false-negative on a file that genuinely carries LTC. Detection had lived only in an in-memory per-run cache (`StripedTimecodeCache`), so a single bad scan dropped the `FILE` readout, the detected badge, and — critically — the music-only tap, bleeding the LTC tone to the audience. Remembering the good answer closes that gap and gives the operator a visible, controllable per-song LTC state (Edit Media status + Re-detect/Clear, item-list tag).
+**Reversal cost**: Low-moderate. It is an additive optional field with a no-op migration; dropping it would need a v21 bump. It is a deliberate exception to "detected data is never authored" — the fallback trusts the remembered value on scan failure (same file), with Clear / Re-detect and relink-clear as the escape hatches.
+
+---
+
 ## ADR-030 — grandMA2 push goes XML-over-FTP; telnet only orchestrates
 
 **Date**: 2026-07-19

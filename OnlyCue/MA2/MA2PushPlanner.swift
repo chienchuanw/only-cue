@@ -66,18 +66,21 @@ enum MA2PushPlanner {
         // the sequence pool directory (`Import … At` argument order is flipped
         // vs Export — wrong order → Error #12), back to root, timecode import,
         // executor assign, labels.
-        let commands = [
+        var commands = [
             "Delete Sequence \(target.sequenceSlot) /nc",
             "Delete Timecode \(target.timecodeSlot) /nc",
             "cd Sequences",
             "cd Global",
             "Import \"\(sequenceFileBase)\" At \(target.sequenceSlot) /nc",
             "cd /",
-            "Import \"\(timecodeFileBase)\" At Timecode \(target.timecodeSlot) /nc",
-            "Assign Sequence \(target.sequenceSlot) At Exec \(target.executorPage).\(target.executorNumber)",
-            "Label Sequence \(target.sequenceSlot) \"\(commandQuotable(sequenceName))\"",
-            "Label Timecode \(target.timecodeSlot) \"\(commandQuotable(timecodeName))\""
+            "Import \"\(timecodeFileBase)\" At Timecode \(target.timecodeSlot) /nc"
         ]
+        // Executor is optional (#764): skip the assign when unassigned.
+        if let executor = target.executor {
+            commands.append("Assign Sequence \(target.sequenceSlot) At Exec \(executor.page).\(executor.number)")
+        }
+        commands.append("Label Sequence \(target.sequenceSlot) \"\(commandQuotable(sequenceName))\"")
+        commands.append("Label Timecode \(target.timecodeSlot) \"\(commandQuotable(timecodeName))\"")
 
         return MA2PushPlan(
             sequenceUpload: sequenceUpload,

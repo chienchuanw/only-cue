@@ -61,7 +61,11 @@ enum MA2CommandPlanner {
         }
 
         commands.append("Label Sequence \(seq) \"\(MA2CommandQuoting.quotable(sequenceName))\"")
-        commands.append("Assign Sequence \(seq) At Exec \(target.executorPage).\(target.executorNumber)")
+        // Executor is optional (#764): with none assigned, the sequence is left in
+        // the pool for the operator to place — skip the `At Exec` command entirely.
+        if let executor = target.executor {
+            commands.append("Assign Sequence \(seq) At Exec \(executor.page).\(executor.number)")
+        }
         return commands
     }
 }

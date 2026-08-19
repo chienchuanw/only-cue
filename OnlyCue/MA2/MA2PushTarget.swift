@@ -17,10 +17,12 @@ struct MA2PushTarget: Codable, Equatable {
     var sequenceSlot: Int
     /// Timecode pool slot the timecode show is imported into.
     var timecodeSlot: Int
-    /// Executor page the sequence is assigned to (`page.exec`).
-    var executorPage: Int
-    /// Executor number within the page (`page.exec`).
-    var executorNumber: Int
+    /// Executor page the sequence is assigned to (`page.exec`). `nil` = leave the
+    /// sequence unassigned (#764) — Store it into the pool and let the operator
+    /// place it. Page and number are set or cleared together.
+    var executorPage: Int?
+    /// Executor number within the page (`page.exec`). `nil` = unassigned (#764).
+    var executorNumber: Int?
     /// Command each timecode event fires on the executor.
     var timecodeCommand: MA2TimecodeCommand
     /// Cue-type filter used for the last push. Empty = all types
@@ -36,8 +38,8 @@ struct MA2PushTarget: Codable, Equatable {
     init(
         sequenceSlot: Int,
         timecodeSlot: Int,
-        executorPage: Int,
-        executorNumber: Int,
+        executorPage: Int?,
+        executorNumber: Int?,
         timecodeCommand: MA2TimecodeCommand,
         includedTypeIDs: Set<UUID>,
         sequenceName: String? = nil
@@ -51,10 +53,27 @@ struct MA2PushTarget: Codable, Equatable {
         self.sequenceName = sequenceName
     }
 
+    /// The executor as a `page.exec` pair when assigned, else `nil` (#764). Page and
+    /// number are only meaningful together, so a half-set executor resolves to `nil`.
+    var executor: (page: Int, number: Int)? {
+        guard let page = executorPage, let number = executorNumber else { return nil }
+        return (page, number)
+    }
+
     /// Console slots, pages and executors are 1-based; anything below 1 would
     /// emit invalid XML indices (`index="-1"`) and telnet commands
-    /// (`Delete Sequence 0`). The push sheet refuses invalid targets.
+    /// (`Delete Sequence 0`). The executor is optional (#764): valid when both
+    /// fields are cleared (unassigned) or both are 1-based. The push sheet refuses
+    /// invalid targets.
     var isValid: Bool {
-        sequenceSlot >= 1 && timecodeSlot >= 1 && executorPage >= 1 && executorNumber >= 1
+        guard sequenceSlot >= 1, timecodeSlot >= 1 else { return false }
+        switch (executorPage, executorNumber) {
+        case (nil, nil):
+            return true
+        case let (page?, number?):
+            return page >= 1 && number >= 1
+        default:
+            return false  // half-set executor
+        }
     }
 }

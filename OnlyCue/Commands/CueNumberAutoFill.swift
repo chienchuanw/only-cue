@@ -24,19 +24,19 @@ enum CueNumberAutoFill {
         // Upper bound for each slot = nearest *existing* number strictly after it.
         var nextExisting = [Double?](repeating: nil, count: ordered.count)
         var running: Double?
-        for i in stride(from: ordered.count - 1, through: 0, by: -1) {
-            nextExisting[i] = running
-            if let number = ordered[i].cueNumber { running = number }
+        for index in stride(from: ordered.count - 1, through: 0, by: -1) {
+            nextExisting[index] = running
+            if let number = ordered[index].cueNumber { running = number }
         }
 
         var result: [Cue.ID: Double] = [:]
         var lower: Double?  // nearest number before this slot (existing or just-assigned)
-        for (i, cue) in ordered.enumerated() {
+        for (index, cue) in ordered.enumerated() {
             guard cue.cueNumber == nil else { lower = cue.cueNumber; continue }
             // No representable unique number in this interval (e.g. a sub-thousandth gap or
             // numbers running backwards vs. time) → leave the cue nil for the pre-flight to
             // report, rather than fabricate a duplicate or an out-of-range value.
-            guard let value = pick(lower: lower, upper: nextExisting[i], used: &used) else { continue }
+            guard let value = pick(lower: lower, upper: nextExisting[index], used: &used) else { continue }
             result[cue.id] = value
             lower = value
         }
@@ -58,13 +58,13 @@ enum CueNumberAutoFill {
     private static func pick(lower: Double?, upper: Double?, used: inout Set<Int>) -> Double? {
         let base = lower ?? 0
         func fits(_ value: Double) -> Bool {
-            value >= minNumber && value > base && (upper == nil || value < upper!) && !used.contains(key(value))
+            value >= minNumber && value > base && (upper.map { value < $0 } ?? true) && !used.contains(key(value))
         }
         func take(_ value: Double) -> Double { used.insert(key(value)); return value }
 
         // Cue numbers are always positive, so floor(lower)+1 >= 1 (and 1 when open).
         var candidate = lower.map { Int(floor($0)) + 1 } ?? 1
-        while upper == nil || Double(candidate) < upper! {
+        while upper.map({ Double(candidate) < $0 }) ?? true {
             if fits(Double(candidate)) { return take(Double(candidate)) }
             candidate += 1
         }

@@ -9,12 +9,12 @@ final class MA2PushSheetScreenshotTests: XCTestCase {
         continueAfterFailure = false
     }
 
-    /// Scenario: File → Send to grandMA2… presents the MA2 Push sheet
+    /// Scenario: File → Send to grandMA2… presents the batch MA2 push sheet (#765)
     /// Given a populated document with an active media item
     /// When the user chooses File → Send to grandMA2…
-    /// Then the "Send to grandMA2" sheet is shown with its target slots
+    /// Then the batch "Send to grandMA2" sheet is shown listing the project's songs
     /// And a dark-mode screenshot of the sheet is captured.
-    func test_ma2PushSheet_darkMode_visualBaseline() throws {
+    func test_ma2BatchSheet_darkMode_visualBaseline() throws {
         try XCTSkipIf(
             CIRuntime.isGitHubActions,
             "Flaky on self-hosted runner: menu-bar driving + foregrounding race."
@@ -48,14 +48,18 @@ final class MA2PushSheetScreenshotTests: XCTestCase {
         // The accessibilityIdentifier resolves to more than one element (the
         // container plus its accessibility children), so scope to firstMatch —
         // a bare query can't produce a single snapshot.
-        let sheet = app.descendants(matching: .any).matching(identifier: "ma2PushSheet").firstMatch
-        XCTAssertTrue(sheet.waitForExistence(timeout: 5), "the MA2 Push sheet should present")
+        let sheet = app.descendants(matching: .any).matching(identifier: "ma2BatchSheet").firstMatch
+        XCTAssertTrue(sheet.waitForExistence(timeout: 5), "the batch MA2 push sheet should present")
+
+        // Batch-specific affordance: the multi-song push button is present.
+        let pushButton = app.descendants(matching: .any).matching(identifier: "ma2BatchPushButton").firstMatch
+        XCTAssertTrue(pushButton.waitForExistence(timeout: 3), "the batch push button should exist")
 
         Thread.sleep(forTimeInterval: 0.9)
         // Capture the frontmost window (the sheet overlays the document window),
         // which reliably includes the whole sheet region.
         let target: XCUIElement? = app.windows.firstMatch
-        try captureScreenshot(named: "ma2-push-sheet-dark", window: target)
+        try captureScreenshot(named: "ma2-batch-sheet-dark", window: target)
         app.terminate()
     }
 

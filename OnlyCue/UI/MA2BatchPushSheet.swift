@@ -34,6 +34,8 @@ final class MA2BatchPushModel: Identifiable {
     var rows: [Row]
     var includedTypeIDs: Set<UUID>
     var runner: MA2BatchPushRunner?
+    /// The pre-checked song the sheet scrolls into view on open (#765).
+    let scrollTarget: MediaItem.ID?
 
     init(songs: [SongInput], activeItemID: MediaItem.ID?, preselect: MediaItem.ID?) {
         var usedSlots = Set(songs.compactMap { $0.saved?.sequenceSlot })
@@ -44,6 +46,7 @@ final class MA2BatchPushModel: Identifiable {
             return nextSlot
         }
         let checked = preselect ?? activeItemID
+        scrollTarget = checked
         rows = songs.map { song in
             let slot = song.saved?.sequenceSlot ?? allocateSlot()
             return Row(
@@ -148,14 +151,22 @@ struct MA2BatchPushSheet: View {
     private var songsSection: some View {
         VStack(alignment: .leading, spacing: DS.Space.sm) {
             Text("SONGS").dsSectionHeader()
-            ScrollView {
-                VStack(spacing: DS.Space.xs) {
-                    ForEach($model.rows) { $row in
-                        songRow($row)
+            ScrollViewReader { proxy in
+                ScrollView {
+                    VStack(spacing: DS.Space.xs) {
+                        ForEach($model.rows) { $row in
+                            songRow($row).id(row.itemID)
+                        }
+                    }
+                }
+                .frame(maxHeight: 220)
+                .onAppear {
+                    // Right-click / active entry pre-checks a song — scroll it into view (#765).
+                    if let target = model.scrollTarget {
+                        proxy.scrollTo(target, anchor: .center)
                     }
                 }
             }
-            .frame(maxHeight: 220)
         }
     }
 
@@ -297,18 +308,12 @@ struct MA2BatchPushSheet: View {
 
     private func push() {
         guard let portValue = UInt16(exactly: port), portValue > 0 else { return }
-        let selections = model.selectedRows.map {
-            MA2BatchPushPlan.Selection(itemID: $0.itemID, target: model.target(for: $0))
-        }
-        // Coalesce the whole push side effect — persisting each target and auto-filling
-        // each song's cue numbers — into one undo step, so a single Cmd-Z reverses it.
-        undoManager?.beginUndoGrouping()
-        for row in model.selectedRows {
-            CueCommands.setMA2PushTarget(model.target(for: row), itemID: row.itemID, document: document, undoManager: undoManager)
-        }
+        let rows = model.selectedRows
+        let selections = rows.map { MA2BatchPushPlan.Selection(itemID: $0.itemID, target: model.target(for: $0)) }
+        let targets = Dictionary(uniqueKeysWithValues: rows.map { ($0.itemID, model.target(for: $0)) })
+        // Auto-fill each selected song's cue numbers (undoable) so its commands can be built.
+        // Targets are persisted only for songs that reach the console (see `persistTargets`).
         let songs = MA2BatchPushPlan.build(selections, document: document, undoManager: undoManager, framerate: framerate)
-        undoManager?.setActionName("Send to grandMA2")
-        undoManager?.endUndoGrouping()
         let runner = MA2BatchPushRunner(transport: MA2TelnetClient(configuration: .init(host: host, port: portValue)))
         model.runner = runner
         pushTask = Task {
@@ -318,7 +323,23 @@ struct MA2BatchPushSheet: View {
                 username: MA2ConnectionSettings.username,
                 password: MA2ConnectionSettings.password
             )
+            persistTargets(for: runner, targets: targets)
         }
+    }
+
+    /// Persist the push target only for songs that actually reached the console (#765) — a
+    /// re-push should remember a confirmed configuration, not a failed or never-sent attempt.
+    private func persistTargets(for runner: MA2BatchPushRunner, targets: [MediaItem.ID: MA2PushTarget]) {
+        let succeeded = runner.songs.filter { $0.state == .done }
+        guard !succeeded.isEmpty else { return }
+        undoManager?.beginUndoGrouping()
+        for song in succeeded {
+            if let target = targets[song.itemID] {
+                CueCommands.setMA2PushTarget(target, itemID: song.itemID, document: document, undoManager: undoManager)
+            }
+        }
+        undoManager?.setActionName("Set grandMA2 Targets")
+        undoManager?.endUndoGrouping()
     }
 }
 

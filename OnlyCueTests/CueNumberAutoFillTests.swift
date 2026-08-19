@@ -73,6 +73,36 @@ final class CueNumberAutoFillTests: XCTestCase {
         XCTAssertNil(result[list[2].id])
     }
 
+    func test_smallGap_stillFillsWhenRoomExists() {
+        // A 0.05-wide gap has no whole number but a free thousandth (e.g. 1.025).
+        let list = cues([1, nil, 1.05])
+        let filled = CueNumberAutoFill.assignments(for: list)[list[1].id] ?? 0
+        XCTAssertGreaterThan(filled, 1)
+        XCTAssertLessThan(filled, 1.05)
+    }
+
+    func test_subGridGap_leavesCueUnnumbered_neverDuplicates() {
+        // No representable thousandth strictly between 1.000 and 1.001 → cannot fill.
+        let list = cues([1, 1.001, nil])   // nil sits after, but bounded tight elsewhere
+        let tight = cues([1, nil, 1.001])
+        XCTAssertNil(CueNumberAutoFill.assignments(for: tight)[tight[1].id],
+                     "must not fabricate a duplicate of the existing 1.001")
+        // Sanity: the loose variant (nil at the end, open upper) still fills.
+        XCTAssertNotNil(CueNumberAutoFill.assignments(for: list)[list[2].id])
+    }
+
+    func test_leadingNilBeforeSubOneUpper_neverZeroOrNegative() {
+        // base 0, upper 0.0004 → no value >= 0.001 fits; leave nil rather than emit 0.0.
+        let list = cues([nil, 0.0004])
+        XCTAssertNil(CueNumberAutoFill.assignments(for: list)[list[0].id])
+    }
+
+    func test_numbersRunningBackwardsInTime_leaveUnfillableNil() {
+        // Non-monotonic: no value strictly between lower 10 and upper 5.
+        let list = cues([10, nil, 5])
+        XCTAssertNil(CueNumberAutoFill.assignments(for: list)[list[1].id])
+    }
+
     func test_allNumbered_noAssignments() {
         let result = CueNumberAutoFill.assignments(for: cues([1, 2, 3]))
         XCTAssertTrue(result.isEmpty)

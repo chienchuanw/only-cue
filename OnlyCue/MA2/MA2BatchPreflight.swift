@@ -8,10 +8,13 @@ import Foundation
 /// while `isClear` is false.
 enum MA2BatchPreflight {
 
-    /// One selected song: its item id, its type-filtered cues, and its push target.
+    /// One selected song: its item id, its *full* cue list, the global type filter, and its
+    /// push target. Pre-flight applies auto-fill to the full list and then the filter — the
+    /// same order the push uses (`MA2BatchPushPlan`) — so the preview matches what is sent.
     struct Song: Equatable {
         let itemID: MediaItem.ID
         let cues: [Cue]
+        let includedTypeIDs: Set<UUID>
         let target: MA2PushTarget
     }
 
@@ -35,7 +38,8 @@ enum MA2BatchPreflight {
 
     static func validate(_ songs: [Song]) -> Result {
         let perSong = songs.compactMap { song -> SongIssues? in
-            let issues = MA2PushPreflight.validate(autoFilled(song.cues))
+            let filtered = CueExportFilter.cues(autoFilled(song.cues), onlyTypeIDs: song.includedTypeIDs)
+            let issues = MA2PushPreflight.validate(filtered)
             return issues.isEmpty ? nil : SongIssues(itemID: song.itemID, issues: issues)
         }
 

@@ -77,7 +77,8 @@ final class MA2BatchPushModel: Identifiable {
         MA2BatchPreflight.validate(selectedRows.map { row in
             MA2BatchPreflight.Song(
                 itemID: row.itemID,
-                cues: CueExportFilter.cues(row.cues, onlyTypeIDs: includedTypeIDs),
+                cues: row.cues,
+                includedTypeIDs: includedTypeIDs,
                 target: target(for: row)
             )
         })
@@ -299,11 +300,15 @@ struct MA2BatchPushSheet: View {
         let selections = model.selectedRows.map {
             MA2BatchPushPlan.Selection(itemID: $0.itemID, target: model.target(for: $0))
         }
-        // Persist each song's target so a re-push remembers it.
+        // Coalesce the whole push side effect — persisting each target and auto-filling
+        // each song's cue numbers — into one undo step, so a single Cmd-Z reverses it.
+        undoManager?.beginUndoGrouping()
         for row in model.selectedRows {
             CueCommands.setMA2PushTarget(model.target(for: row), itemID: row.itemID, document: document, undoManager: undoManager)
         }
         let songs = MA2BatchPushPlan.build(selections, document: document, undoManager: undoManager, framerate: framerate)
+        undoManager?.setActionName("Send to grandMA2")
+        undoManager?.endUndoGrouping()
         let runner = MA2BatchPushRunner(transport: MA2TelnetClient(configuration: .init(host: host, port: portValue)))
         model.runner = runner
         pushTask = Task {

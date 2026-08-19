@@ -33,46 +33,60 @@ enum CueNumberAutoFill {
         var lower: Double?  // nearest number before this slot (existing or just-assigned)
         for (i, cue) in ordered.enumerated() {
             guard cue.cueNumber == nil else { lower = cue.cueNumber; continue }
-            let value = pick(lower: lower, upper: nextExisting[i], used: &used)
+            // No representable unique number in this interval (e.g. a sub-thousandth gap or
+            // numbers running backwards vs. time) → leave the cue nil for the pre-flight to
+            // report, rather than fabricate a duplicate or an out-of-range value.
+            guard let value = pick(lower: lower, upper: nextExisting[i], used: &used) else { continue }
             result[cue.id] = value
             lower = value
         }
         return result
     }
 
+    /// Smallest legal MA2 cue number.
+    private static let minNumber = 0.001
+
     private static func key(_ number: Double) -> Int { Int((number * 1000).rounded()) }
 
     private static func round3(_ number: Double) -> Double { (number * 1000).rounded() / 1000 }
 
-    /// First free number strictly between `lower` and `upper` (either may be open),
+    /// First free, legal number strictly between `lower` and `upper` (either may be open),
     /// preferring whole numbers, then a `+0.1` step from the lower bound, then a
-    /// binary-subdivision fallback if `0.1` steps overrun a tight upper bound.
-    private static func pick(lower: Double?, upper: Double?, used: inout Set<Int>) -> Double {
+    /// binary-subdivision fallback for a tight upper bound. Returns `nil` when the interval
+    /// holds no unique thousandth `>= minNumber` — every candidate is validated by `fits`,
+    /// so the result can never duplicate an existing number or fall out of range.
+    private static func pick(lower: Double?, upper: Double?, used: inout Set<Int>) -> Double? {
+        let base = lower ?? 0
+        func fits(_ value: Double) -> Bool {
+            value >= minNumber && value > base && (upper == nil || value < upper!) && !used.contains(key(value))
+        }
         func take(_ value: Double) -> Double { used.insert(key(value)); return value }
 
         // Cue numbers are always positive, so floor(lower)+1 >= 1 (and 1 when open).
         var candidate = lower.map { Int(floor($0)) + 1 } ?? 1
         while upper == nil || Double(candidate) < upper! {
-            if !used.contains(key(Double(candidate))) { return take(Double(candidate)) }
+            if fits(Double(candidate)) { return take(Double(candidate)) }
             candidate += 1
         }
 
-        let base = lower ?? 0
+        // +0.1 steps from the lower bound (upper is non-nil here — the integer scan above
+        // never exits for an open upper).
         var step = 1
-        while true {
+        while let upper, round3(base + Double(step) * 0.1) < upper {
             let value = round3(base + Double(step) * 0.1)
-            if let upper, value >= upper { break }
-            if value > base, !used.contains(key(value)) { return take(value) }
+            if fits(value) { return take(value) }
             step += 1
         }
 
-        // Tight bound: subdivide (lower, upper) until a free slot appears.
-        var high = upper ?? (base + 1)
-        for _ in 0..<20 {
+        // Tight bound: subdivide (base, upper) looking for a free thousandth.
+        guard let upper else { return nil }
+        var high = upper
+        for _ in 0..<40 {
             let mid = round3((base + high) / 2)
-            if mid > base, mid < (upper ?? .infinity), !used.contains(key(mid)) { return take(mid) }
+            if fits(mid) { return take(mid) }
+            if high - base < minNumber { break }  // gap narrower than the thousandths grid
             high = mid
         }
-        return take(round3((base + (upper ?? base + 1)) / 2))
+        return nil
     }
 }

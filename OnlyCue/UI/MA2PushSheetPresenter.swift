@@ -1,40 +1,48 @@
 import SwiftUI
 
-/// View modifier that listens for `.sendToMA2Requested` (#683), resolves the
-/// target media item (notification object = `MediaItem.ID`, nil = active
-/// item), and presents `MA2PushSheet`. Saving the target back to the document
-/// goes through `CueCommands.setMA2PushTarget` — never a direct model write.
+/// View modifier that listens for `.sendToMA2Requested` (#683) and presents the batch
+/// `MA2BatchPushSheet` (#765) over every song in the project. The notification object
+/// (`MediaItem.ID`, or nil = the active item) pre-selects that song; the user checks any
+/// others. Target and cue-number writes go through `CueCommands` — never a direct model write.
 struct MA2PushSheetPresenter: ViewModifier {
 
     let document: CueListDocument
     let undoManager: UndoManager?
 
-    @State private var presentedItem: MediaItem?
+    @State private var model: MA2BatchPushModel?
 
     func body(content: Content) -> some View {
         content
             .onReceive(NotificationCenter.default.publisher(for: .sendToMA2Requested)) { note in
-                let requestedID = note.object as? MediaItem.ID
-                let itemID = requestedID ?? document.model.activeItemID
-                presentedItem = document.model.items.first { $0.id == itemID }
+                let preselect = note.object as? MediaItem.ID
+                model = makeModel(preselect: preselect)
             }
-            .sheet(item: $presentedItem) { item in
-                MA2PushSheet(
-                    item: item,
+            .sheet(item: $model) { model in
+                MA2BatchPushSheet(
+                    model: model,
+                    document: document,
+                    undoManager: undoManager,
                     cuePointTypes: document.model.cuePointTypes,
                     framerate: document.model.timecodeSettings.framerate,
-                    showfile: "OnlyCue",
-                    onSaveTarget: { target in
-                        CueCommands.setMA2PushTarget(
-                            target,
-                            itemID: item.id,
-                            document: document,
-                            undoManager: undoManager
-                        )
-                    },
-                    onDismiss: { presentedItem = nil }
+                    onDismiss: { self.model = nil }
                 )
             }
+    }
+
+    private func makeModel(preselect: MediaItem.ID?) -> MA2BatchPushModel {
+        let songs = document.model.items.map { item in
+            MA2BatchPushModel.SongInput(
+                itemID: item.id,
+                name: item.resolvedName,
+                cues: item.cues,
+                saved: item.ma2PushTarget
+            )
+        }
+        return MA2BatchPushModel(
+            songs: songs,
+            activeItemID: document.model.activeItemID,
+            preselect: preselect
+        )
     }
 }
 

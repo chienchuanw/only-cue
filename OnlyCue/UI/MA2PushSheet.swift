@@ -52,8 +52,8 @@ struct MA2PushSheet: View {
         )
         _sequenceSlot = State(initialValue: saved.sequenceSlot)
         _timecodeSlot = State(initialValue: saved.timecodeSlot)
-        _executorPage = State(initialValue: saved.executorPage)
-        _executorNumber = State(initialValue: saved.executorNumber)
+        _executorPage = State(initialValue: saved.executorPage ?? 1)
+        _executorNumber = State(initialValue: saved.executorNumber ?? 1)
         _timecodeCommand = State(initialValue: saved.timecodeCommand)
         _includedTypeIDs = State(initialValue: saved.includedTypeIDs)
         _sequenceName = State(initialValue: saved.sequenceName

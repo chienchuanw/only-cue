@@ -13,8 +13,8 @@ enum MA2TimecodeXMLGenerator {
         timecodeName: String,
         sequenceSlot: Int,
         sequenceName: String,
-        executorPage: Int,
-        executorNumber: Int,
+        executorPage: Int?,
+        executorNumber: Int?,
         command: MA2TimecodeCommand,
         startTimecodeFrames: Int,
         lengthFrames: Int,
@@ -55,13 +55,16 @@ enum MA2TimecodeXMLGenerator {
             + ">"
         )
         lines.append("\t\t<Track index=\"0\" active=\"true\" expanded=\"true\">")
-        // The track object is the executor: object path 30/1/page/exec; the
-        // name attribute is cosmetic ("SequName page.exec" in real exports).
-        lines.append("\t\t\t<Object name=\"\(escape(sequenceName)) \(executorPage).\(executorNumber)\">")
-        for number in [30, 1, executorPage, executorNumber] {
-            lines.append("\t\t\t\t<No>\(number)</No>")
+        // The track object is the executor: object path 30/1/page/exec; the name
+        // attribute is cosmetic ("SequName page.exec" in real exports). Executor is
+        // optional (#764) — an unassigned target emits no executor Object.
+        if let page = executorPage, let exec = executorNumber {
+            lines.append("\t\t\t<Object name=\"\(escape(sequenceName)) \(page).\(exec)\">")
+            for number in [30, 1, page, exec] {
+                lines.append("\t\t\t\t<No>\(number)</No>")
+            }
+            lines.append("\t\t\t</Object>")
         }
-        lines.append("\t\t\t</Object>")
         lines.append("\t\t\t<SubTrack index=\"0\">")
         for (eventIndex, cue) in timeOrdered.enumerated() {
             lines.append(contentsOf: eventElement(

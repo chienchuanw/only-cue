@@ -7,8 +7,15 @@ import XCTest
 final class MA2BatchPreflightTests: XCTestCase {
 
     private func cue(_ number: Double?, time: TimeInterval) -> Cue {
-        Cue(id: UUID(), typeID: UUID(), cueNumber: number, name: "c", time: time,
-            notes: "", fadeTime: FadeTime(fadeIn: 0, fadeOut: 0))
+        Cue(
+            id: UUID(),
+            typeID: UUID(),
+            cueNumber: number,
+            name: "c",
+            time: time,
+            notes: "",
+            fadeTime: FadeTime(fadeIn: 0, fadeOut: 0)
+        )
     }
 
     private func song(

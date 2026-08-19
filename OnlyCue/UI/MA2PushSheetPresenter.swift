@@ -14,6 +14,9 @@ struct MA2PushSheetPresenter: ViewModifier {
     func body(content: Content) -> some View {
         content
             .onReceive(NotificationCenter.default.publisher(for: .sendToMA2Requested)) { note in
+                // Ignore a re-trigger while the sheet (and any running push) is already up —
+                // rebuilding the model would orphan an in-flight push and reset the sheet.
+                guard model == nil else { return }
                 let preselect = note.object as? MediaItem.ID
                 model = makeModel(preselect: preselect)
             }

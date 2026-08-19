@@ -27,6 +27,7 @@ final class MA2BatchPreflightTests: XCTestCase {
         MA2BatchPreflight.Song(
             itemID: itemID,
             cues: cues,
+            includedTypeIDs: [],
             target: MA2PushTarget(
                 sequenceSlot: slot,
                 timecodeSlot: 1,

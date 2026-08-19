@@ -67,6 +67,12 @@ final class MA2BatchPushRunner {
         }
 
         for (index, song) in input.enumerated() {
+            if Task.isCancelled {
+                for remaining in index..<songs.count where songs[remaining].state == .pending {
+                    songs[remaining].state = .failed("Cancelled")
+                }
+                break
+            }
             songs[index].state = .running
             do {
                 for command in song.commands {

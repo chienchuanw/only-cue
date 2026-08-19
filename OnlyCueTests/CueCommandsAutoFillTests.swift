@@ -8,36 +8,36 @@ import XCTest
 final class CueCommandsAutoFillTests: XCTestCase {
 
     func test_autoFill_writesNumbersBack() {
-        let (doc, itemID, ids) = makeDocument([1, nil, 3])
-        CueCommands.autoFillCueNumbers(itemID: itemID, document: doc, undoManager: nil)
-        XCTAssertEqual(number(doc, itemID, ids[1]), 2)
+        let (doc, media) = makeDocument([1, nil, 3])
+        CueCommands.autoFillCueNumbers(itemID: media.id, document: doc, undoManager: nil)
+        XCTAssertEqual(number(doc, media.id, media.cues[1].id), 2)
     }
 
     func test_autoFill_preservesExistingNumbers() {
-        let (doc, itemID, ids) = makeDocument([1, nil, 3])
-        CueCommands.autoFillCueNumbers(itemID: itemID, document: doc, undoManager: nil)
-        XCTAssertEqual(number(doc, itemID, ids[0]), 1)
-        XCTAssertEqual(number(doc, itemID, ids[2]), 3)
+        let (doc, media) = makeDocument([1, nil, 3])
+        CueCommands.autoFillCueNumbers(itemID: media.id, document: doc, undoManager: nil)
+        XCTAssertEqual(number(doc, media.id, media.cues[0].id), 1)
+        XCTAssertEqual(number(doc, media.id, media.cues[2].id), 3)
     }
 
     func test_autoFill_undoRestoresNil_redoRefills() {
         let undo = makeUndoManager()
-        let (doc, itemID, ids) = makeDocument([1, nil, 3])
+        let (doc, media) = makeDocument([1, nil, 3])
 
-        CueCommands.autoFillCueNumbers(itemID: itemID, document: doc, undoManager: undo)
-        XCTAssertEqual(number(doc, itemID, ids[1]), 2)
+        CueCommands.autoFillCueNumbers(itemID: media.id, document: doc, undoManager: undo)
+        XCTAssertEqual(number(doc, media.id, media.cues[1].id), 2)
 
         undo.undo()
-        XCTAssertNil(number(doc, itemID, ids[1]))
+        XCTAssertNil(number(doc, media.id, media.cues[1].id))
 
         undo.redo()
-        XCTAssertEqual(number(doc, itemID, ids[1]), 2)
+        XCTAssertEqual(number(doc, media.id, media.cues[1].id), 2)
     }
 
     func test_autoFill_allNumbered_isNoOp_noUndoStep() {
         let undo = makeUndoManager()
-        let (doc, itemID, _) = makeDocument([1, 2, 3])
-        CueCommands.autoFillCueNumbers(itemID: itemID, document: doc, undoManager: undo)
+        let (doc, media) = makeDocument([1, 2, 3])
+        CueCommands.autoFillCueNumbers(itemID: media.id, document: doc, undoManager: undo)
         XCTAssertFalse(undo.canUndo)
     }
 
@@ -77,12 +77,12 @@ final class CueCommandsAutoFillTests: XCTestCase {
         )
     }
 
-    private func makeDocument(_ numbers: [Double?]) -> (CueListDocument, MediaItem.ID, [Cue.ID]) {
+    private func makeDocument(_ numbers: [Double?]) -> (CueListDocument, MediaItem) {
         let doc = CueListDocument()
         let media = item(numbers)
         doc.model.items = [media]
         doc.model.activeItemID = media.id
-        return (doc, media.id, media.cues.map(\.id))
+        return (doc, media)
     }
 
     private func number(_ doc: CueListDocument, _ itemID: MediaItem.ID, _ cueID: Cue.ID) -> Double? {

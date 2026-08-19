@@ -78,6 +78,53 @@ final class MA2PushTargetTests: XCTestCase {
         XCTAssertFalse(target(executorNumber: 0).isValid)
     }
 
+    // MARK: - Optional executor (#764)
+
+    private func targetWithExecutor(page: Int?, number: Int?) -> MA2PushTarget {
+        MA2PushTarget(
+            sequenceSlot: 1,
+            timecodeSlot: 1,
+            executorPage: page,
+            executorNumber: number,
+            timecodeCommand: .goto,
+            includedTypeIDs: []
+        )
+    }
+
+    func test_unassignedExecutor_isValid() {
+        XCTAssertTrue(targetWithExecutor(page: nil, number: nil).isValid)
+    }
+
+    func test_halfSetExecutor_isInvalid() {
+        XCTAssertFalse(targetWithExecutor(page: 1, number: nil).isValid)
+        XCTAssertFalse(targetWithExecutor(page: nil, number: 1).isValid)
+    }
+
+    func test_executorTuple_reflectsAssignment() {
+        XCTAssertNil(targetWithExecutor(page: nil, number: nil).executor?.page)
+        let executor = targetWithExecutor(page: 2, number: 7).executor
+        XCTAssertEqual(executor?.page, 2)
+        XCTAssertEqual(executor?.number, 7)
+    }
+
+    func test_unassignedExecutor_codableRoundTrip() throws {
+        let target = targetWithExecutor(page: nil, number: nil)
+        let decoded = try JSONDecoder().decode(MA2PushTarget.self, from: JSONEncoder().encode(target))
+        XCTAssertNil(decoded.executorPage)
+        XCTAssertNil(decoded.executorNumber)
+        XCTAssertEqual(decoded, target)
+    }
+
+    func test_decodesLegacyIntExecutor_asAssigned() throws {
+        // v20 documents stored executorPage/Number as plain Ints; they must decode into the new Int?.
+        let json = Data("""
+        {"sequenceSlot":1,"timecodeSlot":1,"executorPage":3,"executorNumber":8,"timecodeCommand":"goto","includedTypeIDs":[]}
+        """.utf8)
+        let decoded = try JSONDecoder().decode(MA2PushTarget.self, from: json)
+        XCTAssertEqual(decoded.executor?.page, 3)
+        XCTAssertEqual(decoded.executor?.number, 8)
+    }
+
     // MARK: - Sequence name (#686)
 
     func test_sequenceName_defaultsNil_andRoundTrips() throws {

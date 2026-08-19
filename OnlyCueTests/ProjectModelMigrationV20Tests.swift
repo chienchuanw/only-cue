@@ -37,7 +37,7 @@ final class ProjectModelMigrationV20Tests: XCTestCase {
     func test_v19ToV20_bumpsSchemaVersion() throws {
         let migrated = try ProjectModel.decode(from: Data(v19Doc().utf8))
         XCTAssertEqual(migrated.schemaVersion, ProjectModel.currentSchemaVersion)
-        XCTAssertEqual(ProjectModel.currentSchemaVersion, 20)
+        XCTAssertGreaterThanOrEqual(ProjectModel.currentSchemaVersion, 20)
     }
 
     func test_v19ToV20_rememberedLTCDefaultsNil() throws {

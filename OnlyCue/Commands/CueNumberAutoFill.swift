@@ -50,7 +50,8 @@ enum CueNumberAutoFill {
     private static func pick(lower: Double?, upper: Double?, used: inout Set<Int>) -> Double {
         func take(_ value: Double) -> Double { used.insert(key(value)); return value }
 
-        var candidate = max(lower.map { Int(floor($0)) + 1 } ?? 1, 1)
+        // Cue numbers are always positive, so floor(lower)+1 >= 1 (and 1 when open).
+        var candidate = lower.map { Int(floor($0)) + 1 } ?? 1
         while upper == nil || Double(candidate) < upper! {
             if !used.contains(key(Double(candidate))) { return take(Double(candidate)) }
             candidate += 1

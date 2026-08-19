@@ -116,4 +116,31 @@ final class MA2CommandPlannerTests: XCTestCase {
         )
         XCTAssertFalse(commands.contains(where: { $0.contains("/info=") }))
     }
+
+    // MARK: - Optional executor (#764)
+
+    private func unassignedTarget(seq: Int = 900) -> MA2PushTarget {
+        MA2PushTarget(
+            sequenceSlot: seq,
+            timecodeSlot: 9,
+            executorPage: nil,
+            executorNumber: nil,
+            timecodeCommand: .goto,
+            includedTypeIDs: []
+        )
+    }
+
+    func test_unassignedExecutor_omitsAtExecCommand() {
+        let cues = [cue(1, "C", time: 0)]
+        let assigned = MA2CommandPlanner.commands(
+            cues: cues, target: target(), sequenceName: "S", startTimecodeFrames: 0, framerate: .fps30
+        )
+        let unassigned = MA2CommandPlanner.commands(
+            cues: cues, target: unassignedTarget(), sequenceName: "S", startTimecodeFrames: 0, framerate: .fps30
+        )
+        // The assigned case ends with an At Exec; the unassigned case omits exactly that line.
+        XCTAssertTrue(assigned.contains { $0.contains("At Exec") })
+        XCTAssertFalse(unassigned.contains { $0.contains("At Exec") })
+        XCTAssertEqual(unassigned, assigned.filter { !$0.contains("At Exec") })
+    }
 }

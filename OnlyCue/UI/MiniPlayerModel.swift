@@ -130,15 +130,17 @@ struct MiniPlayerModel: Equatable {
         cuePointTypes: [CuePointType]
     ) -> [CueMarker] {
         guard duration > 0 else { return [] }
+        // One pass, then sort the survivors: `make` runs on every playback frame,
+        // so the pipeline stays as short as the time-order guarantee allows.
         return cues
-            .filter { (0...duration).contains($0.time) }
-            .sorted { $0.time < $1.time }
-            .compactMap { cue in
-                guard let type = cuePointTypes.first(where: { $0.id == cue.typeID }), type.isVisible else {
-                    return nil
-                }
+            .compactMap { cue -> CueMarker? in
+                guard (0...duration).contains(cue.time),
+                      let type = cuePointTypes.first(where: { $0.id == cue.typeID }),
+                      type.isVisible
+                else { return nil }
                 return CueMarker(fraction: cue.time / duration, colorHex: type.colorHex)
             }
+            .sorted { $0.fraction < $1.fraction }
     }
 
     /// Playhead position as a 0…1 fraction, clamped; 0 when the length is

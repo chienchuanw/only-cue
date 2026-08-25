@@ -97,6 +97,25 @@ status=$?
 expect_eq "exits 124 on stall" "124" "$status"
 expect_contains "reports the in-flight test" "$err" "test_playheadClockIsPresent"
 
+# --- 3b. a command that finishes while quiet is NOT a stall -----------------
+# Regression: the monitor evaluated the stall clock before re-checking whether
+# the command had exited, so a command that finished during a poll interval was
+# killed and reported as a wedge — turning a green run red. Reproduces when the
+# poll interval is longer than the stall timeout.
+
+echo "does not kill a quiet command that exits on its own"
+cat >"$tmp/quiet-then-done.sh" <<'EOF'
+#!/bin/bash
+echo "Test Case '-[OnlyCueUITests.FooTests test_bar]' started."
+sleep 3
+echo "** TEST SUCCEEDED **"
+EOF
+chmod +x "$tmp/quiet-then-done.sh"
+
+"$watchdog" --log "$tmp/quiet.log" --poll-interval 5 --stall-timeout 2 \
+  -- "$tmp/quiet-then-done.sh" >/dev/null 2>&1
+expect_eq "exits 0, not 124" "0" "$?"
+
 # --- 4. the hard cap, independent of the stall clock ------------------------
 # Chatty forever: the stall clock never trips, so only the wall-clock cap can
 # stop it. This is what proves the two limits are genuinely independent.
@@ -124,7 +143,6 @@ cat >"$tmp/spawner.sh" <<'EOF'
 #!/bin/bash
 sleep 120 &
 echo "$!" >"$1"
-echo "Test Case '-[OnlyCueUITests.FooTests test_bar]' started."
 sleep 120
 EOF
 chmod +x "$tmp/spawner.sh"

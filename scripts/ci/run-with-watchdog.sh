@@ -38,24 +38,13 @@ usage() {
 
 while [ $# -gt 0 ]; do
   case "$1" in
-    --log|--stall-timeout|--hard-timeout|--heartbeat|--poll-interval)
-      if [ $# -lt 2 ]; then
-        echo "$0: $1 needs a value" >&2
-        exit 2
-      fi
-      case "$1" in
-        --log) log="$2" ;;
-        --stall-timeout) stall_timeout="$2" ;;
-        --hard-timeout) hard_timeout="$2" ;;
-        --heartbeat) heartbeat="$2" ;;
-        --poll-interval) poll_interval="$2" ;;
-      esac
-      shift 2
-      ;;
-    --)
-      shift
-      break
-      ;;
+    --)              shift; break ;;
+    -h|--help)       usage; exit 0 ;;
+    --log)           log="$2";           shift 2 ;;
+    --stall-timeout) stall_timeout="$2"; shift 2 ;;
+    --hard-timeout)  hard_timeout="$2";  shift 2 ;;
+    --heartbeat)     heartbeat="$2";     shift 2 ;;
+    --poll-interval) poll_interval="$2"; shift 2 ;;
     *)
       echo "$0: unknown option '$1'" >&2
       usage
@@ -76,12 +65,6 @@ if [ $# -eq 0 ]; then
   exit 2
 fi
 
-# `stat -f` is BSD (macOS, where CI runs); `stat -c` is GNU. Both are O(1) on a
-# regular file, unlike `wc -c`, which may read the whole log every poll.
-file_size() {
-  stat -f %z "$1" 2>/dev/null || stat -c %s "$1" 2>/dev/null || echo 0
-}
-
 # The last test xcodebuild announced. This is the answer to "which test was in
 # flight when it wedged" — the question the #775 forensics had to reconstruct by
 # hand from DerivedData.
@@ -97,9 +80,13 @@ in_flight() {
 
 own_pgid="$(ps -o pgid= -p $$ 2>/dev/null | tr -d ' ')"
 
-# Kill the command's whole process group. Killing just the direct child would
-# orphan xcodebuild's helpers (XCTRunner, the app under test) and hand the retry
-# a dirty runner — which is precisely what the retry exists to avoid.
+# Kill the command's whole process group: `kill "$job"` alone would leave the
+# pipeline's other members (xcodebuild itself, `tee`) running.
+#
+# This deliberately does not try to reach XCTRunner or the app under test —
+# those are spawned by testmanagerd, not inside this process group, so no
+# signal sent here can touch them. ci.yml's `reset_ui_daemons` owns that
+# cleanup and runs right after a 124.
 kill_command_tree() {
   local pgid
   pgid="$(ps -o pgid= -p "$job" 2>/dev/null | tr -d ' ')"
@@ -126,35 +113,46 @@ job=$!
 set +m
 
 start="$(date +%s)"
-last_change="$start"
 last_beat="$start"
-last_size="$(file_size "$log")"
+# The log's mtime *is* the stall clock — the filesystem already records when the
+# command last wrote, so tracking a byte count alongside it would just be a
+# second copy of the same fact. `: >"$log"` above seeded it to now.
+# `stat -f` is BSD; the runner and this whole project are macOS-only (ADR-001).
+last_out="$start"
 reason=""
 
-while [ ! -f "$status_file" ]; do
+while :; do
   sleep "$poll_interval"
-  now="$(date +%s)"
-  size="$(file_size "$log")"
 
-  if [ "$size" != "$last_size" ]; then
-    last_size="$size"
-    last_change="$now"
-  fi
-
-  if [ $((now - last_change)) -ge "$stall_timeout" ]; then
-    reason="produced no output for ${stall_timeout}s"
+  # Completion is checked before the clocks: a command that exited during the
+  # sleep has not wedged, however quiet it was beforehand. Checking the other
+  # way round kills a finishing command and reports a green run as a wedge.
+  if [ -f "$status_file" ]; then
     break
   fi
 
-  if [ $((now - start)) -ge "$hard_timeout" ]; then
+  now="$(date +%s)"
+  last_out="$(stat -f %m "$log" 2>/dev/null || echo "$last_out")"
+
+  if [ $((now - last_out)) -ge "$stall_timeout" ]; then
+    reason="produced no output for ${stall_timeout}s"
+  elif [ $((now - start)) -ge "$hard_timeout" ]; then
     reason="exceeded the ${hard_timeout}s cap"
+  fi
+
+  if [ -n "$reason" ]; then
+    # It may have exited while we were deciding. Re-check rather than kill a
+    # command that already finished.
+    if [ -f "$status_file" ]; then
+      reason=""
+    fi
     break
   fi
 
   if [ "$heartbeat" -gt 0 ] && [ $((now - last_beat)) -ge "$heartbeat" ]; then
     last_beat="$now"
     printf '[watchdog] %ss elapsed, %ss since last output — in flight: %s\n' \
-      "$((now - start))" "$((now - last_change))" "$(in_flight)" >&2
+      "$((now - start))" "$((now - last_out))" "$(in_flight)" >&2
   fi
 done
 

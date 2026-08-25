@@ -1,6 +1,6 @@
 # CI — UI-test stall watchdog (#775) and single-run fast-forward (#776)
 
-**Status:** draft (awaiting approval 2026-08-26)
+**Status:** approved 2026-08-26
 **Issues:** #775 (`bug`, `p0-blocker`, `type:ci`), #776 (`chore`, `p2`, `type:ci`)
 **Touches:** `.github/workflows/ci.yml`, new `scripts/ci/`
 **Prior art:** #471, #595 (testmanagerd control-session reset), #603/#605
@@ -93,7 +93,8 @@ Behaviour:
 
 - Runs `COMMAND` with stdout+stderr tee'd to `--log` **and** forwarded to the
   script's stdout, so the caller can still pipe into `xcbeautify`.
-- Polls the log every 5s. Tracks byte count; resets the stall clock on growth.
+- Polls every 5s and reads the log's mtime — the filesystem already records when
+  the command last wrote, so the stall clock needs no separate byte counter.
 - Emits a heartbeat line to **stderr** every `--heartbeat` seconds (default 120)
   with elapsed time and the last observed `Test Case '...' started`. stderr is
   unbuffered, so this is visible live in the Actions log — fixing the
@@ -166,6 +167,9 @@ first and seen red:
 2. Non-zero command → exit code propagates unchanged.
 3. Emits one line then sleeps, `--stall-timeout 3` → exit 124; stderr names the
    in-flight test.
+3b. Quiet but *finishing* (poll interval longer than the stall timeout) → exit 0,
+   not 124. Guards the inverse failure: a watchdog that turns a green run red is
+   worse than the wedge it replaces.
 4. Chatty but endless, `--hard-timeout 3` → exit 124 *despite* continuous output
    (proves the cap is independent of the stall clock).
 5. After a kill, the grandchild pid is gone (proves process-group reaping).

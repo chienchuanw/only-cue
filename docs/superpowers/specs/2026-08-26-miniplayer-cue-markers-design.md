@@ -39,10 +39,18 @@ is made against that number, not against the roomy main-window waveform.
 2. **Panel height stays 84pt.** No change to `MiniPlayerController`'s locked
    height or its config tests. The Mini Player's value is being small.
 3. **Which cues:** every cue of the active `MediaItem` whose `CuePointType`
-   has `isVisible == true`. **Identical in Cue mode and Show mode** — the
-   `showGoTypeID` filter is deliberately *not* applied, so the Mini Player
-   timeline always matches what the main window shows and the two can be read
-   against each other.
+   has `isVisible == true` — the same flag that shows or hides a Type's lane in
+   the timeline breakdown (`TimelineBreakdownLayout`), so hiding a Type hides it
+   here too. **This deliberately does *not* match the waveform:**
+   `CueMarkersOverlay` ignores `isVisible` and draws every cue. The tick strip
+   is conceptually a compressed *breakdown*, not a compressed waveform — the
+   breakdown is where "which Types am I looking at right now" is already
+   expressed, and the Mini Player exists to replace exactly that overview when
+   the main window is out of the way. (Corrected 2026-08-26: the original
+   wording claimed the strip matched "what the main window shows", which is
+   only true of the breakdown lanes, not the waveform markers.)
+   **Identical in Cue mode and Show mode** — the `showGoTypeID` filter is
+   deliberately *not* applied.
 4. **Overlap:** none of it is managed. Ticks are drawn in time order and later
    ticks overdraw earlier ones, exactly like `CueMarkersOverlay`. **No bucketing,
    no merging, no "N cues here" affordance.** A dense stretch rendering as a
@@ -78,7 +86,9 @@ lyric markers, waveform, Windows.
 
 Derived by a pure function on `MiniPlayerModel`:
 
-1. Include a cue only if its `CuePointType` resolves and `isVisible == true`.
+1. Include a cue only if its `CuePointType` resolves and `isVisible == true`
+   (decision 3 — the breakdown-lane flag, not the waveform's rule). Because the
+   type must resolve, the emitted colour is non-optional.
 2. Skip cues whose `time` is outside `[0, duration]`. When `duration <= 0`, the
    layer draws nothing. (Out-of-range cue times are real — the `set-list-act-i`
    Figma mock itself has cue times exceeding the clip length. Clamping them to
@@ -95,7 +105,8 @@ Derived by a pure function on `MiniPlayerModel`:
   array of `(fraction, colorHex)` in time order. No new data plumbing —
   `MiniPlayerHostView` already receives `document.model.activeItem` and
   `cuePointTypes` (`MiniPlayerHostView.swift:25-33`).
-- **Rendering:** an **`Equatable` view wrapping a `Canvas`**, depending only on
+- **Rendering:** `MiniPlayerCueMarkers` — an **`Equatable` view wrapping a
+  `Canvas`**, depending only on
   the derived ticks and the geometry width — **never on `currentTime`**.
   This matters: `MiniPlayerHostView` re-derives its model on every render and
   `engine.currentTime` advances every frame, so the progress row repaints at
@@ -113,8 +124,8 @@ Derived by a pure function on `MiniPlayerModel`:
 
 ## Verification strategy
 
-- **Unit tests (TDD, red first, separate commit):** `MiniPlayerModelTests` — the
-  four data rules above: `isVisible` filtering, out-of-range skipping,
+- **Unit tests (TDD, red first, separate commit):** `MiniPlayerCueMarkerTests`
+  — the four data rules above: `isVisible` filtering, out-of-range skipping,
   `duration <= 0`, fraction math, color resolution + fallback, time ordering.
 - **Screenshot test:** `MiniPlayerViewScreenshotTests` gains a **dense-cue**
   state, producing a PNG that pairs with the dense Figma mock for the
@@ -132,9 +143,15 @@ separately from the implementation commits. Issue checklist order:
 1. ~~Figma proposal frame approved by the maintainer~~ — **done 2026-08-26**.
 2. ~~Rewrite the canonical Mini Player frames with the approved marker layer.~~
    — **done 2026-08-26** (`581:3020`, `583:3020`).
-3. Failing `MiniPlayerModelTests` → derivation → green.
-4. `Canvas` tick layer + z-order + accessibility hint (+ zh-Hant string).
-5. Dense-state screenshot baseline; Figma↔app comparison.
+3. ~~Failing `MiniPlayerModelTests` → derivation → green.~~ — **done
+   2026-08-26**, as `MiniPlayerCueMarkerTests` (its own file; folding it into
+   `MiniPlayerModelTests` breached SwiftLint's `type_body_length`).
+4. ~~`Canvas` tick layer + z-order + accessibility hint (+ zh-Hant string).~~
+   — **done 2026-08-26** (`OnlyCue/UI/MiniPlayerCueMarkers.swift`; hint
+   `"Cue markers: %lld"` → `"Cue 標記：%lld"`).
+5. ~~Dense-state screenshot baseline; Figma↔app comparison.~~ — **done
+   2026-08-26** (`miniplayer-dense-dark`). The comparison confirmed decision 7's
+   recorded trade-off: cool ticks on the indigo fill keep position, lose colour.
 
 **Known drift, deliberately not fixed here:** the Figma Mini Player frames are
 620×118, while the shipped panel is 660–1000 wide × 84 tall. Unrelated to this

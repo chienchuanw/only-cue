@@ -74,9 +74,15 @@ therefore ~20× the healthy inter-event gap and cannot happen on a healthy run.
 
 ### `scripts/ci/run-with-watchdog.sh`
 
-A single-purpose, project-agnostic wrapper. Splitting it out of `ci.yml` is what
-makes it *testable* — YAML `run:` blocks cannot be unit-tested, and this logic
-must not itself become a new way for CI to hang.
+A single-purpose wrapper. Splitting it out of `ci.yml` is what makes it
+*testable* — YAML `run:` blocks cannot be unit-tested, and this logic must not
+itself become a new way for CI to hang.
+
+Its *kill* logic is generic (byte growth on a log), but its *diagnostics* are
+deliberately not: it greps for XCTest's `Test Case '...' started` and emits
+GitHub Actions `::error::` annotations. That framework awareness is the point —
+"which test was in flight" is the whole value — it just means this is a CI
+helper for this repo, not a general-purpose `timeout(1)`.
 
 ```
 run-with-watchdog.sh --log PATH [--stall-timeout SEC] [--hard-timeout SEC]
@@ -123,9 +129,10 @@ where wrapping it in `caffeinate` deterministically broke automation-mode init �
 the watchdog deliberately does not alter argv, environment, or the process's
 controlling terminal. It only observes a file and, on timeout, sends a signal.
 
-After each attempt, `ci.yml` counts connection losses from `$RAW_LOG` and emits
-the `::warning::`. That stays in `ci.yml` rather than the script so the script
-holds no OnlyCue-specific knowledge.
+After each attempt, `ci.yml` counts connection losses from the attempt's log and
+emits the `::warning::`. That stays in `ci.yml` rather than the script because it
+is a *policy* call the spec deliberately left unsettled (decision 2) — keeping
+the script to one verb, "kill on silence", is what makes its tests meaningful.
 
 `$RAW_LOG` lives under `$RUNNER_TEMP` and is uploaded via `actions/upload-artifact`
 on failure, so a wedge is post-mortem-able without SSHing to the Mac mini.

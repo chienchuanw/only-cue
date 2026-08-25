@@ -24,25 +24,27 @@ final class MiniPlayerController {
     /// Test seam: the live panel, so its AppKit configuration (focus-on-click,
     /// title-bar-only move, resizable width) can be asserted (#761).
     var configuredPanel: NSPanel? { panel }
-    /// Marks every Mini Player panel so the front-most-among-minis lookup can
-    /// filter `NSApp.orderedWindows` precisely (not "any NSPanel").
+    /// Marks every Mini Player panel so it can be picked out of the app's
+    /// windows (tests, debugging).
     private static let panelIdentifier = NSUserInterfaceItemIdentifier("OnlyCue.MiniPlayerPanel")
 
     var isVisible: Bool { panel?.isVisible ?? false }
 
-    /// Whether this controller's panel is the front-most *visible* Mini Player
-    /// panel across all open documents. This is the multi-document scoping
-    /// discriminator used by the key-monitor gate (#743): the Mini Player panels
-    /// are non-activating (they never become key), so key-window state cannot
-    /// pick a winner — front-to-back order in `NSApp.orderedWindows` does.
-    /// TRUE for the sole panel when a single document is open, and still TRUE
-    /// while this document's main window is collapsed (the panel stays visible).
-    var isFrontmostMiniPanel: Bool {
-        guard let panel, panel.isVisible else { return false }
-        let visibleMiniPanels = NSApp.orderedWindows.filter {
-            $0.identifier == Self.panelIdentifier && $0.isVisible
-        }
-        return visibleMiniPanels.first === panel
+    /// Whether this controller's panel currently holds keyboard focus — the
+    /// discriminator the key-monitor gate keys off (#743).
+    ///
+    /// Since #761 the panel is a `KeyableMiniPanel`, so "the operator selected
+    /// the Mini Player" *is* key-window state. Asked of AppKit at event time
+    /// rather than cached, so it cannot go stale. Being key also implies the
+    /// panel is visible, that this document's main window is not key, and that
+    /// no other document's panel is focused — the multi-document scoping the
+    /// gate needs.
+    ///
+    /// This replaces a front-to-back lookup over `NSApp.orderedWindows` that
+    /// could never succeed: `orderedWindows` excludes `NSPanel` objects, so the
+    /// filter always came back empty and the gate never opened.
+    var isKeyMiniPanel: Bool {
+        panel?.isKeyWindow == true
     }
 
     /// Invoked when the user dismisses the panel via its close (X) button.

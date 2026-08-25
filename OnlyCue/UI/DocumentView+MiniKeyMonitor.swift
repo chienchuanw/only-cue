@@ -20,15 +20,15 @@ extension DocumentView {
     /// Returns true when the event was handled (and should be swallowed).
     private func handleMiniKey(_ event: NSEvent) -> Bool {
         // Derive the gate inputs from THIS document's own live objects:
-        // - `mainWindowIsKey` is this document's own window (not any app window),
-        //   so a collapsed / behind main window reads false and the gate can fire.
-        // - `isFrontmostDocument` is the panel's front-to-back rank among all
-        //   Mini Player panels, which stays true when this document is the sole
-        //   or front document even while its main window is collapsed, and yields
-        //   to another document whose panel is in front.
+        // - `isFrontmostDocument` is the panel's own key-window state: the
+        //   operator selects the Mini Player and the keyboard follows focus.
+        //   That scopes multi-document for free (only one panel app-wide can be
+        //   key) and stays true while this document's main window is collapsed.
+        // - `panelVisible` / `mainWindowIsKey` are implied by a key panel and
+        //   kept as belt-and-braces.
         guard MiniPlaybackGate.shouldHandle(
             panelVisible: miniController.isVisible,
-            isFrontmostDocument: miniController.isFrontmostMiniPanel,
+            isFrontmostDocument: miniController.isKeyMiniPanel,
             mainWindowIsKey: documentWindow?.isKeyWindow == true
         ) else { return false }
 

@@ -21,6 +21,13 @@ struct MiniPlayerModel: Equatable {
         var countdown: String
     }
 
+    /// One read-only tick on the progress bar (#773): where to draw it (0…1 of
+    /// the bar's width) and the cue type's colour.
+    struct CueMarker: Equatable {
+        var fraction: Double
+        var colorHex: String
+    }
+
     var isEmpty: Bool
     var mediaName: String
     var timecode: String
@@ -34,6 +41,10 @@ struct MiniPlayerModel: Equatable {
     var progress: Double
     /// The clip length as `mm:ss`, shown at the progress bar's trailing end.
     var lengthLabel: String
+    /// The active clip's cues as colored ticks on the progress bar, in time
+    /// order (#773). Read-only overview — never filtered by Show mode, so the
+    /// Mini Player timeline always matches the main window's.
+    var cueMarkers: [CueMarker]
 
     /// Shown as the media name when no clip is active.
     static let emptyMediaName = "No media loaded"
@@ -67,18 +78,16 @@ struct MiniPlayerModel: Equatable {
                 nextCue: nil,
                 showsGo: showsGo,
                 progress: 0,
-                lengthLabel: clockLabel(0)
+                lengthLabel: clockLabel(0),
+                cueMarkers: []
             )
         }
 
-        func colorHex(_ typeID: CuePointType.ID) -> String? {
-            cuePointTypes.first { $0.id == typeID }?.colorHex
-        }
         func display(_ cue: Cue) -> CueDisplay {
             CueDisplay(
                 number: cue.cueNumber.map(FadeTime.formatNumber),
                 name: cue.name,
-                colorHex: colorHex(cue.typeID)
+                colorHex: cuePointTypes.first { $0.id == cue.typeID }?.colorHex
             )
         }
 
@@ -105,8 +114,31 @@ struct MiniPlayerModel: Equatable {
             nextCue: next,
             showsGo: showsGo,
             progress: progressFraction(currentTime, duration),
-            lengthLabel: clockLabel(duration)
+            lengthLabel: clockLabel(duration),
+            cueMarkers: cueMarkers(item.cues, duration: duration, cuePointTypes: cuePointTypes)
         )
+    }
+
+    /// The progress bar's tick layer (#773). A cue earns a tick only when its
+    /// type resolves and is visible, and when its time actually falls inside the
+    /// clip — out-of-range times are dropped rather than clamped, which would
+    /// pile a fake thick tick onto the bar's edge. Coincident cues are kept as
+    /// separate ticks: a dense stretch is *meant* to read as a solid block.
+    static func cueMarkers(
+        _ cues: [Cue],
+        duration: TimeInterval,
+        cuePointTypes: [CuePointType]
+    ) -> [CueMarker] {
+        guard duration > 0 else { return [] }
+        return cues
+            .filter { (0...duration).contains($0.time) }
+            .sorted { $0.time < $1.time }
+            .compactMap { cue in
+                guard let type = cuePointTypes.first(where: { $0.id == cue.typeID }), type.isVisible else {
+                    return nil
+                }
+                return CueMarker(fraction: cue.time / duration, colorHex: type.colorHex)
+            }
     }
 
     /// Playhead position as a 0…1 fraction, clamped; 0 when the length is

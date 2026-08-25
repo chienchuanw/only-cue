@@ -33,12 +33,6 @@ jobs:
     runs-on: [self-hosted, macos, arm64]
     timeout-minutes: 90
 
-    env:
-      # Raw, un-xcbeautified xcodebuild output, one file per UI-test attempt.
-      # Uploaded on failure so a wedge can be diagnosed from the run page
-      # instead of by SSHing to the Mac mini (#775).
-      UI_TEST_LOG_DIR: ${{ runner.temp }}/ui-test-logs
-
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -160,6 +154,12 @@ jobs:
       # behavior (menus, mode/inspector swaps, layout geometry, hit-testing).
       - name: UI tests (behavioral)
         if: github.event_name == 'push'
+        env:
+          # Raw, un-xcbeautified xcodebuild output, one file per attempt.
+          # Uploaded on failure so a wedge can be diagnosed from the run page
+          # instead of by SSHing to the Mac mini (#775). Set per step, not on
+          # the job: the `runner` context is not available in a job-level `env`.
+          UI_TEST_LOG_DIR: ${{ runner.temp }}/ui-test-logs
         run: |
           set -o pipefail
           # NOTE: a caffeinate wrapper and -test-timeouts-enabled were tried in
@@ -269,6 +269,8 @@ jobs:
       # Screenshot / Figma-baseline generators — manual only (#548).
       - name: UI baseline screenshots
         if: github.event_name == 'workflow_dispatch'
+        env:
+          UI_TEST_LOG_DIR: ${{ runner.temp }}/ui-test-logs
         run: |
           set -o pipefail
           # Same XCUITest app-launch path as the behavioral step above, so it is
@@ -309,7 +311,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: ui-test-raw-logs-${{ github.run_id }}-${{ github.run_attempt }}
-          path: ${{ env.UI_TEST_LOG_DIR }}
+          path: ${{ runner.temp }}/ui-test-logs
           if-no-files-found: ignore
           retention-days: 14
 

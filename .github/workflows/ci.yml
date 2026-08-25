@@ -33,6 +33,12 @@ jobs:
     runs-on: [self-hosted, macos, arm64]
     timeout-minutes: 90
 
+    env:
+      # Raw, un-xcbeautified xcodebuild output, one file per UI-test attempt.
+      # Uploaded on failure so a wedge can be diagnosed from the run page
+      # instead of by SSHing to the Mac mini (#775).
+      UI_TEST_LOG_DIR: ${{ runner.temp }}/ui-test-logs
+
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -49,6 +55,11 @@ jobs:
 
       - name: SwiftLint (strict)
         run: swiftlint lint --strict --reporter github-actions-logging
+
+      # The UI-test watchdog is the thing standing between a wedge and a wasted
+      # 90-minute job, so it gets its own tests and they gate every run (~15s).
+      - name: CI script tests
+        run: scripts/ci/run-with-watchdog.test.sh
 
       - name: Generate Xcode project
         run: xcodegen generate
@@ -174,7 +185,32 @@ jobs:
             sleep 5
           }
 
+          # The wedge (#775): xcodebuild stays alive with its stdout dead and
+          # never exits, so the `|| { reset; retry; }` below — which only fires
+          # on a non-zero *exit* — was unreachable and the job burned all 90
+          # minutes. The watchdog kills a stalled run and exits 124, which makes
+          # that fallback reachable for the first time.
+          #
+          # 600s stall / 2400s cap: the healthy step measured 7m04s (run
+          # 32882261391) to 28m44s (run 32879198538) on the same commit — the
+          # spread is `-test-iterations 2` retries. A healthy run emits test
+          # events at ~2/min, so 10 minutes of silence cannot happen. Two capped
+          # attempts plus the earlier steps come to ~82 min, inside the 90-min
+          # job timeout.
+          #
+          # The xcodebuild invocation below is unchanged: #605 showed that
+          # wrapping it (with `caffeinate`) deterministically broke
+          # automation-mode init, so the watchdog only observes a log file and
+          # signals on timeout.
+          # Each attempt gets its own raw log: the watchdog truncates its log on
+          # start, so a shared path would let the retry erase the wedged
+          # attempt's output — the one worth reading.
           run_ui_tests() {
+            scripts/ci/run-with-watchdog.sh \
+              --log "$UI_TEST_LOG_DIR/attempt-$1.log" \
+              --stall-timeout 600 \
+              --hard-timeout 2400 \
+              -- \
             xcodebuild test-without-building \
               -project OnlyCue.xcodeproj \
               -scheme OnlyCue \
@@ -198,13 +234,32 @@ jobs:
               | xcbeautify --renderer github-actions
           }
 
+          # Session-degradation signal (#775). Before the wedge, ~17 of ~38 test
+          # attempts failed with "Lost connection to the application", so the
+          # session was already sick. Reported only — we have no baseline for a
+          # sane abort threshold yet, and a new abort path would be a second new
+          # way for this step to fail. Tracked for a follow-up.
+          report_connection_losses() {
+            losses="$(grep -c 'Lost connection to the application' "$UI_TEST_LOG_DIR/attempt-$1.log" 2>/dev/null || true)"
+            if [ -n "$losses" ] && [ "$losses" -gt 0 ]; then
+              echo "::warning::attempt $1: ${losses} 'Lost connection to the application' event(s) — the XCUITest session may be degraded (#775)."
+            fi
+          }
+
+          mkdir -p "$UI_TEST_LOG_DIR"
+
           # One-shot whole-step retry: absorbs the runner-init flake without
           # hiding regressions (a genuine failure still fails twice).
-          run_ui_tests || {
+          run_ui_tests 1 || {
+            report_connection_losses 1
             echo "::warning::UI tests failed once — resetting XCUITest daemons and retrying once (absorbs the automation-mode init flake; see #605, #595)."
             reset_ui_daemons
-            run_ui_tests
+            run_ui_tests 2
+            status=$?
+            report_connection_losses 2
+            exit "$status"
           }
+          report_connection_losses 1
 
       # Screenshot / Figma-baseline generators — manual only (#548).
       - name: UI baseline screenshots
@@ -231,6 +286,16 @@ jobs:
             -test-iterations 2 \
             -retry-tests-on-failure \
             | xcbeautify --renderer github-actions
+
+      # Only on failure: a green run's raw log is ~50 MB of noise nobody reads.
+      - name: Upload raw UI-test logs
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ui-test-raw-logs-${{ github.run_id }}-${{ github.run_attempt }}
+          path: ${{ env.UI_TEST_LOG_DIR }}
+          if-no-files-found: ignore
+          retention-days: 14
 
       - name: Clear CI marker
         if: always()

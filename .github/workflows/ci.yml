@@ -186,10 +186,11 @@ jobs:
           }
 
           # The wedge (#775): xcodebuild stays alive with its stdout dead and
-          # never exits, so the `|| { reset; retry; }` below — which only fires
-          # on a non-zero *exit* — was unreachable and the job burned all 90
-          # minutes. The watchdog kills a stalled run and exits 124, which makes
-          # that fallback reachable for the first time.
+          # never exits, so the retry below — which only fires on a non-zero
+          # *exit* — was unreachable and the job burned all 90 minutes. The
+          # watchdog kills a stalled run and exits 124, making that retry
+          # reachable for the first time. Rationale for how it kills without
+          # disturbing xcodebuild lives in the script's own header.
           #
           # 600s stall / 2400s cap: the healthy step measured 7m04s (run
           # 32882261391) to 28m44s (run 32879198538) on the same commit — the
@@ -198,10 +199,6 @@ jobs:
           # attempts plus the earlier steps come to ~82 min, inside the 90-min
           # job timeout.
           #
-          # The xcodebuild invocation below is unchanged: #605 showed that
-          # wrapping it (with `caffeinate`) deterministically broke
-          # automation-mode init, so the watchdog only observes a log file and
-          # signals on timeout.
           # Each attempt gets its own raw log: the watchdog truncates its log on
           # start, so a shared path would let the retry erase the wedged
           # attempt's output — the one worth reading.
@@ -250,22 +247,40 @@ jobs:
 
           # One-shot whole-step retry: absorbs the runner-init flake without
           # hiding regressions (a genuine failure still fails twice).
-          run_ui_tests 1 || {
-            report_connection_losses 1
+          #
+          # Written as an explicit single-exit flow rather than
+          # `run_ui_tests || { ...; run_ui_tests; }`: GitHub runs `run:` blocks
+          # under `bash -e`, which aborts the block the moment the retry fails,
+          # skipping any reporting that follows it inside the `||` branch.
+          status=0
+          run_ui_tests 1 || status=$?
+          report_connection_losses 1
+
+          if [ "$status" -ne 0 ]; then
             echo "::warning::UI tests failed once — resetting XCUITest daemons and retrying once (absorbs the automation-mode init flake; see #605, #595)."
             reset_ui_daemons
-            run_ui_tests 2
-            status=$?
+            status=0
+            run_ui_tests 2 || status=$?
             report_connection_losses 2
-            exit "$status"
-          }
-          report_connection_losses 1
+          fi
+
+          exit "$status"
 
       # Screenshot / Figma-baseline generators — manual only (#548).
       - name: UI baseline screenshots
         if: github.event_name == 'workflow_dispatch'
         run: |
           set -o pipefail
+          # Same XCUITest app-launch path as the behavioral step above, so it is
+          # exposed to the same #775 wedge — and a wedge here would monopolise
+          # the single self-hosted runner for 90 minutes. No retry: a baseline
+          # refresh is manual and re-dispatching is a click.
+          mkdir -p "$UI_TEST_LOG_DIR"
+          scripts/ci/run-with-watchdog.sh \
+            --log "$UI_TEST_LOG_DIR/baseline.log" \
+            --stall-timeout 600 \
+            --hard-timeout 2400 \
+            -- \
           xcodebuild test-without-building \
             -project OnlyCue.xcodeproj \
             -scheme OnlyCue \
@@ -288,8 +303,9 @@ jobs:
             | xcbeautify --renderer github-actions
 
       # Only on failure: a green run's raw log is ~50 MB of noise nobody reads.
+      # Only where the logs exist: PR runs never reach a step that writes them.
       - name: Upload raw UI-test logs
-        if: failure()
+        if: failure() && github.event_name != 'pull_request'
         uses: actions/upload-artifact@v4
         with:
           name: ui-test-raw-logs-${{ github.run_id }}-${{ github.run_attempt }}

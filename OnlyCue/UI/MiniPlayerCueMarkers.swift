@@ -21,7 +21,7 @@ struct MiniPlayerCueMarkers: View, Equatable {
     let width: CGFloat
 
     private static let lineWidth: CGFloat = 2
-    static let height: CGFloat = 9
+    private static let height: CGFloat = 9
 
     var body: some View {
         Canvas { context, _ in

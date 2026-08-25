@@ -34,9 +34,11 @@ final class MiniPlaybackGateTests: XCTestCase {
     // These express the four behaviours the live wiring must satisfy, using the
     // same `Inputs` struct the key monitor builds from its live objects
     // (`panelVisible` = miniController.isVisible, `isFrontmostDocument` =
-    // miniController.isFrontmostMiniPanel, `mainWindowIsKey` =
-    // documentWindow?.isKeyWindow). The window-key read itself is runtime-only
-    // (needs a live NSWindow), but the decision from these derived inputs is not.
+    // miniController.isKeyMiniPanel, `mainWindowIsKey` =
+    // documentWindow?.isKeyWindow). Feeding the struct booleans cannot catch a
+    // wrong *derivation* — that is how the `NSApp.orderedWindows` lookup (which
+    // excludes NSPanel, so it always returned false) shipped green. The derived
+    // reads are covered by MiniPlayerControllerTests + the Mini Player UI test.
 
     func test_collapsedMainWindow_panelVisibleFrontmost_handles() {
         // Collapsed main window -> its own window is not key; panel stays visible

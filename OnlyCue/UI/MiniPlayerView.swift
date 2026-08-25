@@ -59,6 +59,8 @@ struct MiniPlayerView: View {
                     Capsule()
                         .fill(DS.Color.cueIndigo)
                         .frame(width: max(0, width * model.progress), height: 4)
+                    MiniPlayerCueMarkers(markers: model.cueMarkers, width: width)
+                        .equatable()
                     if !model.isEmpty {
                         Circle()
                             .fill(DS.Color.cueIndigo)
@@ -86,6 +88,10 @@ struct MiniPlayerView: View {
         .accessibilityElement()
         .accessibilityLabel("Playback progress")
         .accessibilityValue(model.lengthLabel)
+        // The ticks themselves are undrawn to VoiceOver — dozens of focusable
+        // stops on one bar would be worse than useless. The count is the part
+        // that carries meaning (#773).
+        .accessibilityHint("Cue markers: \(model.cueMarkers.count)")
         .accessibilityIdentifier("miniPlayerProgress")
     }
 

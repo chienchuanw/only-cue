@@ -701,6 +701,16 @@
         }
       }
     },
+    "Cue markers: %lld": {
+      "localizations": {
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cue 標記：%lld"
+          }
+        }
+      }
+    },
     "Cue name": {
       "localizations": {
         "zh-Hant": {

@@ -100,6 +100,7 @@ T = {
     "Cue List Import Failed": "Cue List 匯入失敗",
     "Cue Mode": "Cue 模式",
     "Cue Type %lld": "Cue 類型 %lld",
+    "Cue markers: %lld": "Cue 標記：%lld",
     "Cue name": "Cue 名稱",
     "Cues": "Cue",
     "Delete": "刪除",

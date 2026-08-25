@@ -61,10 +61,15 @@ A local `NSEvent` key-down monitor, installed by `MiniPlayerController` while it
 visible and removed on hide/close. On each key-down it runs a **pure decision**:
 
 1. **Gate (Approach A — yield to the main window):** handle only when
-   - this controller's panel is visible **and** it is the frontmost document's Mini Player
-     (reuse the existing frontmost gate), **and**
+   - this controller's panel **is the key window** — since #761 the panel is keyable, so
+     "the operator selected the Mini Player" *is* key-window state, and only one window
+     app-wide can hold it (multi-document scoping comes for free), **and**
    - the current key window is **not** a main document window (main window is
      minimized / hidden / behind).
+
+   Do **not** resolve this by window ordering: `NSApp.orderedWindows` omits every
+   `NSPanel`, so a front-to-back lookup over it can never match the panel — that is
+   #770, which shipped dead through three releases.
    Otherwise return the event unchanged, so the main window's existing SwiftUI shortcuts
    (which already yield to inline text fields) handle it.
 2. **Resolve:** match the event's key + modifiers against `KeymapStore.keymap`; accept

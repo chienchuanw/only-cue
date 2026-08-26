@@ -134,9 +134,24 @@ jobs:
       - name: Mark CI active
         run: touch "/tmp/.onlycue-ci-active"
 
-      # UI tests run on push to dev/main only, NOT on PR. Historically the
-      # self-hosted runner ran on the maintainer's primary workstation, where
-      # an unattended desktop (overnight, screen locked, fast-user-switched)
+      # UI tests run on push to dev only — not on PR, and not on main.
+      #
+      # Skipping main is #776. A release fast-forwards dev into main, so main
+      # receives a commit dev has already run the full UI suite on. With one
+      # self-hosted runner the two runs serialize, and on 03f5576 that cost the
+      # runner ~3 hours for one commit while a PR queued behind both. Re-running
+      # a by-construction-identical tree produces no new signal.
+      #
+      # The trade-off, accepted deliberately: a release commit no longer carries
+      # its own green UI run — it inherits dev's. main keeps lint + build + unit
+      # (~1 min) as a "did the fast-forward land a buildable tree" check, which
+      # is the only thing a fast-forward can actually break. If main ever starts
+      # receiving commits that are NOT already on dev (a hotfix landed straight
+      # onto main, say), this condition must be revisited.
+      #
+      # Skipping PRs is older. Historically the self-hosted runner ran on the
+      # maintainer's primary workstation, where an unattended desktop
+      # (overnight, screen locked, fast-user-switched)
       # left the macOS window-server unable to foreground a freshly-launched
       # app from the XCTRunner process — every UI test then failed with
       # "Failed to activate application (current state: Running Background)"
@@ -153,7 +168,7 @@ jobs:
       # below. This keeps the push path to the UI tests that actually gate
       # behavior (menus, mode/inspector swaps, layout geometry, hit-testing).
       - name: UI tests (behavioral)
-        if: github.event_name == 'push'
+        if: github.event_name == 'push' && github.ref != 'refs/heads/main'
         env:
           # Raw, un-xcbeautified xcodebuild output, one file per attempt.
           # Uploaded on failure so a wedge can be diagnosed from the run page

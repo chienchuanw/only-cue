@@ -1161,6 +1161,16 @@
         }
       }
     },
+    "Go to cue": {
+      "localizations": {
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "跳至此 Cue"
+          }
+        }
+      }
+    },
     "Goto": {
       "localizations": {
         "zh-Hant": {

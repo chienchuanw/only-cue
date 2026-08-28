@@ -103,10 +103,12 @@ extension UITestSeedHandler {
             // Tagged / untagged / tagged, so one document covers both halves of
             // the rule: a tag draws a stripe, and an untagged clip draws none
             // (#782). Cue-free — the tag is purely a sidebar affordance.
+            let palette = CuePointType.defaultPalette
+            let clip = Fixture.silentAudioShort
             return [
-                colorTagged("Opening.wav", isActive: true, colorHex: CuePointType.defaultPalette[3]),
-                colorTagged("Interlude.wav", isActive: false, colorHex: nil),
-                colorTagged("Finale.wav", isActive: false, colorHex: CuePointType.defaultPalette[5])
+                ItemSeed(displayName: "Opening.wav", kind: .audio, duration: 30, fixture: clip, isActive: true, colorHex: palette[3]),
+                ItemSeed(displayName: "Interlude.wav", kind: .audio, duration: 30, fixture: clip),
+                ItemSeed(displayName: "Finale.wav", kind: .audio, duration: 30, fixture: clip, colorHex: palette[5])
             ]
         case "three-cues-1-3-6":
             return [legacyAudioItem(cues: [CueSpec(time: 1), CueSpec(time: 3), CueSpec(time: 6)])]
@@ -152,19 +154,6 @@ extension UITestSeedHandler {
     }
 
     // MARK: - Plans
-
-    /// One cue-free short-audio clip for the `media-color-tags` seed — the tag
-    /// is a sidebar affordance, so nothing else about the clip matters.
-    private static func colorTagged(_ name: String, isActive: Bool, colorHex: String?) -> ItemSeed {
-        ItemSeed(
-            displayName: name,
-            kind: .audio,
-            duration: 30,
-            fixture: .silentAudioShort,
-            isActive: isActive,
-            colorHex: colorHex
-        )
-    }
 
     /// The single-item shape every pre-`set-list` seed used: one short-audio
     /// clip, active, with the legacy bundled-fixture display name.

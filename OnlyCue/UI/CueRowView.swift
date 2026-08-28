@@ -34,26 +34,25 @@ struct CueRowView: View {
     @State private var infoDraft = ""
     @FocusState private var infoFieldFocused: Bool
 
-    @State private var isHoveringStripe = false
-
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
             HStack(spacing: CueListLayout.rowHorizontalSpacing) {
                 numberCell
                     .cueColumnFrame(width: numberColumnWidth, range: CueListColumnWidths.numberRange)
-                    .disabled(isReadOnly)
                     .accessibilityIdentifier("cueNumber-\(cue.id)")
 
                 nameField
                     .frame(maxWidth: .infinity, alignment: .leading)
-                    .disabled(isReadOnly)
                     .accessibilityIdentifier("cueName-\(cue.id)")
 
                 infoCell
                     .cueColumnFrame(width: infoColumnWidth, range: CueListColumnWidths.infoRange)
-                    .disabled(isReadOnly)
                     .accessibilityIdentifier("cueInfo-\(cue.id)")
             }
+            // Scoped to the columns rather than the whole row (#786): the
+            // stripe is an overlay on the enclosing `VStack`, so it stays live
+            // in Show mode and remains the way to move the playhead.
+            .disabled(isReadOnly)
             if let numberError {
                 Text(numberError)
                     .font(.caption2)
@@ -95,19 +94,12 @@ struct CueRowView: View {
             .frame(width: CueListLayout.typeStripeWidth)
             .frame(width: CueListLayout.typeStripeHitWidth, alignment: .leading)
             .contentShape(Rectangle())
-            .onTapGesture { handleStripeTap() }
+            .onTapGesture { handleTap(on: .stripe) }
+            // `.set()` rather than the push/pop pair `WaveformZoomMagnifier`
+            // uses (the `ColumnResizeHandle` idiom): list rows recycle out from
+            // under a hovering pointer, and there is no cursor stack to leak.
             .onHover { hovering in
-                isHoveringStripe = hovering
-                if hovering { NSCursor.pointingHand.push() } else { NSCursor.pop() }
-            }
-            .onDisappear {
-                // List rows recycle out from under a hovering pointer, which
-                // would leak the pushed cursor (the `WaveformZoomMagnifier`
-                // guard, which matters more here because rows churn).
-                if isHoveringStripe {
-                    NSCursor.pop()
-                    isHoveringStripe = false
-                }
+                if hovering { NSCursor.pointingHand.set() } else { NSCursor.arrow.set() }
             }
             .help("Go to cue")
             // A bare `Rectangle` is not in the AX tree at all, so the handle
@@ -141,7 +133,7 @@ struct CueRowView: View {
                 .foregroundStyle(cue.cueNumber == nil ? DS.Color.textTertiary : DS.Color.textPrimary)
                 .frame(maxWidth: .infinity, alignment: .leading)
                 .contentShape(Rectangle())
-                .onTapGesture { handleFieldTap(beginNumberEdit) }
+                .onTapGesture { handleTap(on: .field, beginEditing: beginNumberEdit) }
         }
     }
 
@@ -169,7 +161,7 @@ struct CueRowView: View {
                 .truncationMode(.tail)
                 .frame(maxWidth: .infinity, alignment: .leading)
                 .contentShape(Rectangle())
-                .onTapGesture { handleFieldTap(beginRename) }
+                .onTapGesture { handleTap(on: .field, beginEditing: beginRename) }
         }
     }
 
@@ -197,33 +189,25 @@ struct CueRowView: View {
                 .truncationMode(.tail)
                 .frame(maxWidth: .infinity, alignment: .leading)
                 .contentShape(Rectangle())
-                .onTapGesture { handleFieldTap(beginInfoEdit) }
+                .onTapGesture { handleTap(on: .field, beginEditing: beginInfoEdit) }
         }
     }
 
     // MARK: - Tap routing
 
-    /// A plain click types here; ⌘/⇧ means "I am selecting, not typing".
-    private func handleFieldTap(_ beginEditing: () -> Void) {
-        switch CueRowTap.intent(target: .field, isExtending: Self.isExtending, isReadOnly: isReadOnly) {
+    /// A plain click in a column types there, a plain click on the stripe
+    /// seeks, and ⌘/⇧ anywhere means "I am selecting, not doing either".
+    private func handleTap(on target: CueRowTapTarget, beginEditing: () -> Void = {}) {
+        switch CueRowTap.intent(target: target, isExtending: Self.isExtending, isReadOnly: isReadOnly) {
         case .beginEdit:
             onSelect()
             beginEditing()
         case .extendSelection:
             onExtendSelection()
-        case .selectAndSeek, .ignored:
-            break
-        }
-    }
-
-    private func handleStripeTap() {
-        switch CueRowTap.intent(target: .stripe, isExtending: Self.isExtending, isReadOnly: isReadOnly) {
         case .selectAndSeek:
             onSelect()
             onSeek()
-        case .extendSelection:
-            onExtendSelection()
-        case .beginEdit, .ignored:
+        case .ignored:
             break
         }
     }
@@ -249,7 +233,7 @@ struct CueRowView: View {
     }
 
     private func commitRename() {
-        if let newName = CueRowNameCommit.value(draft: draftName, current: cue.name) {
+        if let newName = CueInspectorCommit.commitCueName(draft: draftName, current: cue.name) {
             onRename(newName)
         }
         isEditingName = false
@@ -260,15 +244,18 @@ struct CueRowView: View {
         isEditingName = false
     }
 
-    private func beginNumberEdit() {
+    private func resetNumberDraft() {
         numberDraft = cue.cueNumber.map(FadeTime.formatNumber) ?? ""
         numberError = nil
+    }
+
+    private func beginNumberEdit() {
+        resetNumberDraft()
         isEditingNumber = true
     }
 
     private func cancelNumberEdit() {
-        numberDraft = cue.cueNumber.map(FadeTime.formatNumber) ?? ""
-        numberError = nil
+        resetNumberDraft()
         isEditingNumber = false
     }
 

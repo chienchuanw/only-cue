@@ -44,4 +44,15 @@ enum CueInspectorCommit {
         }
         return .parsed(parsed)
     }
+
+    /// The name to write, or `nil` when nothing changed (#786).
+    ///
+    /// Whitespace is trimmed, and an empty result is a legal name: #661 made an
+    /// empty cue name render blank rather than "Untitled", so clearing the
+    /// field is an edit the user meant. No `revert` case — unlike a fade time
+    /// or a cue number, any string parses.
+    static func commitCueName(draft: String, current: String) -> String? {
+        let trimmed = draft.trimmingCharacters(in: .whitespacesAndNewlines)
+        return trimmed == current ? nil : trimmed
+    }
 }

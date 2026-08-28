@@ -48,17 +48,3 @@ enum CueRowTap {
         }
     }
 }
-
-/// Whether an inline name edit should be written, and as what (#786).
-enum CueRowNameCommit {
-
-    /// The value to write, or `nil` when nothing changed.
-    ///
-    /// Whitespace is trimmed, and an empty result is a legal name: #661 made an
-    /// empty cue name render blank rather than "Untitled", so clearing the
-    /// field is an edit the user meant.
-    static func value(draft: String, current: String) -> String? {
-        let trimmed = draft.trimmingCharacters(in: .whitespacesAndNewlines)
-        return trimmed == current ? nil : trimmed
-    }
-}

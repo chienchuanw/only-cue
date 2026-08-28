@@ -76,4 +76,38 @@ final class CueInspectorCommitTests: XCTestCase {
         let outcome = CueInspectorCommit.commitCueNumber(draft: "1.5", current: nil)
         XCTAssertEqual(outcome, .parsed(1.5))
     }
+
+    // MARK: - Cue name (#786)
+    //
+    // With a single click starting an edit and focus loss committing it,
+    // deciding *whether* a rename should be written is worth proving without
+    // driving the UI.
+
+    func test_commitCueName_unchanged_commitsNothing() {
+        XCTAssertNil(CueInspectorCommit.commitCueName(draft: "Verse", current: "Verse"))
+    }
+
+    func test_commitCueName_trimsSurroundingWhitespace() {
+        XCTAssertEqual(CueInspectorCommit.commitCueName(draft: "  Chorus  ", current: "Verse"), "Chorus")
+    }
+
+    func test_commitCueName_whitespaceOnlyEdit_commitsNothing() {
+        XCTAssertNil(CueInspectorCommit.commitCueName(draft: "  Verse  ", current: "Verse"))
+    }
+
+    /// #661 made an empty cue name render blank rather than "Untitled", so
+    /// clearing the field is a legal edit. The pre-#786 `commitRename()`
+    /// swallowed it (`guard !trimmed.isEmpty`), which is the behaviour this
+    /// test exists to prevent from coming back.
+    func test_commitCueName_clearingAName_commitsAnEmptyString() {
+        XCTAssertEqual(CueInspectorCommit.commitCueName(draft: "", current: "Verse"), "")
+    }
+
+    func test_commitCueName_treatsWhitespaceAsEmpty() {
+        XCTAssertEqual(CueInspectorCommit.commitCueName(draft: "   ", current: "Verse"), "")
+    }
+
+    func test_commitCueName_clearingAnAlreadyEmptyName_commitsNothing() {
+        XCTAssertNil(CueInspectorCommit.commitCueName(draft: "   ", current: ""))
+    }
 }

@@ -65,4 +65,34 @@ extension CueCommands {
         }
         undoManager?.setActionName("Edit Media")
     }
+
+    /// Set (or clear, with `colorHex == nil`) a clip's colour tag, undoably.
+    /// The tag is purely visual — a leading stripe in the media panel (#782).
+    ///
+    /// No-op when the item ID is unknown, when the value is unchanged, or when
+    /// `colorHex` is not one of `CuePointType.defaultPalette`. The palette
+    /// guard is what keeps arbitrary or malformed hex out of the model: the
+    /// picker only ever offers those eight, so anything else means a caller bug.
+    /// (A *hand-edited* `.cuelist` bypasses this and is handled at render time
+    /// instead — `Color(hex:)` returns nil, so the row draws no stripe.)
+    static func setMediaColor(
+        itemID: MediaItem.ID,
+        colorHex: String?,
+        document: CueListDocument,
+        undoManager: UndoManager?
+    ) {
+        guard let index = document.model.items.firstIndex(where: { $0.id == itemID }) else { return }
+        if let colorHex, !CuePointType.defaultPalette.contains(colorHex) { return }
+        let previous = document.model.items[index].colorHex
+        guard previous != colorHex else { return }
+
+        undoManager?.beginUndoGrouping()
+        defer { undoManager?.endUndoGrouping() }
+
+        document.model.items[index].colorHex = colorHex
+        undoManager?.registerUndo(withTarget: document) { doc in
+            Self.setMediaColor(itemID: itemID, colorHex: previous, document: doc, undoManager: undoManager)
+        }
+        undoManager?.setActionName(colorHex == nil ? "Clear Color" : "Set Color")
+    }
 }

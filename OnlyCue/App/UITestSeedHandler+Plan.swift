@@ -53,6 +53,8 @@ extension UITestSeedHandler {
         var isActive: Bool = false
         var cues: [CueSpec] = []
         var lyrics: Lyrics = .empty
+        /// The user's colour tag (#782); `nil` leaves the clip untagged.
+        var colorHex: String?
     }
 
     /// The cue-point-type palette for a seed. The populated `set-list-act-i`
@@ -96,6 +98,15 @@ extension UITestSeedHandler {
                 ItemSeed(displayName: "2_break.m4a", kind: .audio, duration: 30, fixture: .silentAudioShort, isActive: true, cues: []),
                 ItemSeed(displayName: "1_intro.m4a", kind: .audio, duration: 30, fixture: .silentAudioShort, cues: []),
                 ItemSeed(displayName: "3_finale.m4a", kind: .audio, duration: 30, fixture: .silentAudioShort, cues: [])
+            ]
+        case "media-color-tags":
+            // Tagged / untagged / tagged, so one document covers both halves of
+            // the rule: a tag draws a stripe, and an untagged clip draws none
+            // (#782). Cue-free — the tag is purely a sidebar affordance.
+            return [
+                colorTagged("Opening.wav", isActive: true, colorHex: CuePointType.defaultPalette[3]),
+                colorTagged("Interlude.wav", isActive: false, colorHex: nil),
+                colorTagged("Finale.wav", isActive: false, colorHex: CuePointType.defaultPalette[5])
             ]
         case "three-cues-1-3-6":
             return [legacyAudioItem(cues: [CueSpec(time: 1), CueSpec(time: 3), CueSpec(time: 6)])]
@@ -141,6 +152,19 @@ extension UITestSeedHandler {
     }
 
     // MARK: - Plans
+
+    /// One cue-free short-audio clip for the `media-color-tags` seed — the tag
+    /// is a sidebar affordance, so nothing else about the clip matters.
+    private static func colorTagged(_ name: String, isActive: Bool, colorHex: String?) -> ItemSeed {
+        ItemSeed(
+            displayName: name,
+            kind: .audio,
+            duration: 30,
+            fixture: .silentAudioShort,
+            isActive: isActive,
+            colorHex: colorHex
+        )
+    }
 
     /// The single-item shape every pre-`set-list` seed used: one short-audio
     /// clip, active, with the legacy bundled-fixture display name.

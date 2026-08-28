@@ -64,6 +64,24 @@ struct ItemRowView: View {
                 .opacity(ItemRowMetrics.pencilOpacity(isHovered: isHovered))
             }
         }
+        // Reserved on every row so tagging never shifts the text sideways —
+        // see `ItemRowMetrics.colorGutter`.
+        .padding(.leading, ItemRowMetrics.colorGutter)
+        // The user's colour tag (#782), same idiom as the cue list's type
+        // stripe. Deliberately *unlike* `CueRowView`, an untagged row draws
+        // nothing rather than falling back to `DS.Color.border`: in the cue
+        // list having a type is the normal state, here having a colour is the
+        // exception, and a grey stripe on every untagged row would stop the
+        // tagged ones from standing out at all.
+        .overlay(alignment: .leading) {
+            if let stripeColor {
+                Rectangle()
+                    .fill(stripeColor)
+                    .frame(width: ItemRowMetrics.colorStripeWidth)
+                    .accessibilityIdentifier("itemRowSwatch-\(item.id.uuidString)")
+                    .accessibilityLabel(colorLabel)
+            }
+        }
         .onHover { isHovered = $0 }
         // SwiftUI's `List { ForEach { … .tag(item.id) } }` wraps every row
         // in an accessibility container that, with a single
@@ -81,5 +99,20 @@ struct ItemRowView: View {
         case .audio: "waveform"
         case .video: "film"
         }
+    }
+
+    /// The tag colour, or nil when the clip is untagged — or when a hand-edited
+    /// `.cuelist` carries an unparseable hex, which degrades to untagged rather
+    /// than to a wrong colour.
+    private var stripeColor: Color? {
+        item.colorHex.flatMap { Color(hex: $0) }
+    }
+
+    /// Names the colour for VoiceOver, so the tag is perceivable without colour
+    /// vision. Falls back to the raw hex for a value outside the palette.
+    private var colorLabel: Text {
+        guard let hex = item.colorHex else { return Text(verbatim: "") }
+        guard let name = CuePointType.paletteName(forHex: hex) else { return Text(verbatim: hex) }
+        return Text(name)
     }
 }

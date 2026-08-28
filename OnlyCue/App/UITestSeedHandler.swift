@@ -104,7 +104,8 @@ enum UITestSeedHandler {
                         bookmarkData: bookmark
                     ),
                     cues: seed.cues.map { cue($0, types: types) },
-                    lyrics: seed.lyrics
+                    lyrics: seed.lyrics,
+                    colorHex: seed.colorHex
                 )
             )
         }

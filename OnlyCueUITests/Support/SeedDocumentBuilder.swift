@@ -26,6 +26,10 @@ enum SeedKey: String {
     /// Same populated sidebar with a video clip active so the preview pane shows
     /// video — drives the Video Project baseline (#417, Figma `318:1614`).
     case videoProject = "video-project"
+    /// Three media, the outer two carrying a colour tag and the middle one
+    /// untagged — so a single document proves both that a tag draws a stripe and
+    /// that an untagged clip draws none (#782).
+    case mediaColorTags = "media-color-tags"
     /// Three digit-named media + a cue type bound to hotkey "1", so a digit
     /// keypress must create a cue rather than type-select a media item (#750).
     case digitLeadingMediaTypeSelect = "digit-media-typeselect"

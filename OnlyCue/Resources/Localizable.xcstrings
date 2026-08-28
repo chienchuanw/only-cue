@@ -361,6 +361,16 @@
         }
       }
     },
+    "Blue": {
+      "localizations": {
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "藍色"
+          }
+        }
+      }
+    },
     "Both the .xml and its _PLUGIN.lua are written next to each other.": {
       "localizations": {
         "zh-Hant": {
@@ -1161,6 +1171,16 @@
         }
       }
     },
+    "Green": {
+      "localizations": {
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "綠色"
+          }
+        }
+      }
+    },
     "HH:MM:SS:FF": {
       "localizations": {
         "zh-Hant": {
@@ -1901,6 +1921,16 @@
         }
       }
     },
+    "Orange": {
+      "localizations": {
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "橘色"
+          }
+        }
+      }
+    },
     "Output device": {
       "localizations": {
         "zh-Hant": {
@@ -1927,6 +1957,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "在每個 Cue 暫停"
+          }
+        }
+      }
+    },
+    "Pink": {
+      "localizations": {
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "粉紅色"
           }
         }
       }
@@ -2081,6 +2121,16 @@
         }
       }
     },
+    "Purple": {
+      "localizations": {
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "紫色"
+          }
+        }
+      }
+    },
     "Push complete.": {
       "localizations": {
         "zh-Hant": {
@@ -2137,6 +2187,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "最近的訊息"
+          }
+        }
+      }
+    },
+    "Red": {
+      "localizations": {
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "紅色"
           }
         }
       }
@@ -2771,6 +2831,16 @@
         }
       }
     },
+    "Teal": {
+      "localizations": {
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "青色"
+          }
+        }
+      }
+    },
     "Telnet port": {
       "localizations": {
         "zh-Hant": {
@@ -3107,6 +3177,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "工作區名稱"
+          }
+        }
+      }
+    },
+    "Yellow": {
+      "localizations": {
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "黃色"
           }
         }
       }

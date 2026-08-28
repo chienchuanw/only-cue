@@ -32,6 +32,11 @@ struct MediaItem: Identifiable, Equatable {
     /// music-only muting, FILE readout, and detected badge don't vanish). nil
     /// until a successful detection or after Clear/relink. Schema v20.
     var rememberedLTC: StripedTimecodeTrack?
+    /// User-assigned colour tag shown as a leading stripe in the media panel
+    /// (#782). Canonical `"#RRGGBB"` drawn from `CuePointType.defaultPalette`;
+    /// `nil` (the default) means untagged and draws nothing. Purely visual —
+    /// it carries no meaning to playback, LTC, or the MA2 push. Schema v22.
+    var colorHex: String?
 }
 
 // MARK: - Codable
@@ -52,6 +57,7 @@ extension MediaItem: Codable {
         case ma2PushTarget
         case playsOriginalSourceAudio
         case rememberedLTC
+        case colorHex
     }
 
     init(from decoder: Decoder) throws {
@@ -68,6 +74,8 @@ extension MediaItem: Codable {
         playsOriginalSourceAudio = try container.decodeIfPresent(Bool.self, forKey: .playsOriginalSourceAudio) ?? false
         // v19 documents lack this key; default to nil (no remembered LTC).
         rememberedLTC = try container.decodeIfPresent(StripedTimecodeTrack.self, forKey: .rememberedLTC)
+        // v21 documents lack this key; default to nil (untagged).
+        colorHex = try container.decodeIfPresent(String.self, forKey: .colorHex)
     }
 
     func encode(to encoder: Encoder) throws {
@@ -82,6 +90,7 @@ extension MediaItem: Codable {
         try container.encodeIfPresent(ma2PushTarget, forKey: .ma2PushTarget)
         try container.encode(playsOriginalSourceAudio, forKey: .playsOriginalSourceAudio)
         try container.encodeIfPresent(rememberedLTC, forKey: .rememberedLTC)
+        try container.encodeIfPresent(colorHex, forKey: .colorHex)
     }
 }
 

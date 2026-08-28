@@ -42,7 +42,11 @@ final class ProjectModelMigrationV21Tests: XCTestCase {
     func test_v20ToV21_bumpsSchemaVersion() throws {
         let migrated = try ProjectModel.decode(from: Data(v20Doc().utf8))
         XCTAssertEqual(migrated.schemaVersion, ProjectModel.currentSchemaVersion)
-        XCTAssertEqual(ProjectModel.currentSchemaVersion, 21)
+        // Floor, not a pin: this test owns "v20 documents still load", not
+        // "the schema is exactly 21". The exact-version tripwire lives once, in
+        // ProjectModelTests, so a bump doesn't ripple through every migration
+        // suite. Matches the V20 suite's idiom.
+        XCTAssertGreaterThanOrEqual(ProjectModel.currentSchemaVersion, 21)
     }
 
     func test_v20ToV21_preservesIntExecutor() throws {

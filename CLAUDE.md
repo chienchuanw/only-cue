@@ -68,7 +68,7 @@ If you add a new source folder under `OnlyCue/`, add it as a `sources` path in `
 - `docs/superpowers/specs/` — approved specs.
 - `docs/superpowers/plans/` — implementation plans + reusable artifacts (issue body markdown, setup scripts).
 - `OnlyCue/` — app source, organized by subsystem:
-  - `App/` — entry point and lifecycle; `Document/` — `ProjectModel`, schema, and migrations (`ProjectModel.currentSchemaVersion` is the source of truth — v21 as of 2026-08-28); `Commands/` — the `CueCommands` mutation seam.
+  - `App/` — entry point and lifecycle; `Document/` — `ProjectModel`, schema, and migrations (`ProjectModel.currentSchemaVersion` is the source of truth — v22 as of 2026-08-28); `Commands/` — the `CueCommands` mutation seam.
   - `UI/` — SwiftUI views and the `DS` design-system tokens (`UI/DesignSystem/`); `Media/` — media import and waveform; `Tempo/` — tempo / beat grid.
   - Show-control integrations: `MA2/` (grandMA2), `MIDI/`, `OSC/`, `LTC/` (linear timecode).
   - `Update/` — in-app updates; `Resources/`, `Utilities/` — assets and shared helpers.

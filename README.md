@@ -50,6 +50,7 @@ It is built for real show-control workflows: SMPTE linear timecode generation an
 
 **Media & waveform**
 - Audio and video import, multiple media items per project with drag-reorder.
+- Color-tag any clip from its right-click menu — a leading stripe in the media panel, so a long list can be grouped at a glance.
 - Dual-envelope waveform (filled RMS body + peak outline) that streams in progressively for large files, with click-to-seek, a draggable playhead, and horizontal zoom to 64× with auto-follow during playback.
 - Music-only playback for files striped with timecode, plus an opt-in Split Channels view.
 

@@ -124,6 +124,7 @@ struct ItemListPane: View {
                     }
                     .disabled(revealURL == nil)
                     .accessibilityIdentifier("contextMenuShowInFinder")
+                    colorMenu(for: item)
                     Button("Send to grandMA2…") {
                         NotificationCenter.default.post(name: .sendToMA2Requested, object: item.id)
                     }
@@ -189,6 +190,50 @@ struct ItemListPane: View {
         // context-menu item. Kept wired for any responder that can still route it.
         .onDeleteCommand { deleteSelected() }
         .scrollContentBackground(.hidden)
+    }
+
+    /// The clip's colour tag as a context-menu submenu (#782).
+    ///
+    /// Built from an inline `Picker`, **not** `Button` + `Label(systemImage:)`:
+    /// on macOS SwiftUI silently drops the checkmark in the latter form, which
+    /// cost a full debugging cycle in #752. The picker's own selection state is
+    /// what draws the ✓ against the current colour.
+    ///
+    /// Every entry carries its name as text, so the menu is operable and
+    /// announceable without colour vision; the swatch is the decoration, not
+    /// the label.
+    @ViewBuilder
+    private func colorMenu(for item: MediaItem) -> some View {
+        Menu("Color") {
+            Picker("Color", selection: colorBinding(for: item)) {
+                Text("None").tag(String?.none)
+                ForEach(CuePointType.namedDefaultPalette, id: \.hex) { entry in
+                    Label {
+                        Text(entry.name)
+                    } icon: {
+                        CueColorSwatch(hex: entry.hex)
+                    }
+                    .tag(String?.some(entry.hex))
+                }
+            }
+            .pickerStyle(.inline)
+            .labelsHidden()
+        }
+        .accessibilityIdentifier("contextMenuMediaColor")
+    }
+
+    private func colorBinding(for item: MediaItem) -> Binding<String?> {
+        Binding(
+            get: { item.colorHex },
+            set: { newHex in
+                CueCommands.setMediaColor(
+                    itemID: item.id,
+                    colorHex: newHex,
+                    document: document,
+                    undoManager: undoManager
+                )
+            }
+        )
     }
 
     private var selectionBinding: Binding<MediaItem.ID?> {

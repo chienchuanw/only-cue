@@ -17,7 +17,8 @@ final class CueListSingleClickEditUITests: OnlyCueUITestCase {
 
         let readout = app.staticTexts["currentTimeReadout"]
         XCTAssertTrue(readout.waitForExistence(timeout: 15), "the transport readout must be present")
-        let timeBeforeEdit = readout.label
+        let timeBeforeEdit = Self.timecode(of: readout)
+        XCTAssertFalse(timeBeforeEdit.isEmpty, "the readout must report a timecode to compare against")
 
         let name = app.staticTexts["Lights Up"]
         XCTAssertTrue(name.waitForExistence(timeout: 10), "the seeded cue name must be present")
@@ -44,7 +45,7 @@ final class CueListSingleClickEditUITests: OnlyCueUITestCase {
         )
 
         XCTAssertEqual(
-            readout.label,
+            Self.timecode(of: readout),
             timeBeforeEdit,
             "editing a cue's name must not seek the playhead"
         )
@@ -58,24 +59,25 @@ final class CueListSingleClickEditUITests: OnlyCueUITestCase {
 
         let readout = app.staticTexts["currentTimeReadout"]
         XCTAssertTrue(readout.waitForExistence(timeout: 15), "the transport readout must be present")
-        let timeBeforeClick = readout.label
+        let timeBeforeClick = Self.timecode(of: readout)
 
-        // Cues are time-sorted, so the first row is "Lights Up" at 18s.
-        let stripe = app.descendants(matching: .any)
-            .matching(NSPredicate(format: "identifier BEGINSWITH 'cueRowSwatch-'"))
-            .firstMatch
+        // Cues are time-sorted, so the first stripe belongs to "Lights Up" at
+        // 18s. The stripe carries no identifier of its own — the row's
+        // `cueRow-<id>` propagates over it — so match on the label.
+        let stripe = app.buttons["Go to cue"].firstMatch
         XCTAssertTrue(stripe.waitForExistence(timeout: 10), "the cue-type stripe must be present")
 
         stripe.click()
 
-        let seeked = NSPredicate(format: "label != %@", timeBeforeClick)
+        let seeked = NSPredicate(format: "value != %@", timeBeforeClick)
         expectation(for: seeked, evaluatedWith: readout)
         waitForExpectations(timeout: 5) { error in
             XCTAssertNil(error, "clicking the colour stripe must seek the playhead")
         }
+        let timeAfterClick = Self.timecode(of: readout)
         XCTAssertTrue(
-            readout.label.contains("18"),
-            "the playhead must land on the cue's 18s mark, got \(readout.label)"
+            timeAfterClick.contains("18"),
+            "the playhead must land on the cue's 18s mark, got \(timeAfterClick)"
         )
 
         XCTAssertFalse(
@@ -89,5 +91,12 @@ final class CueListSingleClickEditUITests: OnlyCueUITestCase {
     private func waitForCueList(in app: XCUIApplication) throws {
         let pane = app.descendants(matching: .any).matching(identifier: "cueListPane").firstMatch
         XCTAssertTrue(pane.waitForExistence(timeout: 15), "the Set List seed must mount the cue list pane")
+    }
+
+    /// A SwiftUI `Text` publishes its string as the AX *value*, not the label —
+    /// reading `.label` here returns "" for every playhead position, which
+    /// makes an "unchanged" assertion pass without testing anything.
+    private static func timecode(of readout: XCUIElement) -> String {
+        readout.value as? String ?? ""
     }
 }

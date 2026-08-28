@@ -34,6 +34,12 @@ enum CueListLayout {
     /// row columns.
     static let rowLeadingGutter: CGFloat = DS.Space.xs / 2 + swatchDiameter + DS.Space.xs
 
+    /// Clickable width of the stripe (#786). The stripe is drawn 5pt wide but
+    /// is now the row's select/seek handle, so its hit area widens to fill the
+    /// gutter — and stops exactly there, because the `#` column's text starts
+    /// at `rowLeadingGutter` and a wider target would swallow its clicks.
+    static let typeStripeHitWidth: CGFloat = rowLeadingGutter
+
     /// Non-column horizontal cost of the header row: the 2 inter-column gaps
     /// (`rowHorizontalSpacing` each, for `# · Name · Info`) plus the leading
     /// swatch gutter and the trailing edge padding. The Name column is flexible
@@ -312,16 +318,12 @@ struct CueListPane: View {
                 .onDelete(perform: isReadOnly ? nil : deleteAtOffsets)
             }
             .onDeleteCommand { if !isReadOnly { deleteSelected() } }
-            .onChange(of: selection) { _, _ in
-                guard
-                    let id = soleSelectedID,
-                    let cue = cues.first(where: { $0.id == id })
-                else { return }
-                Task { await engine.seek(to: cue.time) }
-                withAnimation(.easeOut(duration: 0.2)) {
-                    proxy.scrollTo(id, anchor: .center)
-                }
-            }
+            // Selection no longer seeks (#786): a plain click inside a column
+            // now means "type here", and typing must never move the playhead.
+            // Seeking moved to the row's colour stripe. The centring scroll went
+            // with it — recentring the row you just clicked yanks the list out
+            // from under the caret.
+            //
             // Keep the playhead's current cue visible, but only while playing —
             // scrolling during editing would yank the list (#671). Fires once
             // per cue-section crossing (currentCueID changes), not per frame.
@@ -350,6 +352,15 @@ struct CueListPane: View {
             onCommitNotes: { newNotes in
                 CueCommands.setNotes(cueId: cue.id, to: newNotes, document: document, undoManager: undoManager)
             },
+            onSelect: { selection = [cue.id] },
+            onExtendSelection: {
+                if selection.contains(cue.id) {
+                    selection.remove(cue.id)
+                } else {
+                    selection.insert(cue.id)
+                }
+            },
+            onSeek: { Task { await engine.seek(to: cue.time) } },
             isReadOnly: isReadOnly
         )
     }

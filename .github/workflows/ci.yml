@@ -136,39 +136,69 @@ jobs:
 
       # UI tests run on push to dev only — not on PR, and not on main.
       #
-      # Skipping main is #776. A release fast-forwards dev into main, so main
-      # receives a commit dev has already run the full UI suite on. With one
-      # self-hosted runner the two runs serialize, and on 03f5576 that cost the
-      # runner ~3 hours for one commit while a PR queued behind both. Re-running
-      # a by-construction-identical tree produces no new signal.
+      # Skipping main is #776. A release fast-forwards dev into main, so the
+      # same commit is pushed twice. `concurrency.group` keys on the ref, so the
+      # two runs land in different groups and do not cancel each other; with one
+      # runner they serialize. On 03f5576 the pair occupied the runner from
+      # 15:22Z to 17:24Z (~2h01m wall) and a PR queued behind both. Most of that
+      # was the #775 wedge, not the duplication — the duplicate itself cost
+      # ~30 min there, and 7m04s on the healthy 0.28.0 release (run
+      # 32882261391). 7 to 29 minutes of re-running a by-construction-identical
+      # tree is the actual saving.
       #
-      # The trade-off, accepted deliberately: a release commit no longer carries
-      # its own green UI run — it inherits dev's. main keeps lint + build + unit
-      # (~1 min) as a "did the fast-forward land a buildable tree" check, which
-      # is the only thing a fast-forward can actually break. If main ever starts
-      # receiving commits that are NOT already on dev (a hotfix landed straight
-      # onto main, say), this condition must be revisited.
+      # Written as an allowlist rather than `!= refs/heads/main`: the two are
+      # equivalent only because `on.push.branches` happens to be exactly
+      # [main, dev]. Adding a release/* or hotfix/* branch to that trigger would
+      # silently re-enable the full suite on it. This states the intent instead.
+      #
+      # Two things this gives up, both accepted deliberately:
+      #
+      # 1. A release commit no longer earns its own green UI run — it inherits
+      #    dev's. That is a convention, not a guarantee. `cancel-in-progress`
+      #    kills a dev run when the next dev push lands, so a bump FF'd while a
+      #    later merge supersedes its dev run leaves the released commit with no
+      #    green UI run anywhere, and nothing surfaces that. Observed once in the
+      #    last 8 releases (31319081463, superseded after 4m36s). The other 6
+      #    non-green dev runs in that window were all the #775 90-minute wedge,
+      #    now fixed, so the forward-looking base rate should be much better than
+      #    the history suggests. `docs/release.md` step 2 ("make sure dev is
+      #    green") is the only enforcement.
+      # 2. main is no longer a meaningful build gate. It keeps lint + build +
+      #    unit, but that is ~18s total on a fast-forward and the Build step is a
+      #    2-second DerivedData cache hit — it verifies the cache is warm, not
+      #    that the tree compiles. It is kept because it is nearly free, not
+      #    because it proves anything. The shipped artifact is gated by
+      #    scripts/build-release.sh (Release config, warnings-as-errors) run
+      #    locally per docs/release.md; CI only ever builds Debug.
+      #
+      # If main starts receiving commits that are not already on dev — CLAUDE.md
+      # permits direct pushes for repo-metadata work — those commits get no UI
+      # coverage and nothing detects it. Revisit this condition if that changes.
       #
       # Skipping PRs is older. Historically the self-hosted runner ran on the
-      # maintainer's primary workstation, where an unattended desktop
-      # (overnight, screen locked, fast-user-switched)
-      # left the macOS window-server unable to foreground a freshly-launched
-      # app from the XCTRunner process — every UI test then failed with
-      # "Failed to activate application (current state: Running Background)"
-      # regardless of retry budget or timeout cap (see PR #387 for the
-      # 7-attempt rabbit hole that established this). The runner now lives on
-      # a dedicated, always-logged-in Mac mini, which should remove that
-      # constraint; re-enabling UI tests on PRs is a separate decision, gated
-      # on confirming the dedicated session stays foregroundable. Until then
-      # the push-only gate stays. Per-test XCTSkipIf guards still apply when
-      # UI tests do run; they just no longer sit behind a 90-min flake budget
-      # on every PR.
+      # maintainer's primary workstation, where an unattended desktop (overnight,
+      # screen locked, fast-user-switched) left the macOS window-server unable to
+      # foreground a freshly-launched app from the XCTRunner process — every UI
+      # test then failed with "Failed to activate application (current state:
+      # Running Background)" regardless of retry budget or timeout cap (see PR
+      # #387 for the 7-attempt rabbit hole that established this). The runner
+      # now lives on a dedicated Mac mini, but that did not remove the
+      # constraint: #775 reproduced the identical failure there — 39 activation
+      # failures across 21 tests, every one of them at the app-launch helper —
+      # purely because the mini's screen was locked. The same commit re-ran
+      # green in 7m07s once it was unlocked (run 32938412653). The real
+      # precondition is an unlocked, on-console session, and nothing in CI
+      # enforces or reports it. Re-enabling UI tests on PRs stays a separate
+      # decision, gated on that. Until then the push-only gate stays. Per-test
+      # XCTSkipIf guards still apply when UI tests do run; they just no longer
+      # sit behind a 90-min flake budget on every PR.
+      #
       # Behavioral UI tests only (#548): the screenshot / Figma-baseline classes
       # are excluded here and run via the manual "UI baseline screenshots" step
       # below. This keeps the push path to the UI tests that actually gate
       # behavior (menus, mode/inspector swaps, layout geometry, hit-testing).
       - name: UI tests (behavioral)
-        if: github.event_name == 'push' && github.ref != 'refs/heads/main'
+        if: github.event_name == 'push' && github.ref == 'refs/heads/dev'
         env:
           # Raw, un-xcbeautified xcodebuild output, one file per attempt.
           # Uploaded on failure so a wedge can be diagnosed from the run page
@@ -320,7 +350,10 @@ jobs:
             | xcbeautify --renderer github-actions
 
       # Only on failure: a green run's raw log is ~50 MB of noise nobody reads.
-      # Only where the logs exist: PR runs never reach a step that writes them.
+      # The event guard skips PR runs, which never reach a step that writes
+      # these logs. `if-no-files-found: ignore` covers the other two cases where
+      # the directory is absent: a main push (#776 skips the UI step there) and
+      # a dev failure earlier than the UI step.
       - name: Upload raw UI-test logs
         if: failure() && github.event_name != 'pull_request'
         uses: actions/upload-artifact@v4

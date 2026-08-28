@@ -43,25 +43,16 @@ final class CueRowContextMenuUITests: OnlyCueUITestCase {
         app.typeKey(.escape, modifierFlags: [])
     }
 
-    /// Right-click the row, with a coordinate-based fallback for the headless
-    /// CI hit-test path (`row.rightClick()` is flaky there — copied verbatim
-    /// from `MediaEditSheetUITests.openEditSheet`). Skips the test if neither
-    /// approach surfaces the menu.
+    /// Settle, select the row, then right-click it via the shared harness helper.
     private func openContextMenu(on row: XCUIElement, in app: XCUIApplication) throws {
         Thread.sleep(forTimeInterval: 1)
         row.click()
         Thread.sleep(forTimeInterval: 0.3)
-
-        let probe = app.menuItems["cueRowContextEditNotes"]
-
-        row.rightClick()
-        if probe.waitForExistence(timeout: 2) { return }
-
-        let coord = row.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5))
-        coord.rightClick()
-        if probe.waitForExistence(timeout: 2) { return }
-
-        throw XCTSkip("Right-click did not surface the cue row context menu on this host (known CI hit-test flake).")
+        try openContextMenu(
+            on: row,
+            probe: app.menuItems["cueRowContextEditNotes"],
+            describedAs: "cue row context menu"
+        )
     }
 
     // MARK: - Helpers

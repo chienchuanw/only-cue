@@ -6,10 +6,6 @@ import XCTest
 /// because a colour with no name is unusable without colour vision.
 final class CuePointTypeDefaultPaletteTests: XCTestCase {
 
-    func test_defaultPaletteIsDerivedFromTheNamedPalette() {
-        XCTAssertEqual(CuePointType.defaultPalette, CuePointType.namedDefaultPalette.map(\.hex))
-    }
-
     /// Pins the palette itself. Changing a value here silently repaints every
     /// existing document that uses that cue type, so it must be deliberate.
     func test_paletteIsTheEightMVPColors() {

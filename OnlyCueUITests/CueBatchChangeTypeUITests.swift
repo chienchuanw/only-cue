@@ -52,19 +52,14 @@ final class CueBatchChangeTypeUITests: OnlyCueUITestCase {
         app.typeKey(.escape, modifierFlags: [])
     }
 
-    /// Right-click the row to reveal its context menu, with a coordinate-based
-    /// fallback for the headless CI hit-test path. Skips the test if neither
-    /// approach surfaces the menu (copied from `CueRowContextMenuUITests`).
+    /// Right-click the row via the shared harness helper. No select-first warm-up
+    /// here on purpose — this suite has already built up a multi-row selection
+    /// and a stray click would collapse it.
     private func openContextMenu(on row: XCUIElement, in app: XCUIApplication) throws {
-        let probe = app.menuItems["cueRowContextEditNotes"]
-
-        row.rightClick()
-        if probe.waitForExistence(timeout: 2) { return }
-
-        let coord = row.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5))
-        coord.rightClick()
-        if probe.waitForExistence(timeout: 2) { return }
-
-        throw XCTSkip("Right-click did not surface the cue row context menu on this host (known CI hit-test flake).")
+        try openContextMenu(
+            on: row,
+            probe: app.menuItems["cueRowContextEditNotes"],
+            describedAs: "cue row context menu"
+        )
     }
 }

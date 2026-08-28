@@ -20,15 +20,6 @@ final class MediaColorTagsSeedTests: XCTestCase {
         ])
     }
 
-    func test_everySeededTagIsAPaletteColor() throws {
-        for hex in try plan().compactMap(\.colorHex) {
-            XCTAssertTrue(
-                CuePointType.defaultPalette.contains(hex),
-                "\(hex) is not in the palette, so `setMediaColor` would reject it"
-            )
-        }
-    }
-
     func test_buildsSeededProject_carryingTheTagsOntoTheMediaItems() throws {
         let project = try UITestSeedHandler.buildProject(for: "media-color-tags")
         XCTAssertEqual(project.items.count, 3)

@@ -86,6 +86,30 @@ class OnlyCueUITestCase: XCTestCase {
         return app
     }
 
+    /// Right-clicks `element` and waits for `probe` to appear, falling back to a
+    /// coordinate-based right-click at the element's center — the headless CI
+    /// hit-test path where `XCUIElement.rightClick()` alone does not land.
+    /// Throws `XCTSkip` if neither surfaces the menu.
+    ///
+    /// Deliberately does no click/select warm-up of its own: a caller that has
+    /// built up a multi-row selection would have it collapsed by one. Callers
+    /// that want the warm-up do it themselves before calling.
+    ///
+    /// - Parameter probe: a menu item the caller knows the menu contains, used
+    ///   purely as the "did the menu open" signal. Prefer a long-standing item
+    ///   over the one under test, so a *missing* item reads as a real failure
+    ///   rather than as "the menu never opened".
+    func openContextMenu(on element: XCUIElement, probe: XCUIElement, describedAs what: String) throws {
+        element.rightClick()
+        if probe.waitForExistence(timeout: 2) { return }
+
+        let coord = element.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5))
+        coord.rightClick()
+        if probe.waitForExistence(timeout: 2) { return }
+
+        throw XCTSkip("Right-click did not surface the \(what) on this host (known CI hit-test flake).")
+    }
+
     /// Waits for the seeded document window (`UITestSeedHandler` writes it as
     /// `seed-<UUID>.cuelist`). State restoration is disabled at launch, but
     /// scoping queries to this window still guards against any stray document.

@@ -73,13 +73,15 @@ struct ItemRowView: View {
         // list having a type is the normal state, here having a colour is the
         // exception, and a grey stripe on every untagged row would stop the
         // tagged ones from standing out at all.
+        // A hand-edited `.cuelist` carrying an unparseable hex degrades to
+        // untagged rather than to a wrong colour.
         .overlay(alignment: .leading) {
-            if let stripeColor {
+            if let hex = item.colorHex, let color = Color(hex: hex) {
                 Rectangle()
-                    .fill(stripeColor)
+                    .fill(color)
                     .frame(width: ItemRowMetrics.colorStripeWidth)
                     .accessibilityIdentifier("itemRowSwatch-\(item.id.uuidString)")
-                    .accessibilityLabel(colorLabel)
+                    .accessibilityLabel(colorLabel(for: hex))
             }
         }
         .onHover { isHovered = $0 }
@@ -101,17 +103,9 @@ struct ItemRowView: View {
         }
     }
 
-    /// The tag colour, or nil when the clip is untagged — or when a hand-edited
-    /// `.cuelist` carries an unparseable hex, which degrades to untagged rather
-    /// than to a wrong colour.
-    private var stripeColor: Color? {
-        item.colorHex.flatMap { Color(hex: $0) }
-    }
-
     /// Names the colour for VoiceOver, so the tag is perceivable without colour
     /// vision. Falls back to the raw hex for a value outside the palette.
-    private var colorLabel: Text {
-        guard let hex = item.colorHex else { return Text(verbatim: "") }
+    private func colorLabel(for hex: String) -> Text {
         guard let name = CuePointType.paletteName(forHex: hex) else { return Text(verbatim: hex) }
         return Text(name)
     }

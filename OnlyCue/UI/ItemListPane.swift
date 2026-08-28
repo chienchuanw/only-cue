@@ -202,7 +202,6 @@ struct ItemListPane: View {
     /// Every entry carries its name as text, so the menu is operable and
     /// announceable without colour vision; the swatch is the decoration, not
     /// the label.
-    @ViewBuilder
     private func colorMenu(for item: MediaItem) -> some View {
         Menu("Color") {
             Picker("Color", selection: colorBinding(for: item)) {

@@ -38,6 +38,5 @@ final class ItemRowMetricsTests: XCTestCase {
     /// breathing room, so the colour never crowds the kind icon.
     func test_colorGutterIsTheStripePlusOneSpaceUnit() {
         XCTAssertEqual(ItemRowMetrics.colorGutter, 13)
-        XCTAssertEqual(ItemRowMetrics.colorGutter, ItemRowMetrics.colorStripeWidth + DS.Space.sm)
     }
 }

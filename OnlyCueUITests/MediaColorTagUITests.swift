@@ -23,9 +23,7 @@ final class MediaColorTagUITests: OnlyCueUITestCase {
         let app = launchApp(seed: .mediaColorTags)
         let window = try waitForSeedWindow(in: app)
 
-        let rows = window.descendants(matching: .any)
-            .matching(NSPredicate(format: "identifier == 'itemRow'"))
-        XCTAssertTrue(rows.firstMatch.waitForExistence(timeout: 15), "Seed should display media rows.")
+        let rows = try mediaRows(in: window)
         XCTAssertEqual(rows.count, 3, "The media-color-tags seed has three clips.")
 
         let swatches = window.descendants(matching: .any)
@@ -44,12 +42,18 @@ final class MediaColorTagUITests: OnlyCueUITestCase {
         let app = launchApp(seed: .mediaColorTags)
         let window = try waitForSeedWindow(in: app)
 
-        let row = window.descendants(matching: .any)
-            .matching(NSPredicate(format: "identifier == 'itemRow'"))
-            .firstMatch
-        XCTAssertTrue(row.waitForExistence(timeout: 15), "Seed should display media rows.")
+        let row = try mediaRows(in: window).firstMatch
+        Thread.sleep(forTimeInterval: 1)
+        row.click()
+        Thread.sleep(forTimeInterval: 0.3)
+        // Probe on the long-standing "Edit Media…" item, so a missing *Color*
+        // item reads as a real failure rather than as "the menu never opened".
+        try openContextMenu(
+            on: row,
+            probe: app.menuItems["contextMenuEditMedia"],
+            describedAs: "media row context menu"
+        )
 
-        try openContextMenu(on: row, in: app)
         XCTAssertTrue(
             app.menuItems["contextMenuMediaColor"].exists,
             "Right-click must reveal the 'Color' submenu."
@@ -58,24 +62,10 @@ final class MediaColorTagUITests: OnlyCueUITestCase {
         app.typeKey(.escape, modifierFlags: [])
     }
 
-    /// Right-click with a coordinate-based fallback, mirroring
-    /// `CueRowContextMenuUITests.openContextMenu`. Probes on the long-standing
-    /// "Edit Media…" item so a missing *Color* item reads as a real failure
-    /// rather than as "the menu never opened".
-    private func openContextMenu(on row: XCUIElement, in app: XCUIApplication) throws {
-        Thread.sleep(forTimeInterval: 1)
-        row.click()
-        Thread.sleep(forTimeInterval: 0.3)
-
-        let probe = app.menuItems["contextMenuEditMedia"]
-
-        row.rightClick()
-        if probe.waitForExistence(timeout: 2) { return }
-
-        let coord = row.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5))
-        coord.rightClick()
-        if probe.waitForExistence(timeout: 2) { return }
-
-        throw XCTSkip("Right-click did not surface the media row context menu on this host (known CI hit-test flake).")
+    private func mediaRows(in window: XCUIElement) throws -> XCUIElementQuery {
+        let rows = window.descendants(matching: .any)
+            .matching(NSPredicate(format: "identifier == 'itemRow'"))
+        XCTAssertTrue(rows.firstMatch.waitForExistence(timeout: 15), "Seed should display media rows.")
+        return rows
     }
 }

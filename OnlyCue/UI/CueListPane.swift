@@ -318,11 +318,8 @@ struct CueListPane: View {
                 .onDelete(perform: isReadOnly ? nil : deleteAtOffsets)
             }
             .onDeleteCommand { if !isReadOnly { deleteSelected() } }
-            // Selection no longer seeks (#786): a plain click inside a column
-            // now means "type here", and typing must never move the playhead.
-            // Seeking moved to the row's colour stripe. The centring scroll went
-            // with it — recentring the row you just clicked yanks the list out
-            // from under the caret.
+            // Selecting a cue deliberately does not seek (#786) — only the
+            // row's colour stripe does. Do not re-add it here.
             //
             // Keep the playhead's current cue visible, but only while playing —
             // scrolling during editing would yank the list (#671). Fires once
@@ -352,14 +349,10 @@ struct CueListPane: View {
             onCommitNotes: { newNotes in
                 CueCommands.setNotes(cueId: cue.id, to: newNotes, document: document, undoManager: undoManager)
             },
+            // Same shape as the timeline's marker taps (`DocumentView`'s
+            // `onSelectCue` / `onToggleCue`), over the same selection set.
             onSelect: { selection = [cue.id] },
-            onExtendSelection: {
-                if selection.contains(cue.id) {
-                    selection.remove(cue.id)
-                } else {
-                    selection.insert(cue.id)
-                }
-            },
+            onExtendSelection: { selection.formSymmetricDifference([cue.id]) },
             onSeek: { Task { await engine.seek(to: cue.time) } },
             isReadOnly: isReadOnly
         )

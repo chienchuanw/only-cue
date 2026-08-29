@@ -11,16 +11,16 @@ Run on a clean user account with a freshly installed DMG. Use bundled fixtures `
 3. Press space → audio plays, playhead line moves across the waveform with a floating HH:MM:SS label, time readout advances.
 4. Drag the playhead line on the audio waveform → playback pauses, the line follows the cursor; release → playback resumes from the new position. Drag again while paused → playback stays paused after release.
 5. Press `M` three times at different points → 3 cues appear in the list and as markers on the waveform.
-6. Double-click cue #2 name → rename to `Chorus` → press enter → list updates.
+6. Single-click cue #2's name → the caret lands in the field → rename to `Chorus` → press enter → list updates and the playhead has not moved.
 7. Drag cue #2's waveform marker → its time field updates live; release → list reflects the new time.
-8. Click cue #1 in the list → playhead jumps to its time; pressing space resumes from there.
+8. Click cue #1's colour stripe in the list → playhead jumps to its time; pressing space resumes from there.
 9. `⌘Z` → last edit undone. `⌘⇧Z` → redone. Repeat across mixed edits (rename + retime + delete).
 10. `⌘S` → save as `Show.cuelist` to Desktop. Quit the app.
 11. Re-launch → File → Open Recent → `Show.cuelist` → media reloads via bookmark, all cues intact, time fields match.
 12. Repeat steps 2–11 with `clip.mp4` to validate the video path (preview pane shows picture stacked above a waveform strip; cue markers drag and seek on the strip; playhead line and scrub work on the strip just like on audio).
 13. Move `sample.mp3` to a new folder, then reopen `Show.cuelist` → app surfaces a "Relink media…" alert; relinking restores playback.
 14. Multi-import: drag `sample.mp3` and `clip.mp4` together onto the sidebar → both appear as items in drop order; the first one becomes active and loads in the preview. Add a cue to item 1, click item 2, add a different cue → switching back shows item 1's cues unchanged. Drag item 2 above item 1 in the sidebar, save and reopen → order persists. Press ⌫ on the active item → it is removed and selection advances; `⌘Z` restores both the item and the prior active selection.
-15. Waveform zoom: with a ≥ 60 s media item active, pinch outward on the waveform → bars grow, a horizontal scroll bar appears, cue markers and the playhead remain time-aligned. Press `⌘0` → returns to fit-width. Press `⌘=` three times, then space → playhead moves to ~80% of the viewport then auto-scrolls forward so the playhead lands at ~20%. Click a cue in the cue list → seek snaps the playhead back into view. Switch to a different sidebar item → zoom resets to 1×. Confirm the playhead line is visibly thinner than before (1pt vs 2pt).
+15. Waveform zoom: with a ≥ 60 s media item active, pinch outward on the waveform → bars grow, a horizontal scroll bar appears, cue markers and the playhead remain time-aligned. Press `⌘0` → returns to fit-width. Press `⌘=` three times, then space → playhead moves to ~80% of the viewport then auto-scrolls forward so the playhead lands at ~20%. Click a cue's colour stripe in the cue list → seek snaps the playhead back into view. Switch to a different sidebar item → zoom resets to 1×. Confirm the playhead line is visibly thinner than before (1pt vs 2pt).
 
 If any step fails, the MVP is not done.
 

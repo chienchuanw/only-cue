@@ -13,7 +13,7 @@ A **thin slice** of the cue-planning workflow. Everything below should work end-
 | 5 | Cue list panel | Right-side list showing `#`, name, time, color swatch |
 | 6 | Add cue at playhead | `M` key or button; appends to list |
 | 7 | Edit cue | Inline rename, recolor, retype time, delete |
-| 8 | Click cue → seek | Tapping a row moves playhead to that cue's time |
+| 8 | Click cue stripe → seek | Tapping a row's leading colour stripe moves playhead to that cue's time (the text columns start an edit instead) |
 | 9 | Cue markers on waveform | Draw on timeline; drag to retime; click to seek |
 | 10 | Save / Open | `.cuelist` JSON document via `DocumentGroup` |
 | 11 | Reopen restores media | Stored security-scoped bookmark resolves on open |

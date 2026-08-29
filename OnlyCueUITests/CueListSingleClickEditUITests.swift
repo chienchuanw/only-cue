@@ -51,6 +51,38 @@ final class CueListSingleClickEditUITests: OnlyCueUITestCase {
         )
     }
 
+    /// Focus-loss commit (#786) means Return can fire `commitRename` twice: once
+    /// from `onSubmit`, then again when tearing down the `TextField` drops
+    /// focus. `CueCommands.mutateCues` registers an undo group unconditionally,
+    /// so a second write would cost the user a second Cmd-Z to get their name
+    /// back. One Cmd-Z must be enough.
+    func test_renameThenUndo_revertsInASingleUndo() throws {
+        let app = launchApp(seed: .setListActI)
+        try waitForCueList(in: app)
+
+        let name = app.staticTexts["Lights Up"]
+        XCTAssertTrue(name.waitForExistence(timeout: 10), "the seeded cue name must be present")
+
+        name.click()
+        XCTAssertTrue(
+            app.textFields.firstMatch.waitForExistence(timeout: 3),
+            "a single click on the Name cell must open its text field"
+        )
+        app.typeKey("a", modifierFlags: .command)
+        app.typeText("Rehearsal\r")
+        XCTAssertTrue(
+            app.staticTexts["Rehearsal"].waitForExistence(timeout: 5),
+            "committing the edit must rename the cue"
+        )
+
+        app.typeKey("z", modifierFlags: .command)
+
+        XCTAssertTrue(
+            app.staticTexts["Lights Up"].waitForExistence(timeout: 5),
+            "one Cmd-Z must restore the original name — a second undo entry means the rename committed twice"
+        )
+    }
+
     /// The stripe is the row's handle: it is what still selects and seeks once
     /// the three columns have been given over to text entry.
     func test_singleClickOnColourStripe_seeksToTheCue() throws {
@@ -63,8 +95,12 @@ final class CueListSingleClickEditUITests: OnlyCueUITestCase {
 
         // Cues are time-sorted, so the first stripe belongs to "Lights Up" at
         // 18s. The stripe carries no identifier of its own — the row's
-        // `cueRow-<id>` propagates over it — so match on the label.
-        let stripe = app.buttons["Go to cue"].firstMatch
+        // `cueRow-<id>` propagates over it — so match on element type plus that
+        // inherited identifier. Not on the label: "Go to cue" is localized
+        // (zh-Hant "跳至此 Cue"), so a label query fails under any other locale.
+        let stripe = app.buttons
+            .matching(NSPredicate(format: "identifier BEGINSWITH 'cueRow-'"))
+            .firstMatch
         XCTAssertTrue(stripe.waitForExistence(timeout: 10), "the cue-type stripe must be present")
 
         stripe.click()

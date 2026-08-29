@@ -110,6 +110,11 @@ struct CueRowView: View {
             .accessibilityElement()
             .accessibilityAddTraits(.isButton)
             .accessibilityLabel("Go to cue")
+            // `.onTapGesture` registers no accessibility activation, so without
+            // this the element announces as a button that VoiceOver cannot
+            // press — and since selecting a cue no longer seeks, the stripe is
+            // the cue list's only path to the playhead.
+            .accessibilityAction { handleTap(on: .stripe) }
     }
 
     @ViewBuilder
@@ -221,11 +226,16 @@ struct CueRowView: View {
 
     // MARK: - Commit / cancel
     //
-    // Every `cancel*` restores its draft to the model's current value before
-    // lowering the editing flag. Tearing down the `TextField` drops focus,
-    // which fires the focus-loss commit — restoring the draft first makes that
-    // commit a no-op, so Escape cannot save the text it was meant to discard.
-    // Cheaper and harder to get wrong than a separate "am I cancelling" flag.
+    // Each editing flag is also the commit's re-entry guard, because every path
+    // that ends an edit can fire the commit twice. `onSubmit` and `onExitCommand`
+    // lower the flag, which tears down the `TextField`, which drops focus, which
+    // fires the focus-loss commit a second time — and the closure that runs then
+    // captured the pre-mutation `cue`, so a rename would look like a fresh edit
+    // and `CueCommands.mutateCues` would register a second undo group. Guarding
+    // on the flag is ordering-independent, which draft-restoration alone is not.
+    //
+    // `cancel*` additionally restores its draft to the model's current value, so
+    // the field shows the right text if it is ever re-entered.
 
     private func beginRename() {
         draftName = cue.name
@@ -233,10 +243,11 @@ struct CueRowView: View {
     }
 
     private func commitRename() {
+        guard isEditingName else { return }
+        isEditingName = false
         if let newName = CueInspectorCommit.commitCueName(draft: draftName, current: cue.name) {
             onRename(newName)
         }
-        isEditingName = false
     }
 
     private func cancelRename() {
@@ -260,7 +271,8 @@ struct CueRowView: View {
     }
 
     private func commitNumber() {
-        defer { isEditingNumber = false }
+        guard isEditingNumber else { return }
+        isEditingNumber = false
         switch CueInspectorCommit.commitCueNumber(draft: numberDraft, current: cue.cueNumber) {
         case .parsed(let value):
             let result = onCommitNumber(value)
@@ -287,7 +299,8 @@ struct CueRowView: View {
     }
 
     private func commitInfo() {
-        defer { isEditingInfo = false }
+        guard isEditingInfo else { return }
+        isEditingInfo = false
         guard infoDraft != cue.notes else { return }
         onCommitNotes(infoDraft)
     }

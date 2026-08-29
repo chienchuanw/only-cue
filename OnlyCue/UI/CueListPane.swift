@@ -1,69 +1,5 @@
 import SwiftUI
 
-enum CueListLayout {
-    static let rowHorizontalSpacing: CGFloat = 8
-    /// Horizontal edge padding on the header row. Shared with
-    /// `headerHorizontalChrome` so the #297 width floor can never silently
-    /// diverge from the padding actually rendered.
-    static let rowHorizontalPadding: CGFloat = 8
-    static let rowTintOpacity: Double = 0.18
-
-    /// The horizontal inset macOS's `List` adds to every row on top of the
-    /// row's own padding. The column header lives *outside* the `List`, so it
-    /// must mirror this inset to line its columns up with the row values below
-    /// (`listRowInsets` / `.listStyle(.plain)` do not remove it on macOS). The
-    /// `CueListColumnAlignmentUITests` regression guard fails if it drifts.
-    static let listRowHorizontalInset: CGFloat = 16
-
-    /// Opacity of a cue row whose type differs from the Show-mode GO-by-type
-    /// filter — dimmed but still visible and hittable (#657).
-    static let dimmedRowOpacity: Double = 0.35
-
-    /// Basis for `rowLeadingGutter` — kept so the header/row column alignment
-    /// and the #297 floor are unchanged after the swatch became a stripe.
-    static let swatchDiameter: CGFloat = 8
-
-    /// Cue-type colour stripe on a row's left edge (Figma `318:1326` TypeBar);
-    /// sits inside `rowLeadingGutter`, so it doesn't affect the header floor.
-    static let typeStripeWidth: CGFloat = 5
-
-    /// The leading offset of a row's first column (Time): the row's leading
-    /// padding (`DS.Space.xs / 2`) + the swatch + the swatch-to-content gap
-    /// (`DS.Space.xs`). The header reserves the same gutter (Figma's empty
-    /// swatch slot, `318:1320`) so its TIME/#/NAME/FADE labels align with the
-    /// row columns.
-    static let rowLeadingGutter: CGFloat = DS.Space.xs / 2 + swatchDiameter + DS.Space.xs
-
-    /// Clickable width of the stripe (#786). The stripe is drawn 5pt wide but
-    /// is now the row's select/seek handle, so its hit area widens to fill the
-    /// gutter — and stops exactly there, because the `#` column's text starts
-    /// at `rowLeadingGutter` and a wider target would swallow its clicks.
-    static let typeStripeHitWidth: CGFloat = rowLeadingGutter
-
-    /// Non-column horizontal cost of the header row: the 2 inter-column gaps
-    /// (`rowHorizontalSpacing` each, for `# · Name · Info`) plus the leading
-    /// swatch gutter and the trailing edge padding. The Name column is flexible
-    /// with no enforced intrinsic minimum, so it compresses to ~0 and
-    /// contributes nothing.
-    static let headerHorizontalChrome: CGFloat =
-        2 * rowHorizontalSpacing + rowLeadingGutter + rowHorizontalPadding
-            + 2 * listRowHorizontalInset
-
-    /// The cue-list header's guaranteed-compressible minimum width — the
-    /// value the outer `NSSplitView` sees as the pane's hard floor. Issue
-    /// #297: this must never exceed `CueListInspectorMetrics.minWidth`, or
-    /// the splitter cannot reach the 240 column minimum without the content
-    /// demanding more and feeding the constraint-update loop. Header and rows
-    /// share the same leading swatch gutter (`rowLeadingGutter`), so the
-    /// header is the binding floor; the two fixed columns are `#` and `Info`
-    /// (Name is flexible), so the floor stays ≤ 240 (40+72+chrome).
-    static var headerMinimumWidth: CGFloat {
-        CueListColumnWidths.numberRange.lowerBound
-            + CueListColumnWidths.infoRange.lowerBound
-            + headerHorizontalChrome
-    }
-}
-
 struct CueListPane: View {
 
     static let headerAccessibilityIdentifier = "cueListHeader"
@@ -89,6 +25,13 @@ struct CueListPane: View {
     /// granularity the inspector / snap / nudge / duplicate commands work at
     /// (batch versions over the whole `selection` are a follow-up leaf).
     var soleSelectedID: Cue.ID? { selection.count == 1 ? selection.first : nil }
+
+    /// What this pane's own row taps last wrote to `selection` (#786), so the
+    /// reveal-the-row `onChange` can skip those and still scroll for selections
+    /// made elsewhere. Recorded as the value rather than a one-shot flag: a tap
+    /// on the already-selected row writes an unchanged set, `onChange` never
+    /// fires, and a flag would stay armed and swallow the next external change.
+    @State private var lastRowTapSelection: Set<Cue.ID>?
 
     @Environment(\.undoManager) var undoManager
 
@@ -319,8 +262,24 @@ struct CueListPane: View {
             }
             .onDeleteCommand { if !isReadOnly { deleteSelected() } }
             // Selecting a cue deliberately does not seek (#786) — only the
-            // row's colour stripe does. Do not re-add it here.
+            // row's colour stripe does. Do not re-add a seek here.
             //
+            // The scroll does survive, because the selection has sources
+            // outside this pane — a timeline marker tap (`DocumentView`'s
+            // `onSelectCue`) and pause-at-each-cue — and those need the row
+            // revealed. A tap on a row is the one case that must not scroll:
+            // that row is already under the pointer, and centring it would
+            // yank the list out from under the caret that just opened.
+            .onChange(of: selection) { _, newValue in
+                guard newValue != lastRowTapSelection else {
+                    lastRowTapSelection = nil
+                    return
+                }
+                guard let id = soleSelectedID else { return }
+                withAnimation(.easeOut(duration: 0.2)) {
+                    proxy.scrollTo(id, anchor: .center)
+                }
+            }
             // Keep the playhead's current cue visible, but only while playing —
             // scrolling during editing would yank the list (#671). Fires once
             // per cue-section crossing (currentCueID changes), not per frame.
@@ -351,8 +310,18 @@ struct CueListPane: View {
             },
             // Same shape as the timeline's marker taps (`DocumentView`'s
             // `onSelectCue` / `onToggleCue`), over the same selection set.
-            onSelect: { selection = [cue.id] },
-            onExtendSelection: { selection.formSymmetricDifference([cue.id]) },
+            // Both record what they set so the scroll `onChange` can recognise
+            // its own pane's clicks and leave the list where it is.
+            onSelect: {
+                lastRowTapSelection = [cue.id]
+                selection = [cue.id]
+            },
+            onExtendSelection: {
+                var updated = selection
+                updated.formSymmetricDifference([cue.id])
+                lastRowTapSelection = updated
+                selection = updated
+            },
             onSeek: { Task { await engine.seek(to: cue.time) } },
             isReadOnly: isReadOnly
         )

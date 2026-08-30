@@ -43,11 +43,17 @@ final class CueRowContextMenuUITests: OnlyCueUITestCase {
         app.typeKey(.escape, modifierFlags: [])
     }
 
-    /// Settle, select the row, then right-click it via the shared harness helper.
+    /// Settle, then right-click the row via the shared harness helper.
+    ///
+    /// No select-first left-click any more (#786): a plain click in a column now
+    /// opens that column's `TextField`, and right-clicking inside an open field
+    /// gets AppKit's Cut/Copy/Paste field-editor menu rather than the row's
+    /// `.contextMenu` — correct macOS behaviour, but not what this test is
+    /// about. Right-click alone targets whatever is under the cursor, which is
+    /// the interaction this suite exists to guard; right-click *with* a live
+    /// selection stays covered by `CueBatchChangeTypeUITests`.
     private func openContextMenu(on row: XCUIElement, in app: XCUIApplication) throws {
         Thread.sleep(forTimeInterval: 1)
-        row.click()
-        Thread.sleep(forTimeInterval: 0.3)
         try openContextMenu(
             on: row,
             probe: app.menuItems["cueRowContextEditNotes"],

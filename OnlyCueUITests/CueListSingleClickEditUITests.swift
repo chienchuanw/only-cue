@@ -51,11 +51,11 @@ final class CueListSingleClickEditUITests: OnlyCueUITestCase {
         )
     }
 
-    /// Focus-loss commit (#786) means Return can fire `commitRename` twice: once
-    /// from `onSubmit`, then again when tearing down the `TextField` drops
-    /// focus. `CueCommands.mutateCues` registers an undo group unconditionally,
-    /// so a second write would cost the user a second Cmd-Z to get their name
-    /// back. One Cmd-Z must be enough.
+    /// A rename must cost exactly one undo entry. `CueCommands.mutateCues`
+    /// registers an undo group unconditionally, and #786 gave the rename two
+    /// ways to commit — `onSubmit` and focus loss — either of which could write
+    /// again on the way out and leave the user pressing Cmd-Z twice to get their
+    /// name back. This is the assertion that says it does not.
     func test_renameThenUndo_revertsInASingleUndo() throws {
         let app = launchApp(seed: .setListActI)
         try waitForCueList(in: app)

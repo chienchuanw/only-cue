@@ -226,16 +226,16 @@ struct CueRowView: View {
 
     // MARK: - Commit / cancel
     //
-    // Each editing flag is also the commit's re-entry guard, because every path
-    // that ends an edit can fire the commit twice. `onSubmit` and `onExitCommand`
-    // lower the flag, which tears down the `TextField`, which drops focus, which
-    // fires the focus-loss commit a second time — and the closure that runs then
-    // captured the pre-mutation `cue`, so a rename would look like a fresh edit
-    // and `CueCommands.mutateCues` would register a second undo group. Guarding
-    // on the flag is ordering-independent, which draft-restoration alone is not.
+    // Return commits twice in theory — `onSubmit` fires, lowering the flag tears
+    // the `TextField` down, and that drops focus into the focus-loss commit —
+    // but not in practice: SwiftUI tears the `.onChange` down with the field, and
+    // the second call would in any case see its own write and short-circuit in
+    // `CueInspectorCommit`. Measured, not assumed
+    // (`test_renameThenUndo_revertsInASingleUndo` is red if a rename ever costs
+    // two undo entries), so no re-entry guard is carried here.
     //
-    // `cancel*` additionally restores its draft to the model's current value, so
-    // the field shows the right text if it is ever re-entered.
+    // `cancel*` restores its draft to the model's current value, so the field
+    // shows the right text if it is ever re-entered.
 
     private func beginRename() {
         draftName = cue.name
@@ -243,7 +243,6 @@ struct CueRowView: View {
     }
 
     private func commitRename() {
-        guard isEditingName else { return }
         isEditingName = false
         if let newName = CueInspectorCommit.commitCueName(draft: draftName, current: cue.name) {
             onRename(newName)
@@ -271,7 +270,6 @@ struct CueRowView: View {
     }
 
     private func commitNumber() {
-        guard isEditingNumber else { return }
         isEditingNumber = false
         switch CueInspectorCommit.commitCueNumber(draft: numberDraft, current: cue.cueNumber) {
         case .parsed(let value):
@@ -299,7 +297,6 @@ struct CueRowView: View {
     }
 
     private func commitInfo() {
-        guard isEditingInfo else { return }
         isEditingInfo = false
         guard infoDraft != cue.notes else { return }
         onCommitNotes(infoDraft)

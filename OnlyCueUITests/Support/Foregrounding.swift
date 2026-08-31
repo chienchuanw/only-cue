@@ -71,7 +71,34 @@ enum CIRuntime {
     /// True when the CI workflow's marker file exists, i.e. tests are
     /// running under GitHub Actions on the self-hosted runner.
     static var isSelfHostedRunner: Bool {
-        FileManager.default.fileExists(atPath: markerPath)
+        let exists = FileManager.default.fileExists(atPath: markerPath)
+        logMarkerRead(exists: exists)
+        return exists
+    }
+
+    /// Diagnostic for #789, not a behavioural gate. In run 33179874282 every
+    /// `XCTSkipIf(isGitHubActions)` guard fired during UI-test attempt 1 and
+    /// none fired during attempt 2, although the workflow `touch`ed the marker
+    /// before attempt 1 and removed it only after attempt 2. The run log could
+    /// not distinguish "the file was deleted mid-step" from "the relaunched
+    /// test runner could not read it", so neither could be ruled out.
+    ///
+    /// Printing the inode and mtime this process actually observed makes the
+    /// two cases distinguishable next time: the workflow stats the same file
+    /// either side of each attempt (`log_marker_state` in `ci.yml`), so a
+    /// changed inode, a changed mtime, or a disagreement between the two
+    /// vantage points each point at a different cause.
+    ///
+    /// Goes to stdout, which the watchdog captures verbatim into
+    /// `attempt-N.log`; `xcbeautify` only filters the console rendering, so the
+    /// line survives in the uploaded raw log even though it will not appear on
+    /// the run page.
+    private static func logMarkerRead(exists: Bool) {
+        let attributes = try? FileManager.default.attributesOfItem(atPath: markerPath)
+        let inode = (attributes?[.systemFileNumber] as? NSNumber)?.stringValue ?? "-"
+        let modified = (attributes?[.modificationDate] as? Date)
+            .map(ISO8601DateFormatter().string(from:)) ?? "-"
+        print("[CIRuntime] marker=\(markerPath) exists=\(exists) inode=\(inode) mtime=\(modified)")
     }
 
     /// Backwards-compatible alias retained so existing `XCTSkipIf` call

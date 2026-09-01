@@ -45,7 +45,7 @@ private struct StripedTimecodeHost: ViewModifier {
                 // instead would be wrong: the selection is authored and the
                 // remembered track is derived, and deselecting "No LTC" must
                 // bring the measured answer back (#793).
-                let deniesLTC = item?.ltcChannelSelection == LTCChannelSelection.none
+                let deniesLTC = item?.ltcChannelSelection.deniesLTC ?? false
                 track = LTCFallback.resolve(
                     detected: decoded, remembered: deniesLTC ? nil : item?.rememberedLTC
                 )

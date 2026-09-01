@@ -42,27 +42,65 @@ enum LTCDecoder {
 
     // MARK: - Zero crossings
 
-    /// Sample indices at which the signal changes sign (a zero sample keeps the
-    /// previous sign). The index returned is the first sample of the new sign.
+    /// A buffer whose RMS falls below this carries no signal worth decoding.
+    /// Four times above the dither peak measured in a real Logic Pro mp3
+    /// export (2.35e-5) and three and a half orders of magnitude below that
+    /// file's LTC (RMS 0.33). Rejecting such a buffer outright is what stops
+    /// an all-silent channel from having its own noise amplified into a
+    /// threshold. See #793.
+    static let silenceRMSFloor: Float = 1e-4
+
+    /// Fraction of the reference amplitude at which the comparator latches.
+    /// Verified correct across a 20x span (0.02...0.40) against a real file:
+    /// the LTC channel decoded 226-227 frames at every setting and the music
+    /// channel decoded none.
+    private static let thresholdFraction: Float = 0.3
+
+    private static func rms(_ samples: [Float]) -> Float {
+        guard !samples.isEmpty else { return 0 }
+        var total = 0.0
+        for sample in samples { total += Double(sample) * Double(sample) }
+        return Float((total / Double(samples.count)).squareRoot())
+    }
+
+    /// Indices where the signal crosses a hysteresis comparator.
+    ///
+    /// A bare zero-crossing detector has no noise immunity: the dither in a
+    /// decoded mp3's silent lead-in flips sign every sample or two, which
+    /// swamps the interval statistics the demodulator depends on. Latching
+    /// only past +/- `thresholdFraction * rms` gates that out.
+    ///
+    /// The reference amplitude is deliberately computed over the WHOLE
+    /// buffer and must stay global. A per-block adaptive reference
+    /// re-introduces the bug: a block of pure noise has an RMS equal to the
+    /// noise, so its threshold collapses to the noise floor.
     private static func transitionIndices(in samples: [Float]) -> [Int] {
+        let reference = rms(samples)
+        guard reference >= silenceRMSFloor else { return [] }
+        let threshold = thresholdFraction * reference
+
         var indices: [Int] = []
-        var lastSign = 0
+        var state = 0
         for (index, sample) in samples.enumerated() {
-            let sign = sample > 0 ? 1 : (sample < 0 ? -1 : lastSign)
-            if sign != 0, lastSign != 0, sign != lastSign {
-                indices.append(index)
+            if state <= 0, sample > threshold {
+                if state != 0 { indices.append(index) }
+                state = 1
+            } else if state >= 0, sample < -threshold {
+                if state != 0 { indices.append(index) }
+                state = -1
             }
-            if sign != 0 { lastSign = sign }
         }
         return indices
     }
 
     // MARK: - Bit-period estimate
 
-    /// Estimate the half-bit period (samples) from the transition spacings: the
-    /// intervals cluster at `H` (the two halves of a `1`, plus the half before a
-    /// boundary transition) and `2H` (a `0`'s full bit period). Average the lower
-    /// cluster.
+    /// Estimates the half-bit period from the shortest transition intervals.
+    /// Biphase-mark encoding emits one transition per `0` bit and two per `1`,
+    /// so the shortest intervals are the half-bit period; the estimate is the
+    /// mean of every interval within 1.5x of the minimum. This is only sound
+    /// because `transitionIndices` gates out noise first — an ungated minimum
+    /// collapses to 1 sample (#793).
     private static func estimateHalfBitSamples(transitions: [Int]) -> Double? {
         var intervals: [Int] = []
         intervals.reserveCapacity(transitions.count - 1)

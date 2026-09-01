@@ -103,4 +103,83 @@ final class StripedTimecodeTrackTests: XCTestCase {
         let later = track?.timecode(atPlaybackSeconds: (track?.anchorPlaybackSeconds ?? 0) + 1.0)
         XCTAssertEqual(later, track.map { Timecode(frameCount: $0.anchorTimecode.frameCount + 25, rate: .fps25) })
     }
+
+    // MARK: - Valid range (#793)
+
+    func test_isValid_withNoBounds_isAlwaysValid() {
+        let track = StripedTimecodeTrack(
+            anchorTimecode: Timecode(frameCount: 0, rate: .fps30),
+            anchorPlaybackSeconds: 0
+        )
+        XCTAssertTrue(track.isValid(atPlaybackSeconds: 0))
+        XCTAssertTrue(track.isValid(atPlaybackSeconds: 10_000))
+    }
+
+    func test_isValid_respectsBothBounds() {
+        let track = StripedTimecodeTrack(
+            anchorTimecode: Timecode(frameCount: 0, rate: .fps30),
+            anchorPlaybackSeconds: 2.0,
+            validFrom: 2.0,
+            validUntil: 291.1
+        )
+        XCTAssertFalse(track.isValid(atPlaybackSeconds: 1.99))
+        XCTAssertTrue(track.isValid(atPlaybackSeconds: 2.0))
+        XCTAssertTrue(track.isValid(atPlaybackSeconds: 291.1))
+        XCTAssertFalse(track.isValid(atPlaybackSeconds: 291.2))
+    }
+
+    func test_initFullFileFrames_derivesBothBoundsFromFirstAndLastFrame() {
+        let sampleRate = 48_000.0
+        let frames = [
+            LTCDecoder.DecodedFrame(
+                timecode: Timecode(frameCount: 30, rate: .fps30), startSample: 96_000
+            ),
+            LTCDecoder.DecodedFrame(
+                timecode: Timecode(frameCount: 31, rate: .fps30), startSample: 97_600
+            )
+        ]
+        let track = StripedTimecodeTrack(
+            fullFileFrames: frames, channel: 1, sampleRate: sampleRate
+        )
+        XCTAssertEqual(track?.ltcChannel, 1)
+        XCTAssertEqual(track?.validFrom ?? -1, 2.0, accuracy: 0.001)
+        // last frame start (97600/48000 = 2.0333) plus one frame of duration (1/30)
+        XCTAssertEqual(
+            track?.validUntil ?? -1, 97_600.0 / 48_000.0 + 1.0 / 30.0, accuracy: 0.002
+        )
+    }
+
+    func test_track_roundTripsBoundsThroughCoding() throws {
+        let track = StripedTimecodeTrack(
+            anchorTimecode: Timecode(frameCount: 5, rate: .fps30),
+            anchorPlaybackSeconds: 1.0,
+            ltcChannel: 1,
+            validFrom: 1.0,
+            validUntil: 9.0
+        )
+        let data = try JSONEncoder().encode(track)
+        XCTAssertEqual(try JSONDecoder().decode(StripedTimecodeTrack.self, from: data), track)
+    }
+
+    func test_track_savedBeforeThisChange_decodesUnbounded() throws {
+        // A rememberedLTC persisted by v22 carries neither key. Encoding a
+        // bounds-free track reproduces that shape exactly, because
+        // encodeIfPresent omits both — which the first assertion proves. This
+        // is deliberately not a hand-written literal: Timecode's own wire
+        // format is not this test's business, and guessing it makes the test
+        // fail for the wrong reason.
+        let unbounded = StripedTimecodeTrack(
+            anchorTimecode: Timecode(frameCount: 5, rate: .fps30),
+            anchorPlaybackSeconds: 1.0,
+            ltcChannel: 1
+        )
+        let data = try JSONEncoder().encode(unbounded)
+        let json = try XCTUnwrap(String(data: data, encoding: .utf8))
+        XCTAssertFalse(json.contains("valid"), "neither bound may be written when nil")
+
+        let track = try JSONDecoder().decode(StripedTimecodeTrack.self, from: data)
+        XCTAssertNil(track.validFrom)
+        XCTAssertNil(track.validUntil)
+        XCTAssertTrue(track.isValid(atPlaybackSeconds: 12_345))
+    }
 }

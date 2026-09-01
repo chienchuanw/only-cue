@@ -22,10 +22,36 @@ struct StripedTimecodeTrack: Equatable, Sendable, Codable {
     /// exclude the timecode channel from the output.
     let ltcChannel: Int
 
-    init(anchorTimecode: Timecode, anchorPlaybackSeconds: TimeInterval, ltcChannel: Int = 0) {
+    /// First playback second at which this track's timecode is real.
+    /// `nil` means unbounded — either not yet measured (between Phase 1 and
+    /// Phase 2 completing) or loaded from a document saved before #793.
+    let validFrom: TimeInterval?
+
+    /// Last playback second at which this track's timecode is real.
+    /// `nil` means unbounded, exactly as `validFrom`.
+    let validUntil: TimeInterval?
+
+    init(
+        anchorTimecode: Timecode,
+        anchorPlaybackSeconds: TimeInterval,
+        ltcChannel: Int = 0,
+        validFrom: TimeInterval? = nil,
+        validUntil: TimeInterval? = nil
+    ) {
         self.anchorTimecode = anchorTimecode
         self.anchorPlaybackSeconds = anchorPlaybackSeconds
         self.ltcChannel = ltcChannel
+        self.validFrom = validFrom
+        self.validUntil = validUntil
+    }
+
+    /// Whether the timecode this track reports at `seconds` was actually
+    /// measured from the file, as opposed to extrapolated past the end of
+    /// the stripe. Unbounded on either side means "assume valid".
+    func isValid(atPlaybackSeconds seconds: TimeInterval) -> Bool {
+        if let validFrom, seconds < validFrom { return false }
+        if let validUntil, seconds > validUntil { return false }
+        return true
     }
 
     /// Anchor on the detected channel's first decoded frame. `nil` if no frames
@@ -47,7 +73,28 @@ struct StripedTimecodeTrack: Equatable, Sendable, Codable {
     ///   the channel index is available (i.e. from `LTCAudioReader.detectTimecodes`).
     init?(decodedFrames: [LTCDecoder.DecodedFrame], sampleRate: Double) {
         guard let first = decodedFrames.first, sampleRate > 0 else { return nil }
-        self.init(anchorTimecode: first.timecode, anchorPlaybackSeconds: Double(first.startSample) / sampleRate)
+        // Phase 1 sees only the head of the file: it can bound the start but
+        // not the end, so validUntil stays nil (unbounded) until the full-file
+        // pass in MediaImporter measures it.
+        self.init(
+            anchorTimecode: first.timecode,
+            anchorPlaybackSeconds: Double(first.startSample) / sampleRate,
+            validFrom: Double(first.startSample) / sampleRate,
+            validUntil: nil
+        )
+    }
+
+    /// Builds a track from a decode of the entire file, so both bounds are
+    /// measured rather than assumed. `validUntil` extends one frame past the
+    /// last frame's start, because that frame occupies real time.
+    init?(fullFileFrames frames: [LTCDecoder.DecodedFrame], channel: Int, sampleRate: Double) {
+        guard let first = frames.first, let last = frames.last else { return nil }
+        self.anchorTimecode = first.timecode
+        self.anchorPlaybackSeconds = Double(first.startSample) / sampleRate
+        self.ltcChannel = channel
+        self.validFrom = Double(first.startSample) / sampleRate
+        self.validUntil = Double(last.startSample) / sampleRate
+            + 1.0 / Double(last.timecode.rate.framesPerSecond)
     }
 
     /// The striped timecode at `seconds` of playback — `anchorTimecode` shifted

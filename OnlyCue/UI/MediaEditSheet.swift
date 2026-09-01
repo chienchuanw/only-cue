@@ -171,6 +171,8 @@ struct MediaEditSheet: View {
         return "Auto (detected: Channel \(channel + 1))"
     }
 
+    /// The LTC status line. "Remembered" whenever a persisted value exists (the
+    /// write-once truth); "Detected" for a fresh, not-yet-remembered hit.
     private var ltcStatusText: String {
         if detecting { return "Detecting…" }
         guard let track = resolvedTrack else { return "Not found" }

@@ -163,17 +163,85 @@ enum MediaImporter {
     static func stripedTimecode(for item: MediaItem?) async -> StripedTimecodeTrack? {
         guard let item else { return nil }
         return await StripedTimecodeCache.shared.track(for: item.id) {
-            do {
-                let resolution = try Bookmarks.resolve(item.media.bookmarkData)
-                let didAccess = resolution.url.startAccessingSecurityScopedResource()
-                defer { if didAccess { resolution.url.stopAccessingSecurityScopedResource() } }
-                guard let detection = try await LTCAudioReader.detectTimecodes(from: resolution.url) else {
-                    return nil
-                }
-                return StripedTimecodeTrack(detection: detection, sampleRate: LTCAudioReader.sampleRate)
-            } catch {
+            switch item.ltcChannelSelection {
+            case .none:
+                // The user asserted there is none. Believe them and skip the scan.
+                return nil
+            case .channel(let channel):
+                // Named channel: no windowed scan at all — go straight to the
+                // full-file pass, which is also what finds LTC starting past
+                // the 60 s scan ceiling.
+                return await fullFileTrack(for: item, channel: channel)
+            case .auto:
+                return await autoDetectedTrack(for: item)
+            }
+        }
+    }
+
+    /// The historical windowed scan across every channel (Phase 1).
+    @MainActor
+    private static func autoDetectedTrack(for item: MediaItem) async -> StripedTimecodeTrack? {
+        await withResolvedMedia(item) { url in
+            guard let detection = try await LTCAudioReader.detectTimecodes(from: url) else {
                 return nil
             }
+            return StripedTimecodeTrack(detection: detection, sampleRate: LTCAudioReader.sampleRate)
+        }
+    }
+
+    /// Decodes one channel across the whole file (Phase 2), for the measured
+    /// extent. Public entry point used by `StripedTimecodeHost` once Phase 1
+    /// has named a channel.
+    @MainActor
+    static func fullFileStripedTimecode(
+        for item: MediaItem?, channel: Int
+    ) async -> StripedTimecodeTrack? {
+        guard let item else { return nil }
+        return await fullFileTrack(for: item, channel: channel)
+    }
+
+    @MainActor
+    private static func fullFileTrack(
+        for item: MediaItem, channel: Int
+    ) async -> StripedTimecodeTrack? {
+        await withResolvedMedia(item) { url in
+            guard let result = try await LTCAudioReader.analyzeFullFile(
+                from: url, channel: channel
+            ) else { return nil }
+            return StripedTimecodeTrack(
+                fullFileFrames: result.frames,
+                channel: result.channel,
+                sampleRate: LTCAudioReader.sampleRate
+            )
+        }
+    }
+
+    /// How many audio channels the item's file has, for the channel picker.
+    /// Returns 0 when the bookmark cannot be resolved — the picker then offers
+    /// only Auto and No LTC, which is the honest thing to show.
+    @MainActor
+    static func audioChannelCount(for item: MediaItem?) async -> Int {
+        guard let item else { return 0 }
+        return await withResolvedMedia(item) { url in
+            try await AudioSampleReader.channelCount(of: url)
+        } ?? 0
+    }
+
+    /// Resolves the security-scoped bookmark, runs `body`, and always releases
+    /// access. Extracted because four call sites now need the same dance
+    /// (ADR-006: media is referenced by bookmark, never embedded).
+    @MainActor
+    private static func withResolvedMedia<T>(
+        _ item: MediaItem,
+        _ body: (URL) async throws -> T?
+    ) async -> T? {
+        do {
+            let resolution = try Bookmarks.resolve(item.media.bookmarkData)
+            let didAccess = resolution.url.startAccessingSecurityScopedResource()
+            defer { if didAccess { resolution.url.stopAccessingSecurityScopedResource() } }
+            return try await body(resolution.url)
+        } catch {
+            return nil
         }
     }
 

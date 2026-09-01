@@ -89,6 +89,7 @@ enum LTCAudioReader {
     /// adopting frames from a later stripe would place the anchor on a
     /// timecode that does not follow from it.
     static func analyzeFullFile(from url: URL, channel: Int) async throws -> DetectionResult? {
+        try Task.checkCancellation()
         let channelCount = try await AudioSampleReader.channelCount(of: url)
         guard channel >= 0, channel < channelCount else { return nil }
 

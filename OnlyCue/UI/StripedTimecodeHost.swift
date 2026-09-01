@@ -28,19 +28,27 @@ private struct StripedTimecodeHost: ViewModifier {
             .task(id: item?.id) {
                 track = nil
                 let decoded = await MediaImporter.stripedTimecode(for: item)
-                // The scan can outlive its clip: switching from a slow file (LTC
-                // late on the last of 8 channels) to one with a cached answer
-                // lets the outgoing task finish *after* the incoming one. Without
-                // this guard it would publish the old file's timecode under the
-                // new file's name — and the readout says `FILE`, asserting the
-                // number came off the media on screen.
                 guard !Task.isCancelled else { return }
-                // Remember the first successful detection so a later flaky scan
-                // can fall back to it (#754); write-once via CueCommands.
                 if let decoded, let item, item.rememberedLTC == nil {
                     CueCommands.rememberLTC(decoded, forItemID: item.id, document: document)
                 }
                 track = LTCFallback.resolve(detected: decoded, remembered: item?.rememberedLTC)
+
+                // Phase 2 (#793): the windowed scan can bound only the start. Now that
+                // the channel is known, measure the real extent across the whole file
+                // in the background and upgrade the readout in place. Skipped when the
+                // pass has already run (validUntil is set) and when the user named the
+                // channel, because MediaImporter went straight to the full-file pass
+                // in that case and the bounds are already measured.
+                guard let item, item.ltcChannelSelection == .auto,
+                      let phase1 = track, phase1.validUntil == nil else { return }
+                let refined = await MediaImporter.fullFileStripedTimecode(
+                    for: item, channel: phase1.ltcChannel
+                )
+                guard !Task.isCancelled, let refined else { return }
+                StripedTimecodeCache.shared.store(refined, for: item.id)
+                CueCommands.refineRememberedLTC(refined, forItemID: item.id, document: document)
+                track = refined
             }
     }
 }

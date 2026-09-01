@@ -37,6 +37,8 @@ struct MediaItem: Identifiable, Equatable {
     /// `nil` (the default) means untagged and draws nothing. Purely visual —
     /// it carries no meaning to playback, LTC, or the MA2 push. Schema v22.
     var colorHex: String?
+    /// Which channel carries LTC, as the user declared it. Schema v23 (#793).
+    var ltcChannelSelection: LTCChannelSelection = .auto
 }
 
 // MARK: - Codable
@@ -58,6 +60,7 @@ extension MediaItem: Codable {
         case playsOriginalSourceAudio
         case rememberedLTC
         case colorHex
+        case ltcChannelSelection
     }
 
     init(from decoder: Decoder) throws {
@@ -76,6 +79,10 @@ extension MediaItem: Codable {
         rememberedLTC = try container.decodeIfPresent(StripedTimecodeTrack.self, forKey: .rememberedLTC)
         // v21 documents lack this key; default to nil (untagged).
         colorHex = try container.decodeIfPresent(String.self, forKey: .colorHex)
+        // v23: absent in older documents, where auto is the historical behaviour.
+        ltcChannelSelection = try container.decodeIfPresent(
+            LTCChannelSelection.self, forKey: .ltcChannelSelection
+        ) ?? .auto
     }
 
     func encode(to encoder: Encoder) throws {
@@ -91,6 +98,11 @@ extension MediaItem: Codable {
         try container.encode(playsOriginalSourceAudio, forKey: .playsOriginalSourceAudio)
         try container.encodeIfPresent(rememberedLTC, forKey: .rememberedLTC)
         try container.encodeIfPresent(colorHex, forKey: .colorHex)
+        // Only written when the user has actually chosen. Encoding .auto would
+        // add a key saying "default" to every item in every document.
+        if ltcChannelSelection != .auto {
+            try container.encode(ltcChannelSelection, forKey: .ltcChannelSelection)
+        }
     }
 }
 

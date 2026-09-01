@@ -29,4 +29,26 @@ final class LTCChannelSelectionTests: XCTestCase {
         let data = "\"channel:banana\"".data(using: .utf8)!
         XCTAssertEqual(try JSONDecoder().decode(LTCChannelSelection.self, from: data), .auto)
     }
+
+    func test_deniesLTC_isTrueOnlyForNone() {
+        XCTAssertTrue(LTCChannelSelection.none.deniesLTC)
+        XCTAssertFalse(LTCChannelSelection.auto.deniesLTC)
+        XCTAssertFalse(LTCChannelSelection.channel(0).deniesLTC)
+        XCTAssertFalse(LTCChannelSelection.channel(3).deniesLTC)
+    }
+
+    func test_deniesLTC_throughAnOptional_readsTheCaseNotTheEmptiness() {
+        // The trap this property exists to close. `StripedTimecodeHost` holds
+        // an optional MediaItem, so the call site reads through `?.` — an
+        // absent item must not read as "the user denied LTC".
+        let absent: LTCChannelSelection? = nil
+        XCTAssertNil(absent?.deniesLTC)
+        XCTAssertFalse(absent?.deniesLTC ?? false, "no item is not a denial")
+
+        let auto: LTCChannelSelection? = .auto
+        XCTAssertEqual(auto?.deniesLTC, false)
+
+        let denied: LTCChannelSelection? = LTCChannelSelection.none
+        XCTAssertEqual(denied?.deniesLTC, true)
+    }
 }

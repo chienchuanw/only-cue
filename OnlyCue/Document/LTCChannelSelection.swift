@@ -57,3 +57,18 @@ extension LTCChannelSelection: Codable {
         }
     }
 }
+
+extension LTCChannelSelection {
+
+    /// Whether the user has asserted this file carries no LTC, so neither the
+    /// scan nor the remembered track may surface a readout (#793).
+    ///
+    /// Lives here rather than inline at the call site so it can be tested, and
+    /// so the comparison happens on a non-Optional value: written against an
+    /// `LTCChannelSelection?`, `== .none` compiles and asks whether the
+    /// optional is empty — the opposite question.
+    var deniesLTC: Bool {
+        if case .none = self { return true }
+        return false
+    }
+}

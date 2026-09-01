@@ -69,25 +69,24 @@ enum CIRuntime {
     static let markerPath = "/tmp/.onlycue-ci-active"
 
     /// True when the CI workflow's marker file exists, i.e. tests are
-    /// running under GitHub Actions on the self-hosted runner.
+    /// running under GitHub Actions on the self-hosted runner. Also prints
+    /// what this read observed — see `logMarkerRead` (#789).
     static var isSelfHostedRunner: Bool {
         let exists = FileManager.default.fileExists(atPath: markerPath)
         logMarkerRead(exists: exists)
         return exists
     }
 
-    /// Diagnostic for #789, not a behavioural gate. In run 33179874282 every
-    /// `XCTSkipIf(isGitHubActions)` guard fired during UI-test attempt 1 and
-    /// none fired during attempt 2, although the workflow `touch`ed the marker
-    /// before attempt 1 and removed it only after attempt 2. The run log could
-    /// not distinguish "the file was deleted mid-step" from "the relaunched
-    /// test runner could not read it", so neither could be ruled out.
+    /// Diagnostic for #789 — the guards fired on UI-test attempt 1 and not on
+    /// attempt 2 of the same job, and the run log could not tell "the file was
+    /// deleted mid-step" from "the relaunched test runner could not read it".
     ///
-    /// Printing the inode and mtime this process actually observed makes the
-    /// two cases distinguishable next time: the workflow stats the same file
-    /// either side of each attempt (`log_marker_state` in `ci.yml`), so a
-    /// changed inode, a changed mtime, or a disagreement between the two
-    /// vantage points each point at a different cause.
+    /// Reporting the inode and mtime *this* read observed separates the two:
+    /// the workflow stats the same file either side of each attempt
+    /// (`log_marker_state` in `ci.yml`), so a changed inode, a changed mtime,
+    /// or a disagreement between the two vantage points each point at a
+    /// different cause. Both sides render mtime as UTC ISO-8601 so they can be
+    /// compared literally.
     ///
     /// Goes to stdout, which the watchdog captures verbatim into
     /// `attempt-N.log`; `xcbeautify` only filters the console rendering, so the
@@ -97,9 +96,11 @@ enum CIRuntime {
         let attributes = try? FileManager.default.attributesOfItem(atPath: markerPath)
         let inode = (attributes?[.systemFileNumber] as? NSNumber)?.stringValue ?? "-"
         let modified = (attributes?[.modificationDate] as? Date)
-            .map(ISO8601DateFormatter().string(from:)) ?? "-"
+            .map(markerDateFormatter.string(from:)) ?? "-"
         print("[CIRuntime] marker=\(markerPath) exists=\(exists) inode=\(inode) mtime=\(modified)")
     }
+
+    private static let markerDateFormatter = ISO8601DateFormatter()
 
     /// Backwards-compatible alias retained so existing `XCTSkipIf` call
     /// sites keep working. The semantic is the same — "skip this test on

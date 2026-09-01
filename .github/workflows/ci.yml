@@ -289,19 +289,18 @@ jobs:
           }
 
           # Diagnostic for #789, reported only — nothing here changes what runs.
-          # In run 33179874282 every `XCTSkipIf(CIRuntime.isGitHubActions)` guard
-          # fired during attempt 1 and none fired during attempt 2, even though
-          # the marker was touched before attempt 1 and removed only after
-          # attempt 2, no other workflow run existed in the window, and the
-          # runner executes one job at a time. Whether the file was deleted
-          # mid-step or merely became unreadable from the relaunched test runner
-          # could not be told apart from the log, so stat it from the workflow
-          # side at each boundary. Pairs with the `[CIRuntime] marker=...` lines
-          # the test process writes into the raw attempt log: agreement narrows
-          # the cause to deletion, disagreement to a read failure.
+          # The guards fired on attempt 1 and not on attempt 2 of the same job,
+          # and the log could not tell whether the marker was deleted mid-step
+          # or merely became unreadable from the relaunched test runner. So stat
+          # it from the workflow side at each boundary. Pairs with the
+          # `[CIRuntime] marker=...` lines the test process writes into the raw
+          # attempt log: agreement narrows the cause to deletion, disagreement
+          # to a read failure. `TZ=UTC` so mtime renders exactly as the Swift
+          # side's ISO8601DateFormatter does, making the two comparable as text.
           log_marker_state() {
-            if [ -e "/tmp/.onlycue-ci-active" ]; then
-              echo "marker @ $1: present ($(stat -f 'inode=%i mtime=%Sm size=%z' -t '%FT%T%z' /tmp/.onlycue-ci-active))"
+            marker="/tmp/.onlycue-ci-active"
+            if [ -e "$marker" ]; then
+              echo "marker @ $1: present ($(TZ=UTC stat -f 'inode=%i mtime=%Sm' -t '%FT%TZ' "$marker"))"
             else
               echo "::warning::marker @ $1: absent — CIRuntime guards will not fire for what follows (#789)."
             fi
@@ -391,9 +390,9 @@ jobs:
         run: |
           # `Mark CI active` is unconditional, so by the time this step runs the
           # marker must exist on every run — including PR and `main` runs, where
-          # the UI step never executes. Finding it already gone means something
-          # removed it mid-job, which is the open question in #789. Reported,
-          # not enforced: the `rm -f` below is what the step is for.
+          # the UI step never executes and so none of `log_marker_state`'s
+          # probes run. Finding it already gone means something removed it
+          # mid-job, which is the open question in #789.
           if [ ! -e "/tmp/.onlycue-ci-active" ]; then
             echo "::warning::marker was already absent at clear time — something removed it mid-job (#789)."
           fi

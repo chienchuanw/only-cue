@@ -27,6 +27,9 @@ extension CueCommands {
     /// LTC is on. Non-undoable, like its neighbours, because this is derived
     /// data (contrast `setLTCChannelSelection`, which is authored and IS
     /// undoable).
+    /// A `nil` existing value fails the guard on purpose: it means the user
+    /// cleared the remembered LTC while the pass was still running, and a
+    /// refinement must not resurrect what Clear removed.
     static func refineRememberedLTC(
         _ track: StripedTimecodeTrack,
         forItemID id: MediaItem.ID,
@@ -34,7 +37,7 @@ extension CueCommands {
     ) {
         guard let index = document.model.items.firstIndex(where: { $0.id == id }) else { return }
         let existing = document.model.items[index].rememberedLTC
-        guard existing == nil || existing?.ltcChannel == track.ltcChannel else { return }
+        guard existing?.ltcChannel == track.ltcChannel else { return }
         document.model.items[index].rememberedLTC = track
     }
 

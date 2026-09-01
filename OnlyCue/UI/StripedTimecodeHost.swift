@@ -28,7 +28,15 @@ private struct StripedTimecodeHost: ViewModifier {
             .task(id: item?.id) {
                 track = nil
                 let decoded = await MediaImporter.stripedTimecode(for: item)
+                // The scan can outlive its clip: switching from a slow file (LTC
+                // late on the last of 8 channels) to one with a cached answer
+                // lets the outgoing task finish *after* the incoming one. Without
+                // this guard it would publish the old file's timecode under the
+                // new file's name — and the readout says `FILE`, asserting the
+                // number came off the media on screen.
                 guard !Task.isCancelled else { return }
+                // Remember the first successful detection so a later flaky scan
+                // can fall back to it (#754); write-once via CueCommands.
                 if let decoded, let item, item.rememberedLTC == nil {
                     CueCommands.rememberLTC(decoded, forItemID: item.id, document: document)
                 }
@@ -46,6 +54,13 @@ private struct StripedTimecodeHost: ViewModifier {
                     for: item, channel: phase1.ltcChannel
                 )
                 guard !Task.isCancelled, let refined else { return }
+                // Clear / Re-detect do not change the task's id, so they cannot
+                // cancel a pass already in flight. Re-read the live item before
+                // publishing: if the remembered value is gone or now names a
+                // different channel, the user changed their mind while the file
+                // was decoding and this result is stale.
+                guard document.model.items.first(where: { $0.id == item.id })?
+                    .rememberedLTC?.ltcChannel == refined.ltcChannel else { return }
                 StripedTimecodeCache.shared.store(refined, for: item.id)
                 CueCommands.refineRememberedLTC(refined, forItemID: item.id, document: document)
                 track = refined

@@ -57,4 +57,16 @@ final class CueCommandsLTCTests: XCTestCase {
         CueCommands.clearRememberedLTC(forItemID: item.id, document: document)
         XCTAssertNil(document.model.items[0].rememberedLTC)
     }
+
+    func test_refineRememberedLTC_afterClear_doesNotResurrectTheValue() {
+        // The Clear race (#793): Clear does not cancel an in-flight full-file
+        // pass, so a refinement arriving afterwards must not re-create what
+        // the user just removed.
+        let item = makeItem()
+        let document = seed([item])
+        let refined = track(channel: 1)
+        CueCommands.clearRememberedLTC(forItemID: item.id, document: document)
+        CueCommands.refineRememberedLTC(refined, forItemID: item.id, document: document)
+        XCTAssertNil(document.model.items[0].rememberedLTC)
+    }
 }

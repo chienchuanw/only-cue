@@ -38,9 +38,10 @@ extension LTCChannelSelection: Codable {
             self = .none
         case let value where value.hasPrefix(Self.channelPrefix):
             let index = Int(value.dropFirst(Self.channelPrefix.count))
-            // An unparseable or negative index falls back to auto rather
-            // than failing the load: one malformed field must not make a
-            // whole show file unopenable.
+            // An unparseable or negative index falls back to auto rather than
+            // failing the load. Note the limit of that promise: a value of the
+            // wrong *type* still throws, because a document that is not even
+            // shaped like this format is a different problem from a typo in it.
             self = index.map { $0 >= 0 ? .channel($0) : .auto } ?? .auto
         default:
             self = .auto

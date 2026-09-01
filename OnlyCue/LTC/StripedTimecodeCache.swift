@@ -36,6 +36,14 @@ final class StripedTimecodeCache {
         return decoded
     }
 
+    /// Replaces `id`'s cached answer outright. Used by the full-file pass
+    /// (#793), which runs after `track(for:decode:)` has already cached the
+    /// windowed result and needs to upgrade it in place — `invalidate` would
+    /// instead cause the next ask to re-run the expensive scan.
+    func store(_ track: StripedTimecodeTrack?, for id: MediaItem.ID) {
+        entries[id] = track
+    }
+
     /// Forgets `id`'s scan, so the next ask re-reads the audio. Needed because
     /// the key is the item id, which survives a relink: the user can point the
     /// same item at a different file, and a remembered "no LTC" would otherwise

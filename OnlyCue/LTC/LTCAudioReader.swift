@@ -79,6 +79,46 @@ enum LTCAudioReader {
         return nil
     }
 
+    /// Decodes one channel across the entire file to measure where its
+    /// timecode actually starts and stops (#793). Unlike `detectTimecodes`,
+    /// which scans a window across every channel to answer "is there LTC
+    /// here", this answers "how far does the LTC we already found extend".
+    ///
+    /// Only the contiguous run containing the first frame is returned:
+    /// spliced files with several disjoint stripes are out of scope, and
+    /// adopting frames from a later stripe would place the anchor on a
+    /// timecode that does not follow from it.
+    static func analyzeFullFile(from url: URL, channel: Int) async throws -> DetectionResult? {
+        let channelCount = try await AudioSampleReader.channelCount(of: url)
+        guard channel >= 0, channel < channelCount else { return nil }
+
+        let interleaved = try await AudioSampleReader.readInterleavedSamples(
+            from: url, channels: channelCount, range: nil
+        )
+        let samples = AudioSampleReader.channel(channel, of: channelCount, in: interleaved)
+        let frames = LTCDecoder.decode(samples: samples, sampleRate: sampleRate)
+        let run = contiguousRunContainingFirst(frames)
+        guard isCorroborated(run) else { return nil }
+        return DetectionResult(channel: channel, frames: run)
+    }
+
+    /// The leading run of frames whose timecodes advance by one or two — the
+    /// same continuity rule `isCorroborated` uses. Two is tolerated because a
+    /// single dropped frame in the middle of a stripe is normal; anything
+    /// larger is a splice, and the run ends there.
+    private static func contiguousRunContainingFirst(
+        _ frames: [LTCDecoder.DecodedFrame]
+    ) -> [LTCDecoder.DecodedFrame] {
+        guard let first = frames.first else { return [] }
+        var run = [first]
+        for frame in frames.dropFirst() {
+            let delta = frame.timecode.frameCount - (run.last?.timecode.frameCount ?? 0)
+            guard (1...2).contains(delta) else { break }
+            run.append(frame)
+        }
+        return run
+    }
+
     /// Whether `frames` are trustworthy enough to relabel the transport `FILE`
     /// and anchor the whole readout on `frames.first`.
     ///

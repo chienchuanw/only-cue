@@ -21,4 +21,9 @@ enum TimecodeReadout {
     static func prefix(hasFileTimecode: Bool) -> String {
         hasFileTimecode ? "FILE" : "SMPTE"
     }
+
+    /// Shown in place of a timecode when the playhead sits outside the
+    /// stripe's measured range (#793). The prefix stays `FILE`: the
+    /// information does come from the file, it is simply not valid here.
+    static let outOfRange = "--:--:--:--"
 }

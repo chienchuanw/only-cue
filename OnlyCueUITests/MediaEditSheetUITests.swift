@@ -30,6 +30,34 @@ final class MediaEditSheetUITests: OnlyCueUITestCase {
         )
     }
 
+    /// #793 — the edit sheet must surface the LTC channel picker and a non-empty
+    /// LTC status line so the designer can confirm whether a stripe was found and
+    /// override the automatic channel selection.
+    func test_editSheet_showsLTCChannelPickerAndStatus() throws {
+        let app = launchWithSeed(.threeCuesAt1And3And6)
+
+        try openEditSheet(in: app)
+
+        XCTAssertTrue(
+            app.descendants(matching: .any)
+                .matching(identifier: "mediaEditLTCChannelPicker").firstMatch
+                .waitForExistence(timeout: 3),
+            "LTC channel picker should be present in the Edit Media sheet (#793)."
+        )
+
+        let statusEl = app.descendants(matching: .any)
+            .matching(identifier: "mediaEditLTCStatus").firstMatch
+        XCTAssertTrue(
+            statusEl.waitForExistence(timeout: 3),
+            "LTC status line should be present in the Edit Media sheet (#793)."
+        )
+        let statusValue = (statusEl.value as? String) ?? statusEl.label
+        XCTAssertFalse(
+            statusValue.isEmpty,
+            "LTC status line should carry a non-empty value, got empty string."
+        )
+    }
+
     /// #649 — the Start timecode field must be wide enough to show and enter a
     /// full `HH:MM:SS:FF` value. Types a full timecode and reads it back, and
     /// captures a screenshot of the sheet for review.

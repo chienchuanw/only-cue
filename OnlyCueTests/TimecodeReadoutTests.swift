@@ -28,4 +28,17 @@ final class TimecodeReadoutTests: XCTestCase {
         XCTAssertEqual(TimecodeReadout.prefix(hasFileTimecode: true), "FILE")
         XCTAssertEqual(TimecodeReadout.prefix(hasFileTimecode: false), "SMPTE")
     }
+
+    // MARK: - Out of range (#793)
+
+    func test_outOfRange_isTheStandardBlankTimecode() {
+        XCTAssertEqual(TimecodeReadout.outOfRange, "--:--:--:--")
+    }
+
+    func test_prefix_staysFILEOutsideTheValidRange() {
+        // The information still comes from the file — it is simply not valid
+        // at this position. Flipping to SMPTE would claim the project's
+        // fallback timecode is being shown, which it is not.
+        XCTAssertEqual(TimecodeReadout.prefix(hasFileTimecode: true), "FILE")
+    }
 }

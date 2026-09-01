@@ -232,6 +232,11 @@ struct TransportControls: View {
     /// it has any, otherwise derived from the project settings + active item.
     private var smpteReadout: String {
         if let striped = stripedTimecode {
+            // Outside the measured stripe the old code extrapolated, inventing
+            // timecode for a stretch of the file that carries none (#793).
+            guard striped.isValid(atPlaybackSeconds: engine.currentTime) else {
+                return TimecodeReadout.outOfRange
+            }
             return striped.timecode(atPlaybackSeconds: engine.currentTime).displayString
         }
         guard let activeItem else {

@@ -8,6 +8,7 @@ extension CueCommands {
     /// good value — an explicit Re-detect (Clear + remember) is the way to refresh.
     /// No-op for an unknown id. Non-undoable: this is derived data, not authored;
     /// Cmd-Z should not resurrect a stale LTC (Re-detect / Clear are the controls).
+    /// Contrast `setLTCChannelSelection`, which is authored and undoable.
     static func rememberLTC(
         _ track: StripedTimecodeTrack,
         forItemID id: MediaItem.ID,
@@ -43,9 +44,39 @@ extension CueCommands {
 
     /// Forgets a song's remembered LTC (#754) — the Clear action, and the relink
     /// reset (a new file may not carry the old LTC). No-op for an unknown id.
-    /// Non-undoable, like `rememberLTC`.
+    /// Non-undoable, like `rememberLTC`. Contrast `setLTCChannelSelection`, which
+    /// is authored and undoable.
     static func clearRememberedLTC(forItemID id: MediaItem.ID, document: CueListDocument) {
         guard let index = document.model.items.firstIndex(where: { $0.id == id }) else { return }
         document.model.items[index].rememberedLTC = nil
+    }
+
+    /// Records which channel the user says carries LTC (#793).
+    ///
+    /// Undoable, deliberately unlike `rememberLTC` / `clearRememberedLTC` /
+    /// `refineRememberedLTC` in this same file. Those three carry data derived
+    /// from the media, where Cmd-Z resurrecting a stale value would be wrong.
+    /// This one carries a decision the user made, and every user decision in
+    /// this app is undoable. Do not "make these consistent".
+    static func setLTCChannelSelection(
+        _ selection: LTCChannelSelection,
+        forItemID id: MediaItem.ID,
+        document: CueListDocument,
+        undoManager: UndoManager?
+    ) {
+        guard let index = document.model.items.firstIndex(where: { $0.id == id }) else { return }
+        let previous = document.model.items[index].ltcChannelSelection
+        guard previous != selection else { return }
+
+        undoManager?.beginUndoGrouping()
+        defer { undoManager?.endUndoGrouping() }
+
+        document.model.items[index].ltcChannelSelection = selection
+        undoManager?.registerUndo(withTarget: document) { doc in
+            Self.setLTCChannelSelection(
+                previous, forItemID: id, document: doc, undoManager: undoManager
+            )
+        }
+        undoManager?.setActionName("Set LTC Channel")
     }
 }

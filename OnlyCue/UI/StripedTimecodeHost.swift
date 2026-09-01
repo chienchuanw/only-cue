@@ -40,7 +40,15 @@ private struct StripedTimecodeHost: ViewModifier {
                 if let decoded, let item, item.rememberedLTC == nil {
                     CueCommands.rememberLTC(decoded, forItemID: item.id, document: document)
                 }
-                track = LTCFallback.resolve(detected: decoded, remembered: item?.rememberedLTC)
+                // `.none` is the user asserting this file carries no LTC, so it
+                // has to suppress the *remembered* track too. Clearing it
+                // instead would be wrong: the selection is authored and the
+                // remembered track is derived, and deselecting "No LTC" must
+                // bring the measured answer back (#793).
+                let deniesLTC = item?.ltcChannelSelection == LTCChannelSelection.none
+                track = LTCFallback.resolve(
+                    detected: decoded, remembered: deniesLTC ? nil : item?.rememberedLTC
+                )
 
                 // Phase 2 (#793): the windowed scan can bound only the start. Now that
                 // the channel is known, measure the real extent across the whole file

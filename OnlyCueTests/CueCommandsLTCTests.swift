@@ -69,4 +69,70 @@ final class CueCommandsLTCTests: XCTestCase {
         CueCommands.refineRememberedLTC(refined, forItemID: item.id, document: document)
         XCTAssertNil(document.model.items[0].rememberedLTC)
     }
+
+    // MARK: - Channel selection (#793)
+
+    func test_setLTCChannelSelection_storesTheChoice() {
+        let item = makeItem()
+        let document = seed([item])
+        CueCommands.setLTCChannelSelection(
+            .channel(1), forItemID: item.id, document: document, undoManager: nil
+        )
+        XCTAssertEqual(document.model.items.first?.ltcChannelSelection, .channel(1))
+    }
+
+    func test_setLTCChannelSelection_isUndoable() {
+        let item = makeItem()
+        let document = seed([item])
+        let undoManager = UndoManager()
+        undoManager.groupsByEvent = false
+
+        CueCommands.setLTCChannelSelection(
+            .channel(1), forItemID: item.id, document: document, undoManager: undoManager
+        )
+        XCTAssertEqual(document.model.items.first?.ltcChannelSelection, .channel(1))
+
+        undoManager.undo()
+        XCTAssertEqual(
+            document.model.items.first?.ltcChannelSelection, .auto,
+            "the channel the user named must be undoable, unlike derived rememberedLTC"
+        )
+    }
+
+    func test_clearRememberedLTC_leavesTheChannelSelectionAlone() {
+        // Clear and Re-detect reset derived data only. Erasing the user's
+        // declaration would make Re-detect silently undo their override.
+        let item = makeItem()
+        let document = seed([item])
+        CueCommands.setLTCChannelSelection(
+            .channel(1), forItemID: item.id, document: document, undoManager: nil
+        )
+        CueCommands.rememberLTC(track(channel: 1), forItemID: item.id, document: document)
+
+        CueCommands.clearRememberedLTC(forItemID: item.id, document: document)
+
+        XCTAssertNil(document.model.items.first?.rememberedLTC)
+        XCTAssertEqual(document.model.items.first?.ltcChannelSelection, .channel(1))
+    }
+
+    func test_setLTCChannelSelection_unchangedValue_doesNotRegisterUndo() {
+        let item = makeItem()
+        let document = seed([item])
+        let undoManager = UndoManager()
+        undoManager.groupsByEvent = false
+        CueCommands.setLTCChannelSelection(
+            .auto, forItemID: item.id, document: document, undoManager: undoManager
+        )
+        XCTAssertFalse(undoManager.canUndo)
+    }
+
+    func test_refineRememberedLTC_onADifferentChannel_isIgnored() {
+        let item = makeItem()
+        let document = seed([item])
+        CueCommands.rememberLTC(track(channel: 1), forItemID: item.id, document: document)
+
+        CueCommands.refineRememberedLTC(track(channel: 0), forItemID: item.id, document: document)
+
+        XCTAssertEqual(document.model.items.first?.rememberedLTC?.ltcChannel, 1)
+    }
 }

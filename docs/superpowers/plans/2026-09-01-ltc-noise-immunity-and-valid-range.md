@@ -313,8 +313,10 @@ func test_initFullFileFrames_derivesBothBoundsFromFirstAndLastFrame() {
     )
     XCTAssertEqual(track?.ltcChannel, 1)
     XCTAssertEqual(track?.validFrom ?? -1, 2.0, accuracy: 0.001)
-    // last frame start (97600/48000) plus one frame of duration (1/30)
-    XCTAssertEqual(track?.validUntil ?? -1, 2.0666 + 0.0333, accuracy: 0.002)
+    // last frame start (97600/48000 = 2.0333) plus one frame of duration (1/30)
+    XCTAssertEqual(
+        track?.validUntil ?? -1, 97_600.0 / 48_000.0 + 1.0 / 30.0, accuracy: 0.002
+    )
 }
 
 func test_track_roundTripsBoundsThroughCoding() throws {
@@ -330,19 +332,27 @@ func test_track_roundTripsBoundsThroughCoding() throws {
 }
 
 func test_track_savedBeforeThisChange_decodesUnbounded() throws {
-    // A rememberedLTC persisted by v22 carries neither key.
-    let json = """
-    {"anchorTimecode":{"frameCount":5,"rate":"fps30"},\
-    "anchorPlaybackSeconds":1,"ltcChannel":1}
-    """.data(using: .utf8)!
-    let track = try JSONDecoder().decode(StripedTimecodeTrack.self, from: json)
+    // A rememberedLTC persisted by v22 carries neither key. Encoding a
+    // bounds-free track reproduces that shape exactly, because
+    // encodeIfPresent omits both — which the first assertion proves. This
+    // is deliberately not a hand-written literal: Timecode's own wire
+    // format is not this test's business, and guessing it makes the test
+    // fail for the wrong reason.
+    let unbounded = StripedTimecodeTrack(
+        anchorTimecode: Timecode(frameCount: 5, rate: .fps30),
+        anchorPlaybackSeconds: 1.0,
+        ltcChannel: 1
+    )
+    let data = try JSONEncoder().encode(unbounded)
+    let json = try XCTUnwrap(String(data: data, encoding: .utf8))
+    XCTAssertFalse(json.contains("valid"), "neither bound may be written when nil")
+
+    let track = try JSONDecoder().decode(StripedTimecodeTrack.self, from: data)
     XCTAssertNil(track.validFrom)
     XCTAssertNil(track.validUntil)
     XCTAssertTrue(track.isValid(atPlaybackSeconds: 12_345))
 }
 ```
-
-If `Timecode`'s own `Codable` representation differs from the literal above, run the encoder once and paste what it actually emits — do not adjust `Timecode` to fit the test.
 
 - [ ] **Step 2: Run the tests and watch them fail**
 
@@ -446,7 +456,6 @@ Phase 1 (the 10 s / 60 s scan) is unchanged and still publishes a readout immedi
 - Modify: `OnlyCue/LTC/LTCAudioReader.swift`
 - Modify: `OnlyCue/LTC/StripedTimecodeCache.swift`
 - Modify: `OnlyCue/Commands/CueCommands+LTC.swift`
-- Modify: `OnlyCue/UI/StripedTimecodeHost.swift`
 - Create: `OnlyCueTests/LTCFullFileAnalysisTests.swift`
 
 **Interfaces:**
@@ -626,45 +635,24 @@ static func refineRememberedLTC(
 }
 ```
 
-- [ ] **Step 7: Kick Phase 2 off from the host**
+- [ ] **Step 7: Run the tests and verify they pass**
 
-In `OnlyCue/UI/StripedTimecodeHost.swift`, extend the existing `.task(id: item?.id)` so Phase 2 follows Phase 1 in the same task — it inherits cancellation for free when the item changes:
-
-```swift
-.task(id: item?.id) {
-    track = nil
-    let decoded = await MediaImporter.stripedTimecode(for: item)
-    guard !Task.isCancelled else { return }
-    if let decoded, let item, item.rememberedLTC == nil {
-        CueCommands.rememberLTC(decoded, forItemID: item.id, document: document)
-    }
-    track = LTCFallback.resolve(detected: decoded, remembered: item?.rememberedLTC)
-
-    // Phase 2 (#793): the windowed scan can bound only the start. Now
-    // that the channel is known, measure the real extent across the whole
-    // file in the background and upgrade the readout in place. Skipped
-    // when the pass has already run (validUntil is set) or when the user
-    // named the channel, because MediaImporter went straight to the
-    // full-file pass in that case.
-    guard let item, item.ltcChannelSelection == .auto,
-          let phase1 = track, phase1.validUntil == nil else { return }
-    let refined = await MediaImporter.fullFileStripedTimecode(
-        for: item, channel: phase1.ltcChannel
-    )
-    guard !Task.isCancelled, let refined else { return }
-    StripedTimecodeCache.shared.store(refined, for: item.id)
-    CueCommands.refineRememberedLTC(refined, forItemID: item.id, document: document)
-    track = refined
-}
+```bash
+xcodebuild build-for-testing -project OnlyCue.xcodeproj -scheme OnlyCue \
+  -configuration Debug -destination 'platform=macOS'
+xcodebuild test-without-building -project OnlyCue.xcodeproj -scheme OnlyCue \
+  -destination 'platform=macOS' -parallel-testing-enabled NO \
+  -only-testing:OnlyCueTests/LTCFullFileAnalysisTests \
+  -only-testing:OnlyCueTests/LTCAudioReaderTests
 ```
 
-`MediaImporter.fullFileStripedTimecode(for:channel:)` and `MediaItem.ltcChannelSelection` land in Task 4 — this step will not compile until then, which is the one place in this plan where a task depends forward. Write it now and let Task 4 close it; the alternative is writing the host twice.
+Expected: PASS. `store(_:for:)` and `refineRememberedLTC` have no callers yet — that is correct at this point; Task 4 wires them up.
 
 - [ ] **Step 8: Commit**
 
 ```bash
 git add OnlyCue/LTC/LTCAudioReader.swift OnlyCue/LTC/StripedTimecodeCache.swift \
-        OnlyCue/Commands/CueCommands+LTC.swift OnlyCue/UI/StripedTimecodeHost.swift
+        OnlyCue/Commands/CueCommands+LTC.swift
 git commit -m "feat(ltc): measure the timecode extent with a full-file pass"
 ```
 
@@ -681,6 +669,7 @@ The task that makes the branch persistent. It carries its own migration, its own
 - Modify: `OnlyCue/Document/ProjectModel.swift` (`currentSchemaVersion`)
 - Modify: `OnlyCue/Document/ProjectModel+Migration.swift` (dispatch)
 - Modify: `OnlyCue/Commands/MediaImporter.swift`
+- Modify: `OnlyCue/UI/StripedTimecodeHost.swift`
 - Modify: `docs/data-model.md`
 - Create: `OnlyCueTests/LTCChannelSelectionTests.swift`
 - Create: `OnlyCueTests/ProjectModelMigrationV23Tests.swift`
@@ -688,7 +677,7 @@ The task that makes the branch persistent. It carries its own migration, its own
 **Interfaces:**
 - Consumes: `LTCAudioReader.analyzeFullFile(from:channel:)` (Task 3), `StripedTimecodeTrack.init?(fullFileFrames:channel:sampleRate:)` (Task 2), `StripedTimecodeCache.store(_:for:)` (Task 3).
 - Produces:
-  - `enum LTCChannelSelection: Codable, Equatable, Sendable { case auto; case channel(Int); case none }`
+  - `enum LTCChannelSelection: Codable, Hashable, Sendable { case auto; case channel(Int); case none }` — `Hashable` (not merely `Equatable`) because SwiftUI `.tag()` requires it in Task 6.
   - `MediaItem.ltcChannelSelection: LTCChannelSelection` (default `.auto`), last in the memberwise initialiser.
   - `ProjectModel.currentSchemaVersion == 23`; `ProjectModel.migrateFromV22(data:)`.
   - `MediaImporter.fullFileStripedTimecode(for: MediaItem?, channel: Int) async -> StripedTimecodeTrack?`
@@ -890,7 +879,9 @@ import Foundation
 /// Naming a channel is also the escape hatch from the 60 s scan ceiling. A
 /// file whose LTC begins at 90 s is invisible to `.auto`, but a named channel
 /// sends the full-file pass at it, which finds it.
-enum LTCChannelSelection: Equatable, Sendable {
+/// `Hashable` is load-bearing, not decoration: SwiftUI's `.tag()` requires
+/// it, and the channel picker in the edit sheet tags rows with these values.
+enum LTCChannelSelection: Hashable, Sendable {
 
     /// Run the windowed scan across every channel and take the first that
     /// corroborates. The default.
@@ -1114,7 +1105,39 @@ private static func withResolvedMedia<T>(
 
 `resolvedStripedTimecode(for:)` above it is unchanged — it still composes `stripedTimecode` with `LTCFallback.resolve`.
 
-- [ ] **Step 8: Update `docs/data-model.md`**
+- [ ] **Step 8: Kick Phase 2 off from the host**
+
+`OnlyCue/UI/StripedTimecodeHost.swift` lives in this task, not Task 3, because it is the first point at which both `fullFileStripedTimecode` and `ltcChannelSelection` exist. Extend the existing `.task(id: item?.id)` so Phase 2 follows Phase 1 in the same task — it then inherits cancellation for free when the item changes:
+
+```swift
+.task(id: item?.id) {
+    track = nil
+    let decoded = await MediaImporter.stripedTimecode(for: item)
+    guard !Task.isCancelled else { return }
+    if let decoded, let item, item.rememberedLTC == nil {
+        CueCommands.rememberLTC(decoded, forItemID: item.id, document: document)
+    }
+    track = LTCFallback.resolve(detected: decoded, remembered: item?.rememberedLTC)
+
+    // Phase 2 (#793): the windowed scan can bound only the start. Now that
+    // the channel is known, measure the real extent across the whole file
+    // in the background and upgrade the readout in place. Skipped when the
+    // pass has already run (validUntil is set) and when the user named the
+    // channel, because MediaImporter went straight to the full-file pass
+    // in that case and the bounds are already measured.
+    guard let item, item.ltcChannelSelection == .auto,
+          let phase1 = track, phase1.validUntil == nil else { return }
+    let refined = await MediaImporter.fullFileStripedTimecode(
+        for: item, channel: phase1.ltcChannel
+    )
+    guard !Task.isCancelled, let refined else { return }
+    StripedTimecodeCache.shared.store(refined, for: item.id)
+    CueCommands.refineRememberedLTC(refined, forItemID: item.id, document: document)
+    track = refined
+}
+```
+
+- [ ] **Step 9: Update `docs/data-model.md`**
 
 Five edits, all in the sections the file already has:
 
@@ -1124,7 +1147,7 @@ Five edits, all in the sections the file already has:
 4. Migration list (~line 236): add "**v22 → current** — `ltcChannelSelection` defaults to `auto`; `rememberedLTC` gains optional `validFrom` / `validUntil`, both absent-means-unbounded, so existing readouts are unchanged."
 5. Line 237: "v22 is a one-way upgrade" → "v23 is a one-way upgrade".
 
-- [ ] **Step 9: Run the full suite and verify it passes**
+- [ ] **Step 10: Run the full suite and verify it passes**
 
 ```bash
 xcodegen generate
@@ -1136,7 +1159,7 @@ xcodebuild test-without-building -project OnlyCue.xcodeproj -scheme OnlyCue \
 
 Expected: PASS, including every earlier `ProjectModelMigrationV*Tests` class — a schema bump that breaks an older migration shows up there and nowhere else. Task 3's `StripedTimecodeHost` change compiles from this point on.
 
-- [ ] **Step 10: Commit**
+- [ ] **Step 11: Commit**
 
 ```bash
 git add OnlyCue/Document/LTCChannelSelection.swift \
@@ -1145,6 +1168,7 @@ git add OnlyCue/Document/LTCChannelSelection.swift \
         OnlyCue/Document/ProjectModel.swift \
         OnlyCue/Document/ProjectModel+Migration.swift \
         OnlyCue/Commands/MediaImporter.swift \
+        OnlyCue/UI/StripedTimecodeHost.swift \
         docs/data-model.md
 git commit -m "feat(document): let the user name the ltc channel (schema v23)"
 ```
@@ -1450,7 +1474,9 @@ Insert the picker into `Section("LTC")`, immediately above the Status row — th
 ```swift
 Picker("Channel", selection: $channelDraft) {
     Text(autoChannelLabel).tag(LTCChannelSelection.auto)
-    ForEach(0..<channelCount, id: \.self) { index in
+    // Array(...) not a bare 0..<channelCount: SwiftUI treats a bare range
+    // as constant and does not re-render when the probe returns.
+    ForEach(Array(0..<channelCount), id: \.self) { index in
         Text("Channel \(index + 1)").tag(LTCChannelSelection.channel(index))
     }
     Text("No LTC").tag(LTCChannelSelection.none)

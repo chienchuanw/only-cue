@@ -110,4 +110,49 @@ final class LTCDecoderTests: XCTestCase {
         XCTAssertNil(SMPTEFramerate.matching(framesPerSecond: 25, isDropFrame: true))
         XCTAssertNil(SMPTEFramerate.matching(framesPerSecond: 60, isDropFrame: false))
     }
+
+    // MARK: - Silent lead-in (#793)
+
+    /// Mimics the dither mp3 decoding leaves in "digital silence": amplitude
+    /// 2e-5 with the sign flipping every sample. The real file measured a
+    /// 2.35e-5 peak with 95998 of 96000 samples non-zero; alternating signs
+    /// is that case at its worst, and is deterministic.
+    private func silenceDither(seconds: Double, sampleRate: Double) -> [Float] {
+        let count = Int(seconds * sampleRate)
+        return (0..<count).map { $0 % 2 == 0 ? Float(2e-5) : Float(-2e-5) }
+    }
+
+    func test_decode_ltcPrecededBySilentLeadIn_stillDecodes() {
+        let sampleRate = 48_000.0
+        let start = tc(8, 0, 0, 18, .fps30)
+        let stream = LTCFrameStream(startTimecode: start, sampleRate: sampleRate)
+        let samples = silenceDither(seconds: 2.0, sampleRate: sampleRate)
+            + stream.samples(frameCount: 30)
+
+        let frames = LTCDecoder.decode(samples: samples, sampleRate: sampleRate)
+
+        XCTAssertGreaterThanOrEqual(frames.count, 28, "expected ~30 frames, got \(frames.count)")
+        XCTAssertEqual(frames.first?.timecode.rate, .fps30)
+        XCTAssertEqual(frames.first?.timecode, start)
+        XCTAssertGreaterThanOrEqual(
+            frames.first?.startSample ?? 0, 96_000 - 100,
+            "the first frame must sit after the 2 s lead-in, not inside it"
+        )
+    }
+
+    func test_decode_pureSilenceDither_findsNothing() {
+        // Pins the global-reference constraint: a buffer that is *only* noise
+        // must be rejected by the RMS floor, not normalised up to it.
+        let samples = silenceDither(seconds: 2.0, sampleRate: 48_000.0)
+        XCTAssertTrue(LTCDecoder.decode(samples: samples, sampleRate: 48_000.0).isEmpty)
+    }
+
+    func test_decode_loudNonLTCTone_findsNoFrames() {
+        // The more permissive front end must not invent frames in music.
+        let sampleRate = 48_000.0
+        let samples = (0..<Int(sampleRate * 2)).map { index in
+            Float(0.5 * sin(2.0 * Double.pi * 440.0 * Double(index) / sampleRate))
+        }
+        XCTAssertTrue(LTCDecoder.decode(samples: samples, sampleRate: sampleRate).isEmpty)
+    }
 }

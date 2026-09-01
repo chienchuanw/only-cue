@@ -58,10 +58,15 @@ struct StripedTimecodeTrack: Equatable, Sendable, Codable {
     /// were recovered (or `sampleRate <= 0`) — i.e. the file has no readable LTC.
     init?(detection: LTCAudioReader.DetectionResult, sampleRate: Double) {
         guard let first = detection.frames.first, sampleRate > 0 else { return nil }
+        // Phase 1 scans only the head of the file: it can bound the start but
+        // not the end, so validUntil stays nil (unbounded) until the full-file
+        // pass measures it.
+        let start = Double(first.startSample) / sampleRate
         self.init(
             anchorTimecode: first.timecode,
-            anchorPlaybackSeconds: Double(first.startSample) / sampleRate,
-            ltcChannel: detection.channel
+            anchorPlaybackSeconds: start,
+            ltcChannel: detection.channel,
+            validFrom: start
         )
     }
 
@@ -88,7 +93,7 @@ struct StripedTimecodeTrack: Equatable, Sendable, Codable {
     /// measured rather than assumed. `validUntil` extends one frame past the
     /// last frame's start, because that frame occupies real time.
     init?(fullFileFrames frames: [LTCDecoder.DecodedFrame], channel: Int, sampleRate: Double) {
-        guard let first = frames.first, let last = frames.last else { return nil }
+        guard let first = frames.first, let last = frames.last, sampleRate > 0 else { return nil }
         self.anchorTimecode = first.timecode
         self.anchorPlaybackSeconds = Double(first.startSample) / sampleRate
         self.ltcChannel = channel

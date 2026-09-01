@@ -182,4 +182,22 @@ final class StripedTimecodeTrackTests: XCTestCase {
         XCTAssertNil(track.validUntil)
         XCTAssertTrue(track.isValid(atPlaybackSeconds: 12_345))
     }
+
+    func test_initFromDetection_boundsTheStartButNotTheEnd() {
+        // The production Phase 1 path: MediaImporter builds the track from a
+        // DetectionResult, and a windowed scan can only bound the start.
+        let frame = LTCDecoder.DecodedFrame(timecode: tc(8, 0, 0, 18), startSample: 96_000)
+        let detection = LTCAudioReader.DetectionResult(channel: 1, frames: [frame])
+        let track = StripedTimecodeTrack(detection: detection, sampleRate: 48_000)
+        XCTAssertEqual(track?.validFrom ?? -1, 2.0, accuracy: 1e-9)
+        XCTAssertNil(track?.validUntil)
+        XCTAssertEqual(track?.ltcChannel, 1)
+        XCTAssertFalse(track?.isValid(atPlaybackSeconds: 1.0) ?? true)
+        XCTAssertTrue(track?.isValid(atPlaybackSeconds: 300.0) ?? false)
+    }
+
+    func test_initFromFullFileFrames_zeroSampleRate_isNil() {
+        let frame = LTCDecoder.DecodedFrame(timecode: tc(0, 0, 0, 0), startSample: 0)
+        XCTAssertNil(StripedTimecodeTrack(fullFileFrames: [frame], channel: 0, sampleRate: 0))
+    }
 }

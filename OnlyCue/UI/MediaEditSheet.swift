@@ -18,6 +18,11 @@ struct MediaEditSheet: View {
     var onRedetectLTC: () -> Void = {}
     /// Forget this clip's remembered LTC (#754). Supplied by the presenter.
     var onClearLTC: () -> Void = {}
+    /// Records which channel carries LTC (#793). Applied immediately rather
+    /// than on Save — the status line re-resolves against the new channel,
+    /// so the change has to have landed to be worth showing. Supplied by the
+    /// presenter, which holds `document` and the undo manager.
+    var onSelectLTCChannel: (LTCChannelSelection) -> Void = { _ in }
 
     @State private var nameDraft: String = ""
     @State private var tcDraft: String = ""
@@ -30,6 +35,13 @@ struct MediaEditSheet: View {
     @State private var detecting = true
     /// Bumped by Re-detect / Clear to re-run the resolve `.task`.
     @State private var fetchToken = UUID()
+    /// The picker's displayed value. `item` is a snapshot the presenter took
+    /// when the sheet opened and never updates, so this is the source of
+    /// truth after the initial sync.
+    @State private var channelDraft: LTCChannelSelection = .auto
+    /// How many channels the file has, for the picker's rows. 0 until the
+    /// probe returns, which is why the loop below is over an empty range then.
+    @State private var channelCount = 0
 
     private var ltcChannel: Int? { resolvedTrack?.ltcChannel }
 
@@ -95,6 +107,20 @@ struct MediaEditSheet: View {
                         .accessibilityIdentifier("mediaEditStartTimecodeField")
                 }
                 Section("LTC") {
+                    Picker("Channel", selection: $channelDraft) {
+                        Text(autoChannelLabel).tag(LTCChannelSelection.auto)
+                        // Array(...) not a bare 0..<channelCount: SwiftUI treats a bare range
+                        // as constant and does not re-render when the probe returns.
+                        ForEach(Array(0..<channelCount), id: \.self) { index in
+                            Text("Channel \(index + 1)").tag(LTCChannelSelection.channel(index))
+                        }
+                        Text("No LTC").tag(LTCChannelSelection.none)
+                    }
+                    .accessibilityIdentifier("mediaEditLTCChannelPicker")
+                    .onChange(of: channelDraft) { _, new in
+                        onSelectLTCChannel(new)
+                        fetchToken = UUID()   // re-resolve the status line against the new choice
+                    }
                     LabeledContent("Status") {
                         Text(ltcStatusText)
                             .foregroundStyle(.secondary)
@@ -132,19 +158,32 @@ struct MediaEditSheet: View {
         .onAppear { syncDraftsFromItem() }
         .task(id: fetchToken) {
             detecting = true
+            channelCount = await MediaImporter.audioChannelCount(for: item)
             resolvedTrack = await MediaImporter.resolvedStripedTimecode(for: item)
             detecting = false
         }
     }
 
-    /// The LTC status line. "Remembered" whenever a persisted value exists (the
-    /// write-once truth); "Detected" for a fresh, not-yet-remembered hit.
+    /// Names what Auto actually found, so the user can accept it or override
+    /// it from the same list without first reading the Status row.
+    private var autoChannelLabel: String {
+        guard let channel = resolvedTrack?.ltcChannel, channelDraft == .auto else { return "Auto" }
+        return "Auto (detected: Channel \(channel + 1))"
+    }
+
     private var ltcStatusText: String {
         if detecting { return "Detecting…" }
         guard let track = resolvedTrack else { return "Not found" }
         let prefix = item.rememberedLTC == nil ? "Detected" : "Remembered"
         let tc = track.timecode(atPlaybackSeconds: track.anchorPlaybackSeconds).displayString
-        return "\(prefix) · channel \(track.ltcChannel + 1) · \(tc)"
+        var line = "\(prefix) · channel \(track.ltcChannel + 1) · \(tc)"
+        // Present only once the full-file pass has measured something. A range
+        // visibly shorter than the media is also how a truncated/discontinuous
+        // stripe announces itself (spec section 2).
+        if let extent = LTCExtentLabel.text(validFrom: track.validFrom, validUntil: track.validUntil) {
+            line += " · \(extent)"
+        }
+        return line
     }
 
     private func redetect() {
@@ -163,6 +202,7 @@ struct MediaEditSheet: View {
         mutedDraft = item.ltcMuted
         playsOriginalDraft = item.playsOriginalSourceAudio
         tcInvalid = false
+        channelDraft = item.ltcChannelSelection
     }
 
     private func commit() {

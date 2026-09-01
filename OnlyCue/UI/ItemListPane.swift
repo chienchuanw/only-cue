@@ -68,6 +68,16 @@ struct ItemListPane: View {
                 },
                 onClearLTC: {
                     CueCommands.clearRememberedLTC(forItemID: editing.item.id, document: document)
+                },
+                onSelectLTCChannel: { selection in
+                    CueCommands.setLTCChannelSelection(
+                        selection,
+                        forItemID: editing.item.id,
+                        document: document,
+                        undoManager: undoManager
+                    )
+                    // The cached answer was computed for the old selection.
+                    StripedTimecodeCache.shared.invalidate(editing.item.id)
                 }
             )
         }

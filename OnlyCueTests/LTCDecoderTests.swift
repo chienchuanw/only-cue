@@ -133,7 +133,13 @@ final class LTCDecoderTests: XCTestCase {
 
         XCTAssertGreaterThanOrEqual(frames.count, 28, "expected ~30 frames, got \(frames.count)")
         XCTAssertEqual(frames.first?.timecode.rate, .fps30)
-        XCTAssertEqual(frames.first?.timecode, start)
+        // The demodulator can lose the leading frame while it phase-locks — the
+        // same tolerance `assertRoundTrips` above allows on a clean signal.
+        let firstOffset = (frames.first?.timecode.frameCount ?? -1) - start.frameCount
+        XCTAssertTrue(
+            (0...1).contains(firstOffset),
+            "first frame should be the start or the one after it, got offset \(firstOffset)"
+        )
         XCTAssertGreaterThanOrEqual(
             frames.first?.startSample ?? 0, 96_000 - 100,
             "the first frame must sit after the 2 s lead-in, not inside it"

@@ -138,6 +138,28 @@ final class MTCPortSender {
         }
     }
 
+    /// Unschedule anything already handed to CoreMIDI for this destination.
+    ///
+    /// Quarter-frames are sent with timestamps up to a look-ahead window into the
+    /// future, so CoreMIDI is holding messages that have not gone out yet. On a
+    /// re-anchor or a stop those describe a position the transport has left, and
+    /// without this they would still be delivered — interleaved with the new
+    /// schedule after a seek, or continuing for a fraction of a second after
+    /// pause. Scheduling ahead is what buys the immunity to main-actor stalls;
+    /// this is the other half of that bargain.
+    ///
+    /// Apple documents `MIDIFlushOutput` as *not* cancelling already-scheduled
+    /// events on **network** MIDI destinations, so on those a seek can still emit
+    /// a short stale tail. Correct and necessary for USB/DIN interfaces, which is
+    /// what this feature targets.
+    func flushScheduled() {
+        guard let destination else { return }
+        let status = MIDIFlushOutput(destination)
+        if status != noErr {
+            lastError = "MIDIFlushOutput failed (\(status))"
+        }
+    }
+
     private func flush(_ list: UnsafeMutablePointer<MIDIEventList>, to destination: MIDIEndpointRef) {
         let status = MIDISendEventList(port, destination, list)
         if status == noErr {

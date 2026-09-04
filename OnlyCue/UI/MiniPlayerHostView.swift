@@ -9,6 +9,10 @@ struct MiniPlayerHostView: View {
 
     let engine: PlayerEngine
     @ObservedObject var document: CueListDocument
+    // See `DocumentView` — keeps the mini player's rate interlock reactive to
+    // both timecode outputs rather than only to LTC.
+    @ObservedObject private var ltcRoutingStore = LTCRoutingStore.shared
+    @ObservedObject private var mtcOutputStore = MTCOutputStore.shared
     let context: MiniPlayerContext
     /// Shared seek-task box — owned by `DocumentView` so the key monitor and
     /// the host buttons use one `SeekTaskBox`, preventing overlapping seeks (#743).

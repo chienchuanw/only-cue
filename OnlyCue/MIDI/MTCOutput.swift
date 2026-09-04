@@ -150,6 +150,10 @@ final class MTCOutput: ObservableObject {
         // is already scheduled inside CoreMIDI; without this the stream would run
         // on for a fraction of a second after pause.
         sender.flushScheduled()
+        // Every other path that touches the sender republishes its state; without
+        // this a flush that failed on the way out would be recorded and never
+        // shown, which is the one thing the status pill exists to prevent.
+        republishSenderState()
         schedule = nil
         scheduledUpTo = 0
         isRunning = false

@@ -38,6 +38,12 @@ struct PlayheadClockHeader: View {
                         .padding(.trailing, DS.Space.sm)
                         .accessibilityIdentifier("playheadFramerateCaption")
                 }
+                // MTC output state, mirrored opposite the framerate caption so
+                // the two quiet captions balance the clock (#794).
+                .overlay(alignment: .topLeading) {
+                    MTCStatusPill()
+                        .padding(.leading, DS.Space.sm)
+                }
             Divider()
                 .padding(.top, 6)
         }

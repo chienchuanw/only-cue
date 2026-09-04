@@ -15,6 +15,17 @@ ADR template:
 
 ---
 
+## ADR-032 — OnlyCue generates MIDI Timecode itself; `fps30drop` rides the 29.97-DF rate slot
+
+**Date**: 2026-09-05
+**Status**: Accepted
+**Supersedes**: the "MIDI Timecode is delegated to an external app" clause of ADR-019
+**Decision**: OnlyCue emits MTC directly to a CoreMIDI destination (epic #794) rather than delegating it to an external helper as ADR-019 recorded. The generator is a pure wire-format encoder (`MTCFrame`: quarter-frame data bytes, Full Frame SysEx) plus a pure timing plan (`MTCSchedule`: a `mach_absolute_time` anchor turned into `(byte, MIDITimeStamp)` pairs) plus one untested CoreMIDI edge (`MTCOutput`), mirroring the `MIDIMessage` / `MIDIInput` split. It free-runs from the same `ProjectTimecodeSettings.timecode(atPlaybackSeconds:forItem:)` the LTC engine consumes, so LTC and MTC cannot disagree. Because MTC's rate field is only two bits (24 / 25 / 29.97-DF / 30) and has no 30-fps-drop-frame code, `SMPTEFramerate.fps30drop` is transmitted in the **29.97-DF** slot while still being clocked at **30 fps** — carrying forward, unchanged, the simplification ADR-019 already made for LTC. Configuration is machine-level (`MTCOutputStore`, `UserDefaults` key `mtcOutput.v1`), independent of the LTC master switch, and requires no `ProjectModel` schema change.
+**Why**: ADR-019 deferred MTC because epic #33 was already carrying the whole timecode model and an external bridge was cheaper than a second generator. That reasoning expired once the model existed: `Timecode`, `SMPTEFramerate` and the per-clip start TC are exactly the inputs MTC needs, so generating it in-app is now additive rather than duplicative — and it removes a moving part from the show-critical path, since delegating meant a second app had to be running, routed and locked before the rig saw timecode. Emitting the 29.97-DF code for a 30 fps stream is a knowing inaccuracy, but it is the *same* inaccuracy LTC already ships; keeping the two outputs identical is worth more than making one of them honest in isolation, and true fractional framerates remain a separate, larger epic.
+**Reversal cost**: Low. `OnlyCue/MIDI/MTC*.swift` plus `MTCOutputHost` are a self-contained additive slice with no schema field and no change to any existing LTC type; deleting them removes the feature and restores ADR-019's position. The one load-bearing commitment is the rate-slot mapping — changing it later changes what already-configured consoles receive.
+
+---
+
 ## ADR-031 — A song's detected LTC is remembered in the document
 
 **Date**: 2026-08-17

@@ -9,15 +9,21 @@ struct MiniPlaybackActions {
     let engine: PlayerEngine
     let document: CueListDocument
     let context: MiniPlayerContext
-    let ltcEnabled: Bool
+    let timecodeOutputEnabled: Bool
 
     private var seekTaskBox: SeekTaskBox
 
-    init(engine: PlayerEngine, document: CueListDocument, context: MiniPlayerContext, ltcEnabled: Bool, seekTaskBox: SeekTaskBox) {
+    init(
+        engine: PlayerEngine,
+        document: CueListDocument,
+        context: MiniPlayerContext,
+        timecodeOutputEnabled: Bool,
+        seekTaskBox: SeekTaskBox
+    ) {
         self.engine = engine
         self.document = document
         self.context = context
-        self.ltcEnabled = ltcEnabled
+        self.timecodeOutputEnabled = timecodeOutputEnabled
         self.seekTaskBox = seekTaskBox
     }
 
@@ -59,7 +65,7 @@ struct MiniPlaybackActions {
     }
 
     func rate(_ change: PlaybackRateShortcuts.Change) {
-        PlaybackRateController.apply(change, engine: engine, ltcEnabled: ltcEnabled)
+        PlaybackRateController.apply(change, engine: engine, timecodeOutputEnabled: timecodeOutputEnabled)
     }
 
     /// Absolute seek to a 0…1 fraction of the clip — the Mini Player progress

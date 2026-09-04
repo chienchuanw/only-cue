@@ -126,16 +126,16 @@ final class PlayerEnginePlaybackRateTests: XCTestCase {
         defer { NotificationCenter.default.removeObserver(observer) }
 
         // Allowed: target rate == 1.0× while LTC active is fine.
-        PlaybackRateController.apply(.reset, engine: engine, ltcEnabled: true)
+        PlaybackRateController.apply(.reset, engine: engine, timecodeOutputEnabled: true)
         XCTAssertEqual(engine.playbackRate, 1.0, accuracy: 0.0001)
         XCTAssertEqual(blockedSignals, 0)
 
         // Blocked: any non-1.0× target while LTC active is a no-op + signal.
-        PlaybackRateController.apply(.up, engine: engine, ltcEnabled: true)
+        PlaybackRateController.apply(.up, engine: engine, timecodeOutputEnabled: true)
         XCTAssertEqual(engine.playbackRate, 1.0, accuracy: 0.0001)
         XCTAssertEqual(blockedSignals, 1)
 
-        PlaybackRateController.apply(.down, engine: engine, ltcEnabled: true)
+        PlaybackRateController.apply(.down, engine: engine, timecodeOutputEnabled: true)
         XCTAssertEqual(engine.playbackRate, 1.0, accuracy: 0.0001)
         XCTAssertEqual(blockedSignals, 2)
     }
@@ -143,14 +143,14 @@ final class PlayerEnginePlaybackRateTests: XCTestCase {
     func test_controller_appliesChangeWhenLTCInactive() {
         let engine = PlayerEngine()
 
-        PlaybackRateController.apply(.up, engine: engine, ltcEnabled: false)
+        PlaybackRateController.apply(.up, engine: engine, timecodeOutputEnabled: false)
         XCTAssertEqual(engine.playbackRate, 1.1, accuracy: 0.0001)
 
-        PlaybackRateController.apply(.down, engine: engine, ltcEnabled: false)
-        PlaybackRateController.apply(.down, engine: engine, ltcEnabled: false)
+        PlaybackRateController.apply(.down, engine: engine, timecodeOutputEnabled: false)
+        PlaybackRateController.apply(.down, engine: engine, timecodeOutputEnabled: false)
         XCTAssertEqual(engine.playbackRate, 0.9, accuracy: 0.0001)
 
-        PlaybackRateController.apply(.reset, engine: engine, ltcEnabled: false)
+        PlaybackRateController.apply(.reset, engine: engine, timecodeOutputEnabled: false)
         XCTAssertEqual(engine.playbackRate, 1.0, accuracy: 0.0001)
     }
 

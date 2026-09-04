@@ -19,7 +19,7 @@ struct MiniPlayerHostView: View {
             engine: engine,
             document: document,
             context: context,
-            ltcEnabled: LTCRoutingStore.shared.settings.isEnabled,
+            timecodeOutputEnabled: TimecodeOutputInterlock.isEngagedNow,
             seekTaskBox: seekBox
         )
         let model = MiniPlayerModel.make(

@@ -211,7 +211,7 @@ struct TransportControls: View {
                     .font(DS.Text.mono)
                     .foregroundStyle(DS.Color.textTertiary)
             }
-            PlaybackRateBadge(engine: engine, ltcEnabled: ltcRoutingStore.settings.isEnabled)
+            PlaybackRateBadge(engine: engine, timecodeOutputEnabled: TimecodeOutputInterlock.isEngagedNow)
             PlaybackModeBadge(mode: playbackMode)
             if TimecodeReadout.isVisible(
                 hasFileTimecode: stripedTimecode != nil,

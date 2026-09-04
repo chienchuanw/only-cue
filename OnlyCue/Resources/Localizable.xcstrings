@@ -781,12 +781,12 @@
         }
       }
     },
-    "Disable LTC to change playback rate.": {
+    "Disable timecode output to change playback rate.": {
       "localizations": {
         "zh-Hant": {
           "stringUnit": {
             "state": "translated",
-            "value": "停用 LTC 以變更播放速率。"
+            "value": "停用時間碼輸出以變更播放速率。"
           }
         }
       }

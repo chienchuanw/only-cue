@@ -43,7 +43,7 @@ extension DocumentView {
             engine: engine,
             document: document,
             context: miniContext,
-            ltcEnabled: ltcRoutingStore.settings.isEnabled,
+            timecodeOutputEnabled: TimecodeOutputInterlock.isEngagedNow,
             seekTaskBox: seekBox
         ).perform(action)
         return true

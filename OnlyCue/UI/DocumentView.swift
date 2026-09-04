@@ -242,7 +242,7 @@ struct DocumentView: View {
                 )
                 PlaybackRateShortcuts(
                     engine: engine,
-                    ltcEnabled: ltcRoutingStore.settings.isEnabled,
+                    timecodeOutputEnabled: TimecodeOutputInterlock.isEngagedNow,
                     shortcutFor: shortcut
                 )
                 ShowGoShortcut(
@@ -294,7 +294,7 @@ struct DocumentView: View {
         .onReceive(NotificationCenter.default.publisher(for: .importMediaRequested)) { _ in
             showImporter = true
         }
-        .playbackRateBindings(engine: engine, ltcEnabled: ltcRoutingStore.settings.isEnabled)
+        .playbackRateBindings(engine: engine, timecodeOutputEnabled: TimecodeOutputInterlock.isEngagedNow)
         .templateMenuReceiver(
             document: document,
             pendingErrorMessage: pendingAlertMessageBinding,

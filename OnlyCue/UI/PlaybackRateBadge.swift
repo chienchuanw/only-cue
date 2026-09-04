@@ -2,14 +2,14 @@ import SwiftUI
 
 /// Transport-bar rate indicator + popover. Hidden when `rate == 1.0×` outside
 /// the flash window. Flashes briefly on any rate change (including back to 1.0×)
-/// and shows red interlock messages when LTC blocks/forces a rate reset.
+/// and shows red interlock messages when timecode output blocks/forces a rate reset.
 struct PlaybackRateBadge: View {
 
     let engine: PlayerEngine
-    /// When `true`, the popover's slider + reset are disabled so the LTC
+    /// When `true`, the popover's slider + reset are disabled so the timecode
     /// interlock can't be bypassed through the popover. The badge itself
     /// stays clickable so the user can read the current rate.
-    var ltcEnabled: Bool = false
+    var timecodeOutputEnabled: Bool = false
 
     @State private var flashUntil: Date = .distantPast
     @State private var flashTick: Int = 0
@@ -17,8 +17,8 @@ struct PlaybackRateBadge: View {
     @State private var showPopover = false
 
     private static let flashDuration: TimeInterval = 1.2
-    private static let interlockBlockedMessage = "Disable LTC to change playback rate."
-    private static let interlockResetMessage = "Playback rate reset to 1.0× for LTC."
+    private static let interlockBlockedMessage = "Disable timecode output to change playback rate."
+    private static let interlockResetMessage = "Playback rate reset to 1.0× for timecode output."
 
     private var rateText: String {
         String(format: "%.1f×", engine.playbackRate)
@@ -54,7 +54,7 @@ struct PlaybackRateBadge: View {
                 .accessibilityLabel(interlockMessage ?? rateText)
                 .help("Playback rate (click to adjust)")
                 .popover(isPresented: $showPopover) {
-                    PlaybackRatePopover(engine: engine, ltcEnabled: ltcEnabled)
+                    PlaybackRatePopover(engine: engine, timecodeOutputEnabled: timecodeOutputEnabled)
                         .padding()
                 }
             }
@@ -86,7 +86,7 @@ struct PlaybackRateBadge: View {
 private struct PlaybackRatePopover: View {
 
     @Bindable var engine: PlayerEngine
-    let ltcEnabled: Bool
+    let timecodeOutputEnabled: Bool
 
     private var rateBinding: Binding<Double> {
         Binding(
@@ -108,12 +108,12 @@ private struct PlaybackRatePopover: View {
             .accessibilityIdentifier("playbackRateSlider")
             Button("Reset to 1.0×") { engine.resetPlaybackRate() }
                 .accessibilityIdentifier("playbackRateResetButton")
-            if ltcEnabled {
-                Text("Disable LTC to change playback rate.")
+            if timecodeOutputEnabled {
+                Text("Disable timecode output to change playback rate.")
                     .font(.caption)
                     .foregroundStyle(.red)
             }
         }
-        .disabled(ltcEnabled)
+        .disabled(timecodeOutputEnabled)
     }
 }

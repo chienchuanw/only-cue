@@ -164,6 +164,7 @@ struct DocumentView: View {
         .oscServerHost(engine: engine, document: document, undoManager: undoManager, editorMode: editorMode, showGoTypeID: showGoTypeID)
         .midiInputHost(engine: engine, document: document, undoManager: undoManager, editorMode: editorMode, showGoTypeID: showGoTypeID)
         .ltcOutput(engine: engine, document: document)
+        .mtcOutput(engine: engine, document: document)
         .environment(\.projectFramerate, document.model.timecodeSettings.framerate)
         .workspaceHosted(for: self)
         .sidebarVisibilitySync(for: self)

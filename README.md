@@ -39,7 +39,7 @@ Import an audio or video file, preview it, and lay out a cue list: an ordered se
 
 OnlyCue is a document-based macOS app for lighting designers and show programmers, inspired by [CuePoints](https://cuepoints.com/). You work against the media itself — a waveform or video timeline — dropping cues where they need to land, then hand the timing off to a console or a remote operator.
 
-It is built for real show-control workflows: SMPTE linear timecode generation and routing, grandMA2 push, OSC and MIDI remote control, and console-ready cue exports. The main document window is a dark, design-token-driven surface kept 1:1 with a Figma design system.
+It is built for real show-control workflows: SMPTE linear timecode generation and routing, MIDI Timecode output, grandMA2 push, OSC and MIDI remote control, and console-ready cue exports. The main document window is a dark, design-token-driven surface kept 1:1 with a Figma design system.
 
 ## Features
 
@@ -56,6 +56,7 @@ It is built for real show-control workflows: SMPTE linear timecode generation an
 
 **Timecode & tempo**
 - SMPTE Linear Timecode generation (24 / 25 / 30 ND / 30 DF) routed to a chosen Core Audio output, with per-channel role assignment.
+- MIDI Timecode (MTC) output to any CoreMIDI destination, independent of LTC — quarter-frame stream while playing, Full Frame on locate (including while paused), plus a test burst to prove the rig at setup.
 - Per-media start timecode; reads LTC striped onto imported audio.
 - Cue-anchored tempo with a derived beat grid and per-cue tempo detection.
 
@@ -112,7 +113,7 @@ Re-run `xcodegen generate` whenever `project.yml`, `Info.plist`, or the source f
 | --- | --- |
 | Language | Swift 5.10 |
 | UI | SwiftUI (`@Observable`, `DocumentGroup`), dark-only main window |
-| Media | AVFoundation (`AVPlayer`, `AVAssetReader`), Core Audio (LTC routing) |
+| Media | AVFoundation (`AVPlayer`, `AVAssetReader`), Core Audio (LTC routing), CoreMIDI (MTC output) |
 | Networking | `Network.framework` (OSC, grandMA2 telnet), CoreMIDI |
 | Min OS | macOS 14 (Sonoma) |
 | Project file | `.cuelist` — AES-256-GCM encrypted container, JSON payload |

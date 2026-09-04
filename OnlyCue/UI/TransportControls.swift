@@ -36,6 +36,8 @@ struct TransportControls: View {
 
     @Environment(\.stripedTimecode) private var stripedTimecode
     @ObservedObject private var ltcRoutingStore = LTCRoutingStore.shared
+    // See `DocumentView` — keeps the rate badge's interlock reactive to MTC.
+    @ObservedObject private var mtcOutputStore = MTCOutputStore.shared
     @AppStorage("transport.countdownMode") private var countdownModeRaw = TransportBar.CountdownMode.time.rawValue
 
     private var countdownMode: TransportBar.CountdownMode {

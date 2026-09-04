@@ -132,6 +132,10 @@ final class MTCOutput: ObservableObject {
     /// receiver there. Every entry into a new position goes through here, so the
     /// piece sequence always restarts at 0 on a clean group boundary.
     private func anchor(at timecode: Timecode) {
+        // Drop the previous schedule's still-pending quarter-frames before the
+        // new position goes out, or up to `lookAheadSeconds` of pre-seek nibbles
+        // would arrive after the Full Frame and drag the receiver backwards.
+        sender.flushScheduled()
         let now = mach_absolute_time()
         schedule = MTCSchedule(startTimecode: timecode, anchorHostTime: now, ticksPerSecond: ticksPerSecond)
         scheduledUpTo = now
@@ -142,6 +146,10 @@ final class MTCOutput: ObservableObject {
 
     private func stopStream() {
         stopRefillTimer()
+        // Cancelling the timer stops us *queuing* more, but a look-ahead window
+        // is already scheduled inside CoreMIDI; without this the stream would run
+        // on for a fraction of a second after pause.
+        sender.flushScheduled()
         schedule = nil
         scheduledUpTo = 0
         isRunning = false

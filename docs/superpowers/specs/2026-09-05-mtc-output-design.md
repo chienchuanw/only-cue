@@ -154,6 +154,14 @@ Mirrors `MIDIInput` in shape, ownership and documentation tone. Send-only.
   ~10/s by the caller.
 - `stop()` cancels the timer and clears state. It does **not** dispose the client,
   so re-arming is cheap; `deinit` disposes.
+- **`MIDIFlushOutput` on every re-anchor and stop.** Scheduling ahead means
+  CoreMIDI is holding up to a look-ahead window of quarter-frames that have not
+  gone out yet. On a seek those describe the *old* position and would arrive
+  interleaved after the new Full Frame; on a stop they would keep the stream
+  running for a fraction of a second past pause. Flushing is the other half of
+  the scheduled-ahead bargain, not an optimisation. (Apple documents it as *not*
+  cancelling scheduled events on **network** MIDI destinations, so those can
+  still emit a short stale tail; correct for the USB/DIN interfaces this targets.)
 - Hot-plug: `MIDIClientCreateWithBlock`'s notify block re-resolves the chosen UID,
   matching `MIDIInput.handleHotPlug`.
 - `@Published` / observable: `isRunning`, `currentTimecode`, `lastError`.
@@ -284,8 +292,10 @@ written.
    `01:00:00:00`.
 2. Play a clip with both LTC and MTC armed; confirm a reader on each shows the
    **same** value — this is the LTC≡MTC invariant and the 2-frame-convention check.
-3. Seek while playing → both re-cue together. Seek while paused → the MTC display
-   follows, LTC stays silent (by design).
+3. Seek while playing → both re-cue together, with **no stale tail**: the MTC
+   reader must not show pre-seek values after the jump (the `MIDIFlushOutput`
+   path). Pause → the MTC reader stops immediately, not a beat later. Seek while
+   paused → the MTC display follows, LTC stays silent (by design).
 4. Unplug the box mid-playback → status row and pill both report the failure
    rather than pretending to send.
 5. Repeat 2 at 24, 25, 30 and 30 DF.

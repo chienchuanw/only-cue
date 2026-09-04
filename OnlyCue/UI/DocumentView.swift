@@ -65,6 +65,8 @@ struct DocumentView: View {
     /// routing is enabled. Observing the singleton here means flipping the
     /// switch in Preferences updates the strip in real time.
     @ObservedObject var ltcRoutingStore = LTCRoutingStore.shared
+    // Observed so the rate interlock re-reads when MTC is toggled (#794).
+    @ObservedObject var mtcOutputStore = MTCOutputStore.shared
     @Environment(\.undoManager) var undoManager
     /// True while an inline cue field (name/number/fade) is being edited, so the
     /// bare arrow-key transport/step shortcuts yield to the text field (#573).

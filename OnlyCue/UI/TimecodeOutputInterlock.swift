@@ -18,6 +18,12 @@ enum TimecodeOutputInterlock {
     }
 
     /// The interlock as the live stores currently see it.
+    ///
+    /// **Callers must observe both stores.** This is a static read, so it is
+    /// invisible to SwiftUI's dependency tracking: a view that reads it without
+    /// an `@ObservedObject` on `LTCRoutingStore.shared` *and*
+    /// `MTCOutputStore.shared` will not re-evaluate when either switch is
+    /// toggled, and the interlock goes stale until something else redraws it.
     @MainActor
     static var isEngagedNow: Bool {
         isEngaged(

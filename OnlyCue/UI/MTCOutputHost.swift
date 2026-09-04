@@ -40,6 +40,9 @@ private struct MTCOutputHost: ViewModifier {
 
     func body(content: Content) -> some View {
         content
+            // Published so `MTCStatusPill` can read the generator without the
+            // object being threaded through ModeAwareInspector and CueListPane.
+            .environment(\.mtcOutput, output)
             .onChange(of: engine.isPlaying) { _, playing in
                 refresh(playing: playing)
             }

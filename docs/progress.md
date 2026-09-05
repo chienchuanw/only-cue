@@ -6,7 +6,7 @@ Append-only session log. Newer entries on top.
 
 ## 2026-09-05 — MIDI Timecode (MTC) output (#794)
 
-**On `issues/794` (PR pending):**
+**Shipped to `dev` (PR #795, rebase-merged as `d677822` head, closes #794); released as v0.31.0 (build 49):**
 
 - `feat(midi)`: OnlyCue now generates MTC itself and sends it to any CoreMIDI destination, alongside and independent of LTC. Reverses in part **ADR-019**'s "MIDI Timecode is delegated to an external app (as CuePoints does with Lockstep)" clause; **ADR-032** records why that reasoning expired — the timecode model epic #33 built is exactly what MTC needs, so generating it in-app is additive rather than duplicative, and it removes a second app from the show-critical path.
 - Shape follows the `MIDIInput` / `LTCAudioOutput` split: `MTCFrame` (wire format, golden-vector tested), `MTCSchedule` (half-open timing windows from a `mach_absolute_time` anchor, injectable timebase), `MIDIUniversalPacket` (UMP encoding), `MTCOutputSettings`/`MTCOutputStore`, `MTCLocateGate`, `MTCStatusLabel`, `TimecodeOutputInterlock` — all pure and unit-tested — with only `MTCPortSender` hardware-facing.
@@ -15,9 +15,10 @@ Append-only session log. Newer entries on top.
 - Surfaces: an MTC section leading `Settings → MIDI` (enable, destination, Rescan, live status, **Send test timecode**) and an `[MTC]` pill beside the playhead clock that turns red when the destination vanishes.
 - `PlaybackRateController`'s `ltcEnabled` becomes `timecodeOutputEnabled`; the "Disable LTC to change playback rate." string is migrated in the String Catalog so its zh-Hant translation is carried across rather than orphaned.
 - **No schema change** — framerate comes from `ProjectTimecodeSettings`, start TC from `MediaItem.startTimecodeFrames`, config is machine-level `UserDefaults` (`mtcOutput.v1`). `currentSchemaVersion` stays at v22.
-- 1665 unit tests + 2 new UI tests green locally.
+- 1665 unit tests green on CI. The 2 new UI tests pass locally but have **not** run on CI: the behavioral UI-test step is push-to-`dev`-only and has been failing on every push since 2026-08-28 because the runner cannot foreground the app (#797) — environmental, not a regression from this work.
 - **Open, and honest about it:** the design's leaf-2 hardware check against the DoReMIDI box has **not** been performed — no such device is attached here. Two assumptions ride on it: that the **uncompensated** two-frame convention matches what the box expects (`MTCSchedule.timecode(forSequence:)` is the single place to change it), and that `MIDISendEventList` honours future timestamps on that driver (fallback: shorter timer, smaller batches, confined to `MTCOutput`). The **Send test timecode** button exists to make that check a one-click job.
-- Found while designing, deliberately **not** fixed here: `LTCAudioOutput.lastError` is published "for UI to surface" but no consumer reads it, so LTC output failures are silently swallowed today. Filed separately rather than perturbing the LTC path inside this epic.
+- Found while designing, deliberately **not** fixed here: `LTCAudioOutput.lastError` is published "for UI to surface" but no consumer reads it, so LTC output failures are silently swallowed today. Filed as **#796** rather than perturbing the LTC path inside this epic.
+- Review loop caught one real defect before merge: quarter-frames are scheduled up to 200 ms ahead, so a seek or stop left already-queued messages to fire — a seek emitted pre-seek nibbles *after* the new Full Frame, and pause kept streaming briefly. `MIDIFlushOutput` on re-anchor and stop is the other half of the scheduled-ahead bargain; the spec and the manual checklist now say so. A second round found that the `stopStream()` path recorded a flush failure without republishing it to the status UI.
 
 ## 2026-07-13 — Playhead AV-sync: output-latency compensation (#611)
 

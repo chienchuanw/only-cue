@@ -26,7 +26,7 @@ final class LTCChannelSelectionTests: XCTestCase {
     }
 
     func test_unknownStringDecodesAsAuto() throws {
-        let data = "\"channel:banana\"".data(using: .utf8)!
+        let data = Data("\"channel:banana\"".utf8)
         XCTAssertEqual(try JSONDecoder().decode(LTCChannelSelection.self, from: data), .auto)
     }
 

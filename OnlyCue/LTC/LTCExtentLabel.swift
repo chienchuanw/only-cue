@@ -30,7 +30,10 @@ enum LTCExtentLabel {
         let tenths = Int((clamped - Double(whole)) * 10)
         return String(
             format: "%02d:%02d:%02d.%d",
-            whole / 3600, (whole % 3600) / 60, whole % 60, tenths
+            whole / 3600,
+            (whole % 3600) / 60,
+            whole % 60,
+            tenths
         )
     }
 }

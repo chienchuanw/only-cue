@@ -94,7 +94,8 @@ final class CueCommandsLTCTests: XCTestCase {
 
         undoManager.undo()
         XCTAssertEqual(
-            document.model.items.first?.ltcChannelSelection, .auto,
+            document.model.items.first?.ltcChannelSelection,
+            .auto,
             "the channel the user named must be undoable, unlike derived rememberedLTC"
         )
     }

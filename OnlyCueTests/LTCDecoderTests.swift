@@ -141,7 +141,8 @@ final class LTCDecoderTests: XCTestCase {
             "first frame should be the start or the one after it, got offset \(firstOffset)"
         )
         XCTAssertGreaterThanOrEqual(
-            frames.first?.startSample ?? 0, 96_000 - 100,
+            frames.first?.startSample ?? 0,
+            96_000 - 100,
             "the first frame must sit after the 2 s lead-in, not inside it"
         )
     }

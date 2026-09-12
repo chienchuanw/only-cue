@@ -95,7 +95,12 @@ jobs:
           # reddening every dev push since. Re-assert it each run so the runner
           # self-heals; best-effort (needs the /etc/sudoers.d passwordless entry
           # for automationmodetool, else this is a harmless no-op).
-          sudo -n automationmodetool enable-automationmode-without-authentication 2>/dev/null || true
+          # `< /dev/null` is load-bearing: automationmodetool prints an "Enter
+          # the password for user 'root'" prompt and blocks reading stdin. It
+          # runs as root (via sudo), so the non-root runner user cannot kill it
+          # if it hangs — feeding EOF is the only reliable guard against the
+          # prompt wedging the whole job.
+          sudo -n automationmodetool enable-automationmode-without-authentication < /dev/null > /dev/null 2>&1 || true
           sleep 3
 
       # One-shot whole-step retry: the daemon-init timeout fails the entire

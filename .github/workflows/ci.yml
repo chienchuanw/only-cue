@@ -87,6 +87,20 @@ jobs:
           killall -9 testmanagerd 2>/dev/null || true
           killall -9 automationmode-writer 2>/dev/null || true
           sudo -n killall -9 automationmode-writer 2>/dev/null || true
+          # Automation Mode must be provisioned no-auth for XCUITest to bring
+          # the app to the foreground; when the policy is off, every UI test
+          # fails with "Failed to activate application (current state: Running
+          # Background)" and the whole job burns ~90 min (#799). The policy was
+          # set manually on 2026-08-10 but a macOS update around 08-28 reset it,
+          # reddening every dev push since. Re-assert it each run so the runner
+          # self-heals; best-effort (needs the /etc/sudoers.d passwordless entry
+          # for automationmodetool, else this is a harmless no-op).
+          # `< /dev/null` is load-bearing: automationmodetool prints an "Enter
+          # the password for user 'root'" prompt and blocks reading stdin. It
+          # runs as root (via sudo), so the non-root runner user cannot kill it
+          # if it hangs — feeding EOF is the only reliable guard against the
+          # prompt wedging the whole job.
+          sudo -n automationmodetool enable-automationmode-without-authentication < /dev/null > /dev/null 2>&1 || true
           sleep 3
 
       # One-shot whole-step retry: the daemon-init timeout fails the entire

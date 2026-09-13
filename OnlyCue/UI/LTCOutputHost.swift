@@ -49,6 +49,9 @@ private struct LTCOutputHost: ViewModifier {
 
     func body(content: Content) -> some View {
         content
+            // Published so `LTCStatusPill` can read the engine without the object
+            // being threaded through ModeAwareInspector and CueListPane (#796).
+            .environment(\.ltcOutput, output)
             .onChange(of: engine.isPlaying) { _, playing in
                 refresh(playing: playing)
             }

@@ -139,15 +139,6 @@ jobs:
       # Was present on the macos-latest workflow; dropped during the
       # self-hosted migration (3a002cb) but the same flake still happens on
       # the self-hosted runner, so it needs to come back.
-      # Marker file consumed by `CIRuntime.isSelfHostedRunner` inside the
-      # test target. Environment variables don't propagate through the
-      # macOS XCUITest sandbox, so the workflow writes a known path the
-      # test process can read via FileManager. Removed on `always()`
-      # after the UI-tests step to avoid leaking the marker into local
-      # test runs on the same machine.
-      - name: Mark CI active
-        run: touch "/tmp/.onlycue-ci-active"
-
       # UI tests run on push to dev only — not on PR, and not on main.
       #
       # Skipping main is #776. A release fast-forwards dev into main, so the
@@ -275,12 +266,18 @@ jobs:
               -skip-testing:OnlyCueUITests/AudioSettingsScreenshotTests \
               -skip-testing:OnlyCueUITests/DocumentViewModeScreenshotTests \
               -skip-testing:OnlyCueUITests/ExportSheetScreenshotTests \
+              -skip-testing:OnlyCueUITests/GeneralSettingsScreenshotTests \
               -skip-testing:OnlyCueUITests/KeyboardSettingsScreenshotTests \
               -skip-testing:OnlyCueUITests/LyricsLaneEditingUITests \
+              -skip-testing:OnlyCueUITests/MA2PushSheetScreenshotTests \
+              -skip-testing:OnlyCueUITests/MA2SettingsScreenshotTests \
+              -skip-testing:OnlyCueUITests/MIDISettingsScreenshotTests \
+              -skip-testing:OnlyCueUITests/MiniPlayerUITests \
               -skip-testing:OnlyCueUITests/OSCMonitorScreenshotTests \
               -skip-testing:OnlyCueUITests/OSCSettingsScreenshotTests \
               -skip-testing:OnlyCueUITests/Phase3ScreenshotTests \
               -skip-testing:OnlyCueUITests/ShowModeUITests \
+              -skip-testing:OnlyCueUITests/SplitChannelWaveformScreenshotTests \
               -skip-testing:OnlyCueUITests/TempoGridOverlayScreenshotTests \
               -skip-testing:OnlyCueUITests/TimecodeSettingsSheetScreenshotTests \
               -skip-testing:OnlyCueUITests/TransportBarScreenshotTests \
@@ -302,24 +299,6 @@ jobs:
             fi
           }
 
-          # Diagnostic for #789, reported only — nothing here changes what runs.
-          # The guards fired on attempt 1 and not on attempt 2 of the same job,
-          # and the log could not tell whether the marker was deleted mid-step
-          # or merely became unreadable from the relaunched test runner. So stat
-          # it from the workflow side at each boundary. Pairs with the
-          # `[CIRuntime] marker=...` lines the test process writes into the raw
-          # attempt log: agreement narrows the cause to deletion, disagreement
-          # to a read failure. `TZ=UTC` so mtime renders exactly as the Swift
-          # side's ISO8601DateFormatter does, making the two comparable as text.
-          log_marker_state() {
-            marker="/tmp/.onlycue-ci-active"
-            if [ -e "$marker" ]; then
-              echo "marker @ $1: present ($(TZ=UTC stat -f 'inode=%i mtime=%Sm' -t '%FT%TZ' "$marker"))"
-            else
-              echo "::warning::marker @ $1: absent — CIRuntime guards will not fire for what follows (#789)."
-            fi
-          }
-
           mkdir -p "$UI_TEST_LOG_DIR"
 
           # One-shot whole-step retry: absorbs the runner-init flake without
@@ -330,19 +309,15 @@ jobs:
           # under `bash -e`, which aborts the block the moment the retry fails,
           # skipping any reporting that follows it inside the `||` branch.
           status=0
-          log_marker_state "before attempt 1"
           run_ui_tests 1 || status=$?
           report_connection_losses 1
-          log_marker_state "after attempt 1"
 
           if [ "$status" -ne 0 ]; then
             echo "::warning::UI tests failed once — resetting XCUITest daemons and retrying once (absorbs the automation-mode init flake; see #605, #595)."
             reset_ui_daemons
-            log_marker_state "after reset_ui_daemons"
             status=0
             run_ui_tests 2 || status=$?
             report_connection_losses 2
-            log_marker_state "after attempt 2"
           fi
 
           exit "$status"
@@ -399,15 +374,3 @@ jobs:
           if-no-files-found: ignore
           retention-days: 14
 
-      - name: Clear CI marker
-        if: always()
-        run: |
-          # `Mark CI active` is unconditional, so by the time this step runs the
-          # marker must exist on every run — including PR and `main` runs, where
-          # the UI step never executes and so none of `log_marker_state`'s
-          # probes run. Finding it already gone means something removed it
-          # mid-job, which is the open question in #789.
-          if [ ! -e "/tmp/.onlycue-ci-active" ]; then
-            echo "::warning::marker was already absent at clear time — something removed it mid-job (#789)."
-          fi
-          rm -f "/tmp/.onlycue-ci-active"

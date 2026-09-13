@@ -15,7 +15,10 @@ final class TempoGridOverlayScreenshotTests: XCTestCase {
 
     func test_showTempoGrid_toggle_visualBaseline() throws {
         let app = XCUIApplication()
-        app.launchArguments += ["-ApplePersistenceIgnoreState", "YES"]
+        // `--ui-test-reset` makes the hermetic defaults-reset explicit at the
+        // call site: this is the one manual launch that carried no `--ui-test*`
+        // argument and relied on the (now-removed) CI marker for it (#792).
+        app.launchArguments += ["-ApplePersistenceIgnoreState", "YES", "--ui-test-reset"]
         app.launch()
         app.typeKey("n", modifierFlags: .command)            // new document
 

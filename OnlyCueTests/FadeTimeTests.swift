@@ -89,30 +89,25 @@ final class FadeTimeTests: XCTestCase {
         XCTAssertEqual(FadeTime.parse(parsed.format()), parsed)
     }
 
-    // MARK: - columnDisplay (read-only cue-list fade cell, #463 / Figma 318:1228)
-
-    func test_columnDisplay_symmetric_oneDecimalPlusUnit() {
-        XCTAssertEqual(FadeTime.symmetric(1.5).columnDisplay, "1.5 s")
-        XCTAssertEqual(FadeTime.symmetric(2).columnDisplay, "2.0 s")
-        XCTAssertEqual(FadeTime.symmetric(0.5).columnDisplay, "0.5 s")
-        XCTAssertEqual(FadeTime.zero.columnDisplay, "0.0 s")
-    }
-
-    func test_columnDisplay_split_showsBothSides() {
-        XCTAssertEqual(FadeTime(fadeIn: 1, fadeOut: 2).columnDisplay, "1.0/2.0 s")
-    }
-
-    // MARK: - cellDisplay (fade cell blanks a zero fade, #804 Decision 8)
+    // MARK: - cellDisplay (cue-list fade cell — numeric, no unit; #804)
+    //
+    // Seconds is the column's implicit unit, so the cell shows the bare number
+    // in `FadeTime.format()` form (whole values drop the trailing `.0`) and
+    // blanks a zero fade so an unset fade reads as absence.
 
     func test_cellDisplay_zero_isBlank() {
         XCTAssertEqual(FadeTime.zero.cellDisplay, "")
     }
 
-    func test_cellDisplay_nonZeroSymmetric_matchesColumnDisplay() {
-        XCTAssertEqual(FadeTime.symmetric(2).cellDisplay, "2.0 s")
+    func test_cellDisplay_wholeSymmetric_dropsTrailingZero() {
+        XCTAssertEqual(FadeTime.symmetric(2).cellDisplay, "2")
     }
 
-    func test_cellDisplay_split_matchesColumnDisplay() {
-        XCTAssertEqual(FadeTime(fadeIn: 1, fadeOut: 2).cellDisplay, "1.0/2.0 s")
+    func test_cellDisplay_decimalSymmetric_keepsDecimal() {
+        XCTAssertEqual(FadeTime.symmetric(1.5).cellDisplay, "1.5")
+    }
+
+    func test_cellDisplay_split_showsSlashForm() {
+        XCTAssertEqual(FadeTime(fadeIn: 1, fadeOut: 2).cellDisplay, "1/2")
     }
 }

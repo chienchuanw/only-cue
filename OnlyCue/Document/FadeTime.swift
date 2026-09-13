@@ -42,21 +42,12 @@ extension FadeTime {
         return "\(Self.formatNumber(fadeIn))/\(Self.formatNumber(fadeOut))"
     }
 
-    /// Read-only display for the cue-list fade column: one-decimal seconds plus a
-    /// `" s"` unit, matching the Figma reference (`318:1228` shows `2.0 s`). The
-    /// editable fade field keeps `format()`; this is glance-only, so it always
-    /// shows one decimal place.
-    var columnDisplay: String {
-        if fadeIn == fadeOut {
-            return String(format: "%.1f s", fadeIn)
-        }
-        return String(format: "%.1f/%.1f s", fadeIn, fadeOut)
-    }
-
-    /// Cue-list fade cell text: blank for a zero fade so an unset fade reads as
-    /// absence rather than `"0.0 s"` (#804 Decision 8); otherwise `columnDisplay`.
+    /// Cue-list fade cell text. Seconds is the column's implicit unit, so the
+    /// cell shows the bare number in canonical `format()` form (whole values
+    /// drop the trailing `.0`, split fades render as `"1/2"`) and blanks a zero
+    /// fade so an unset fade reads as absence rather than `"0"` (#804).
     var cellDisplay: String {
-        self == .zero ? "" : columnDisplay
+        self == .zero ? "" : format()
     }
 
     private static func parseNonNegative(_ text: Substring) -> TimeInterval? {

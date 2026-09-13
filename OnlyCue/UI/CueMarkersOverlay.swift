@@ -48,9 +48,46 @@ struct CueMarkersOverlay: View {
         abs(translationWidth) < dragThreshold
     }
 
+    /// Opacity of a cue's fade band — matches the approved Figma alpha and the
+    /// cue-row tint (`CueListLayout.rowTintOpacity`), so a fade reads as a soft
+    /// wash of the cue's type colour rather than an opaque block (#804).
+    static let fadeBandOpacity: Double = 0.18
+
+    private func fadeBandColor(for cue: Cue) -> Color {
+        guard let hex = resolveColorHex(cue), let color = Color(hex: hex) else { return .accentColor }
+        return color
+    }
+
     var body: some View {
         GeometryReader { geometry in
             ZStack(alignment: .topLeading) {
+                // Fade bands sit *behind* the markers: a translucent forward
+                // span `[t, t+fade]` in each cue's type colour, showing how long
+                // the fade runs (#804). Non-interactive and skipped for a zero
+                // fade, so the waveform reads as a fade map without touching the
+                // seek / drag surfaces beneath it.
+                ForEach(cues) { cue in
+                    let fade = max(cue.fadeTime.fadeIn, cue.fadeTime.fadeOut)
+                    let bandWidth = CueMarkersGeometry.spanWidth(
+                        forFade: fade,
+                        at: cue.time,
+                        width: geometry.size.width,
+                        duration: duration
+                    )
+                    if bandWidth > 0 {
+                        Rectangle()
+                            .fill(fadeBandColor(for: cue))
+                            .opacity(Self.fadeBandOpacity)
+                            .frame(width: bandWidth, height: geometry.size.height)
+                            .offset(x: CueMarkersGeometry.position(
+                                forTime: cue.time,
+                                width: geometry.size.width,
+                                duration: duration
+                            ))
+                            .allowsHitTesting(false)
+                            .accessibilityIdentifier("fadeBand-\(cue.id.uuidString)")
+                    }
+                }
                 ForEach(cues) { cue in
                     CueMarkerView(
                         cue: cue,

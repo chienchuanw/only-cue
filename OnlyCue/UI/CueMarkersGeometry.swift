@@ -8,6 +8,16 @@ enum CueMarkersGeometry {
         return CGFloat(time / duration) * width
     }
 
+    /// Pixel width of a cue's fade band: the forward span `[time, time + fade]`
+    /// mapped into the waveform's content space, clamped so it never runs past
+    /// the content's right edge (a cue near the end with a long fade stops at
+    /// `duration`). Returns 0 for a non-positive fade or duration.
+    static func spanWidth(forFade fade: TimeInterval, at time: TimeInterval, width: CGFloat, duration: TimeInterval) -> CGFloat {
+        guard duration > 0, fade > 0 else { return 0 }
+        let end = min(time + fade, duration)
+        return max(0, CGFloat((end - time) / duration) * width)
+    }
+
     static func time(originalTime: TimeInterval, dx: CGFloat, width: CGFloat, duration: TimeInterval) -> TimeInterval {
         guard width > 0 else { return originalTime }
         let proposed = originalTime + Double(dx / width) * duration

@@ -114,15 +114,17 @@ final class Phase3ScreenshotTests: XCTestCase {
         ]
         app.launch()
 
-        XCTAssertTrue(
-            app.staticTexts["silent-30s.m4a"].waitForExistence(timeout: 15),
-            "seed media row should be visible"
-        )
+        // Target the media row by its `itemRow` identifier, not the display-name
+        // StaticText: the name now resolves to more than one element under this
+        // seed, so `.rightClick()` on the text cannot pick a single match (#785).
+        let row = app.descendants(matching: .any)
+            .matching(NSPredicate(format: "identifier == 'itemRow'")).firstMatch
+        XCTAssertTrue(row.waitForExistence(timeout: 15), "seed media row should be visible")
         Foregrounding.activateRobustly(app)
 
-        // Right-click the media row → Edit Media… menu item.
-        app.staticTexts["silent-30s.m4a"].rightClick()
-        let editItem = app.menuItems["Edit Media…"]
+        // Right-click the media row → Edit Media… menu item (stable identifier).
+        row.rightClick()
+        let editItem = app.menuItems["contextMenuEditMedia"]
         if editItem.waitForExistence(timeout: 3) {
             editItem.click()
         }

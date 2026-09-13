@@ -22,16 +22,10 @@ enum UITestLTCHandler {
         channelRoles: [.ltc, .trackLeft, .trackRight, .silent]
     )
 
-    /// Marker the CI workflow `touch`es for the duration of the UI-tests step
-    /// (`CIRuntime.isSelfHostedRunner`). Lets plain-`launch()` UI tests (no
-    /// `--ui-test*` arg) still run LTC hermetically on the runner.
-    private static let ciMarkerPath = "/tmp/.onlycue-ci-active"
-
     @MainActor
     static func applyIfRequested() {
         let arguments = CommandLine.arguments
         let isUITestLaunch = arguments.contains { $0.hasPrefix("--ui-test") }
-            || FileManager.default.fileExists(atPath: ciMarkerPath)
         guard isUITestLaunch else { return }
         // Run the whole session in memory so neither this handler nor the
         // settings pane's on-appear reconcile touches the persisted default.

@@ -17,16 +17,10 @@ enum UITestMTCHandler {
 
     private static let enableArgument = "--ui-test-mtc-enabled"
 
-    /// Marker the CI workflow `touch`es for the duration of the UI-tests step,
-    /// so plain-`launch()` UI tests still run MTC hermetically on the runner.
-    /// Same marker `UITestLTCHandler` watches.
-    private static let ciMarkerPath = "/tmp/.onlycue-ci-active"
-
     @MainActor
     static func applyIfRequested() {
         let arguments = CommandLine.arguments
         let isUITestLaunch = arguments.contains { $0.hasPrefix("--ui-test") }
-            || FileManager.default.fileExists(atPath: ciMarkerPath)
         guard isUITestLaunch else { return }
         // `applyEphemeralForUITests` suppresses persistence on `shared` only —
         // scoped per-instance so it never leaks into unit tests (#697).

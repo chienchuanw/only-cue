@@ -316,7 +316,26 @@ struct CueListPane: View {
         }
     }
 
-    private func cueRow(for cue: Cue) -> CueRowView {
+    func deleteAtOffsets(_ offsets: IndexSet) {
+        for index in offsets {
+            guard cues.indices.contains(index) else { continue }
+            let cue = cues[index]
+            CueCommands.delete(cueId: cue.id, document: document, undoManager: undoManager)
+        }
+    }
+
+    func deleteSelected() {
+        guard !selection.isEmpty else { return }
+        for id in selection {
+            CueCommands.delete(cueId: id, document: document, undoManager: undoManager)
+        }
+        selection = []
+    }
+}
+
+extension CueListPane {
+
+    func cueRow(for cue: Cue) -> CueRowView {
         CueRowView(
             cue: cue,
             resolvedColorHex: document.model.colorHex(for: cue),
@@ -352,22 +371,6 @@ struct CueListPane: View {
             onSeek: { Task { await engine.seek(to: cue.time) } },
             isReadOnly: isReadOnly
         )
-    }
-
-    func deleteAtOffsets(_ offsets: IndexSet) {
-        for index in offsets {
-            guard cues.indices.contains(index) else { continue }
-            let cue = cues[index]
-            CueCommands.delete(cueId: cue.id, document: document, undoManager: undoManager)
-        }
-    }
-
-    func deleteSelected() {
-        guard !selection.isEmpty else { return }
-        for id in selection {
-            CueCommands.delete(cueId: id, document: document, undoManager: undoManager)
-        }
-        selection = []
     }
 }
 

@@ -180,35 +180,6 @@ struct CueRowView: View {
         }
     }
 
-    /// The Fade cell shows the cue's fade time, right-aligned mono (Figma
-    /// `318:1228`). Blank when the fade is zero (#804 Decision 8); the edit
-    /// field takes the canonical `"1.5"` / `"1/2"` form and commits through
-    /// `FadeTime.parse`, so a split fade is still typeable.
-    @ViewBuilder
-    private var fadeCell: some View {
-        if isEditingFade {
-            TextField("", text: $fadeDraft)
-                .textFieldStyle(.plain)
-                .font(DS.Text.monoSmall)
-                .multilineTextAlignment(.trailing)
-                .focused($fadeFieldFocused)
-                .onSubmit { commitFade() }
-                .onExitCommand { cancelFadeEdit() }
-                .onChange(of: fadeFieldFocused) { _, isFocused in
-                    if !isFocused { commitFade() }
-                }
-                .onAppear { fadeFieldFocused = true }
-                .focusedValue(\.editingCueField, true)
-        } else {
-            Text(cue.fadeTime.cellDisplay)
-                .font(DS.Text.monoSmall)
-                .foregroundStyle(DS.Color.textTertiary)
-                .frame(maxWidth: .infinity, alignment: .trailing)
-                .contentShape(Rectangle())
-                .onTapGesture { handleTap(on: .field, beginEditing: beginFadeEdit) }
-        }
-    }
-
     /// The Info cell surfaces the cue's `notes` inline (#661); the right-click
     /// Notes sheet remains for longer text.
     @ViewBuilder
@@ -325,22 +296,6 @@ struct CueRowView: View {
         }
     }
 
-    private func beginFadeEdit() {
-        fadeDraft = cue.fadeTime.format()
-        isEditingFade = true
-    }
-
-    private func cancelFadeEdit() {
-        fadeDraft = cue.fadeTime.format()
-        isEditingFade = false
-    }
-
-    private func commitFade() {
-        isEditingFade = false
-        guard let parsed = FadeTime.parse(fadeDraft), parsed != cue.fadeTime else { return }
-        onCommitFade(parsed)
-    }
-
     private func beginInfoEdit() {
         infoDraft = cue.notes
         isEditingInfo = true
@@ -355,5 +310,55 @@ struct CueRowView: View {
         isEditingInfo = false
         guard infoDraft != cue.notes else { return }
         onCommitNotes(infoDraft)
+    }
+}
+
+// MARK: - Fade cell
+
+extension CueRowView {
+
+    /// The Fade cell shows the cue's fade time, right-aligned mono (Figma
+    /// `318:1228`). Blank when the fade is zero (#804 Decision 8); the edit
+    /// field takes the canonical `"1.5"` / `"1/2"` form and commits through
+    /// `FadeTime.parse`, so a split fade is still typeable.
+    @ViewBuilder
+    var fadeCell: some View {
+        if isEditingFade {
+            TextField("", text: $fadeDraft)
+                .textFieldStyle(.plain)
+                .font(DS.Text.monoSmall)
+                .multilineTextAlignment(.trailing)
+                .focused($fadeFieldFocused)
+                .onSubmit { commitFade() }
+                .onExitCommand { cancelFadeEdit() }
+                .onChange(of: fadeFieldFocused) { _, isFocused in
+                    if !isFocused { commitFade() }
+                }
+                .onAppear { fadeFieldFocused = true }
+                .focusedValue(\.editingCueField, true)
+        } else {
+            Text(cue.fadeTime.cellDisplay)
+                .font(DS.Text.monoSmall)
+                .foregroundStyle(DS.Color.textTertiary)
+                .frame(maxWidth: .infinity, alignment: .trailing)
+                .contentShape(Rectangle())
+                .onTapGesture { handleTap(on: .field, beginEditing: beginFadeEdit) }
+        }
+    }
+
+    func beginFadeEdit() {
+        fadeDraft = cue.fadeTime.format()
+        isEditingFade = true
+    }
+
+    func cancelFadeEdit() {
+        fadeDraft = cue.fadeTime.format()
+        isEditingFade = false
+    }
+
+    func commitFade() {
+        isEditingFade = false
+        guard let parsed = FadeTime.parse(fadeDraft), parsed != cue.fadeTime else { return }
+        onCommitFade(parsed)
     }
 }

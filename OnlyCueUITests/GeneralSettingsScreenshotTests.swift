@@ -17,14 +17,6 @@ final class GeneralSettingsScreenshotTests: XCTestCase {
     /// Then the language picker is shown
     /// And a dark-mode screenshot of the Settings window is captured.
     func test_generalSettings_darkMode_visualBaseline() throws {
-        // CI flake: the ⌘N + ⌘, foregrounding race is unreliable on the
-        // self-hosted runner (same family as the other Settings screenshot
-        // tests). Runs reliably locally, which is where calibration captures
-        // are produced.
-        try XCTSkipIf(
-            CIRuntime.isGitHubActions,
-            "Flaky on self-hosted runner: ⌘N + ⌘, foregrounding race."
-        )
         let app = XCUIApplication()
         app.launchArguments += ["-ApplePersistenceIgnoreState", "YES", "--ui-test-appearance=dark"]
         app.launch()

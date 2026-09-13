@@ -4,8 +4,8 @@ import XCTest
 /// composition (identity row + hero preview strip) opens from the sidebar row.
 ///
 /// The right-click / inline-Save flows that used to live here were removed
-/// (#548): they were `CIRuntime.isGitHubActions`-gated (always skipped on the
-/// runner), and the underlying command is unit-tested in
+/// (#548): they were excluded from CI (via `-skip-testing:` in `ci.yml`),
+/// and the underlying command is unit-tested in
 /// `CueCommandsUpdateMediaItemTests`. `openEditSheet` still skips gracefully if
 /// the headless context-menu chord can't be synthesised.
 final class MediaEditSheetUITests: OnlyCueUITestCase {

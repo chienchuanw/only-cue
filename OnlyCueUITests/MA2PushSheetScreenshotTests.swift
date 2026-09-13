@@ -15,10 +15,6 @@ final class MA2PushSheetScreenshotTests: XCTestCase {
     /// Then the batch "Send to grandMA2" sheet is shown listing the project's songs
     /// And a dark-mode screenshot of the sheet is captured.
     func test_ma2BatchSheet_darkMode_visualBaseline() throws {
-        try XCTSkipIf(
-            CIRuntime.isGitHubActions,
-            "Flaky on self-hosted runner: menu-bar driving + foregrounding race."
-        )
         let app = XCUIApplication()
         app.launchArguments += [
             "-ApplePersistenceIgnoreState", "YES",

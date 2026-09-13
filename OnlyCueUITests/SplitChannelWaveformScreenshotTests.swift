@@ -23,10 +23,6 @@ final class SplitChannelWaveformScreenshotTests: XCTestCase {
     /// Then the preview pane shows per-channel waveform lanes and the LTC strip
     /// And a dark-mode screenshot of the document window is captured.
     func test_splitChannelWaveform_darkMode_visualBaseline() throws {
-        try XCTSkipIf(
-            CIRuntime.isGitHubActions,
-            "Flaky on self-hosted runner: foregrounding + waveform-bucket timing."
-        )
         let app = XCUIApplication()
         app.launchArguments += [
             "-ApplePersistenceIgnoreState", "YES",

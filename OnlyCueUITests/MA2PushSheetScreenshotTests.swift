@@ -51,7 +51,9 @@ final class MA2PushSheetScreenshotTests: XCTestCase {
         let sheet = app.descendants(matching: .any).matching(identifier: "ma2BatchSheet").firstMatch
         XCTAssertTrue(sheet.waitForExistence(timeout: 5), "the batch MA2 push sheet should present")
 
-        // Batch-specific affordance: the multi-song push button is present.
+        // Batch-specific affordance: the multi-song push button is present. Its
+        // own identifier resolves now that the sheet is an accessibility
+        // container (#785) — previously the sheet's identifier subsumed it.
         let pushButton = app.descendants(matching: .any).matching(identifier: "ma2BatchPushButton").firstMatch
         XCTAssertTrue(pushButton.waitForExistence(timeout: 3), "the batch push button should exist")
 

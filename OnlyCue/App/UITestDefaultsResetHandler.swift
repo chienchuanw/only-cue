@@ -14,9 +14,11 @@ import Foundation
 /// are added — this wipes the whole persistent domain. Any future default is
 /// reset automatically.
 ///
-/// Trigger (same shape as `UITestLTCHandler`): any `--ui-test*` launch argument,
-/// or the CI marker file the workflow `touch`es for the UI-tests step (so plain
-/// `app.launch()` tests reset too).
+/// Trigger (same shape as `UITestLTCHandler`): any `--ui-test*` launch argument.
+/// Every UI-test launch carries one — the base `OnlyCueUITestCase` always adds
+/// `--ui-test-reset`, and each manual screenshot launch passes a `--ui-test*`
+/// argument of its own — so the decision rests entirely on the arguments and no
+/// longer consults a CI marker file (#792).
 ///
 /// Ordering: this MUST run before the other `#if DEBUG` UI-test handlers in
 /// `OnlyCueApp.init` so they re-establish their deterministic state on top of the
@@ -25,29 +27,19 @@ import Foundation
 /// Production builds skip this file entirely (`#if DEBUG`).
 enum UITestDefaultsResetHandler {
 
-    private static let resetArgument = "--ui-test-reset"
-
-    /// Marker the CI workflow `touch`es for the duration of the UI-tests step
-    /// (`CIRuntime.isSelfHostedRunner`).
-    private static let ciMarkerPath = "/tmp/.onlycue-ci-active"
-
     /// True when defaults should be wiped: any `--ui-test*` argument is present
     /// (covers the explicit `--ui-test-reset` the base test case adds and every
-    /// seeded launch), or the CI marker exists. Pure so the precedence is
-    /// unit-tested without launching the app.
-    static func isResetRequested(arguments: [String], ciMarkerPresent: Bool) -> Bool {
-        if ciMarkerPresent { return true }
-        return arguments.contains { $0.hasPrefix("--ui-test") }
+    /// seeded launch). Pure so the precedence is unit-tested without launching
+    /// the app.
+    static func isResetRequested(arguments: [String]) -> Bool {
+        arguments.contains { $0.hasPrefix("--ui-test") }
     }
 
     /// Called at app launch, before the other UI-test handlers. Wipes the app's
     /// persistent `UserDefaults` domain when a reset is requested.
     @MainActor
     static func applyIfRequested() {
-        let ciMarkerPresent = FileManager.default.fileExists(atPath: ciMarkerPath)
-        guard isResetRequested(arguments: CommandLine.arguments, ciMarkerPresent: ciMarkerPresent) else {
-            return
-        }
+        guard isResetRequested(arguments: CommandLine.arguments) else { return }
         guard let bundleID = Bundle.main.bundleIdentifier else { return }
         UserDefaults.standard.removePersistentDomain(forName: bundleID)
     }

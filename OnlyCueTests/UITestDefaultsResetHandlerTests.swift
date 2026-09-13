@@ -7,8 +7,7 @@ final class UITestDefaultsResetHandlerTests: XCTestCase {
     func test_isResetRequested_withResetArgument_returnsTrue() {
         XCTAssertTrue(
             UITestDefaultsResetHandler.isResetRequested(
-                arguments: ["OnlyCue", "--ui-test-reset"],
-                ciMarkerPresent: false
+                arguments: ["OnlyCue", "--ui-test-reset"]
             )
         )
     }
@@ -16,26 +15,26 @@ final class UITestDefaultsResetHandlerTests: XCTestCase {
     func test_isResetRequested_withAnyUITestArgument_returnsTrue() {
         XCTAssertTrue(
             UITestDefaultsResetHandler.isResetRequested(
-                arguments: ["OnlyCue", "--ui-test-seed=three-cues-1-3-6"],
-                ciMarkerPresent: false
+                arguments: ["OnlyCue", "--ui-test-seed=three-cues-1-3-6"]
             )
         )
     }
 
-    func test_isResetRequested_withCIMarkerOnly_returnsTrue() {
-        XCTAssertTrue(
-            UITestDefaultsResetHandler.isResetRequested(
-                arguments: ["OnlyCue"],
-                ciMarkerPresent: true
-            )
-        )
-    }
-
-    func test_isResetRequested_plainLaunchNoMarker_returnsFalse() {
+    // A plain launch with no `--ui-test*` argument must not reset. Previously a
+    // CI marker file could force a reset here (#792); that path is gone, so the
+    // decision now rests entirely on the launch arguments.
+    func test_isResetRequested_plainLaunch_returnsFalse() {
         XCTAssertFalse(
             UITestDefaultsResetHandler.isResetRequested(
-                arguments: ["OnlyCue"],
-                ciMarkerPresent: false
+                arguments: ["OnlyCue"]
+            )
+        )
+    }
+
+    func test_isResetRequested_withUnrelatedArgument_returnsFalse() {
+        XCTAssertFalse(
+            UITestDefaultsResetHandler.isResetRequested(
+                arguments: ["OnlyCue", "-ApplePersistenceIgnoreState", "YES"]
             )
         )
     }

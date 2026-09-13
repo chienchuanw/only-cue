@@ -101,4 +101,18 @@ final class FadeTimeTests: XCTestCase {
     func test_columnDisplay_split_showsBothSides() {
         XCTAssertEqual(FadeTime(fadeIn: 1, fadeOut: 2).columnDisplay, "1.0/2.0 s")
     }
+
+    // MARK: - cellDisplay (fade cell blanks a zero fade, #804 Decision 8)
+
+    func test_cellDisplay_zero_isBlank() {
+        XCTAssertEqual(FadeTime.zero.cellDisplay, "")
+    }
+
+    func test_cellDisplay_nonZeroSymmetric_matchesColumnDisplay() {
+        XCTAssertEqual(FadeTime.symmetric(2).cellDisplay, "2.0 s")
+    }
+
+    func test_cellDisplay_split_matchesColumnDisplay() {
+        XCTAssertEqual(FadeTime(fadeIn: 1, fadeOut: 2).cellDisplay, "1.0/2.0 s")
+    }
 }

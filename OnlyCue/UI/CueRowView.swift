@@ -6,9 +6,11 @@ struct CueRowView: View {
     let cue: Cue
     var resolvedColorHex: String?
     var numberColumnWidth: CGFloat = CueListColumnWidths.numberDefault
+    var fadeColumnWidth: CGFloat = CueListColumnWidths.fadeDefault
     var infoColumnWidth: CGFloat = CueListColumnWidths.infoDefault
     var onRename: (String) -> Void = { _ in }
     var onCommitNumber: (Double?) -> CueNumberValidator.Result = { _ in .ok }
+    var onCommitFade: (FadeTime) -> Void = { _ in }
     var onCommitNotes: (String) -> Void = { _ in }
     /// Make this row the selection. Fires before an edit begins, so the cue
     /// being typed into is also the one Delete and Renumber act on (#786).
@@ -30,6 +32,10 @@ struct CueRowView: View {
     @State private var numberError: String?
     @FocusState private var numberFieldFocused: Bool
 
+    @State private var isEditingFade = false
+    @State private var fadeDraft = ""
+    @FocusState private var fadeFieldFocused: Bool
+
     @State private var isEditingInfo = false
     @State private var infoDraft = ""
     @FocusState private var infoFieldFocused: Bool
@@ -44,6 +50,10 @@ struct CueRowView: View {
                 nameField
                     .frame(maxWidth: .infinity, alignment: .leading)
                     .accessibilityIdentifier("cueName-\(cue.id)")
+
+                fadeCell
+                    .cueColumnFrame(width: fadeColumnWidth, range: CueListColumnWidths.fadeRange, alignment: .trailing)
+                    .accessibilityIdentifier("cueFade-\(cue.id)")
 
                 infoCell
                     .cueColumnFrame(width: infoColumnWidth, range: CueListColumnWidths.infoRange)
@@ -170,6 +180,35 @@ struct CueRowView: View {
         }
     }
 
+    /// The Fade cell shows the cue's fade time, right-aligned mono (Figma
+    /// `318:1228`). Blank when the fade is zero (#804 Decision 8); the edit
+    /// field takes the canonical `"1.5"` / `"1/2"` form and commits through
+    /// `FadeTime.parse`, so a split fade is still typeable.
+    @ViewBuilder
+    private var fadeCell: some View {
+        if isEditingFade {
+            TextField("", text: $fadeDraft)
+                .textFieldStyle(.plain)
+                .font(DS.Text.monoSmall)
+                .multilineTextAlignment(.trailing)
+                .focused($fadeFieldFocused)
+                .onSubmit { commitFade() }
+                .onExitCommand { cancelFadeEdit() }
+                .onChange(of: fadeFieldFocused) { _, isFocused in
+                    if !isFocused { commitFade() }
+                }
+                .onAppear { fadeFieldFocused = true }
+                .focusedValue(\.editingCueField, true)
+        } else {
+            Text(cue.fadeTime.cellDisplay)
+                .font(DS.Text.monoSmall)
+                .foregroundStyle(DS.Color.textTertiary)
+                .frame(maxWidth: .infinity, alignment: .trailing)
+                .contentShape(Rectangle())
+                .onTapGesture { handleTap(on: .field, beginEditing: beginFadeEdit) }
+        }
+    }
+
     /// The Info cell surfaces the cue's `notes` inline (#661); the right-click
     /// Notes sheet remains for longer text.
     @ViewBuilder
@@ -284,6 +323,22 @@ struct CueRowView: View {
         case .revert:
             numberError = CueNumberErrorMessage.invalidFormat
         }
+    }
+
+    private func beginFadeEdit() {
+        fadeDraft = cue.fadeTime.format()
+        isEditingFade = true
+    }
+
+    private func cancelFadeEdit() {
+        fadeDraft = cue.fadeTime.format()
+        isEditingFade = false
+    }
+
+    private func commitFade() {
+        isEditingFade = false
+        guard let parsed = FadeTime.parse(fadeDraft), parsed != cue.fadeTime else { return }
+        onCommitFade(parsed)
     }
 
     private func beginInfoEdit() {

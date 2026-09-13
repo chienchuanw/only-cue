@@ -40,4 +40,29 @@ final class CueListColumnWidthsTests: XCTestCase {
         let mid = (CueListColumnWidths.infoRange.lowerBound + CueListColumnWidths.infoRange.upperBound) / 2
         XCTAssertEqual(CueListColumnWidths.clampInfo(mid), mid)
     }
+
+    // MARK: - Fade column (#804)
+
+    func test_clampFade_belowMin_returnsLowerBound() {
+        XCTAssertEqual(CueListColumnWidths.clampFade(0), CueListColumnWidths.fadeRange.lowerBound)
+    }
+
+    func test_clampFade_aboveMax_returnsUpperBound() {
+        XCTAssertEqual(CueListColumnWidths.clampFade(9_999), CueListColumnWidths.fadeRange.upperBound)
+    }
+
+    func test_clampFade_inRange_returnsValue() {
+        let mid = (CueListColumnWidths.fadeRange.lowerBound + CueListColumnWidths.fadeRange.upperBound) / 2
+        XCTAssertEqual(CueListColumnWidths.clampFade(mid), mid)
+    }
+
+    func test_fadeDefault_isInsideRange() {
+        XCTAssertTrue(CueListColumnWidths.fadeRange.contains(CueListColumnWidths.fadeDefault))
+    }
+
+    func test_fadeStorageKey_isNonEmpty_andDistinct() {
+        XCTAssertFalse(CueListColumnWidths.fadeStorageKey.isEmpty)
+        XCTAssertNotEqual(CueListColumnWidths.fadeStorageKey, CueListColumnWidths.numberStorageKey)
+        XCTAssertNotEqual(CueListColumnWidths.fadeStorageKey, CueListColumnWidths.infoStorageKey)
+    }
 }

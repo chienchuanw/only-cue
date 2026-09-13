@@ -16,10 +16,6 @@ final class MIDISettingsScreenshotTests: XCTestCase {
     /// Then the input-device picker and binding sections are shown
     /// And a dark-mode screenshot of the Settings window is captured.
     func test_midiSettings_darkMode_visualBaseline() throws {
-        try XCTSkipIf(
-            CIRuntime.isGitHubActions,
-            "Flaky on self-hosted runner: ⌘N + ⌘, foregrounding race."
-        )
         let app = XCUIApplication()
         app.launchArguments += ["-ApplePersistenceIgnoreState", "YES", "--ui-test-appearance=dark"]
         app.launch()

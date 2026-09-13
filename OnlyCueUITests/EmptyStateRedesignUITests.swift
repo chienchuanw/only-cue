@@ -28,7 +28,7 @@ final class EmptyStateRedesignUITests: OnlyCueUITestCase {
     }
 
     // Removed (#548): `test_shortcutReferenceButton_isPresentAndHittable` was
-    // CIRuntime-gated (always skipped on the runner), and
+    // excluded from CI (via `-skip-testing:` in `ci.yml`), and
     // `test_inspectorEmptyState_screenshotSmoke` was a screenshot that asserted
     // only that the document opened — neither was a CI regression gate.
 }

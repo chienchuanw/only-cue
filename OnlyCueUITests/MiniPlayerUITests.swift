@@ -6,10 +6,6 @@ import XCTest
 final class MiniPlayerUITests: OnlyCueUITestCase {
 
     func test_toggleMiniPlayer_showsAndHidesFloatingPanel() throws {
-        try XCTSkipIf(
-            CIRuntime.isGitHubActions,
-            "Flaky on self-hosted runner: menu-shortcut + foregrounding race."
-        )
         let app = launchApp(seed: .setListActI, extraArguments: ["--ui-test-appearance=dark"])
         XCTAssertTrue(
             app.staticTexts["currentTimeReadout"].waitForExistence(timeout: 15),
@@ -45,10 +41,6 @@ final class MiniPlayerUITests: OnlyCueUITestCase {
     /// Isolated from playback drift: the playhead starts stopped at zero, so
     /// only the Space keypress can move the readout.
     func test_spaceInFocusedMiniPlayer_startsPlayback() throws {
-        try XCTSkipIf(
-            CIRuntime.isGitHubActions,
-            "Flaky on self-hosted runner: menu-shortcut + foregrounding race."
-        )
         let app = launchApp(seed: .threeCuesAt1And3And6)
         XCTAssertTrue(
             app.staticTexts["currentTimeReadout"].waitForExistence(timeout: 15),

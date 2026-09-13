@@ -8,9 +8,9 @@ import XCTest
 ///
 /// Run each method individually via `-only-testing:` per the established
 /// pattern (Settings tabs persist last-selected state across sequential
-/// suite runs). The CIRuntime guards mean these only execute when the
-/// runner Mac is on push to `dev`/`main` — UI tests are gated off PR
-/// CI as established by #387.
+/// suite runs). These are captured locally and excluded from CI via
+/// `-skip-testing:` in `ci.yml` — UI tests are gated off PR CI as
+/// established by #387.
 final class Phase3ScreenshotTests: XCTestCase {
 
     override func setUpWithError() throws {
@@ -66,13 +66,6 @@ final class Phase3ScreenshotTests: XCTestCase {
     /// notes overlay via the View menu, capture the resulting
     /// projected window.
     func test_notesProjectedOverlay_darkMode_visualBaseline() throws {
-        // CI flake: opening the overlay window relies on a separate
-        // NSWindow being created and gaining its own foreground state.
-        // The non-interactive runner session can't always grant this.
-        try XCTSkipIf(
-            CIRuntime.isGitHubActions,
-            "Flaky on self-hosted runner: secondary window foreground race."
-        )
         let app = XCUIApplication()
         app.launchArguments += [
             "-ApplePersistenceIgnoreState", "YES",
@@ -99,10 +92,6 @@ final class Phase3ScreenshotTests: XCTestCase {
     /// click-absorption flake. Capture the sheet from a state the
     /// runner can reach without context-menu interactions.
     func test_editMedia_darkMode_visualBaseline() throws {
-        try XCTSkipIf(
-            CIRuntime.isGitHubActions,
-            "Phase 3.5: needs an inspector entry path; right-click menu flakes."
-        )
         // Local-only capture: drive the same right-click flow as the
         // functional test. Skipped on CI; the audit doc notes the
         // surface as captured-locally.
@@ -136,20 +125,12 @@ final class Phase3ScreenshotTests: XCTestCase {
     /// Popover · Cue Notes (Figma `321:2351`) — Phase 3.5: requires
     /// row-level inspector chord that's brittle on CI.
     func test_cueNotesPopover_darkMode_visualBaseline() throws {
-        try XCTSkipIf(
-            CIRuntime.isGitHubActions,
-            "Phase 3.5: needs a cue-row inspector chord; defer to local capture."
-        )
         // Implementation deferred — see audit doc Phase 3 status.
     }
 
     /// Popover · Cue Tempo (Figma `321:2355`) — Phase 3.5: same
     /// scoping as Cue Notes popover.
     func test_cueTempoPopover_darkMode_visualBaseline() throws {
-        try XCTSkipIf(
-            CIRuntime.isGitHubActions,
-            "Phase 3.5: needs a cue-row inspector chord; defer to local capture."
-        )
         // Implementation deferred — see audit doc Phase 3 status.
     }
 

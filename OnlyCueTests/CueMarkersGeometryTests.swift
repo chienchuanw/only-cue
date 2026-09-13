@@ -130,30 +130,30 @@ final class CueMarkersGeometryTests: XCTestCase {
     // MARK: - spanWidth(forFade:at:width:duration:)
 
     func test_spanWidth_zeroFade_isZero() {
-        let w = CueMarkersGeometry.spanWidth(forFade: 0, at: 5, width: 200, duration: 30)
-        XCTAssertEqual(w, 0, accuracy: 0.001)
+        let result = CueMarkersGeometry.spanWidth(forFade: 0, at: 5, width: 200, duration: 30)
+        XCTAssertEqual(result, 0, accuracy: 0.001)
     }
 
     func test_spanWidth_fadeEqualsDuration_isFullWidth() {
-        let w = CueMarkersGeometry.spanWidth(forFade: 30, at: 0, width: 200, duration: 30)
-        XCTAssertEqual(w, 200, accuracy: 0.001)
+        let result = CueMarkersGeometry.spanWidth(forFade: 30, at: 0, width: 200, duration: 30)
+        XCTAssertEqual(result, 200, accuracy: 0.001)
     }
 
     func test_spanWidth_mapsLinearly() {
         // fade 3s of a 30s clip across 200px => 3/30 * 200 = 20px.
-        let w = CueMarkersGeometry.spanWidth(forFade: 3, at: 5, width: 200, duration: 30)
-        XCTAssertEqual(w, 20, accuracy: 0.001)
+        let result = CueMarkersGeometry.spanWidth(forFade: 3, at: 5, width: 200, duration: 30)
+        XCTAssertEqual(result, 20, accuracy: 0.001)
     }
 
     func test_spanWidth_overrunClampsToRightEdge() {
         // Cue at 28s with a 5s fade in a 30s clip: the band ends at 30s, not 33s,
         // so it spans (30-28)/30 * 200 = 13.333px, never past the content edge.
-        let w = CueMarkersGeometry.spanWidth(forFade: 5, at: 28, width: 200, duration: 30)
-        XCTAssertEqual(w, 200.0 * 2.0 / 30.0, accuracy: 0.001)
+        let result = CueMarkersGeometry.spanWidth(forFade: 5, at: 28, width: 200, duration: 30)
+        XCTAssertEqual(result, 200.0 * 2.0 / 30.0, accuracy: 0.001)
     }
 
     func test_spanWidth_zeroDuration_isZero() {
-        let w = CueMarkersGeometry.spanWidth(forFade: 3, at: 5, width: 200, duration: 0)
-        XCTAssertEqual(w, 0, accuracy: 0.001)
+        let result = CueMarkersGeometry.spanWidth(forFade: 3, at: 5, width: 200, duration: 0)
+        XCTAssertEqual(result, 0, accuracy: 0.001)
     }
 }

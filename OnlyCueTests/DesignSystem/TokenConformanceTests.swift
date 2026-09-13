@@ -15,11 +15,11 @@ final class TokenConformanceTests: XCTestCase {
         "ModeAwareInspector.swift", "CueListPane.swift", "CueListPane+Sheets.swift",
         "CueRowView.swift", "CueColorSwatch.swift", "TransportControls.swift",
         "ShortcutReferencePopover.swift",
-        // #794. `PlayheadClockHeader.swift`, which hosts the pill, is deliberately
-        // not listed: it carries pre-existing literals (a 34pt clock face, 4/6pt
-        // padding) that predate this gate, and refactoring them belongs to its own
-        // change rather than to the MTC epic.
-        "MTCStatusPill.swift"
+        // #794 / #796. `PlayheadClockHeader.swift`, which hosts the pills, is
+        // deliberately not listed: it carries pre-existing literals (a 34pt clock
+        // face, 4/6pt padding) that predate this gate, and refactoring them belongs
+        // to its own change rather than to the timecode-output pills.
+        "MTCStatusPill.swift", "LTCStatusPill.swift"
     ]
 
     /// Patterns that indicate a raw literal where a `DS.*` token belongs.

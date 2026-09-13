@@ -53,6 +53,12 @@ extension FadeTime {
         return String(format: "%.1f/%.1f s", fadeIn, fadeOut)
     }
 
+    /// Cue-list fade cell text: blank for a zero fade so an unset fade reads as
+    /// absence rather than `"0.0 s"` (#804 Decision 8); otherwise `columnDisplay`.
+    var cellDisplay: String {
+        self == .zero ? "" : columnDisplay
+    }
+
     private static func parseNonNegative(_ text: Substring) -> TimeInterval? {
         guard !text.isEmpty,
               !text.hasPrefix("+"),

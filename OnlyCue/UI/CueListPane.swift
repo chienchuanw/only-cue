@@ -45,11 +45,18 @@ struct CueListPane: View {
     @AppStorage(CueListColumnWidths.numberStorageKey)
     private var numberColumnWidthRaw: Double = Double(CueListColumnWidths.numberDefault)
 
+    @AppStorage(CueListColumnWidths.fadeStorageKey)
+    private var fadeColumnWidthRaw: Double = Double(CueListColumnWidths.fadeDefault)
+
     @AppStorage(CueListColumnWidths.infoStorageKey)
     private var infoColumnWidthRaw: Double = Double(CueListColumnWidths.infoDefault)
 
     private var numberColumnWidth: CGFloat {
         CueListColumnWidths.clampNumber(CGFloat(numberColumnWidthRaw))
+    }
+
+    private var fadeColumnWidth: CGFloat {
+        CueListColumnWidths.clampFade(CGFloat(fadeColumnWidthRaw))
     }
 
     private var infoColumnWidth: CGFloat {
@@ -60,6 +67,13 @@ struct CueListPane: View {
         Binding(
             get: { CueListColumnWidths.clampNumber(CGFloat(numberColumnWidthRaw)) },
             set: { numberColumnWidthRaw = Double(CueListColumnWidths.clampNumber($0)) }
+        )
+    }
+
+    private var fadeColumnWidthBinding: Binding<CGFloat> {
+        Binding(
+            get: { CueListColumnWidths.clampFade(CGFloat(fadeColumnWidthRaw)) },
+            set: { fadeColumnWidthRaw = Double(CueListColumnWidths.clampFade($0)) }
         )
     }
 
@@ -197,6 +211,15 @@ struct CueListPane: View {
                 }
             Text("Name")
                 .frame(maxWidth: .infinity, alignment: .leading)
+            Text("Fade")
+                .cueColumnFrame(width: fadeColumnWidth, range: CueListColumnWidths.fadeRange, alignment: .trailing)
+                .overlay(alignment: .trailing) {
+                    ColumnResizeHandle(
+                        width: fadeColumnWidthBinding,
+                        range: CueListColumnWidths.fadeRange
+                    )
+                    .accessibilityIdentifier("cueListFadeColumnResizeHandle")
+                }
             Text("Info")
                 .cueColumnFrame(width: infoColumnWidth, range: CueListColumnWidths.infoRange)
                 .overlay(alignment: .trailing) {
@@ -298,12 +321,16 @@ struct CueListPane: View {
             cue: cue,
             resolvedColorHex: document.model.colorHex(for: cue),
             numberColumnWidth: numberColumnWidth,
+            fadeColumnWidth: fadeColumnWidth,
             infoColumnWidth: infoColumnWidth,
             onRename: { newName in
                 CueCommands.rename(cueId: cue.id, to: newName, document: document, undoManager: undoManager)
             },
             onCommitNumber: { newNumber in
                 CueCommands.setCueNumber(cueId: cue.id, to: newNumber, document: document, undoManager: undoManager)
+            },
+            onCommitFade: { newFade in
+                CueCommands.setFadeTime(cueId: cue.id, to: newFade, document: document, undoManager: undoManager)
             },
             onCommitNotes: { newNotes in
                 CueCommands.setNotes(cueId: cue.id, to: newNotes, document: document, undoManager: undoManager)

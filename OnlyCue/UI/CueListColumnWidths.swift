@@ -15,6 +15,12 @@ enum CueListColumnWidths {
     // inspector min, asserted by CueListPaneMinWidthTests).
     static let numberRange: ClosedRange<CGFloat> = 40...120
 
+    // The Fade column shows the per-cue fade time ("2.0 s", or "1.0/2.0 s" when
+    // split). Sits between Name and Info (#804). Floor keeps a one-decimal value
+    // legible when squeezed; the floor stays within the #297 budget
+    // (headerMinimumWidth ≤ CueListInspectorMetrics.minWidth).
+    static let fadeRange: ClosedRange<CGFloat> = 44...96
+
     // The Info column previews the cue's notes. Kept narrower than Name so the
     // name stays the primary, widest column (#661); resizable within range.
     static let infoRange: ClosedRange<CGFloat> = 72...220
@@ -23,13 +29,19 @@ enum CueListColumnWidths {
     // column gets the most room, while staying strictly wider than the floors
     // so columns retain compression headroom under width pressure (#297).
     static let numberDefault: CGFloat = 44
+    static let fadeDefault: CGFloat = 56
     static let infoDefault: CGFloat = 110
 
     static let numberStorageKey = "cueList.numberColumnWidth"
+    static let fadeStorageKey = "cueList.fadeColumnWidth"
     static let infoStorageKey = "cueList.infoColumnWidth"
 
     static func clampNumber(_ width: CGFloat) -> CGFloat {
         min(max(width, numberRange.lowerBound), numberRange.upperBound)
+    }
+
+    static func clampFade(_ width: CGFloat) -> CGFloat {
+        min(max(width, fadeRange.lowerBound), fadeRange.upperBound)
     }
 
     static func clampInfo(_ width: CGFloat) -> CGFloat {

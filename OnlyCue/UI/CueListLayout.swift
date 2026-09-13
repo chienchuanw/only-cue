@@ -40,13 +40,13 @@ enum CueListLayout {
     /// at `rowLeadingGutter` and a wider target would swallow its clicks.
     static let typeStripeHitWidth: CGFloat = rowLeadingGutter
 
-    /// Non-column horizontal cost of the header row: the 2 inter-column gaps
-    /// (`rowHorizontalSpacing` each, for `# · Name · Info`) plus the leading
-    /// swatch gutter and the trailing edge padding. The Name column is flexible
-    /// with no enforced intrinsic minimum, so it compresses to ~0 and
+    /// Non-column horizontal cost of the header row: the 3 inter-column gaps
+    /// (`rowHorizontalSpacing` each, for `# · Name · Fade · Info`) plus the
+    /// leading swatch gutter and the trailing edge padding. The Name column is
+    /// flexible with no enforced intrinsic minimum, so it compresses to ~0 and
     /// contributes nothing.
     static let headerHorizontalChrome: CGFloat =
-        2 * rowHorizontalSpacing + rowLeadingGutter + rowHorizontalPadding
+        3 * rowHorizontalSpacing + rowLeadingGutter + rowHorizontalPadding
             + 2 * listRowHorizontalInset
 
     /// The cue-list header's guaranteed-compressible minimum width — the
@@ -55,10 +55,12 @@ enum CueListLayout {
     /// the splitter cannot reach the 240 column minimum without the content
     /// demanding more and feeding the constraint-update loop. Header and rows
     /// share the same leading swatch gutter (`rowLeadingGutter`), so the
-    /// header is the binding floor; the two fixed columns are `#` and `Info`
-    /// (Name is flexible), so the floor stays ≤ 240 (40+72+chrome).
+    /// header is the binding floor; the three fixed columns are `#`, `Fade`, and
+    /// `Info` (Name is flexible), so the floor stays ≤ `minWidth`
+    /// (40+44+72+chrome).
     static var headerMinimumWidth: CGFloat {
         CueListColumnWidths.numberRange.lowerBound
+            + CueListColumnWidths.fadeRange.lowerBound
             + CueListColumnWidths.infoRange.lowerBound
             + headerHorizontalChrome
     }

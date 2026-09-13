@@ -1,5 +1,17 @@
 # Cue fade column + waveform fade preview
 
+> **Refinement (2026-09-14, post-design-review).** Two changes agreed after the
+> first implementation:
+> 1. **Fade cell shows the bare number, no `" s"`** — seconds is the column's
+>    implicit unit. `FadeTime.cellDisplay` returns `format()` (whole values drop
+>    the trailing `.0`: `2`, `1`; decimals keep it: `1.5`, `0.5`; split → `1/2`),
+>    blank for a zero fade. The earlier `columnDisplay` (`"2.0 s"`) is removed as
+>    it was only ever the fade cell's formatter.
+> 2. **Figma cue-list design matches the app** — the confirmation mock (section
+>    `641:6`) drops the aspirational `TIME` column and shows `# · Name · Fade ·
+>    Info`. The `Info` column already exists in the app, so this was a Figma-only
+>    change.
+
 **Status:** draft 2026-09-14 — awaiting approval
 **Touches:** `OnlyCue/UI/CueListPane.swift`, `OnlyCue/UI/CueRowView.swift`,
 `OnlyCue/UI/CueListColumnWidths.swift`, `OnlyCue/UI/CueListLayout.swift`,

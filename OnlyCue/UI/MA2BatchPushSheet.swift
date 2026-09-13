@@ -130,6 +130,8 @@ struct MA2BatchPushSheet: View {
                 .strokeBorder(DS.Color.border, lineWidth: 1)
         )
         .clipShape(RoundedRectangle(cornerRadius: DS.Radius.xl, style: .continuous))
+        // Container role so the sheet identifier does not subsume descendants outside the songs `ScrollView` (header title, action-row buttons) — else `ma2BatchPushButton` / `ma2BatchSheetTitle` are unreachable by identifier (#785).
+        .accessibilityElement(children: .contain)
         .accessibilityIdentifier("ma2BatchSheet")
     }
 

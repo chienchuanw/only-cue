@@ -15,6 +15,34 @@ extension FadeTime {
         FadeTime(fadeIn: seconds, fadeOut: seconds)
     }
 
+    /// Upper bound for a single fade leg, in seconds (#829). An hour is well
+    /// past any fade a designer types; beyond it the value is corruption, and
+    /// it propagates into the MA2 wire payload and the cue-list fade column.
+    static let maximum: TimeInterval = 3600
+
+    /// Coerces an untrusted seconds value into `0...maximum`.
+    ///
+    /// NaN / infinity defeats min/max clamping, so it drops to zero rather than
+    /// propagating — the same choice `Cue.init` already makes for `bpm`.
+    static func clamped(_ seconds: TimeInterval) -> TimeInterval {
+        guard seconds.isFinite else { return 0 }
+        return min(max(seconds, 0), maximum)
+    }
+
+    /// File trust boundary: a `.cuelist` is hand-editable and can be corrupt, so
+    /// both legs are clamped on the way in (#829).
+    ///
+    /// Deliberately *not* mirrored in the memberwise initialiser — in-process
+    /// construction is trusted, and the MA2 golden vectors seat an out-of-range
+    /// fade on purpose to pin cross-platform formatter parity.
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        self.init(
+            fadeIn: Self.clamped(try container.decode(TimeInterval.self, forKey: .fadeIn)),
+            fadeOut: Self.clamped(try container.decode(TimeInterval.self, forKey: .fadeOut))
+        )
+    }
+
     /// Parses a fade-time string. Accepts `"1"`, `"1.5"` (symmetric) and `"1/2"` (split: in=1, out=2).
     /// See `FadeTimeTests` for the full grammar and rejection set.
     static func parse(_ text: String) -> FadeTime? {
@@ -55,16 +83,21 @@ extension FadeTime {
               !text.hasPrefix("+"),
               let value = Double(text),
               value.isFinite,
-              value >= 0
+              value >= 0,
+              value <= maximum
         else { return nil }
         return value
     }
 
     /// Drops trailing `.0` on whole numbers; otherwise returns `String(value)`.
     /// Reused by the cue inspector to display `cueNumber` in the same canonical form.
+    ///
+    /// `Int(exactly:)` rather than `Int(_:)`: the plain conversion traps on any
+    /// whole value outside `Int64` (from 1e19 up) and on infinity, and this
+    /// formatter also renders `cueNumber`, which has no clamp of its own (#829).
     static func formatNumber(_ seconds: TimeInterval) -> String {
-        if seconds == seconds.rounded() {
-            return String(Int(seconds))
+        if let whole = Int(exactly: seconds) {
+            return String(whole)
         }
         return String(seconds)
     }

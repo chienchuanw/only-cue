@@ -151,7 +151,9 @@ struct TempoSection: Codable, Identifiable, Equatable {
 struct Cue: Codable, Identifiable, Equatable {
     var id: UUID
     var typeID: UUID              // references CuePointType.id; required
-    var cueNumber: Double         // user-facing cue number (1, 1.5, 2, ...); console-consumable; required
+    var cueNumber: Double?        // user-facing cue number (1, 1.5, 2, ...); console-consumable
+                                  // nil == unnumbered; 0.001...9999.999 (CueNumberValidator) when set
+                                  // Decode coerces an out-of-domain number to nil; see below.
     var name: String
     var time: TimeInterval        // seconds from item's media start
     var notes: String
@@ -201,7 +203,7 @@ enum MediaKind: String, Codable {
 | `item.cues` | Cue list scoped to this item. Cues are not shared between items. |
 | `cue.id` | Stable; never reused even after delete. |
 | `cue.typeID` | Required. References a `CuePointType.id` in `cuePointTypes`. Editable via the cue inspector pane (Type picker → `CueCommands.setType`). |
-| `cue.cueNumber` | User-facing cue number consumed by lighting consoles. Required. Assigned by `CueCommands.addCueAtPlayhead`: empty list → 1.0; insertion at end → time-predecessor's number + 1; between two cues → mid-point of their numbers; before all → time-successor's number − 1 (may go negative on repeated inserts before the minimum; a future "renumber from 1" command is still pending). Existing cues' numbers are never shifted on insert. Manually editable via the cue inspector (text field → `CueCommands.setCueNumber`). |
+| `cue.cueNumber` | User-facing cue number consumed by lighting consoles. Optional — `nil` means *unnumbered*, which is what `CueCommands.addCueAtPlayhead` creates; numbers arrive later from `CueNumberAutoFill`, `setCueNumber` or `renumberSelected`, and existing cues' numbers are never shifted on insert. The domain is grandMA2's `0.001...9999.999` (`CueNumberValidator.minimum/maximum`), and every boundary enforces it: typed input is rejected (`setCueNumber`, and `renumberSelected` rejects a run whole if any step leaves the window), while a number arriving from disk is coerced to `nil` on decode rather than clamped — clamping would invent a number the designer never chose (#830). `MA2CueNumber` gates on the same window as a last stop before the wire. Editable via the cue inspector (text field → `CueCommands.setCueNumber`) and the cue-list number cell. |
 | `cue.time` | Seconds, double precision. Must be `>= 0` and `<= item.media.duration`. |
 | `cue.notes` | Free text, may be empty. Editable via the cue inspector (multi-line editor → `CueCommands.setNotes`). |
 | `cue.fadeTime` | Required. `FadeTime(fadeIn:fadeOut:)`. New cues default to `.symmetric(0)` (no fade); v4 → v5 migration backfills the same. The cue inspector parses input via `FadeTime.parse(_:)` (accepts `"1"` / `"1.5"` symmetric and `"1/2"` split, trims whitespace, rejects empty/non-numeric/negative/multi-slash/half-empty, and since #829 rejects a leg above `FadeTime.maximum` = 3600 s), routes valid edits through `CueCommands.setFadeTime`, and reverts the field to `FadeTime.format()`'s canonical form on rejection. `init(from:)` clamps both legs into `0...maximum` because a `.cuelist` is hand-editable, coercing non-finite to 0 the way `Cue.init` already does for `bpm`. The memberwise initializer stays unchecked — in-process construction is trusted, and the MA2 golden vectors seat an out-of-range fade on purpose to pin Swift/C# formatter parity. |
@@ -274,5 +276,4 @@ These are out of scope. Adding any of them is a `schemaVersion` bump.
 - Per-cue OSC/MIDI payloads
 - Cross-item cue references or shared cue lists
 - Per-item playhead memory (active-item switch resets transport to 0)
-- A "renumber all from 1" command on `cueNumber` — manual per-cue editing exists via the cue inspector, but a bulk normalize command is still pending
 - `CuePointType.defaultFadeTime` applied at cue creation — currently unused; wiring is a separate leaf that may also convert that field to `FadeTime`

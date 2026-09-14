@@ -167,9 +167,21 @@ enum OSCGoldenCases {
               OSCPack.rawBundle(OSCPack.int32(0) + OSCPack.message("/onlycue/play", ","))),
         .init("a bundle with a negative element size yields nothing",
               OSCPack.rawBundle(OSCPack.int32(-1) + OSCPack.message("/onlycue/play", ","))),
+        // A zero size ends the bundle; it is not a skippable empty element. Both
+        // readings consume the size word, so only a *well-formed element after
+        // the zero* can tell them apart — without one, `size > 0` and `size >= 0`
+        // produce the same empty result. (Found by mutation: the case above
+        // stayed green when the guard was loosened.)
+        .init("a bundle stops at a zero element size rather than skipping past it",
+              OSCPack.rawBundle(OSCPack.int32(0) + sized(OSCPack.message("/onlycue/play", ",")))),
         .init("a bundle truncated mid-element yields nothing",
               OSCPack.rawBundle(OSCPack.int32(64) + Data([1, 2, 3, 4])))
     ]
+
+    /// An element with its `Int32` length prefix, for the raw-bundle fixtures.
+    private static func sized(_ element: Data) -> Data {
+        OSCPack.int32(Int32(element.count)) + element
+    }
 
     /// Every branch that returns nil or an empty list. None of them may throw,
     /// hang, or produce a partially parsed message.

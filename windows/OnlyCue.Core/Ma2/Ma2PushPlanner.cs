@@ -98,7 +98,9 @@ public static class Ma2PushPlanner
         // Executor is optional (#764): skip the assign when unassigned.
         if (target.Executor is { } executor)
         {
-            commands.Add($"Assign Sequence {sequenceSlot} At Exec {executor.Page}.{executor.Number}");
+            var page = executor.Page.ToString(CultureInfo.InvariantCulture);
+            var number = executor.Number.ToString(CultureInfo.InvariantCulture);
+            commands.Add($"Assign Sequence {sequenceSlot} At Exec {page}.{number}");
         }
 
         commands.Add($"Label Sequence {sequenceSlot} \"{Ma2CommandQuoting.Quotable(request.SequenceName)}\"");

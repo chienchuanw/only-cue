@@ -18,11 +18,16 @@ public static class Ma2TrigTime
     /// <c>MidpointRounding.AwayFromZero</c> matches Swift's <c>.rounded()</c>;
     /// the default banker's mode would turn 0.5 s at 25 fps (exactly 12.5
     /// frames) into 12 instead of 13.
+    ///
+    /// The cast is to <c>long</c> because Swift's <c>Int</c> is 64-bit: a
+    /// <c>(int)</c> cast saturates at 2147483647 on .NET Core 3.0+, which at
+    /// 25 fps would clamp silently from ~994 days of cue time onward while
+    /// macOS kept counting.
     /// </remarks>
     public static double Seconds(double cueTime, int startTimecodeFrames, SmpteFramerate framerate)
     {
         double fps = framerate.FramesPerSecond();
-        var absFrames = startTimecodeFrames + (int)Math.Round(cueTime * fps, MidpointRounding.AwayFromZero);
+        var absFrames = startTimecodeFrames + (long)Math.Round(cueTime * fps, MidpointRounding.AwayFromZero);
         return absFrames / fps;
     }
 

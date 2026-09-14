@@ -120,9 +120,11 @@ public static class Ma2TimecodeXmlGenerator
         // when chasing DF LTC is a rig-validation item (#683 plan step 13).
         //
         // AwayFromZero matches Swift's `.rounded()`; banker's rounding would put
-        // a cue landing on an exact half-frame one frame early.
+        // a cue landing on an exact half-frame one frame early. `long`, not
+        // `int`, because Swift's `Int` is 64-bit and a narrowing cast would
+        // saturate at 2147483647 instead of following macOS.
         var frame = request.StartTimecodeFrames
-            + (int)Math.Round(cue.Time * request.Framerate.FramesPerSecond(), MidpointRounding.AwayFromZero);
+            + (long)Math.Round(cue.Time * request.Framerate.FramesPerSecond(), MidpointRounding.AwayFromZero);
 
         var attributes = new List<string> { $"index=\"{Int(eventIndex)}\"" };
         if (frame != 0)
@@ -166,5 +168,5 @@ public static class Ma2TimecodeXmlGenerator
         _ => throw new ArgumentOutOfRangeException(nameof(command))
     };
 
-    private static string Int(int value) => value.ToString(CultureInfo.InvariantCulture);
+    private static string Int(long value) => value.ToString(CultureInfo.InvariantCulture);
 }

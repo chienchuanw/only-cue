@@ -68,8 +68,8 @@ public sealed record Ma2TrigTimeCase(
 public sealed record Ma2CueNumberCase(
     [property: JsonPropertyName("name")] string Name,
     [property: JsonPropertyName("value")] string Value,
-    [property: JsonPropertyName("expectNumber")] int ExpectNumber,
-    [property: JsonPropertyName("expectSubNumber")] int ExpectSubNumber,
+    [property: JsonPropertyName("expectNumber")] long ExpectNumber,
+    [property: JsonPropertyName("expectSubNumber")] long ExpectSubNumber,
     [property: JsonPropertyName("expectCommandString")] string ExpectCommandString);
 
 public sealed record Ma2NameCase(

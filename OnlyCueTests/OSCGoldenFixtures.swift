@@ -211,5 +211,46 @@ enum OSCGoldenCases {
               OSCPack.string("/onlycue/play") + Data([1, 2, 3]))
     ]
 
-    static let all: [OSCGoldenCase] = addresses + arguments + alignment + bundles + malformed
+    /// Where Swift's `String` semantics differ from the obvious .NET spelling.
+    /// Every case here parses one way char-by-char and another way the way Swift
+    /// actually does it, so each one is the difference between a console
+    /// responding and a console sitting still.
+    private static let unicode: [OSCGoldenCase] = [
+        // `String(data:encoding:.utf8)` is NSString-backed and drops exactly one
+        // leading U+FEFF. `UTF8Encoding.GetString` keeps it, strict or lenient,
+        // and the address then fails the "/" test.
+        .init("a byte-order mark before the address is dropped, not kept",
+              OSCPack.message("\u{FEFF}/onlycue/play", ",")),
+        // Same stripping, and it is what lets the head still read as "#bundle" —
+        // a port that keeps the mark takes the plain-message branch and returns
+        // nothing instead of flattening the bundle.
+        .init("a byte-order mark before #bundle still reads as a bundle",
+              bomBundle(sized(OSCPack.message("/onlycue/play", ",")))),
+        // Only the leading one: the second survives as a real scalar.
+        .init("only the first byte-order mark in a string argument is dropped",
+              OSCPack.message("/onlycue/skip", ",s", [OSCPack.terminated(Data(bom + bom + "x".utf8))])),
+        // `hasPrefix` compares grapheme clusters: "," plus a combining acute is a
+        // single cluster that is not ",". Swift therefore treats the word as "not
+        // a type-tag string" and falls through to the address-only form, which
+        // still plays. A char-wise `StartsWith(',')` accepts it, then chokes on
+        // U+0301 as an unknown tag and drops the message.
+        .init("a combining mark on the type-tag comma falls through to address-only",
+              OSCPack.message("/onlycue/play", ",\u{0301}")),
+        // The same rule on the address: the cluster is "/́", not "/", so the whole
+        // datagram is rejected.
+        .init("a combining mark on the leading slash rejects the address",
+              OSCPack.message("/\u{0301}onlycue/play", ","))
+    ]
+
+    private static let bom: [UInt8] = [0xEF, 0xBB, 0xBF]
+
+    /// `rawBundle` with a byte-order mark in front of the `#bundle` word.
+    private static func bomBundle(_ payload: Data) -> Data {
+        var data = OSCPack.terminated(Data(bom + "#bundle".utf8))
+        data.append(contentsOf: [0, 0, 0, 0, 0, 0, 0, 1] as [UInt8])
+        data.append(payload)
+        return data
+    }
+
+    static let all: [OSCGoldenCase] = addresses + arguments + alignment + bundles + malformed + unicode
 }

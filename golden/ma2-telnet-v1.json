@@ -1,0 +1,473 @@
+{
+  "contract" : "ma2-telnet",
+  "cueNumbers" : [
+    {
+      "expectCommandString" : "0",
+      "expectNumber" : 0,
+      "expectSubNumber" : 0,
+      "name" : "zero",
+      "value" : "0.0"
+    },
+    {
+      "expectCommandString" : "3",
+      "expectNumber" : 3,
+      "expectSubNumber" : 0,
+      "name" : "a whole number drops the sub number",
+      "value" : "3.0"
+    },
+    {
+      "expectCommandString" : "1.15",
+      "expectNumber" : 1,
+      "expectSubNumber" : 150,
+      "name" : "one decimal place",
+      "value" : "1.15"
+    },
+    {
+      "expectCommandString" : "2.001",
+      "expectNumber" : 2,
+      "expectSubNumber" : 1,
+      "name" : "three decimal places",
+      "value" : "2.001"
+    },
+    {
+      "expectCommandString" : "1.3",
+      "expectNumber" : 1,
+      "expectSubNumber" : 300,
+      "name" : "binary noise is absorbed by thousandth rounding",
+      "value" : "1.3"
+    },
+    {
+      "expectCommandString" : "0.013",
+      "expectNumber" : 0,
+      "expectSubNumber" : 13,
+      "name" : "an exact midpoint rounds away from zero",
+      "value" : "0.0125"
+    },
+    {
+      "expectCommandString" : "1.003",
+      "expectNumber" : 1,
+      "expectSubNumber" : 3,
+      "name" : "an exact midpoint above one rounds away from zero",
+      "value" : "1.0025"
+    },
+    {
+      "expectCommandString" : "4.12",
+      "expectNumber" : 4,
+      "expectSubNumber" : 120,
+      "name" : "a trailing zero in the sub number is trimmed",
+      "value" : "4.12"
+    },
+    {
+      "expectCommandString" : "-1.-5",
+      "expectNumber" : -1,
+      "expectSubNumber" : -500,
+      "name" : "a negative number truncates toward zero",
+      "value" : "-1.5"
+    }
+  ],
+  "names" : [
+    {
+      "expect" : "Song One",
+      "fallbackSlot" : 7,
+      "name" : "plain ascii is unchanged",
+      "raw" : "Song One"
+    },
+    {
+      "expect" : "Song One",
+      "fallbackSlot" : 7,
+      "name" : "whitespace runs collapse",
+      "raw" : "Song \t  One  "
+    },
+    {
+      "expect" : "He said go",
+      "fallbackSlot" : 7,
+      "name" : "embedded quotes are stripped",
+      "raw" : "He said \"go\""
+    },
+    {
+      "expect" : "SongOne",
+      "fallbackSlot" : 7,
+      "name" : "control characters are dropped",
+      "raw" : "Song\u0007One"
+    },
+    {
+      "expect" : "Caf Set",
+      "fallbackSlot" : 7,
+      "name" : "non-ascii letters are dropped",
+      "raw" : "Café Set"
+    },
+    {
+      "expect" : "Set One",
+      "fallbackSlot" : 7,
+      "name" : "a non-bmp scalar is dropped whole",
+      "raw" : "Set 🎵 One"
+    },
+    {
+      "expect" : "OnlyCue 12",
+      "fallbackSlot" : 12,
+      "name" : "an all-cjk name falls back to the slot",
+      "raw" : "第一首歌"
+    },
+    {
+      "expect" : "OnlyCue 3",
+      "fallbackSlot" : 3,
+      "name" : "an empty name falls back to the slot",
+      "raw" : ""
+    }
+  ],
+  "note" : "macOS-generated golden vectors for the OnlyCue grandMA2 telnet push (MA2CommandPlanner, MA2TrigTime, MA2CueNumber, MA2Name). The C# OnlyCue.Core re-implementation must reproduce every string byte for byte. Doubles are round-trip-exact decimal strings; compare the parsed IEEE-754 values, not the text — but note that the *expected* strings embed Swift's own Double spelling, which the C# side must reproduce. Cues are identified by index. To regenerate after a deliberate change, delete golden/ma2-telnet-v1.json and re-run the test suite.",
+  "plans" : [
+    {
+      "cues" : [
+        {
+          "cueNumber" : "1.0",
+          "fadeIn" : "0.0",
+          "fadeOut" : "0.0",
+          "name" : "Verse",
+          "notes" : "",
+          "time" : "0.0"
+        },
+        {
+          "cueNumber" : "2.0",
+          "fadeIn" : "0.0",
+          "fadeOut" : "0.0",
+          "name" : "Chorus",
+          "notes" : "",
+          "time" : "12.5"
+        }
+      ],
+      "expect" : [
+        "Delete Sequence 7 /nc",
+        "Store Sequence 7 Cue 1 \"Verse\" /nc",
+        "Assign Sequence 7 Cue 1 /Trig=Timecode",
+        "Assign Sequence 7 Cue 1 /TrigTime=0",
+        "Store Sequence 7 Cue 2 \"Chorus\" /nc",
+        "Assign Sequence 7 Cue 2 /Trig=Timecode",
+        "Assign Sequence 7 Cue 2 /TrigTime=12.52",
+        "Label Sequence 7 \"Song A\"",
+        "Assign Sequence 7 At Exec 1.5"
+      ],
+      "framerate" : "25",
+      "name" : "two plain cues with an executor",
+      "sequenceName" : "Song A",
+      "startTimecodeFrames" : 0,
+      "target" : {
+        "executorNumber" : 5,
+        "executorPage" : 1,
+        "sequenceSlot" : 7,
+        "timecodeCommand" : "goto",
+        "timecodeSlot" : 3
+      }
+    },
+    {
+      "cues" : [
+        {
+          "cueNumber" : "1.0",
+          "fadeIn" : "0.0",
+          "fadeOut" : "0.0",
+          "name" : "Top",
+          "notes" : "",
+          "time" : "1.0"
+        }
+      ],
+      "expect" : [
+        "Delete Sequence 12 /nc",
+        "Store Sequence 12 Cue 1 \"Top\" /nc",
+        "Assign Sequence 12 Cue 1 /Trig=Timecode",
+        "Assign Sequence 12 Cue 1 /TrigTime=1",
+        "Label Sequence 12 \"Song B\""
+      ],
+      "framerate" : "30",
+      "name" : "no executor emits no At Exec",
+      "sequenceName" : "Song B",
+      "startTimecodeFrames" : 0,
+      "target" : {
+        "sequenceSlot" : 12,
+        "timecodeCommand" : "go",
+        "timecodeSlot" : 4
+      }
+    },
+    {
+      "cues" : [
+        {
+          "cueNumber" : "1.0",
+          "fadeIn" : "2.5",
+          "fadeOut" : "0.0",
+          "name" : "In only",
+          "notes" : "",
+          "time" : "0.0"
+        },
+        {
+          "cueNumber" : "2.0",
+          "fadeIn" : "0.0",
+          "fadeOut" : "3.0",
+          "name" : "Out only",
+          "notes" : "",
+          "time" : "1.0"
+        },
+        {
+          "cueNumber" : "3.0",
+          "fadeIn" : "0.30000000000000004",
+          "fadeOut" : "1.25",
+          "name" : "Both",
+          "notes" : "hold",
+          "time" : "2.0"
+        }
+      ],
+      "expect" : [
+        "Delete Sequence 7 /nc",
+        "Store Sequence 7 Cue 1 \"In only\" /nc",
+        "Assign Sequence 7 Cue 1 /Trig=Timecode",
+        "Assign Sequence 7 Cue 1 /TrigTime=0",
+        "Assign Sequence 7 Cue 1 /fade=2.5",
+        "Store Sequence 7 Cue 2 \"Out only\" /nc",
+        "Assign Sequence 7 Cue 2 /Trig=Timecode",
+        "Assign Sequence 7 Cue 2 /TrigTime=1",
+        "Assign Sequence 7 Cue 2 /outfade=3",
+        "Store Sequence 7 Cue 3 \"Both\" /nc",
+        "Assign Sequence 7 Cue 3 /Trig=Timecode",
+        "Assign Sequence 7 Cue 3 /TrigTime=2",
+        "Assign Sequence 7 Cue 3 /fade=0.30000000000000004",
+        "Assign Sequence 7 Cue 3 /outfade=1.25",
+        "Assign Sequence 7 Cue 3 /info=\"hold\"",
+        "Label Sequence 7 \"Fades\"",
+        "Assign Sequence 7 At Exec 1.5"
+      ],
+      "framerate" : "24",
+      "name" : "fades and notes are appended only when present",
+      "sequenceName" : "Fades",
+      "startTimecodeFrames" : 0,
+      "target" : {
+        "executorNumber" : 5,
+        "executorPage" : 1,
+        "sequenceSlot" : 7,
+        "timecodeCommand" : "goto",
+        "timecodeSlot" : 3
+      }
+    },
+    {
+      "cues" : [
+        {
+          "cueNumber" : "1.0",
+          "fadeIn" : "0.0",
+          "fadeOut" : "0.0",
+          "name" : "He said \"go\"",
+          "notes" : "line one\nline \"two\"\r\nline three",
+          "time" : "0.0"
+        }
+      ],
+      "expect" : [
+        "Delete Sequence 7 /nc",
+        "Store Sequence 7 Cue 1 \"He said go\" /nc",
+        "Assign Sequence 7 Cue 1 /Trig=Timecode",
+        "Assign Sequence 7 Cue 1 /TrigTime=0",
+        "Assign Sequence 7 Cue 1 /info=\"line one line two line three\"",
+        "Label Sequence 7 \"Quote Test\"",
+        "Assign Sequence 7 At Exec 1.5"
+      ],
+      "framerate" : "25",
+      "name" : "quotes are stripped and note newlines collapse to one line",
+      "sequenceName" : "Quote \"Test\"",
+      "startTimecodeFrames" : 0,
+      "target" : {
+        "executorNumber" : 5,
+        "executorPage" : 1,
+        "sequenceSlot" : 7,
+        "timecodeCommand" : "goto",
+        "timecodeSlot" : 3
+      }
+    },
+    {
+      "cues" : [
+        {
+          "cueNumber" : "3.0",
+          "fadeIn" : "0.0",
+          "fadeOut" : "0.0",
+          "name" : "Third",
+          "notes" : "",
+          "time" : "1.0"
+        },
+        {
+          "cueNumber" : "1.0",
+          "fadeIn" : "0.0",
+          "fadeOut" : "0.0",
+          "name" : "First",
+          "notes" : "",
+          "time" : "9.0"
+        },
+        {
+          "cueNumber" : "2.5",
+          "fadeIn" : "0.0",
+          "fadeOut" : "0.0",
+          "name" : "Middle",
+          "notes" : "",
+          "time" : "5.0"
+        }
+      ],
+      "expect" : [
+        "Delete Sequence 7 /nc",
+        "Store Sequence 7 Cue 1 \"First\" /nc",
+        "Assign Sequence 7 Cue 1 /Trig=Timecode",
+        "Assign Sequence 7 Cue 1 /TrigTime=9",
+        "Store Sequence 7 Cue 2.5 \"Middle\" /nc",
+        "Assign Sequence 7 Cue 2.5 /Trig=Timecode",
+        "Assign Sequence 7 Cue 2.5 /TrigTime=5",
+        "Store Sequence 7 Cue 3 \"Third\" /nc",
+        "Assign Sequence 7 Cue 3 /Trig=Timecode",
+        "Assign Sequence 7 Cue 3 /TrigTime=1",
+        "Label Sequence 7 \"Ordering\"",
+        "Assign Sequence 7 At Exec 1.5"
+      ],
+      "framerate" : "30",
+      "name" : "commands are emitted in cue-number order, not time order",
+      "sequenceName" : "Ordering",
+      "startTimecodeFrames" : 0,
+      "target" : {
+        "executorNumber" : 5,
+        "executorPage" : 1,
+        "sequenceSlot" : 7,
+        "timecodeCommand" : "goto",
+        "timecodeSlot" : 3
+      }
+    },
+    {
+      "cues" : [
+        {
+          "fadeIn" : "0.0",
+          "fadeOut" : "0.0",
+          "name" : "No number",
+          "notes" : "",
+          "time" : "4.0"
+        },
+        {
+          "cueNumber" : "1.0",
+          "fadeIn" : "0.0",
+          "fadeOut" : "0.0",
+          "name" : "One",
+          "notes" : "",
+          "time" : "0.0"
+        }
+      ],
+      "expect" : [
+        "Delete Sequence 7 /nc",
+        "Store Sequence 7 Cue 0 \"No number\" /nc",
+        "Assign Sequence 7 Cue 0 /Trig=Timecode",
+        "Assign Sequence 7 Cue 0 /TrigTime=4",
+        "Store Sequence 7 Cue 1 \"One\" /nc",
+        "Assign Sequence 7 Cue 1 /Trig=Timecode",
+        "Assign Sequence 7 Cue 1 /TrigTime=0",
+        "Label Sequence 7 \"Unnumbered\"",
+        "Assign Sequence 7 At Exec 1.5"
+      ],
+      "framerate" : "25",
+      "name" : "an unnumbered cue sorts as zero and stores as cue 0",
+      "sequenceName" : "Unnumbered",
+      "startTimecodeFrames" : 0,
+      "target" : {
+        "executorNumber" : 5,
+        "executorPage" : 1,
+        "sequenceSlot" : 7,
+        "timecodeCommand" : "goto",
+        "timecodeSlot" : 3
+      }
+    },
+    {
+      "cues" : [
+        {
+          "cueNumber" : "1.0025",
+          "fadeIn" : "0.0",
+          "fadeOut" : "0.0",
+          "name" : "DF",
+          "notes" : "",
+          "time" : "0.75"
+        }
+      ],
+      "expect" : [
+        "Delete Sequence 7 /nc",
+        "Store Sequence 7 Cue 1.003 \"DF\" /nc",
+        "Assign Sequence 7 Cue 1.003 /Trig=Timecode",
+        "Assign Sequence 7 Cue 1.003 /TrigTime=3600.766667",
+        "Label Sequence 7 \"Drop\"",
+        "Assign Sequence 7 At Exec 1.5"
+      ],
+      "framerate" : "30df",
+      "name" : "drop-frame with a start offset",
+      "sequenceName" : "Drop",
+      "startTimecodeFrames" : 108000,
+      "target" : {
+        "executorNumber" : 5,
+        "executorPage" : 1,
+        "sequenceSlot" : 7,
+        "timecodeCommand" : "goto",
+        "timecodeSlot" : 3
+      }
+    }
+  ],
+  "trigTimes" : [
+    {
+      "cueTime" : "0.0",
+      "expectCommand" : "0",
+      "expectSeconds" : "0.0",
+      "framerate" : "25",
+      "name" : "frame zero trims to a bare integer",
+      "startTimecodeFrames" : 0
+    },
+    {
+      "cueTime" : "5.0",
+      "expectCommand" : "5",
+      "expectSeconds" : "5.0",
+      "framerate" : "25",
+      "name" : "a whole second at 25 fps",
+      "startTimecodeFrames" : 0
+    },
+    {
+      "cueTime" : "2.1333333",
+      "expectCommand" : "2.133333",
+      "expectSeconds" : "2.1333333333333333",
+      "framerate" : "30",
+      "name" : "a repeating decimal keeps six places",
+      "startTimecodeFrames" : 0
+    },
+    {
+      "cueTime" : "0.5",
+      "expectCommand" : "0.52",
+      "expectSeconds" : "0.52",
+      "framerate" : "25",
+      "name" : "an exact midpoint rounds away from zero at 25 fps",
+      "startTimecodeFrames" : 0
+    },
+    {
+      "cueTime" : "0.75",
+      "expectCommand" : "0.766667",
+      "expectSeconds" : "0.7666666666666667",
+      "framerate" : "30",
+      "name" : "an exact midpoint rounds away from zero at 30 fps",
+      "startTimecodeFrames" : 0
+    },
+    {
+      "cueTime" : "1.0",
+      "expectCommand" : "101",
+      "expectSeconds" : "101.0",
+      "framerate" : "25",
+      "name" : "a start offset shifts the absolute time",
+      "startTimecodeFrames" : 2500
+    },
+    {
+      "cueTime" : "1.5",
+      "expectCommand" : "1.5",
+      "expectSeconds" : "1.5",
+      "framerate" : "30df",
+      "name" : "drop-frame uses the nominal 30 fps base",
+      "startTimecodeFrames" : 0
+    },
+    {
+      "cueTime" : "1.0",
+      "expectCommand" : "1.291667",
+      "expectSeconds" : "1.2916666666666667",
+      "framerate" : "24",
+      "name" : "24 fps thirds do not terminate",
+      "startTimecodeFrames" : 7
+    }
+  ],
+  "version" : 1
+}

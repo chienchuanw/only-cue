@@ -26,6 +26,11 @@ Packages/
 Package.pins
 Package.resolved
 
+# .NET / Windows port (windows/ — see docs/superpowers/specs/2026-08-08-windows-port-design.md)
+bin/
+obj/
+*.user
+
 # Bundler / fastlane
 fastlane/report.xml
 fastlane/Preview.html

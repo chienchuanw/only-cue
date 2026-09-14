@@ -35,9 +35,10 @@ namespace OnlyCue.Core.Osc;
 ///
 /// Nesting depth is <em>not</em> capped, matching Swift. Both parsers recurse once
 /// per bundle level and would overflow the stack on a sufficiently nested
-/// datagram; at 20 bytes per level a 65507-byte UDP datagram buys at most 3274
-/// levels, which both survive on their default stacks. #835 tracks capping both
-/// sides together — capping only this one would itself be a parity break.
+/// datagram; at 20 bytes per level a 65507-byte UDP datagram buys at most 3275
+/// levels (the innermost bundle carries no size word, so depth D costs 20D-4
+/// bytes), measured to survive a 1 MB stack. #835 tracks capping both sides
+/// together — capping only this one would itself be a parity break.
 /// </remarks>
 public static class OscParser
 {
@@ -161,10 +162,20 @@ public static class OscParser
     /// word is <c>,</c> + U+0301, Swift falls through to the address-only form and
     /// plays, while a char-wise port treats U+0301 as an unknown tag and drops the
     /// message. Same story for the <c>/</c> test on the address.</summary>
-    /// <remarks><see cref="StringInfo.GetNextTextElementLength"/> implements the
-    /// same UAX #29 extended grapheme clusters Swift's <c>Character</c> does, so
-    /// "first cluster is exactly this ASCII char" is "starts with the char and the
-    /// first cluster is one unit long".</remarks>
+    /// <remarks>
+    /// <see cref="StringInfo.GetNextTextElementLength"/> implements the same UAX #29
+    /// algorithm Swift's <c>Character</c> does, so "first cluster is exactly this
+    /// ASCII char" is "starts with the char and the first cluster is one unit long".
+    ///
+    /// Each side runs that algorithm against whatever UCD its own runtime carries,
+    /// which is <em>not</em> the same table: .NET 10 ships UCD 16.0 and Swift 6.3 on
+    /// macOS 26 ships UCD 17.0, leaving 42 scalars that one side joins into the
+    /// leading cluster and the other does not. A datagram whose <c>/</c> or <c>,</c>
+    /// is followed by one of those scalars still parses differently on the two
+    /// platforms. That gap cannot be closed from this file — it is a toolchain
+    /// version skew, not a port bug, and a golden case pinning it would go red on a
+    /// runtime upgrade rather than on a real regression. #836 tracks it.
+    /// </remarks>
     private static bool StartsWithCluster(string value, char expected) =>
         value.Length > 0
             && value[0] == expected

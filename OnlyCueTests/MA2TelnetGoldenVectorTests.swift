@@ -237,7 +237,19 @@ enum MA2TelnetGolden {
         // which the console rejects (#830). The vector's job is to keep the two
         // cores identical, so it records today's output and the drift guard will
         // fail here — deliberately — when #830 is fixed.
-        ("a negative number truncates toward zero", -1.5)
+        ("a negative number truncates toward zero", -1.5),
+        // `%03d` pads to a total width of three *including* the sign, so these
+        // three sub numbers render "-500" → "-50" → "-05", not "-500" →
+        // "-050" → "-005". A port that reaches for a digits-only pad (.NET's
+        // "D3") agrees with the -1.5 case above and diverges on both of these,
+        // so the two magnitude classes below are what actually pin the format.
+        ("a two-digit negative sub number keeps the sign inside the pad", -1.05),
+        ("a one-digit negative sub number keeps the sign inside the pad", -1.005),
+        // 3e6 × 1000 is 3e9, past Int32.max. Swift's `Int` is 64-bit and keeps
+        // counting; a port that casts to a 32-bit int saturates at 2147483647
+        // and silently reports 2147483.647. Out of the validator's range like
+        // the negatives above, so likewise a corrupt-file path only.
+        ("a cue number past Int32.max stays 64-bit", 3_000_000)
     ]
 
     private static func cueNumberCases() -> [MA2TelnetGoldenVector.CueNumberCase] {

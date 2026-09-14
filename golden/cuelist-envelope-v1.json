@@ -1,0 +1,127 @@
+{
+  "cases" : [
+    {
+      "allowLegacyPlaintext" : true,
+      "expect" : {
+        "ok" : true,
+        "outputBase64" : "ewogICJpZCIgOiAiNkM3RTJCOTAtMUY0QS00QzMzLTlFNTItMEExQjJDM0Q0RTVGIiwKICAiaXRlbXMiIDogWwoKICBdLAogICJuYW1lIiA6ICJHb2xkZW4gVmVjdG9yIFNob3ciLAogICJzY2hlbWFWZXJzaW9uIiA6IDIzCn0="
+      },
+      "inputBase64" : "T0NVRQEQERITFBUWFxgZGhvRYJZhMTkxv6CKI3dthvD/faDOBEcnsTH3SJsXTtNttOfz8isb7F0kfDZOqv/9vQzGaYbmI9nNBrgTufhXGOiDc2CdHsJZqgBhiizhNeRBOWT2qmuJgqXgSm8dYZcdVWPvns/HDE2P5UUSmcY4oWhCuFIXmlOkKo6o2qMZB4ggOJmaaqQTHtujsbfOwRZAYLk=",
+      "magic" : "OCUE",
+      "name" : "openDocument"
+    },
+    {
+      "allowLegacyPlaintext" : false,
+      "expect" : {
+        "ok" : true,
+        "outputBase64" : "ewogICJjdWVzIiA6IFsKCiAgXSwKICAiZm9ybWF0VmVyc2lvbiIgOiAxCn0="
+      },
+      "inputBase64" : "T0NDVQFAQUJDREVGR0hJSkvqFL2x3Vt5tbfI0vmLH556ZZ8htvNJuU0zfjMGDqQiRadv0d7C89DKVPyWjsduqt6nM+f3kn1ZoQl0eHU=",
+      "magic" : "OCCU",
+      "name" : "openExport"
+    },
+    {
+      "allowLegacyPlaintext" : true,
+      "expect" : {
+        "ok" : true,
+        "outputBase64" : "ewogICJpZCIgOiAiNkM3RTJCOTAtMUY0QS00QzMzLTlFNTItMEExQjJDM0Q0RTVGIiwKICAiaXRlbXMiIDogWwoKICBdLAogICJuYW1lIiA6ICJHb2xkZW4gVmVjdG9yIFNob3ciLAogICJzY2hlbWFWZXJzaW9uIiA6IDIzCn0="
+      },
+      "inputBase64" : "ewogICJpZCIgOiAiNkM3RTJCOTAtMUY0QS00QzMzLTlFNTItMEExQjJDM0Q0RTVGIiwKICAiaXRlbXMiIDogWwoKICBdLAogICJuYW1lIiA6ICJHb2xkZW4gVmVjdG9yIFNob3ciLAogICJzY2hlbWFWZXJzaW9uIiA6IDIzCn0=",
+      "magic" : "OCUE",
+      "name" : "legacyPlaintextPassesThrough"
+    },
+    {
+      "allowLegacyPlaintext" : false,
+      "expect" : {
+        "error" : "malformedEnvelope",
+        "ok" : false
+      },
+      "inputBase64" : "ewogICJpZCIgOiAiNkM3RTJCOTAtMUY0QS00QzMzLTlFNTItMEExQjJDM0Q0RTVGIiwKICAiaXRlbXMiIDogWwoKICBdLAogICJuYW1lIiA6ICJHb2xkZW4gVmVjdG9yIFNob3ciLAogICJzY2hlbWFWZXJzaW9uIiA6IDIzCn0=",
+      "magic" : "OCCU",
+      "name" : "legacyPlaintextRejectedForExport"
+    },
+    {
+      "allowLegacyPlaintext" : true,
+      "expect" : {
+        "ok" : true,
+        "outputBase64" : "WENVRQEQERITFBUWFxgZGhvRYJZhMTkxv6CKI3dthvD/faDOBEcnsTH3SJsXTtNttOfz8isb7F0kfDZOqv/9vQzGaYbmI9nNBrgTufhXGOiDc2CdHsJZqgBhiizhNeRBOWT2qmuJgqXgSm8dYZcdVWPvns/HDE2P5UUSmcY4oWhCuFIXmlOkKo6o2qMZB4ggOJmaaqQTHtujsbfOwRZAYLk="
+      },
+      "inputBase64" : "WENVRQEQERITFBUWFxgZGhvRYJZhMTkxv6CKI3dthvD/faDOBEcnsTH3SJsXTtNttOfz8isb7F0kfDZOqv/9vQzGaYbmI9nNBrgTufhXGOiDc2CdHsJZqgBhiizhNeRBOWT2qmuJgqXgSm8dYZcdVWPvns/HDE2P5UUSmcY4oWhCuFIXmlOkKo6o2qMZB4ggOJmaaqQTHtujsbfOwRZAYLk=",
+      "magic" : "OCUE",
+      "name" : "badMagicPassesThroughWhenLegacyAllowed"
+    },
+    {
+      "allowLegacyPlaintext" : false,
+      "expect" : {
+        "error" : "malformedEnvelope",
+        "ok" : false
+      },
+      "inputBase64" : "WENVRQEQERITFBUWFxgZGhvRYJZhMTkxv6CKI3dthvD/faDOBEcnsTH3SJsXTtNttOfz8isb7F0kfDZOqv/9vQzGaYbmI9nNBrgTufhXGOiDc2CdHsJZqgBhiizhNeRBOWT2qmuJgqXgSm8dYZcdVWPvns/HDE2P5UUSmcY4oWhCuFIXmlOkKo6o2qMZB4ggOJmaaqQTHtujsbfOwRZAYLk=",
+      "magic" : "OCUE",
+      "name" : "badMagicRejectedWhenLegacyDisallowed"
+    },
+    {
+      "allowLegacyPlaintext" : false,
+      "expect" : {
+        "error" : "malformedEnvelope",
+        "ok" : false
+      },
+      "inputBase64" : "T0NVRQEQERITFBUWFxgZGhvRYJZhMTkxv6CKI3dthvD/faDOBEcnsTH3SJsXTtNttOfz8isb7F0kfDZOqv/9vQzGaYbmI9nNBrgTufhXGOiDc2CdHsJZqgBhiizhNeRBOWT2qmuJgqXgSm8dYZcdVWPvns/HDE2P5UUSmcY4oWhCuFIXmlOkKo6o2qMZB4ggOJmaaqQTHtujsbfOwRZAYLk=",
+      "magic" : "OCCU",
+      "name" : "documentOpenedAsExport"
+    },
+    {
+      "allowLegacyPlaintext" : true,
+      "expect" : {
+        "ok" : true,
+        "outputBase64" : "T0NDVQFAQUJDREVGR0hJSkvqFL2x3Vt5tbfI0vmLH556ZZ8htvNJuU0zfjMGDqQiRadv0d7C89DKVPyWjsduqt6nM+f3kn1ZoQl0eHU="
+      },
+      "inputBase64" : "T0NDVQFAQUJDREVGR0hJSkvqFL2x3Vt5tbfI0vmLH556ZZ8htvNJuU0zfjMGDqQiRadv0d7C89DKVPyWjsduqt6nM+f3kn1ZoQl0eHU=",
+      "magic" : "OCUE",
+      "name" : "exportOpenedAsDocument"
+    },
+    {
+      "allowLegacyPlaintext" : true,
+      "expect" : {
+        "error" : "unsupportedVersion",
+        "ok" : false
+      },
+      "inputBase64" : "T0NVRQIQERITFBUWFxgZGhvRYJZhMTkxv6CKI3dthvD/faDOBEcnsTH3SJsXTtNttOfz8isb7F0kfDZOqv/9vQzGaYbmI9nNBrgTufhXGOiDc2CdHsJZqgBhiizhNeRBOWT2qmuJgqXgSm8dYZcdVWPvns/HDE2P5UUSmcY4oWhCuFIXmlOkKo6o2qMZB4ggOJmaaqQTHtujsbfOwRZAYLk=",
+      "magic" : "OCUE",
+      "name" : "unsupportedVersion"
+    },
+    {
+      "allowLegacyPlaintext" : true,
+      "expect" : {
+        "error" : "malformedEnvelope",
+        "ok" : false
+      },
+      "inputBase64" : "T0NVRQEQERITFBUWFxgZGhvRYJY=",
+      "magic" : "OCUE",
+      "name" : "truncatedHeader"
+    },
+    {
+      "allowLegacyPlaintext" : true,
+      "expect" : {
+        "error" : "decryptionFailed",
+        "ok" : false
+      },
+      "inputBase64" : "T0NVRQEQERITFBUWFxgZGhvRYJZhMTkxv6CKI3dthvD/faDOBEcnsTH3SJsXTtNttOfz8isb7F0kfDZOqv/9vQzGaYbmI9nNBrgTufhXGOiDc2CdHsJZqgBhiizhNeRBOWT2qmuJgqXgSm8dYZcdVWPvns/HDE2P5UUSmcY4oWhCuFIXmlOkKo6o2qMZB4ggOJmaaqQTHtujsbfOwRZAYEY=",
+      "magic" : "OCUE",
+      "name" : "tamperedTag"
+    },
+    {
+      "allowLegacyPlaintext" : true,
+      "expect" : {
+        "error" : "decryptionFailed",
+        "ok" : false
+      },
+      "inputBase64" : "T0NVRQEQERITFBUWFxgZGhsuYJZhMTkxv6CKI3dthvD/faDOBEcnsTH3SJsXTtNttOfz8isb7F0kfDZOqv/9vQzGaYbmI9nNBrgTufhXGOiDc2CdHsJZqgBhiizhNeRBOWT2qmuJgqXgSm8dYZcdVWPvns/HDE2P5UUSmcY4oWhCuFIXmlOkKo6o2qMZB4ggOJmaaqQTHtujsbfOwRZAYLk=",
+      "magic" : "OCUE",
+      "name" : "tamperedCiphertext"
+    }
+  ],
+  "contract" : "cuelist-envelope",
+  "note" : "macOS-generated golden vectors for the OnlyCue AES-256-GCM file envelope (OCUE document / OCCU interchange). The C# OnlyCue.Core re-implementation must reproduce every case exactly. `seal` is deliberately absent: AES-GCM draws a random nonce, so it is not pinnable — it is covered by a round-trip test on each platform. To regenerate after a deliberate CuelistCrypto change, delete golden/cuelist-envelope-v1.json and re-run the test suite.",
+  "version" : 1
+}

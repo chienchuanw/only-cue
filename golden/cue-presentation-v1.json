@@ -1,0 +1,1572 @@
+{
+  "activeCue" : [
+    {
+      "cues" : [
+        {
+          "cueNumber" : "1.0",
+          "id" : "00000000-0000-0000-0000-0000000000c1",
+          "time" : "0.0",
+          "typeID" : "00000000-0000-0000-0000-0000000000a1"
+        },
+        {
+          "cueNumber" : "2.0",
+          "id" : "00000000-0000-0000-0000-0000000000c2",
+          "time" : "10.0",
+          "typeID" : "00000000-0000-0000-0000-0000000000a2"
+        },
+        {
+          "cueNumber" : "3.0",
+          "id" : "00000000-0000-0000-0000-0000000000c3",
+          "time" : "20.0",
+          "typeID" : "00000000-0000-0000-0000-0000000000a1"
+        },
+        {
+          "cueNumber" : "4.0",
+          "id" : "00000000-0000-0000-0000-0000000000c4",
+          "time" : "20.0",
+          "typeID" : "00000000-0000-0000-0000-0000000000a2"
+        }
+      ],
+      "currentTime" : "-1.0",
+      "name" : "before the first cue nothing is active"
+    },
+    {
+      "cues" : [
+        {
+          "cueNumber" : "1.0",
+          "id" : "00000000-0000-0000-0000-0000000000c1",
+          "time" : "0.0",
+          "typeID" : "00000000-0000-0000-0000-0000000000a1"
+        },
+        {
+          "cueNumber" : "2.0",
+          "id" : "00000000-0000-0000-0000-0000000000c2",
+          "time" : "10.0",
+          "typeID" : "00000000-0000-0000-0000-0000000000a2"
+        },
+        {
+          "cueNumber" : "3.0",
+          "id" : "00000000-0000-0000-0000-0000000000c3",
+          "time" : "20.0",
+          "typeID" : "00000000-0000-0000-0000-0000000000a1"
+        },
+        {
+          "cueNumber" : "4.0",
+          "id" : "00000000-0000-0000-0000-0000000000c4",
+          "time" : "20.0",
+          "typeID" : "00000000-0000-0000-0000-0000000000a2"
+        }
+      ],
+      "currentTime" : "10.0",
+      "expectCueID" : "00000000-0000-0000-0000-0000000000C2",
+      "name" : "exactly on a cue that cue is active"
+    },
+    {
+      "cues" : [
+        {
+          "cueNumber" : "1.0",
+          "id" : "00000000-0000-0000-0000-0000000000c1",
+          "time" : "0.0",
+          "typeID" : "00000000-0000-0000-0000-0000000000a1"
+        },
+        {
+          "cueNumber" : "2.0",
+          "id" : "00000000-0000-0000-0000-0000000000c2",
+          "time" : "10.0",
+          "typeID" : "00000000-0000-0000-0000-0000000000a2"
+        },
+        {
+          "cueNumber" : "3.0",
+          "id" : "00000000-0000-0000-0000-0000000000c3",
+          "time" : "20.0",
+          "typeID" : "00000000-0000-0000-0000-0000000000a1"
+        },
+        {
+          "cueNumber" : "4.0",
+          "id" : "00000000-0000-0000-0000-0000000000c4",
+          "time" : "20.0",
+          "typeID" : "00000000-0000-0000-0000-0000000000a2"
+        }
+      ],
+      "currentTime" : "15.0",
+      "expectCueID" : "00000000-0000-0000-0000-0000000000C2",
+      "name" : "between cues the earlier one stays active"
+    },
+    {
+      "cues" : [
+        {
+          "cueNumber" : "1.0",
+          "id" : "00000000-0000-0000-0000-0000000000c1",
+          "time" : "0.0",
+          "typeID" : "00000000-0000-0000-0000-0000000000a1"
+        },
+        {
+          "cueNumber" : "2.0",
+          "id" : "00000000-0000-0000-0000-0000000000c2",
+          "time" : "10.0",
+          "typeID" : "00000000-0000-0000-0000-0000000000a2"
+        },
+        {
+          "cueNumber" : "3.0",
+          "id" : "00000000-0000-0000-0000-0000000000c3",
+          "time" : "20.0",
+          "typeID" : "00000000-0000-0000-0000-0000000000a1"
+        },
+        {
+          "cueNumber" : "4.0",
+          "id" : "00000000-0000-0000-0000-0000000000c4",
+          "time" : "20.0",
+          "typeID" : "00000000-0000-0000-0000-0000000000a2"
+        }
+      ],
+      "currentTime" : "20.0",
+      "expectCueID" : "00000000-0000-0000-0000-0000000000C3",
+      "name" : "on a tie the first cue in list order wins"
+    },
+    {
+      "cues" : [
+        {
+          "cueNumber" : "1.0",
+          "id" : "00000000-0000-0000-0000-0000000000c1",
+          "time" : "0.0",
+          "typeID" : "00000000-0000-0000-0000-0000000000a1"
+        },
+        {
+          "cueNumber" : "2.0",
+          "id" : "00000000-0000-0000-0000-0000000000c2",
+          "time" : "10.0",
+          "typeID" : "00000000-0000-0000-0000-0000000000a2"
+        },
+        {
+          "cueNumber" : "3.0",
+          "id" : "00000000-0000-0000-0000-0000000000c3",
+          "time" : "20.0",
+          "typeID" : "00000000-0000-0000-0000-0000000000a1"
+        },
+        {
+          "cueNumber" : "4.0",
+          "id" : "00000000-0000-0000-0000-0000000000c4",
+          "time" : "20.0",
+          "typeID" : "00000000-0000-0000-0000-0000000000a2"
+        }
+      ],
+      "currentTime" : "100.0",
+      "expectCueID" : "00000000-0000-0000-0000-0000000000C3",
+      "name" : "past the last cue it stays active"
+    },
+    {
+      "cues" : [
+        {
+          "cueNumber" : "1.0",
+          "id" : "00000000-0000-0000-0000-0000000000c1",
+          "time" : "0.0",
+          "typeID" : "00000000-0000-0000-0000-0000000000a1"
+        },
+        {
+          "cueNumber" : "2.0",
+          "id" : "00000000-0000-0000-0000-0000000000c2",
+          "time" : "10.0",
+          "typeID" : "00000000-0000-0000-0000-0000000000a2"
+        },
+        {
+          "cueNumber" : "3.0",
+          "id" : "00000000-0000-0000-0000-0000000000c3",
+          "time" : "20.0",
+          "typeID" : "00000000-0000-0000-0000-0000000000a1"
+        },
+        {
+          "cueNumber" : "4.0",
+          "id" : "00000000-0000-0000-0000-0000000000c4",
+          "time" : "20.0",
+          "typeID" : "00000000-0000-0000-0000-0000000000a2"
+        }
+      ],
+      "currentTime" : "0.0",
+      "expectCueID" : "00000000-0000-0000-0000-0000000000C1",
+      "name" : "at time zero the cue at zero is active"
+    },
+    {
+      "cues" : [
+        {
+          "cueNumber" : "1.0",
+          "id" : "00000000-0000-0000-0000-0000000000c1",
+          "time" : "0.0",
+          "typeID" : "00000000-0000-0000-0000-0000000000a1"
+        },
+        {
+          "cueNumber" : "2.0",
+          "id" : "00000000-0000-0000-0000-0000000000c2",
+          "time" : "10.0",
+          "typeID" : "00000000-0000-0000-0000-0000000000a2"
+        },
+        {
+          "cueNumber" : "3.0",
+          "id" : "00000000-0000-0000-0000-0000000000c3",
+          "time" : "20.0",
+          "typeID" : "00000000-0000-0000-0000-0000000000a1"
+        },
+        {
+          "cueNumber" : "4.0",
+          "id" : "00000000-0000-0000-0000-0000000000c4",
+          "time" : "20.0",
+          "typeID" : "00000000-0000-0000-0000-0000000000a2"
+        }
+      ],
+      "currentTime" : "25.0",
+      "expectCueID" : "00000000-0000-0000-0000-0000000000C3",
+      "name" : "the type filter picks the latest cue of that type",
+      "typeID" : "00000000-0000-0000-0000-0000000000a1"
+    },
+    {
+      "cues" : [
+        {
+          "cueNumber" : "1.0",
+          "id" : "00000000-0000-0000-0000-0000000000c1",
+          "time" : "0.0",
+          "typeID" : "00000000-0000-0000-0000-0000000000a1"
+        },
+        {
+          "cueNumber" : "2.0",
+          "id" : "00000000-0000-0000-0000-0000000000c2",
+          "time" : "10.0",
+          "typeID" : "00000000-0000-0000-0000-0000000000a2"
+        },
+        {
+          "cueNumber" : "3.0",
+          "id" : "00000000-0000-0000-0000-0000000000c3",
+          "time" : "20.0",
+          "typeID" : "00000000-0000-0000-0000-0000000000a1"
+        },
+        {
+          "cueNumber" : "4.0",
+          "id" : "00000000-0000-0000-0000-0000000000c4",
+          "time" : "20.0",
+          "typeID" : "00000000-0000-0000-0000-0000000000a2"
+        }
+      ],
+      "currentTime" : "15.0",
+      "expectCueID" : "00000000-0000-0000-0000-0000000000C1",
+      "name" : "the type filter ignores a later cue of another type",
+      "typeID" : "00000000-0000-0000-0000-0000000000a1"
+    },
+    {
+      "cues" : [
+        {
+          "cueNumber" : "1.0",
+          "id" : "00000000-0000-0000-0000-0000000000c1",
+          "time" : "0.0",
+          "typeID" : "00000000-0000-0000-0000-0000000000a1"
+        },
+        {
+          "cueNumber" : "2.0",
+          "id" : "00000000-0000-0000-0000-0000000000c2",
+          "time" : "10.0",
+          "typeID" : "00000000-0000-0000-0000-0000000000a2"
+        },
+        {
+          "cueNumber" : "3.0",
+          "id" : "00000000-0000-0000-0000-0000000000c3",
+          "time" : "20.0",
+          "typeID" : "00000000-0000-0000-0000-0000000000a1"
+        },
+        {
+          "cueNumber" : "4.0",
+          "id" : "00000000-0000-0000-0000-0000000000c4",
+          "time" : "20.0",
+          "typeID" : "00000000-0000-0000-0000-0000000000a2"
+        }
+      ],
+      "currentTime" : "5.0",
+      "name" : "a type with no cue before the playhead yields nothing",
+      "typeID" : "00000000-0000-0000-0000-0000000000a2"
+    },
+    {
+      "cues" : [
+        {
+          "cueNumber" : "1.0",
+          "id" : "00000000-0000-0000-0000-0000000000c1",
+          "time" : "0.0",
+          "typeID" : "00000000-0000-0000-0000-0000000000a1"
+        },
+        {
+          "cueNumber" : "2.0",
+          "id" : "00000000-0000-0000-0000-0000000000c2",
+          "time" : "10.0",
+          "typeID" : "00000000-0000-0000-0000-0000000000a2"
+        },
+        {
+          "cueNumber" : "3.0",
+          "id" : "00000000-0000-0000-0000-0000000000c3",
+          "time" : "20.0",
+          "typeID" : "00000000-0000-0000-0000-0000000000a1"
+        },
+        {
+          "cueNumber" : "4.0",
+          "id" : "00000000-0000-0000-0000-0000000000c4",
+          "time" : "20.0",
+          "typeID" : "00000000-0000-0000-0000-0000000000a2"
+        }
+      ],
+      "currentTime" : "100.0",
+      "name" : "a type absent from the list yields nothing",
+      "typeID" : "00000000-0000-0000-0000-0000000000dd"
+    },
+    {
+      "cues" : [
+
+      ],
+      "currentTime" : "100.0",
+      "name" : "an empty cue list yields nothing"
+    }
+  ],
+  "contract" : "cue-presentation",
+  "cueNumberErrors" : [
+    {
+      "name" : "a valid number has no message",
+      "result" : {
+        "kind" : "ok"
+      }
+    },
+    {
+      "expect" : "Use 0.001–9999.999, up to 3 decimals.",
+      "name" : "the format message names both bounds and the decimal limit",
+      "result" : {
+        "kind" : "invalidFormat"
+      }
+    },
+    {
+      "expect" : "Already in use.",
+      "name" : "the duplicate message",
+      "result" : {
+        "kind" : "duplicate"
+      }
+    },
+    {
+      "expect" : "Must be between 1 and 3.",
+      "name" : "both neighbours present",
+      "result" : {
+        "kind" : "outOfRange",
+        "lowerExclusive" : "1.0",
+        "upperExclusive" : "3.0"
+      }
+    },
+    {
+      "expect" : "Must be greater than 1.",
+      "name" : "only a lower neighbour",
+      "result" : {
+        "kind" : "outOfRange",
+        "lowerExclusive" : "1.0"
+      }
+    },
+    {
+      "expect" : "Must be less than 3.",
+      "name" : "only an upper neighbour",
+      "result" : {
+        "kind" : "outOfRange",
+        "upperExclusive" : "3.0"
+      }
+    },
+    {
+      "expect" : "Must be between 1.5 and 2.25.",
+      "name" : "decimal bounds keep their own spelling",
+      "result" : {
+        "kind" : "outOfRange",
+        "lowerExclusive" : "1.5",
+        "upperExclusive" : "2.25"
+      }
+    },
+    {
+      "expect" : "Use 0.001–9999.999, up to 3 decimals.",
+      "name" : "neither neighbour falls back to the format message",
+      "result" : {
+        "kind" : "outOfRange"
+      }
+    }
+  ],
+  "cueNumberValidation" : [
+    {
+      "cues" : [
+        {
+          "cueNumber" : "1.0",
+          "id" : "00000000-0000-0000-0000-0000000000c1",
+          "time" : "0.0",
+          "typeID" : "00000000-0000-0000-0000-0000000000a1"
+        },
+        {
+          "cueNumber" : "2.0",
+          "id" : "00000000-0000-0000-0000-0000000000c2",
+          "time" : "10.0",
+          "typeID" : "00000000-0000-0000-0000-0000000000a1"
+        },
+        {
+          "cueNumber" : "3.0",
+          "id" : "00000000-0000-0000-0000-0000000000c3",
+          "time" : "20.0",
+          "typeID" : "00000000-0000-0000-0000-0000000000a2"
+        },
+        {
+          "id" : "00000000-0000-0000-0000-0000000000c4",
+          "time" : "30.0",
+          "typeID" : "00000000-0000-0000-0000-0000000000a1"
+        }
+      ],
+      "expect" : {
+        "kind" : "ok"
+      },
+      "name" : "clearing the number is always allowed",
+      "targetID" : "00000000-0000-0000-0000-0000000000c2"
+    },
+    {
+      "candidate" : "1.5",
+      "cues" : [
+        {
+          "cueNumber" : "1.0",
+          "id" : "00000000-0000-0000-0000-0000000000c1",
+          "time" : "0.0",
+          "typeID" : "00000000-0000-0000-0000-0000000000a1"
+        },
+        {
+          "cueNumber" : "2.0",
+          "id" : "00000000-0000-0000-0000-0000000000c2",
+          "time" : "10.0",
+          "typeID" : "00000000-0000-0000-0000-0000000000a1"
+        },
+        {
+          "cueNumber" : "3.0",
+          "id" : "00000000-0000-0000-0000-0000000000c3",
+          "time" : "20.0",
+          "typeID" : "00000000-0000-0000-0000-0000000000a2"
+        },
+        {
+          "id" : "00000000-0000-0000-0000-0000000000c4",
+          "time" : "30.0",
+          "typeID" : "00000000-0000-0000-0000-0000000000a1"
+        }
+      ],
+      "expect" : {
+        "kind" : "ok"
+      },
+      "name" : "a number between both neighbours is accepted",
+      "targetID" : "00000000-0000-0000-0000-0000000000c2"
+    },
+    {
+      "candidate" : "2.0",
+      "cues" : [
+        {
+          "cueNumber" : "1.0",
+          "id" : "00000000-0000-0000-0000-0000000000c1",
+          "time" : "0.0",
+          "typeID" : "00000000-0000-0000-0000-0000000000a1"
+        },
+        {
+          "cueNumber" : "2.0",
+          "id" : "00000000-0000-0000-0000-0000000000c2",
+          "time" : "10.0",
+          "typeID" : "00000000-0000-0000-0000-0000000000a1"
+        },
+        {
+          "cueNumber" : "3.0",
+          "id" : "00000000-0000-0000-0000-0000000000c3",
+          "time" : "20.0",
+          "typeID" : "00000000-0000-0000-0000-0000000000a2"
+        },
+        {
+          "id" : "00000000-0000-0000-0000-0000000000c4",
+          "time" : "30.0",
+          "typeID" : "00000000-0000-0000-0000-0000000000a1"
+        }
+      ],
+      "expect" : {
+        "kind" : "ok"
+      },
+      "name" : "committing a cue's own number back to itself is accepted",
+      "targetID" : "00000000-0000-0000-0000-0000000000c2"
+    },
+    {
+      "candidate" : "1.125",
+      "cues" : [
+        {
+          "cueNumber" : "1.0",
+          "id" : "00000000-0000-0000-0000-0000000000c1",
+          "time" : "0.0",
+          "typeID" : "00000000-0000-0000-0000-0000000000a1"
+        },
+        {
+          "cueNumber" : "2.0",
+          "id" : "00000000-0000-0000-0000-0000000000c2",
+          "time" : "10.0",
+          "typeID" : "00000000-0000-0000-0000-0000000000a1"
+        },
+        {
+          "cueNumber" : "3.0",
+          "id" : "00000000-0000-0000-0000-0000000000c3",
+          "time" : "20.0",
+          "typeID" : "00000000-0000-0000-0000-0000000000a2"
+        },
+        {
+          "id" : "00000000-0000-0000-0000-0000000000c4",
+          "time" : "30.0",
+          "typeID" : "00000000-0000-0000-0000-0000000000a1"
+        }
+      ],
+      "expect" : {
+        "kind" : "ok"
+      },
+      "name" : "three decimal places are accepted",
+      "targetID" : "00000000-0000-0000-0000-0000000000c2"
+    },
+    {
+      "candidate" : "3.0",
+      "cues" : [
+        {
+          "cueNumber" : "1.0",
+          "id" : "00000000-0000-0000-0000-0000000000c1",
+          "time" : "0.0",
+          "typeID" : "00000000-0000-0000-0000-0000000000a1"
+        },
+        {
+          "cueNumber" : "2.0",
+          "id" : "00000000-0000-0000-0000-0000000000c2",
+          "time" : "10.0",
+          "typeID" : "00000000-0000-0000-0000-0000000000a1"
+        },
+        {
+          "cueNumber" : "3.0",
+          "id" : "00000000-0000-0000-0000-0000000000c3",
+          "time" : "20.0",
+          "typeID" : "00000000-0000-0000-0000-0000000000a2"
+        },
+        {
+          "id" : "00000000-0000-0000-0000-0000000000c4",
+          "time" : "30.0",
+          "typeID" : "00000000-0000-0000-0000-0000000000a1"
+        }
+      ],
+      "expect" : {
+        "kind" : "duplicate"
+      },
+      "name" : "a number already in use is a duplicate",
+      "targetID" : "00000000-0000-0000-0000-0000000000c2"
+    },
+    {
+      "candidate" : "1.0",
+      "cues" : [
+        {
+          "cueNumber" : "1.0",
+          "id" : "00000000-0000-0000-0000-0000000000c1",
+          "time" : "0.0",
+          "typeID" : "00000000-0000-0000-0000-0000000000a1"
+        },
+        {
+          "cueNumber" : "2.0",
+          "id" : "00000000-0000-0000-0000-0000000000c2",
+          "time" : "10.0",
+          "typeID" : "00000000-0000-0000-0000-0000000000a1"
+        },
+        {
+          "cueNumber" : "3.0",
+          "id" : "00000000-0000-0000-0000-0000000000c3",
+          "time" : "20.0",
+          "typeID" : "00000000-0000-0000-0000-0000000000a2"
+        },
+        {
+          "id" : "00000000-0000-0000-0000-0000000000c4",
+          "time" : "30.0",
+          "typeID" : "00000000-0000-0000-0000-0000000000a1"
+        }
+      ],
+      "expect" : {
+        "kind" : "duplicate"
+      },
+      "name" : "a duplicate that is also out of range still reads as a duplicate",
+      "targetID" : "00000000-0000-0000-0000-0000000000c2"
+    },
+    {
+      "candidate" : "0.5",
+      "cues" : [
+        {
+          "cueNumber" : "1.0",
+          "id" : "00000000-0000-0000-0000-0000000000c1",
+          "time" : "0.0",
+          "typeID" : "00000000-0000-0000-0000-0000000000a1"
+        },
+        {
+          "cueNumber" : "2.0",
+          "id" : "00000000-0000-0000-0000-0000000000c2",
+          "time" : "10.0",
+          "typeID" : "00000000-0000-0000-0000-0000000000a1"
+        },
+        {
+          "cueNumber" : "3.0",
+          "id" : "00000000-0000-0000-0000-0000000000c3",
+          "time" : "20.0",
+          "typeID" : "00000000-0000-0000-0000-0000000000a2"
+        },
+        {
+          "id" : "00000000-0000-0000-0000-0000000000c4",
+          "time" : "30.0",
+          "typeID" : "00000000-0000-0000-0000-0000000000a1"
+        }
+      ],
+      "expect" : {
+        "kind" : "outOfRange",
+        "lowerExclusive" : "1.0",
+        "upperExclusive" : "3.0"
+      },
+      "name" : "at or below the previous neighbour is out of range",
+      "targetID" : "00000000-0000-0000-0000-0000000000c2"
+    },
+    {
+      "candidate" : "3.5",
+      "cues" : [
+        {
+          "cueNumber" : "1.0",
+          "id" : "00000000-0000-0000-0000-0000000000c1",
+          "time" : "0.0",
+          "typeID" : "00000000-0000-0000-0000-0000000000a1"
+        },
+        {
+          "cueNumber" : "2.0",
+          "id" : "00000000-0000-0000-0000-0000000000c2",
+          "time" : "10.0",
+          "typeID" : "00000000-0000-0000-0000-0000000000a1"
+        },
+        {
+          "cueNumber" : "3.0",
+          "id" : "00000000-0000-0000-0000-0000000000c3",
+          "time" : "20.0",
+          "typeID" : "00000000-0000-0000-0000-0000000000a2"
+        },
+        {
+          "id" : "00000000-0000-0000-0000-0000000000c4",
+          "time" : "30.0",
+          "typeID" : "00000000-0000-0000-0000-0000000000a1"
+        }
+      ],
+      "expect" : {
+        "kind" : "outOfRange",
+        "lowerExclusive" : "1.0",
+        "upperExclusive" : "3.0"
+      },
+      "name" : "at or above the next neighbour is out of range",
+      "targetID" : "00000000-0000-0000-0000-0000000000c2"
+    },
+    {
+      "candidate" : "0.001",
+      "cues" : [
+        {
+          "cueNumber" : "1.0",
+          "id" : "00000000-0000-0000-0000-0000000000c1",
+          "time" : "0.0",
+          "typeID" : "00000000-0000-0000-0000-0000000000a1"
+        },
+        {
+          "cueNumber" : "2.0",
+          "id" : "00000000-0000-0000-0000-0000000000c2",
+          "time" : "10.0",
+          "typeID" : "00000000-0000-0000-0000-0000000000a1"
+        },
+        {
+          "cueNumber" : "3.0",
+          "id" : "00000000-0000-0000-0000-0000000000c3",
+          "time" : "20.0",
+          "typeID" : "00000000-0000-0000-0000-0000000000a2"
+        },
+        {
+          "id" : "00000000-0000-0000-0000-0000000000c4",
+          "time" : "30.0",
+          "typeID" : "00000000-0000-0000-0000-0000000000a1"
+        }
+      ],
+      "expect" : {
+        "kind" : "ok"
+      },
+      "name" : "the first cue has no lower bound",
+      "targetID" : "00000000-0000-0000-0000-0000000000c1"
+    },
+    {
+      "candidate" : "2.5",
+      "cues" : [
+        {
+          "cueNumber" : "1.0",
+          "id" : "00000000-0000-0000-0000-0000000000c1",
+          "time" : "0.0",
+          "typeID" : "00000000-0000-0000-0000-0000000000a1"
+        },
+        {
+          "cueNumber" : "2.0",
+          "id" : "00000000-0000-0000-0000-0000000000c2",
+          "time" : "10.0",
+          "typeID" : "00000000-0000-0000-0000-0000000000a1"
+        },
+        {
+          "cueNumber" : "3.0",
+          "id" : "00000000-0000-0000-0000-0000000000c3",
+          "time" : "20.0",
+          "typeID" : "00000000-0000-0000-0000-0000000000a2"
+        },
+        {
+          "id" : "00000000-0000-0000-0000-0000000000c4",
+          "time" : "30.0",
+          "typeID" : "00000000-0000-0000-0000-0000000000a1"
+        }
+      ],
+      "expect" : {
+        "kind" : "outOfRange",
+        "upperExclusive" : "2.0"
+      },
+      "name" : "the first cue is still bounded above",
+      "targetID" : "00000000-0000-0000-0000-0000000000c1"
+    },
+    {
+      "candidate" : "9999.999",
+      "cues" : [
+        {
+          "cueNumber" : "1.0",
+          "id" : "00000000-0000-0000-0000-0000000000c1",
+          "time" : "0.0",
+          "typeID" : "00000000-0000-0000-0000-0000000000a1"
+        },
+        {
+          "cueNumber" : "2.0",
+          "id" : "00000000-0000-0000-0000-0000000000c2",
+          "time" : "10.0",
+          "typeID" : "00000000-0000-0000-0000-0000000000a1"
+        },
+        {
+          "cueNumber" : "3.0",
+          "id" : "00000000-0000-0000-0000-0000000000c3",
+          "time" : "20.0",
+          "typeID" : "00000000-0000-0000-0000-0000000000a2"
+        },
+        {
+          "id" : "00000000-0000-0000-0000-0000000000c4",
+          "time" : "30.0",
+          "typeID" : "00000000-0000-0000-0000-0000000000a1"
+        }
+      ],
+      "expect" : {
+        "kind" : "ok"
+      },
+      "name" : "the last numbered cue has no upper bound",
+      "targetID" : "00000000-0000-0000-0000-0000000000c3"
+    },
+    {
+      "candidate" : "1.5",
+      "cues" : [
+        {
+          "cueNumber" : "1.0",
+          "id" : "00000000-0000-0000-0000-0000000000c1",
+          "time" : "0.0",
+          "typeID" : "00000000-0000-0000-0000-0000000000a1"
+        },
+        {
+          "cueNumber" : "2.0",
+          "id" : "00000000-0000-0000-0000-0000000000c2",
+          "time" : "10.0",
+          "typeID" : "00000000-0000-0000-0000-0000000000a1"
+        },
+        {
+          "cueNumber" : "3.0",
+          "id" : "00000000-0000-0000-0000-0000000000c3",
+          "time" : "20.0",
+          "typeID" : "00000000-0000-0000-0000-0000000000a2"
+        },
+        {
+          "id" : "00000000-0000-0000-0000-0000000000c4",
+          "time" : "30.0",
+          "typeID" : "00000000-0000-0000-0000-0000000000a1"
+        }
+      ],
+      "expect" : {
+        "kind" : "outOfRange",
+        "lowerExclusive" : "2.0"
+      },
+      "name" : "the last numbered cue is still bounded below",
+      "targetID" : "00000000-0000-0000-0000-0000000000c3"
+    },
+    {
+      "candidate" : "5.0",
+      "cues" : [
+        {
+          "cueNumber" : "1.0",
+          "id" : "00000000-0000-0000-0000-0000000000c1",
+          "time" : "0.0",
+          "typeID" : "00000000-0000-0000-0000-0000000000a1"
+        },
+        {
+          "cueNumber" : "2.0",
+          "id" : "00000000-0000-0000-0000-0000000000c2",
+          "time" : "10.0",
+          "typeID" : "00000000-0000-0000-0000-0000000000a1"
+        },
+        {
+          "cueNumber" : "3.0",
+          "id" : "00000000-0000-0000-0000-0000000000c3",
+          "time" : "20.0",
+          "typeID" : "00000000-0000-0000-0000-0000000000a2"
+        },
+        {
+          "id" : "00000000-0000-0000-0000-0000000000c4",
+          "time" : "30.0",
+          "typeID" : "00000000-0000-0000-0000-0000000000a1"
+        }
+      ],
+      "expect" : {
+        "kind" : "ok"
+      },
+      "name" : "an unnumbered cue takes its bounds from the numbered neighbours",
+      "targetID" : "00000000-0000-0000-0000-0000000000c4"
+    },
+    {
+      "candidate" : "5.0",
+      "cues" : [
+        {
+          "cueNumber" : "1.0",
+          "id" : "00000000-0000-0000-0000-0000000000c1",
+          "time" : "0.0",
+          "typeID" : "00000000-0000-0000-0000-0000000000a1"
+        },
+        {
+          "cueNumber" : "2.0",
+          "id" : "00000000-0000-0000-0000-0000000000c2",
+          "time" : "10.0",
+          "typeID" : "00000000-0000-0000-0000-0000000000a1"
+        },
+        {
+          "cueNumber" : "3.0",
+          "id" : "00000000-0000-0000-0000-0000000000c3",
+          "time" : "20.0",
+          "typeID" : "00000000-0000-0000-0000-0000000000a2"
+        },
+        {
+          "id" : "00000000-0000-0000-0000-0000000000c4",
+          "time" : "30.0",
+          "typeID" : "00000000-0000-0000-0000-0000000000a1"
+        }
+      ],
+      "expect" : {
+        "kind" : "ok"
+      },
+      "name" : "a cue id not in the list is validated on format and duplicates only",
+      "targetID" : "00000000-0000-0000-0000-0000000000ff"
+    },
+    {
+      "candidate" : "0.0005",
+      "cues" : [
+        {
+          "cueNumber" : "1.0",
+          "id" : "00000000-0000-0000-0000-0000000000c1",
+          "time" : "0.0",
+          "typeID" : "00000000-0000-0000-0000-0000000000a1"
+        },
+        {
+          "cueNumber" : "2.0",
+          "id" : "00000000-0000-0000-0000-0000000000c2",
+          "time" : "10.0",
+          "typeID" : "00000000-0000-0000-0000-0000000000a1"
+        },
+        {
+          "cueNumber" : "3.0",
+          "id" : "00000000-0000-0000-0000-0000000000c3",
+          "time" : "20.0",
+          "typeID" : "00000000-0000-0000-0000-0000000000a2"
+        },
+        {
+          "id" : "00000000-0000-0000-0000-0000000000c4",
+          "time" : "30.0",
+          "typeID" : "00000000-0000-0000-0000-0000000000a1"
+        }
+      ],
+      "expect" : {
+        "kind" : "invalidFormat"
+      },
+      "name" : "below the numbering minimum is a format error",
+      "targetID" : "00000000-0000-0000-0000-0000000000c2"
+    },
+    {
+      "candidate" : "0.0",
+      "cues" : [
+        {
+          "cueNumber" : "1.0",
+          "id" : "00000000-0000-0000-0000-0000000000c1",
+          "time" : "0.0",
+          "typeID" : "00000000-0000-0000-0000-0000000000a1"
+        },
+        {
+          "cueNumber" : "2.0",
+          "id" : "00000000-0000-0000-0000-0000000000c2",
+          "time" : "10.0",
+          "typeID" : "00000000-0000-0000-0000-0000000000a1"
+        },
+        {
+          "cueNumber" : "3.0",
+          "id" : "00000000-0000-0000-0000-0000000000c3",
+          "time" : "20.0",
+          "typeID" : "00000000-0000-0000-0000-0000000000a2"
+        },
+        {
+          "id" : "00000000-0000-0000-0000-0000000000c4",
+          "time" : "30.0",
+          "typeID" : "00000000-0000-0000-0000-0000000000a1"
+        }
+      ],
+      "expect" : {
+        "kind" : "invalidFormat"
+      },
+      "name" : "zero is a format error",
+      "targetID" : "00000000-0000-0000-0000-0000000000c2"
+    },
+    {
+      "candidate" : "-1.5",
+      "cues" : [
+        {
+          "cueNumber" : "1.0",
+          "id" : "00000000-0000-0000-0000-0000000000c1",
+          "time" : "0.0",
+          "typeID" : "00000000-0000-0000-0000-0000000000a1"
+        },
+        {
+          "cueNumber" : "2.0",
+          "id" : "00000000-0000-0000-0000-0000000000c2",
+          "time" : "10.0",
+          "typeID" : "00000000-0000-0000-0000-0000000000a1"
+        },
+        {
+          "cueNumber" : "3.0",
+          "id" : "00000000-0000-0000-0000-0000000000c3",
+          "time" : "20.0",
+          "typeID" : "00000000-0000-0000-0000-0000000000a2"
+        },
+        {
+          "id" : "00000000-0000-0000-0000-0000000000c4",
+          "time" : "30.0",
+          "typeID" : "00000000-0000-0000-0000-0000000000a1"
+        }
+      ],
+      "expect" : {
+        "kind" : "invalidFormat"
+      },
+      "name" : "a negative number is a format error",
+      "targetID" : "00000000-0000-0000-0000-0000000000c2"
+    },
+    {
+      "candidate" : "10000.0",
+      "cues" : [
+        {
+          "cueNumber" : "1.0",
+          "id" : "00000000-0000-0000-0000-0000000000c1",
+          "time" : "0.0",
+          "typeID" : "00000000-0000-0000-0000-0000000000a1"
+        },
+        {
+          "cueNumber" : "2.0",
+          "id" : "00000000-0000-0000-0000-0000000000c2",
+          "time" : "10.0",
+          "typeID" : "00000000-0000-0000-0000-0000000000a1"
+        },
+        {
+          "cueNumber" : "3.0",
+          "id" : "00000000-0000-0000-0000-0000000000c3",
+          "time" : "20.0",
+          "typeID" : "00000000-0000-0000-0000-0000000000a2"
+        },
+        {
+          "id" : "00000000-0000-0000-0000-0000000000c4",
+          "time" : "30.0",
+          "typeID" : "00000000-0000-0000-0000-0000000000a1"
+        }
+      ],
+      "expect" : {
+        "kind" : "invalidFormat"
+      },
+      "name" : "above the numbering maximum is a format error",
+      "targetID" : "00000000-0000-0000-0000-0000000000c2"
+    },
+    {
+      "candidate" : "1.0005",
+      "cues" : [
+        {
+          "cueNumber" : "1.0",
+          "id" : "00000000-0000-0000-0000-0000000000c1",
+          "time" : "0.0",
+          "typeID" : "00000000-0000-0000-0000-0000000000a1"
+        },
+        {
+          "cueNumber" : "2.0",
+          "id" : "00000000-0000-0000-0000-0000000000c2",
+          "time" : "10.0",
+          "typeID" : "00000000-0000-0000-0000-0000000000a1"
+        },
+        {
+          "cueNumber" : "3.0",
+          "id" : "00000000-0000-0000-0000-0000000000c3",
+          "time" : "20.0",
+          "typeID" : "00000000-0000-0000-0000-0000000000a2"
+        },
+        {
+          "id" : "00000000-0000-0000-0000-0000000000c4",
+          "time" : "30.0",
+          "typeID" : "00000000-0000-0000-0000-0000000000a1"
+        }
+      ],
+      "expect" : {
+        "kind" : "invalidFormat"
+      },
+      "name" : "a fourth decimal place is a format error",
+      "targetID" : "00000000-0000-0000-0000-0000000000c2"
+    },
+    {
+      "candidate" : "nan",
+      "cues" : [
+        {
+          "cueNumber" : "1.0",
+          "id" : "00000000-0000-0000-0000-0000000000c1",
+          "time" : "0.0",
+          "typeID" : "00000000-0000-0000-0000-0000000000a1"
+        },
+        {
+          "cueNumber" : "2.0",
+          "id" : "00000000-0000-0000-0000-0000000000c2",
+          "time" : "10.0",
+          "typeID" : "00000000-0000-0000-0000-0000000000a1"
+        },
+        {
+          "cueNumber" : "3.0",
+          "id" : "00000000-0000-0000-0000-0000000000c3",
+          "time" : "20.0",
+          "typeID" : "00000000-0000-0000-0000-0000000000a2"
+        },
+        {
+          "id" : "00000000-0000-0000-0000-0000000000c4",
+          "time" : "30.0",
+          "typeID" : "00000000-0000-0000-0000-0000000000a1"
+        }
+      ],
+      "expect" : {
+        "kind" : "invalidFormat"
+      },
+      "name" : "not-a-number is a format error",
+      "targetID" : "00000000-0000-0000-0000-0000000000c2"
+    },
+    {
+      "candidate" : "inf",
+      "cues" : [
+        {
+          "cueNumber" : "1.0",
+          "id" : "00000000-0000-0000-0000-0000000000c1",
+          "time" : "0.0",
+          "typeID" : "00000000-0000-0000-0000-0000000000a1"
+        },
+        {
+          "cueNumber" : "2.0",
+          "id" : "00000000-0000-0000-0000-0000000000c2",
+          "time" : "10.0",
+          "typeID" : "00000000-0000-0000-0000-0000000000a1"
+        },
+        {
+          "cueNumber" : "3.0",
+          "id" : "00000000-0000-0000-0000-0000000000c3",
+          "time" : "20.0",
+          "typeID" : "00000000-0000-0000-0000-0000000000a2"
+        },
+        {
+          "id" : "00000000-0000-0000-0000-0000000000c4",
+          "time" : "30.0",
+          "typeID" : "00000000-0000-0000-0000-0000000000a1"
+        }
+      ],
+      "expect" : {
+        "kind" : "invalidFormat"
+      },
+      "name" : "infinity is a format error",
+      "targetID" : "00000000-0000-0000-0000-0000000000c2"
+    }
+  ],
+  "emptyState" : [
+    {
+      "expect" : "Import a media file to start adding cues.",
+      "hasActiveItem" : false,
+      "name" : "with no media loaded the copy asks for an import"
+    },
+    {
+      "expect" : "Press M to add a cue at the playhead.",
+      "hasActiveItem" : true,
+      "name" : "with media loaded the copy asks for a cue"
+    }
+  ],
+  "fadeFormat" : [
+    {
+      "expectCellDisplay" : "",
+      "expectFormat" : "0",
+      "fadeIn" : "0.0",
+      "fadeOut" : "0.0",
+      "name" : "a zero fade formats as 0 but its cell is blank"
+    },
+    {
+      "expectCellDisplay" : "1",
+      "expectFormat" : "1",
+      "fadeIn" : "1.0",
+      "fadeOut" : "1.0",
+      "name" : "a symmetric whole number drops the decimal"
+    },
+    {
+      "expectCellDisplay" : "1.5",
+      "expectFormat" : "1.5",
+      "fadeIn" : "1.5",
+      "fadeOut" : "1.5",
+      "name" : "a symmetric decimal keeps it"
+    },
+    {
+      "expectCellDisplay" : "1/2",
+      "expectFormat" : "1/2",
+      "fadeIn" : "1.0",
+      "fadeOut" : "2.0",
+      "name" : "a split fade is spelled with a slash"
+    },
+    {
+      "expectCellDisplay" : "0/1",
+      "expectFormat" : "0/1",
+      "fadeIn" : "0.0",
+      "fadeOut" : "1.0",
+      "name" : "a split fade with a zero in leg still shows"
+    },
+    {
+      "expectCellDisplay" : "1/0",
+      "expectFormat" : "1/0",
+      "fadeIn" : "1.0",
+      "fadeOut" : "0.0",
+      "name" : "a split fade with a zero out leg still shows"
+    },
+    {
+      "expectCellDisplay" : "0.5/0.25",
+      "expectFormat" : "0.5/0.25",
+      "fadeIn" : "0.5",
+      "fadeOut" : "0.25",
+      "name" : "split decimals keep their own spelling"
+    },
+    {
+      "expectCellDisplay" : "3600",
+      "expectFormat" : "3600",
+      "fadeIn" : "3600.0",
+      "fadeOut" : "3600.0",
+      "name" : "the fade maximum formats as a whole number"
+    },
+    {
+      "expectCellDisplay" : "0.1/0.30000000000000004",
+      "expectFormat" : "0.1/0.30000000000000004",
+      "fadeIn" : "0.1",
+      "fadeOut" : "0.30000000000000004",
+      "name" : "a value needing many digits round-trips"
+    }
+  ],
+  "fadeParse" : [
+    {
+      "expectFadeIn" : "1.0",
+      "expectFadeOut" : "1.0",
+      "input" : "1",
+      "name" : "a whole number is symmetric"
+    },
+    {
+      "expectFadeIn" : "1.5",
+      "expectFadeOut" : "1.5",
+      "input" : "1.5",
+      "name" : "a decimal is symmetric"
+    },
+    {
+      "expectFadeIn" : "0.0",
+      "expectFadeOut" : "0.0",
+      "input" : "0",
+      "name" : "zero is symmetric"
+    },
+    {
+      "expectFadeIn" : "1.0",
+      "expectFadeOut" : "2.0",
+      "input" : "1/2",
+      "name" : "a slash splits in from out"
+    },
+    {
+      "expectFadeIn" : "0.5",
+      "expectFadeOut" : "0.25",
+      "input" : "0.5/0.25",
+      "name" : "a split fade may be asymmetric decimals"
+    },
+    {
+      "expectFadeIn" : "0.0",
+      "expectFadeOut" : "1.0",
+      "input" : "0/1",
+      "name" : "a split fade may have a zero leg"
+    },
+    {
+      "expectFadeIn" : "3600.0",
+      "expectFadeOut" : "3600.0",
+      "input" : "3600",
+      "name" : "the fade maximum is accepted"
+    },
+    {
+      "input" : "3601",
+      "name" : "above the fade maximum is rejected"
+    },
+    {
+      "expectFadeIn" : "1.0",
+      "expectFadeOut" : "1.0",
+      "input" : "1.",
+      "name" : "a trailing point is a whole number"
+    },
+    {
+      "expectFadeIn" : "0.5",
+      "expectFadeOut" : "0.5",
+      "input" : ".5",
+      "name" : "a leading point is a fraction"
+    },
+    {
+      "expectFadeIn" : "1000.0",
+      "expectFadeOut" : "1000.0",
+      "input" : "1e3",
+      "name" : "exponent notation is accepted"
+    },
+    {
+      "input" : "1e400",
+      "name" : "an overflowing exponent is not finite and is rejected"
+    },
+    {
+      "expectFadeIn" : "1.5",
+      "expectFadeOut" : "1.5",
+      "input" : " 1.5 ",
+      "name" : "surrounding spaces are trimmed"
+    },
+    {
+      "expectFadeIn" : "1.5",
+      "expectFadeOut" : "1.5",
+      "input" : "1.5\t",
+      "name" : "a trailing tab is trimmed"
+    },
+    {
+      "expectFadeIn" : "1.5",
+      "expectFadeOut" : "1.5",
+      "input" : " 1.5",
+      "name" : "a leading no-break space is trimmed"
+    },
+    {
+      "input" : "1.5\n",
+      "name" : "a trailing newline is NOT trimmed and is rejected"
+    },
+    {
+      "input" : "1.5\r",
+      "name" : "a trailing carriage return is NOT trimmed and is rejected"
+    },
+    {
+      "input" : "1 5",
+      "name" : "interior whitespace is never trimmed"
+    },
+    {
+      "expectFadeIn" : "8.0",
+      "expectFadeOut" : "8.0",
+      "input" : "0x1p3",
+      "name" : "a C99 hex float is accepted"
+    },
+    {
+      "input" : "+1",
+      "name" : "a leading plus is rejected"
+    },
+    {
+      "input" : "1/+2",
+      "name" : "a leading plus on the out leg is rejected"
+    },
+    {
+      "input" : "infinity",
+      "name" : "the word infinity is rejected"
+    },
+    {
+      "input" : "nan",
+      "name" : "the word nan is rejected"
+    },
+    {
+      "input" : "Infinity",
+      "name" : "capitalised Infinity is rejected"
+    },
+    {
+      "input" : "1_000",
+      "name" : "a digit separator is rejected"
+    },
+    {
+      "input" : "-1",
+      "name" : "a negative fade is rejected"
+    },
+    {
+      "input" : "1/-2",
+      "name" : "a negative out leg is rejected"
+    },
+    {
+      "input" : "",
+      "name" : "the empty string is rejected"
+    },
+    {
+      "input" : "   ",
+      "name" : "blank space is rejected"
+    },
+    {
+      "input" : "1/",
+      "name" : "a missing out leg is rejected"
+    },
+    {
+      "input" : "/2",
+      "name" : "a missing in leg is rejected"
+    },
+    {
+      "input" : "1/2/3",
+      "name" : "two slashes are rejected"
+    },
+    {
+      "input" : "abc",
+      "name" : "letters are rejected"
+    }
+  ],
+  "goFilter" : [
+    {
+      "expect" : "00000000-0000-0000-0000-0000000000A1",
+      "isShowMode" : true,
+      "name" : "a live type id in Show mode resolves",
+      "rawID" : "00000000-0000-0000-0000-0000000000a1",
+      "typeIDs" : [
+        "00000000-0000-0000-0000-0000000000A1",
+        "00000000-0000-0000-0000-0000000000A2"
+      ]
+    },
+    {
+      "isShowMode" : false,
+      "name" : "the same id outside Show mode reads as All cues",
+      "rawID" : "00000000-0000-0000-0000-0000000000a1",
+      "typeIDs" : [
+        "00000000-0000-0000-0000-0000000000A1",
+        "00000000-0000-0000-0000-0000000000A2"
+      ]
+    },
+    {
+      "isShowMode" : true,
+      "name" : "the scene-storage default reads as All cues",
+      "rawID" : "",
+      "typeIDs" : [
+        "00000000-0000-0000-0000-0000000000A1",
+        "00000000-0000-0000-0000-0000000000A2"
+      ]
+    },
+    {
+      "isShowMode" : true,
+      "name" : "a deleted type reads as All cues",
+      "rawID" : "00000000-0000-0000-0000-0000000000dd",
+      "typeIDs" : [
+        "00000000-0000-0000-0000-0000000000A1",
+        "00000000-0000-0000-0000-0000000000A2"
+      ]
+    },
+    {
+      "isShowMode" : true,
+      "name" : "a malformed id reads as All cues",
+      "rawID" : "not-a-uuid",
+      "typeIDs" : [
+        "00000000-0000-0000-0000-0000000000A1",
+        "00000000-0000-0000-0000-0000000000A2"
+      ]
+    },
+    {
+      "expect" : "00000000-0000-0000-0000-0000000000A1",
+      "isShowMode" : true,
+      "name" : "an uppercase id resolves",
+      "rawID" : "00000000-0000-0000-0000-0000000000A1",
+      "typeIDs" : [
+        "00000000-0000-0000-0000-0000000000A1",
+        "00000000-0000-0000-0000-0000000000A2"
+      ]
+    },
+    {
+      "isShowMode" : true,
+      "name" : "a braced id is rejected",
+      "rawID" : "{00000000-0000-0000-0000-0000000000a1}",
+      "typeIDs" : [
+        "00000000-0000-0000-0000-0000000000A1",
+        "00000000-0000-0000-0000-0000000000A2"
+      ]
+    },
+    {
+      "isShowMode" : true,
+      "name" : "a parenthesised id is rejected",
+      "rawID" : "(00000000-0000-0000-0000-0000000000a1)",
+      "typeIDs" : [
+        "00000000-0000-0000-0000-0000000000A1",
+        "00000000-0000-0000-0000-0000000000A2"
+      ]
+    },
+    {
+      "isShowMode" : true,
+      "name" : "a dash-less id is rejected",
+      "rawID" : "000000000000000000000000000000a1",
+      "typeIDs" : [
+        "00000000-0000-0000-0000-0000000000A1",
+        "00000000-0000-0000-0000-0000000000A2"
+      ]
+    }
+  ],
+  "note" : "macOS-generated golden vectors for OnlyCue's cue-list presentation layer (epic #728, M1d). Eleven groups, each naming the Swift function it was generated from; see docs/superpowers/specs/2026-09-14-windows-m1d-cue-presentation.md. Unlike vectors 1-7 this one pins decisions rather than bytes on a wire, so the expectations are branch names and user-facing strings: compare them exactly, including the U+2013 EN DASH in the cue-number format message. Doubles are carried as round-trip-exact decimal strings; compare the parsed IEEE-754 bit patterns, not the text. Ids are likewise transport: Swift's uuidString uppercases the hex where .NET's Guid.ToString() lowercases it, so compare parsed Guid values and never the strings. To regenerate after a deliberate change, delete golden/cue-presentation-v1.json and re-run the test suite.",
+  "rowFill" : [
+    {
+      "expect" : "clear",
+      "hasTint" : false,
+      "isCurrent" : false,
+      "isSelected" : false,
+      "name" : "selected=false, current=false, tint=false"
+    },
+    {
+      "expect" : "clear",
+      "hasTint" : true,
+      "isCurrent" : false,
+      "isSelected" : false,
+      "name" : "selected=false, current=false, tint=true"
+    },
+    {
+      "expect" : "current",
+      "hasTint" : false,
+      "isCurrent" : true,
+      "isSelected" : false,
+      "name" : "selected=false, current=true, tint=false"
+    },
+    {
+      "expect" : "current",
+      "hasTint" : true,
+      "isCurrent" : true,
+      "isSelected" : false,
+      "name" : "selected=false, current=true, tint=true"
+    },
+    {
+      "expect" : "selectionFallback",
+      "hasTint" : false,
+      "isCurrent" : false,
+      "isSelected" : true,
+      "name" : "selected=true, current=false, tint=false"
+    },
+    {
+      "expect" : "tint",
+      "hasTint" : true,
+      "isCurrent" : false,
+      "isSelected" : true,
+      "name" : "selected=true, current=false, tint=true"
+    },
+    {
+      "expect" : "current",
+      "hasTint" : false,
+      "isCurrent" : true,
+      "isSelected" : true,
+      "name" : "selected=true, current=true, tint=false"
+    },
+    {
+      "expect" : "current",
+      "hasTint" : true,
+      "isCurrent" : true,
+      "isSelected" : true,
+      "name" : "selected=true, current=true, tint=true"
+    }
+  ],
+  "rowOpacity" : [
+    {
+      "cueTypeID" : "00000000-0000-0000-0000-0000000000a1",
+      "dimmed" : "0.35",
+      "expect" : "1.0",
+      "name" : "no filter leaves every row at full strength"
+    },
+    {
+      "cueTypeID" : "00000000-0000-0000-0000-0000000000a1",
+      "dimmed" : "0.35",
+      "expect" : "1.0",
+      "filter" : "00000000-0000-0000-0000-0000000000a1",
+      "name" : "the filtered type stays at full strength"
+    },
+    {
+      "cueTypeID" : "00000000-0000-0000-0000-0000000000a2",
+      "dimmed" : "0.35",
+      "expect" : "0.35",
+      "filter" : "00000000-0000-0000-0000-0000000000a1",
+      "name" : "another type dims"
+    }
+  ],
+  "rowTapIntent" : [
+    {
+      "expect" : "beginEdit",
+      "isExtending" : false,
+      "isReadOnly" : false,
+      "name" : "field, extending=false, readOnly=false",
+      "target" : "field"
+    },
+    {
+      "expect" : "ignored",
+      "isExtending" : false,
+      "isReadOnly" : true,
+      "name" : "field, extending=false, readOnly=true",
+      "target" : "field"
+    },
+    {
+      "expect" : "extendSelection",
+      "isExtending" : true,
+      "isReadOnly" : false,
+      "name" : "field, extending=true, readOnly=false",
+      "target" : "field"
+    },
+    {
+      "expect" : "ignored",
+      "isExtending" : true,
+      "isReadOnly" : true,
+      "name" : "field, extending=true, readOnly=true",
+      "target" : "field"
+    },
+    {
+      "expect" : "selectAndSeek",
+      "isExtending" : false,
+      "isReadOnly" : false,
+      "name" : "stripe, extending=false, readOnly=false",
+      "target" : "stripe"
+    },
+    {
+      "expect" : "selectAndSeek",
+      "isExtending" : false,
+      "isReadOnly" : true,
+      "name" : "stripe, extending=false, readOnly=true",
+      "target" : "stripe"
+    },
+    {
+      "expect" : "extendSelection",
+      "isExtending" : true,
+      "isReadOnly" : false,
+      "name" : "stripe, extending=true, readOnly=false",
+      "target" : "stripe"
+    },
+    {
+      "expect" : "extendSelection",
+      "isExtending" : true,
+      "isReadOnly" : true,
+      "name" : "stripe, extending=true, readOnly=true",
+      "target" : "stripe"
+    }
+  ],
+  "sectionCount" : [
+    {
+      "count" : 0,
+      "expect" : "0 cues",
+      "name" : "zero is plural"
+    },
+    {
+      "count" : 1,
+      "expect" : "1 cue",
+      "name" : "one is singular"
+    },
+    {
+      "count" : 2,
+      "expect" : "2 cues",
+      "name" : "two is plural"
+    },
+    {
+      "count" : 42,
+      "expect" : "42 cues",
+      "name" : "large counts stay plural"
+    }
+  ],
+  "version" : 1
+}

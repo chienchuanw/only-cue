@@ -23,6 +23,10 @@ actor MA2TelnetClient {
         /// How long to wait for the first response byte before treating the
         /// command as silently accepted.
         var firstByteTimeout: TimeInterval = 2
+        /// How long `connect()` waits for the console's welcome banner before
+        /// giving up on draining it. A console that greets promptly costs only
+        /// `settle`; this bound bites only when the greeting never comes.
+        var bannerTimeout: TimeInterval = 2
         /// Quiet period after the last byte before the response is complete.
         var settle: TimeInterval = 0.3
     }
@@ -76,8 +80,13 @@ actor MA2TelnetClient {
         }
         receiveLoop(connection)
         // Drain the console's welcome banner so it can't be mistaken for the
-        // first command's response.
-        try? await Task.sleep(for: .seconds(configuration.settle))
+        // first command's response. Wait for the greeting to actually arrive and
+        // go quiet rather than sleeping one `settle` and clearing whatever turned
+        // up: that was a bet that the banner beats the clock, and on a loaded
+        // machine it does not — the greeting then lands in the *next* harvest and
+        // is reported as the first command's response (#816). A connection that
+        // died here leaves its sticky failure behind for the first `send()`.
+        _ = try? await awaitQuietInbound(firstByteTimeout: configuration.bannerTimeout)
         inbound.clear()
     }
 
@@ -107,23 +116,8 @@ actor MA2TelnetClient {
             }
         )
 
-        // Wait for the first byte, then for a quiet period after the last.
-        let clock = ContinuousClock()
-        let firstByteDeadline = clock.now.advanced(by: .seconds(configuration.firstByteTimeout))
-        while inbound.isEmpty {
-            if let failure = inbound.failure { throw Failure.connectionFailed(failure) }
-            if clock.now >= firstByteDeadline { return "" }
-            try await Task.sleep(for: .milliseconds(20))
-        }
-        var lastCount = inbound.count
-        var quietSince = clock.now
-        while clock.now < quietSince.advanced(by: .seconds(configuration.settle)) {
-            try await Task.sleep(for: .milliseconds(20))
-            let count = inbound.count
-            if count != lastCount {
-                lastCount = count
-                quietSince = clock.now
-            }
+        guard try await awaitQuietInbound(firstByteTimeout: configuration.firstByteTimeout) else {
+            return ""
         }
 
         // Console output should be ASCII/UTF-8; anything else is surfaced
@@ -137,6 +131,31 @@ actor MA2TelnetClient {
             throw Failure.console(command: command, response: response)
         }
         return response
+    }
+
+    /// Waits for the first inbound byte, then for a `settle`-long quiet period
+    /// after the last one — the harvest shape MA2's unframed output forces on us.
+    /// Returns `false` when nothing arrived inside `firstByteTimeout`, leaving
+    /// the buffer untouched so the caller decides what silence means.
+    private func awaitQuietInbound(firstByteTimeout: TimeInterval) async throws -> Bool {
+        let clock = ContinuousClock()
+        let firstByteDeadline = clock.now.advanced(by: .seconds(firstByteTimeout))
+        while inbound.isEmpty {
+            if let failure = inbound.failure { throw Failure.connectionFailed(failure) }
+            if clock.now >= firstByteDeadline { return false }
+            try await Task.sleep(for: .milliseconds(20))
+        }
+        var lastCount = inbound.count
+        var quietSince = clock.now
+        while clock.now < quietSince.advanced(by: .seconds(configuration.settle)) {
+            try await Task.sleep(for: .milliseconds(20))
+            let count = inbound.count
+            if count != lastCount {
+                lastCount = count
+                quietSince = clock.now
+            }
+        }
+        return true
     }
 
     func disconnect() {

@@ -174,9 +174,7 @@ struct CueListPane: View {
             Text("No cues yet")
                 .font(DS.Text.heading)
                 .foregroundStyle(DS.Color.textPrimary)
-            Text(document.model.activeItem == nil
-                 ? "Import a media file to start adding cues."
-                 : "Press M to add a cue at the playhead.")
+            Text(CueListEmptyState.message(hasActiveItem: document.model.activeItem != nil))
                 .font(DS.Text.body)
                 .foregroundStyle(DS.Color.textSecondary)
                 .multilineTextAlignment(.center)

@@ -13,21 +13,18 @@ extension CueListPane {
         return base.opacity(CueListLayout.rowTintOpacity)
     }
 
-    /// The resolved Show-mode GO-by-type filter (#657): nil = All cues. Non-nil
-    /// only in Show mode (`isReadOnly`) when the stored id still matches a live
-    /// cue type — "" or a deleted type read as All. Shared with `DocumentView`
-    /// via the per-window `@SceneStorage("onlycue.showGoTypeID")`.
-    ///
-    /// Must stay equivalent to `DocumentView.showGoTypeID`, which gates on
-    /// `editorMode == .show`: `isReadOnly` is passed `true` only from the `.show`
-    /// case of `ModeAwareInspector`, so the two agree today. Keep that invariant
-    /// if a future mode ever renders a read-only cue list.
+    /// The resolved Show-mode GO-by-type filter (#657): nil = All cues. Shared
+    /// with `DocumentView` via the per-window
+    /// `@SceneStorage("onlycue.showGoTypeID")` — and now via the same function,
+    /// so the two cannot drift (#837). `isReadOnly` is passed `true` only from
+    /// the `.show` case of `ModeAwareInspector`, which is what makes it the
+    /// right argument for `isShowMode`.
     var showGoTypeID: CuePointType.ID? {
-        guard isReadOnly,
-              let id = UUID(uuidString: showGoTypeIDRaw),
-              document.model.cuePointTypes.contains(where: { $0.id == id })
-        else { return nil }
-        return id
+        CueListGoFilter.resolve(
+            rawID: showGoTypeIDRaw,
+            types: document.model.cuePointTypes,
+            isShowMode: isReadOnly
+        )
     }
 
     /// The cue currently "active" at the playhead — emphasized in Show mode.
@@ -41,8 +38,11 @@ extension CueListPane {
     /// are dimmed (still visible) so the walked type stands out (#657). Full
     /// opacity when no filter is active (All / non-Show mode).
     func rowOpacity(for cue: Cue) -> Double {
-        guard let selected = showGoTypeID, cue.typeID != selected else { return 1 }
-        return CueListLayout.dimmedRowOpacity
+        CueListRowOpacity.value(
+            cueTypeID: cue.typeID,
+            filter: showGoTypeID,
+            dimmed: CueListLayout.dimmedRowOpacity
+        )
     }
 
     /// A row's background. Unselected rows are clean (Figma `318:1228`); the

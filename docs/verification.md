@@ -70,6 +70,35 @@ One scripted flow:
 
 We deliberately keep UI tests minimal — they are slow and flaky. Coverage lives in unit tests.
 
+> The flow above describes the original single smoke test. `OnlyCueUITests/` has since grown to
+> dozens of suites; this section has not been rewritten to match, and should not be read as the
+> current inventory.
+
+#### Which suites run where
+
+CI splits `OnlyCueUITests` across two steps in `.github/workflows/ci.yml`:
+
+| Step | Selection | When |
+|---|---|---|
+| UI tests (behavioral) | the whole target, minus a `-skip-testing` list | push to `dev` |
+| UI baseline screenshots | an explicit `-only-testing` list | `workflow_dispatch` only |
+
+The second list is meant to pick up exactly what the first one drops, so **every suite is selected
+by one step or the other**. The two were maintained by hand and independently, and six suites had
+fallen into the gap between them — compiled into the target, run by no job, so a regression in any
+of them landed on `dev` fully green (#812).
+
+`scripts/ci/check-ui-test-coverage.sh` now enforces that the two lists are the same set, and runs in
+the "CI script tests" step on every push and PR. It also catches a suite listed in both (runs twice),
+a duplicated entry, and a name left behind by a rename. `scripts/ci/check-ui-test-coverage.test.sh`
+tests the guard itself — including that finding zero suites fails loudly rather than passing
+vacuously, since a guard that silently stops guarding is worse than none.
+
+A suite belongs in the baseline list only if it is a screenshot generator. A behavioral suite that is
+merely flaky on the self-hosted runner does not qualify: parking it there means the regression it
+guards is unverified on every push, which is how the Mini Player key-window bug (#770) survived three
+releases.
+
 ## Performance budgets
 
 Not formal perf tests, but anything outside these budgets is a bug to investigate, not ship around.

@@ -56,6 +56,10 @@ public class FadeTimeFormattingTests
     [InlineData(1e19, "1e+19")]
     [InlineData(1e21, "1e+21")]
     [InlineData(1.5e20, "1.5e+20")]
+    // The negative side is not symmetric for free: without the lower guard a
+    // finite -1e21 saturates to long.MinValue, and only -infinity would notice.
+    [InlineData(-1e19, "-1e+19")]
+    [InlineData(-1e21, "-1e+21")]
     public void FormatNumber_FallsBackToDoubleSpelling_BeyondInt64(double seconds, string expected)
     {
         Assert.Equal(expected, FadeTimeFormatting.FormatNumber(seconds));

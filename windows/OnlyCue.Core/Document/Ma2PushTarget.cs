@@ -51,6 +51,15 @@ public sealed class Ma2PushTarget
     public string? SequenceName { get; set; }
 
     /// <summary>
+    /// The executor as a page/number pair when assigned, else <c>null</c> (#764).
+    /// The two are only meaningful together, so a half-set executor resolves to
+    /// <c>null</c>. Mirrors Swift's <c>MA2PushTarget.executor</c>.
+    /// </summary>
+    [JsonIgnore]
+    public (int Page, int Number)? Executor =>
+        (ExecutorPage, ExecutorNumber) is ({ } page, { } number) ? (page, number) : null;
+
+    /// <summary>
     /// Console slots, pages and executors are 1-based; anything below 1 would
     /// emit invalid XML indices and telnet commands. The executor is optional
     /// (#764): valid when both fields are cleared or both are 1-based.

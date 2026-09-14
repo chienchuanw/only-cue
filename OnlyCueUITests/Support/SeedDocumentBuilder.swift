@@ -18,6 +18,13 @@ import Foundation
 enum SeedKey: String {
     case threeCuesAt1And3And6 = "three-cues-1-3-6"
     case threeCuesAt1And3And6With120BPM = "three-cues-1-3-6-with-120bpm-tempo"
+    /// The same three cues spread across the 30s clip instead of its first six
+    /// seconds (#822). Tests that fire a transport action *while playback runs*
+    /// need the gap between cues to be large compared to XCUITest's click/query
+    /// latency, which is 1–2.5s on the self-hosted runner. At 1s/3s/6s the whole
+    /// runway is shorter than two interactions, so the playhead crosses cues —
+    /// even reaching the last one — before the action lands.
+    case threeCuesAt2And12And24 = "three-cues-2-12-24"
     case songWithLyrics = "song-with-lyrics"
     case lyricsWithPlacedLines = "lyrics-with-placed-lines"
     /// Populated "Set List — Act I" project — 8 mixed media items, 6 named cues

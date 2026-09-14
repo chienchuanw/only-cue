@@ -81,8 +81,37 @@ extension UITestSeedHandler {
         }
     }
 
+    /// The seeds that are just the one 30s silent clip with cues (and sometimes
+    /// lyrics) hung off it. Split out of `itemSeeds(for:)` so that switch stays
+    /// under the cyclomatic-complexity limit as keys are added. `nil` = not one
+    /// of these, try the main switch.
+    private static func legacyAudioSeeds(for key: String) -> [ItemSeed]? {
+        switch key {
+        case "three-cues-1-3-6":
+            return [legacyAudioItem(cues: [CueSpec(time: 1), CueSpec(time: 3), CueSpec(time: 6)])]
+        // Same three cues, spread across the 30s clip so a transport action fired
+        // while playback runs has room to land between them (#822).
+        case "three-cues-2-12-24":
+            return [legacyAudioItem(cues: [CueSpec(time: 2), CueSpec(time: 12), CueSpec(time: 24)])]
+        case "three-cues-1-3-6-with-120bpm-tempo":
+            return [legacyAudioItem(cues: [
+                CueSpec(time: 0, bpm: 120, beatsPerBar: 4),
+                CueSpec(time: 1),
+                CueSpec(time: 3),
+                CueSpec(time: 6)
+            ])]
+        case "song-with-lyrics":
+            return [legacyAudioItem(cues: [CueSpec(time: 1)], lyrics: songWithLyrics())]
+        case "lyrics-with-placed-lines":
+            return [legacyAudioItem(cues: [CueSpec(time: 1)], lyrics: lyricsWithPlacedLines())]
+        default:
+            return nil
+        }
+    }
+
     /// The media-item plan for a seed key. Throws on an unknown key.
     static func itemSeeds(for key: String) throws -> [ItemSeed] {
+        if let seeds = legacyAudioSeeds(for: key) { return seeds }
         switch key {
         case "set-list-act-i":
             return setListActISeeds()
@@ -110,19 +139,6 @@ extension UITestSeedHandler {
                 ItemSeed(displayName: "Interlude.wav", kind: .audio, duration: 30, fixture: clip),
                 ItemSeed(displayName: "Finale.wav", kind: .audio, duration: 30, fixture: clip, colorHex: palette[5])
             ]
-        case "three-cues-1-3-6":
-            return [legacyAudioItem(cues: [CueSpec(time: 1), CueSpec(time: 3), CueSpec(time: 6)])]
-        case "three-cues-1-3-6-with-120bpm-tempo":
-            return [legacyAudioItem(cues: [
-                CueSpec(time: 0, bpm: 120, beatsPerBar: 4),
-                CueSpec(time: 1),
-                CueSpec(time: 3),
-                CueSpec(time: 6)
-            ])]
-        case "song-with-lyrics":
-            return [legacyAudioItem(cues: [CueSpec(time: 1)], lyrics: songWithLyrics())]
-        case "lyrics-with-placed-lines":
-            return [legacyAudioItem(cues: [CueSpec(time: 1)], lyrics: lyricsWithPlacedLines())]
         case "split-channels":
             // A single active stereo clip so the preview pane can render the
             // per-channel waveform lanes (#720) for the Figma split-channel

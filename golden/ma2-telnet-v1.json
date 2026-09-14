@@ -70,6 +70,27 @@
       "expectSubNumber" : -500,
       "name" : "a negative number truncates toward zero",
       "value" : "-1.5"
+    },
+    {
+      "expectCommandString" : "-1.-5",
+      "expectNumber" : -1,
+      "expectSubNumber" : -50,
+      "name" : "a two-digit negative sub number keeps the sign inside the pad",
+      "value" : "-1.05"
+    },
+    {
+      "expectCommandString" : "-1.-05",
+      "expectNumber" : -1,
+      "expectSubNumber" : -5,
+      "name" : "a one-digit negative sub number keeps the sign inside the pad",
+      "value" : "-1.005"
+    },
+    {
+      "expectCommandString" : "3000000",
+      "expectNumber" : 3000000,
+      "expectSubNumber" : 0,
+      "name" : "a cue number past Int32.max stays 64-bit",
+      "value" : "3000000.0"
     }
   ],
   "names" : [

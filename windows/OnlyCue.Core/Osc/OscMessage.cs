@@ -28,11 +28,16 @@ public enum OscArgumentType
 /// </summary>
 /// <remarks>
 /// A flattened union rather than a class hierarchy, so the shape matches the
-/// vector's JSON encoding and a case can be added without a new type. Note that
-/// the compiler-generated record equality compares <see cref="FloatValue"/> with
-/// <c>float.Equals</c>, which treats <c>-0.0f</c> and <c>0.0f</c> as equal — the
-/// golden verifier therefore compares float arguments by bit pattern rather than
-/// leaning on <c>==</c>.
+/// vector's JSON encoding and a case can be added without a new type.
+///
+/// The compiler-generated record equality compares <see cref="FloatValue"/> with
+/// <c>float.Equals</c>, which disagrees with Swift's synthesized <c>Equatable</c>
+/// in <em>both</em> directions: it treats <c>-0.0f</c> and <c>0.0f</c> as equal
+/// where Swift's <c>Float.==</c> also does, but it reports <c>NaN == NaN</c> as
+/// <b>true</b> where Swift reports false. The golden verifier therefore compares
+/// float arguments by bit pattern rather than leaning on <c>==</c>. NaN is not yet
+/// in the vector at all — <c>GoldenDouble</c> cannot round-trip its bit pattern
+/// (#833).
 /// </remarks>
 public sealed record OscArgument
 {

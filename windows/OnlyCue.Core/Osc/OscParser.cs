@@ -1,4 +1,5 @@
 using System.Buffers.Binary;
+using System.Globalization;
 using System.Text;
 
 namespace OnlyCue.Core.Osc;
@@ -14,7 +15,7 @@ namespace OnlyCue.Core.Osc;
 /// so "never throws on garbage" is as much of the contract as "decodes valid
 /// input correctly". Every malformed branch returns null or an empty list.
 ///
-/// Three .NET defaults would each silently break parity with Swift and are
+/// Five .NET defaults would each silently break parity with Swift and are
 /// deliberately avoided here:
 /// <list type="bullet">
 /// <item>OSC is big-endian; <c>BitConverter.ToInt32</c> reads host order, so
@@ -23,9 +24,20 @@ namespace OnlyCue.Core.Osc;
 /// returns a string where Swift's <c>String(data:encoding:.utf8)</c> returns nil,
 /// so a strict throwing decoder is used and the throw is turned back into "no
 /// message".</item>
+/// <item>That same decoder <em>keeps</em> a leading U+FEFF where Swift's
+/// NSString-backed one drops it, so <c>ReadOscString</c> strips one explicitly.</item>
+/// <item><c>StartsWith(char)</c> compares one UTF-16 unit where Swift's
+/// <c>hasPrefix</c> compares grapheme clusters, so the <c>/</c> and <c>,</c>
+/// tests go through <see cref="StartsWithCluster"/>.</item>
 /// <item>Slicing must not re-base the NUL search: Swift searches to the end of
 /// the datagram, not the end of the current field.</item>
 /// </list>
+///
+/// Nesting depth is <em>not</em> capped, matching Swift. Both parsers recurse once
+/// per bundle level and would overflow the stack on a sufficiently nested
+/// datagram; at 20 bytes per level a 65507-byte UDP datagram buys at most 3274
+/// levels, which both survive on their default stacks. #835 tracks capping both
+/// sides together — capping only this one would itself be a parity break.
 /// </remarks>
 public static class OscParser
 {
@@ -60,7 +72,7 @@ public static class OscParser
             return ParseBundle(ref reader);
         }
 
-        if (!head.StartsWith('/'))
+        if (!StartsWithCluster(head, '/'))
         {
             return None;
         }
@@ -100,7 +112,7 @@ public static class OscParser
     /// that simply does not begin with a comma.</summary>
     private static OscMessage? ParsePlainMessage(string address, ref Reader reader)
     {
-        if (reader.ReadOscString() is not { } typeTags || !typeTags.StartsWith(','))
+        if (reader.ReadOscString() is not { } typeTags || !StartsWithCluster(typeTags, ','))
         {
             return new OscMessage(address, []);
         }
@@ -115,10 +127,15 @@ public static class OscParser
     /// message rather than yielding a partially parsed one.</summary>
     /// <remarks>
     /// Swift iterates <c>Character</c> (grapheme clusters) where this iterates
-    /// <c>char</c>. The two cannot diverge: a cluster of more than one scalar is
-    /// never one of the seven single-ASCII-letter tags, so Swift rejects it, and
-    /// C# rejects it too because no ASCII letter combines with a following scalar
-    /// without that scalar itself being an invalid tag.
+    /// <c>char</c>. For the tags themselves the two cannot diverge: a cluster of
+    /// more than one scalar is never one of the seven single-ASCII-letter tags, so
+    /// Swift rejects it, and C# rejects it too because no ASCII letter combines
+    /// with a following scalar without that scalar itself being an invalid tag —
+    /// both end at "unknown tag", which drops the whole message either way.
+    ///
+    /// That argument covers only the loop below. The <em>leading comma</em> test
+    /// is a real divergence and is handled by <see cref="StartsWithCluster"/>; a
+    /// plain <c>StartsWith(',')</c> here would be wrong.
     /// </remarks>
     private static List<OscArgument>? ParseArguments(string typeTags, ref Reader reader)
     {
@@ -135,6 +152,23 @@ public static class OscParser
 
         return arguments;
     }
+
+    /// <summary>Swift's <c>hasPrefix</c> compares <c>Character</c>s — extended
+    /// grapheme clusters — so <c>",́".hasPrefix(",")</c> is <b>false</b>: the
+    /// comma and the combining acute are one cluster, and that cluster is not
+    /// ",". C#'s <c>StartsWith(char)</c> looks at one UTF-16 unit and says true.
+    /// The difference is observable: for a <c>/onlycue/play</c> whose type-tag
+    /// word is <c>,</c> + U+0301, Swift falls through to the address-only form and
+    /// plays, while a char-wise port treats U+0301 as an unknown tag and drops the
+    /// message. Same story for the <c>/</c> test on the address.</summary>
+    /// <remarks><see cref="StringInfo.GetNextTextElementLength"/> implements the
+    /// same UAX #29 extended grapheme clusters Swift's <c>Character</c> does, so
+    /// "first cluster is exactly this ASCII char" is "starts with the char and the
+    /// first cluster is one unit long".</remarks>
+    private static bool StartsWithCluster(string value, char expected) =>
+        value.Length > 0
+            && value[0] == expected
+            && StringInfo.GetNextTextElementLength(value) == 1;
 
     private static OscArgument? ParseArgument(char tag, ref Reader reader) => tag switch
     {
@@ -202,6 +236,18 @@ public static class OscParser
                 // bytes; the default .NET decoder would substitute U+FFFD and
                 // accept the datagram.
                 return null;
+            }
+
+            // `String(data:encoding:.utf8)` is NSString-backed and silently drops
+            // exactly one *leading* U+FEFF; `UTF8Encoding.GetString` keeps it,
+            // strict or lenient. Without this, a BOM-prefixed "#bundle" takes the
+            // plain-message branch instead of the bundle branch, and a
+            // BOM-prefixed address is rejected outright — the same datagram
+            // driving the console on macOS and doing nothing on Windows.
+            // Verified against Swift: one BOM only, leading position only.
+            if (value.StartsWith('\uFEFF'))
+            {
+                value = value[1..];
             }
 
             var consumed = length + 1;

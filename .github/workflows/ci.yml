@@ -55,6 +55,13 @@ jobs:
       - name: CI script tests
         run: scripts/ci/run-with-watchdog.test.sh
 
+      # Runs here rather than beside the UI steps on purpose: those are gated on
+      # push-to-dev, so a PR that orphaned a suite would not hear about it until
+      # after merge. This step runs on every event, costs ~1s, and needs nothing
+      # built (#812).
+      - name: UI suite coverage
+        run: scripts/ci/check-ui-test-coverage.test.sh
+
       - name: Generate Xcode project
         run: xcodegen generate
 
@@ -301,7 +308,6 @@ jobs:
               -skip-testing:OnlyCueUITests/MA2PushSheetScreenshotTests \
               -skip-testing:OnlyCueUITests/MA2SettingsScreenshotTests \
               -skip-testing:OnlyCueUITests/MIDISettingsScreenshotTests \
-              -skip-testing:OnlyCueUITests/MiniPlayerUITests \
               -skip-testing:OnlyCueUITests/OSCMonitorScreenshotTests \
               -skip-testing:OnlyCueUITests/OSCSettingsScreenshotTests \
               -skip-testing:OnlyCueUITests/Phase3ScreenshotTests \
@@ -375,12 +381,17 @@ jobs:
             -only-testing:OnlyCueUITests/AudioSettingsScreenshotTests \
             -only-testing:OnlyCueUITests/DocumentViewModeScreenshotTests \
             -only-testing:OnlyCueUITests/ExportSheetScreenshotTests \
+            -only-testing:OnlyCueUITests/GeneralSettingsScreenshotTests \
             -only-testing:OnlyCueUITests/KeyboardSettingsScreenshotTests \
             -only-testing:OnlyCueUITests/LyricsLaneEditingUITests \
+            -only-testing:OnlyCueUITests/MA2PushSheetScreenshotTests \
+            -only-testing:OnlyCueUITests/MA2SettingsScreenshotTests \
+            -only-testing:OnlyCueUITests/MIDISettingsScreenshotTests \
             -only-testing:OnlyCueUITests/OSCMonitorScreenshotTests \
             -only-testing:OnlyCueUITests/OSCSettingsScreenshotTests \
             -only-testing:OnlyCueUITests/Phase3ScreenshotTests \
             -only-testing:OnlyCueUITests/ShowModeUITests \
+            -only-testing:OnlyCueUITests/SplitChannelWaveformScreenshotTests \
             -only-testing:OnlyCueUITests/TempoGridOverlayScreenshotTests \
             -only-testing:OnlyCueUITests/TimecodeSettingsSheetScreenshotTests \
             -only-testing:OnlyCueUITests/TransportBarScreenshotTests \

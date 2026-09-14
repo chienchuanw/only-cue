@@ -1,4 +1,5 @@
 using System.Globalization;
+using OnlyCue.Core.Planning;
 
 namespace OnlyCue.Core.Ma2;
 
@@ -22,21 +23,22 @@ public static class Ma2CueNumber
     /// midpoint — <c>0.0125 * 1000</c> is precisely 12.5 — which
     /// <c>golden/ma2-telnet-v1.json</c> pins.
     ///
-    /// The cast is to <c>long</c>, not <c>int</c>: Swift's <c>Int</c> is 64-bit,
-    /// and a <c>(int)</c> cast saturates at 2147483647 on .NET Core 3.0+, so a
-    /// cue number above ~2.1 million would silently clamp on Windows while macOS
-    /// kept counting. Beyond <c>Int64</c> the two still part ways — Swift traps,
-    /// C# saturates — which is the same corrupt-file-only reach as #829.
-    ///
-    /// Negative values are reproduced as-is rather than corrected: C#'s integer
-    /// division and remainder truncate toward zero exactly as Swift's do, so
-    /// <c>-1.5</c> yields <c>(-1, -500)</c> on both sides. That is a latent macOS
-    /// bug — it renders as the nonsense token <c>-1.-5</c>, which the console
-    /// rejects (#830) — but the contract's job is to keep the two cores identical,
-    /// so the drift guard will force this side to follow when macOS is fixed.
+    /// Outside <see cref="CueNumberDomain"/> the split collapses to an unnumbered
+    /// cue (#830), matching Swift. Two whole classes of divergence go with it:
+    /// a negative value used to yield <c>(-1, -500)</c> on both sides and render
+    /// as the nonsense token <c>-1.-5</c> that the console rejects; and beyond
+    /// <c>Int64</c> the two cores parted ways outright, Swift trapping where C#
+    /// saturates. In domain the scaled value tops out at 9_999_999, so even the
+    /// <c>int</c>-vs-<c>long</c> width question is now moot — the cast stays
+    /// <c>long</c> to keep matching Swift's <c>Int</c> by construction.
     /// </remarks>
     public static Components Split(double value)
     {
+        if (!CueNumberDomain.IsInDomain(value))
+        {
+            return new Components(0, 0);
+        }
+
         var thousandths = (long)Math.Round(value * 1000, MidpointRounding.AwayFromZero);
         return new Components(thousandths / 1000, thousandths % 1000);
     }
@@ -55,14 +57,12 @@ public static class Ma2CueNumber
         }
 
         // Swift: `String(format: "%03d", subNumber)`. `%03d` pads to a total
-        // width of three *including the sign*, so -5 renders as "-05". .NET's
-        // "D3" pads the digits instead and would render "-005"; the two agree
-        // only when |subNumber| >= 100, which is why a vector pinning just -1.5
-        // (sub -500) could not tell them apart. Spelled out rather than
-        // formatted so the width arithmetic is visible.
-        var digits = Math.Abs(parts.SubNumber).ToString(CultureInfo.InvariantCulture);
-        var sign = parts.SubNumber < 0 ? "-" : string.Empty;
-        var frac = (sign + digits.PadLeft(3 - sign.Length, '0')).TrimEnd('0');
+        // width of three *including the sign*, where .NET's "D3" pads the digits
+        // and prepends it — so the two used to disagree on every negative sub
+        // number with |value| < 100 ("-05" vs "-005"). `Split`'s domain guard
+        // (#830) now keeps the sub number in 0...999, where the two formats are
+        // identical, so the sign arithmetic that reconciled them is gone.
+        var frac = parts.SubNumber.ToString("D3", CultureInfo.InvariantCulture).TrimEnd('0');
         return $"{parts.Number.ToString(CultureInfo.InvariantCulture)}.{frac}";
     }
 }

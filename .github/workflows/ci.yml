@@ -92,15 +92,44 @@ jobs:
           # fails with "Failed to activate application (current state: Running
           # Background)" and the whole job burns ~90 min (#799). The policy was
           # set manually on 2026-08-10 but a macOS update around 08-28 reset it,
-          # reddening every dev push since. Re-assert it each run so the runner
-          # self-heals; best-effort (needs the /etc/sudoers.d passwordless entry
-          # for automationmodetool, else this is a harmless no-op).
-          # `< /dev/null` is load-bearing: automationmodetool prints an "Enter
-          # the password for user 'root'" prompt and blocks reading stdin. It
-          # runs as root (via sudo), so the non-root runner user cannot kill it
-          # if it hangs — feeding EOF is the only reliable guard against the
-          # prompt wedging the whole job.
-          sudo -n automationmodetool enable-automationmode-without-authentication < /dev/null > /dev/null 2>&1 || true
+          # so the job re-asserts it — but only when it has actually drifted.
+          #
+          # `enable-automationmode-without-authentication` can block forever
+          # (#810). It runs as root via sudo and /etc/sudoers.d grants the tool
+          # itself but not a killall, so the runner user cannot reap it: one
+          # hang holds the step until the 6h job timeout and every later run
+          # queues behind this single-slot runner. Three orphans had piled up
+          # before this guard existed. `< /dev/null` does not help — the block
+          # is not on stdin.
+          #
+          # The no-arg read is the safe probe: it returns immediately and
+          # prints "This device DOES NOT REQUIRE user authentication to enable
+          # Automation Mode." once the policy is provisioned. (The companion
+          # "Automation Mode is disabled." line is only the current session
+          # state; XCUITest flips that per run, which is exactly what the
+          # policy permits.) So on a healthy runner we never touch the command
+          # that hangs.
+          if /usr/bin/automationmodetool < /dev/null 2>&1 | grep -q 'DOES NOT REQUIRE'; then
+            echo "Automation Mode policy already provisioned no-auth — skipping enable."
+          else
+            echo "Automation Mode policy drifted — re-asserting (bounded)."
+            sudo -n automationmodetool enable-automationmode-without-authentication < /dev/null > /dev/null 2>&1 &
+            amt_pid=$!
+            # Watchdog, not a poll loop: `wait` reaps the child, so a normal
+            # fast exit can't be misread as still-running (a polled `kill -0`
+            # keeps succeeding on the unreaped zombie). The `sudo` wrapper has
+            # the runner user as its *real* uid, so killing it is permitted —
+            # the root grandchild is orphaned rather than reaped, which is the
+            # price of unwedging the job.
+            ( sleep 15; kill -9 "$amt_pid" 2>/dev/null ) &
+            watchdog_pid=$!
+            if wait "$amt_pid"; then amt_rc=0; else amt_rc=$?; fi
+            kill -9 "$watchdog_pid" 2>/dev/null || true
+            wait "$watchdog_pid" 2>/dev/null || true
+            if [ "$amt_rc" -ne 0 ]; then
+              echo "::warning::automationmodetool did not provision the policy (exit ${amt_rc}, #810); continuing. UI tests may fail to foreground the app."
+            fi
+          fi
           sleep 3
 
       # One-shot whole-step retry: the daemon-init timeout fails the entire

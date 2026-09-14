@@ -83,7 +83,9 @@ public static class Ma2CommandPlanner
         // in the pool for the operator to place — skip `At Exec` entirely.
         if (target.Executor is { } executor)
         {
-            commands.Add($"Assign Sequence {seq} At Exec {executor.Page}.{executor.Number}");
+            var page = executor.Page.ToString(CultureInfo.InvariantCulture);
+            var number = executor.Number.ToString(CultureInfo.InvariantCulture);
+            commands.Add($"Assign Sequence {seq} At Exec {page}.{number}");
         }
 
         return commands;

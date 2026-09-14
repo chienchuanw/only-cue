@@ -60,12 +60,27 @@ struct RenumberCuesSheet: View {
                     .accessibilityIdentifier("renumberCuesCancel")
                 Button("Renumber") { onRenumber(start, interval) }
                     .keyboardShortcut(.defaultAction)
+                    .disabled(!canRenumber)
                     .accessibilityIdentifier("renumberCuesConfirm")
             }
         }
         .padding(20)
         .frame(minWidth: 360)
         .accessibilityIdentifier("renumberCuesSheet")
+    }
+
+    /// The `TextField`s are unconstrained — the `Stepper(in:)` beside each one
+    /// binds only its own buttons — so a typed value can leave grandMA2's
+    /// numbering domain. `CueCommands.renumberSelected` rejects such a run
+    /// whole (#830); gate the button on the same rule so the rejection reads as
+    /// a disabled control rather than a click that silently does nothing.
+    ///
+    /// Both ends are checked: the run walks from `start` to
+    /// `start + (cueCount - 1) * interval`, so an in-range start can still
+    /// overrun the maximum.
+    var canRenumber: Bool {
+        let last = start + Double(max(cueCount, 1) - 1) * interval
+        return CueNumberValidator.isInDomain(start) && CueNumberValidator.isInDomain(last)
     }
 
     // MARK: - Test hooks (see CueNotesSheet for why @State can't be set pre-hosting)

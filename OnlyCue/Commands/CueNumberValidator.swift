@@ -59,9 +59,23 @@ enum CueNumberValidator {
         return .ok
     }
 
+    /// Is `value` inside the numbering window at all — finite and within
+    /// `minimum...maximum`?
+    ///
+    /// Deliberately weaker than `isWellFormatted`, which additionally demands
+    /// the three-decimal round-trip. The boundaries that *coerce* an untrusted
+    /// number rather than reject typed input (`Cue.init(from:)`,
+    /// `CueCommands.renumberSelected`, `MA2CueNumber`) gate on this window
+    /// alone: a fourth decimal place is rounded harmlessly into thousandths by
+    /// both MA2 generators, so discarding it would be gratuitous data loss,
+    /// whereas a value outside the window has no MA2 meaning and traps or
+    /// misformats downstream (#830).
+    static func isInDomain(_ value: Double) -> Bool {
+        value.isFinite && value >= minimum && value <= maximum
+    }
+
     private static func isWellFormatted(_ value: Double) -> Bool {
-        guard value.isFinite else { return false }
-        guard value >= minimum, value <= maximum else { return false }
+        guard isInDomain(value) else { return false }
         // Three-decimal-place check via integer round-trip on value * 1000.
         let scaled = value * 1000
         return scaled.rounded() == scaled

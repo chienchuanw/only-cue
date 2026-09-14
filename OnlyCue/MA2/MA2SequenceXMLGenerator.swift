@@ -13,7 +13,16 @@ enum MA2CueNumber {
         var subNumber: Int
     }
 
+    /// Total over `Double`, because this is the last stop before the wire and
+    /// its call sites pass `cue.cueNumber ?? 0` unchecked (#830). Outside MA2's
+    /// numbering domain the value renders as an unnumbered cue — the same
+    /// `0 / 0` a nil number already produces — rather than spelling the nonsense
+    /// token `-1.-5` (`/` and `%` truncate toward zero, so `-1.5` gave
+    /// `-1 / -500`, and `%03d` then padded the sign into the three columns) or
+    /// trapping the `Int` conversion, which a non-finite or `>= 1e16` number did
+    /// outright.
     static func components(from value: Double) -> Components {
+        guard CueNumberValidator.isInDomain(value) else { return Components(number: 0, subNumber: 0) }
         // Round in integer thousandths so binary float noise (1.3 → 1300.0002)
         // cannot leak into the sub number.
         let thousandths = Int((value * 1000).rounded())

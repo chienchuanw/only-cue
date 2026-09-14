@@ -2,13 +2,6 @@
   "contract" : "ma2-telnet",
   "cueNumbers" : [
     {
-      "expectCommandString" : "0",
-      "expectNumber" : 0,
-      "expectSubNumber" : 0,
-      "name" : "zero",
-      "value" : "0.0"
-    },
-    {
       "expectCommandString" : "3",
       "expectNumber" : 3,
       "expectSubNumber" : 0,
@@ -65,31 +58,52 @@
       "value" : "4.12"
     },
     {
-      "expectCommandString" : "-1.-5",
-      "expectNumber" : -1,
-      "expectSubNumber" : -500,
-      "name" : "a negative number truncates toward zero",
+      "expectCommandString" : "0.001",
+      "expectNumber" : 0,
+      "expectSubNumber" : 1,
+      "name" : "the minimum of the numbering domain",
+      "value" : "0.001"
+    },
+    {
+      "expectCommandString" : "9999.999",
+      "expectNumber" : 9999,
+      "expectSubNumber" : 999,
+      "name" : "the maximum of the numbering domain",
+      "value" : "9999.999"
+    },
+    {
+      "expectCommandString" : "0",
+      "expectNumber" : 0,
+      "expectSubNumber" : 0,
+      "name" : "zero is below the minimum",
+      "value" : "0.0"
+    },
+    {
+      "expectCommandString" : "0",
+      "expectNumber" : 0,
+      "expectSubNumber" : 0,
+      "name" : "a negative number collapses to unnumbered",
       "value" : "-1.5"
     },
     {
-      "expectCommandString" : "-1.-5",
-      "expectNumber" : -1,
-      "expectSubNumber" : -50,
-      "name" : "a two-digit negative sub number keeps the sign inside the pad",
-      "value" : "-1.05"
-    },
-    {
-      "expectCommandString" : "-1.-05",
-      "expectNumber" : -1,
-      "expectSubNumber" : -5,
-      "name" : "a one-digit negative sub number keeps the sign inside the pad",
-      "value" : "-1.005"
-    },
-    {
-      "expectCommandString" : "3000000",
-      "expectNumber" : 3000000,
+      "expectCommandString" : "0",
+      "expectNumber" : 0,
       "expectSubNumber" : 0,
-      "name" : "a cue number past Int32.max stays 64-bit",
+      "name" : "a value below the minimum collapses to unnumbered",
+      "value" : "0.0005"
+    },
+    {
+      "expectCommandString" : "0",
+      "expectNumber" : 0,
+      "expectSubNumber" : 0,
+      "name" : "a value above the maximum collapses to unnumbered",
+      "value" : "10000.0"
+    },
+    {
+      "expectCommandString" : "0",
+      "expectNumber" : 0,
+      "expectSubNumber" : 0,
+      "name" : "a value past Int32.max collapses to unnumbered",
       "value" : "3000000.0"
     }
   ],

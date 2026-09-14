@@ -224,7 +224,6 @@ enum MA2TelnetGolden {
     /// inside `(0, 0.5)` — and is what separates round-to-nearest from
     /// `.rounded(.up)`, which agrees with `.rounded()` on both midpoints above.
     private static let cueNumberSpecs: [(name: String, value: Double)] = [
-        ("zero", 0),
         ("a whole number drops the sub number", 3),
         ("one decimal place", 1.15),
         ("three decimal places", 2.001),
@@ -233,23 +232,23 @@ enum MA2TelnetGolden {
         ("an exact midpoint above one rounds away from zero", 1.0025),
         ("a fourth decimal place rounds down, not up", 1.0001),
         ("a trailing zero in the sub number is trimmed", 4.12),
-        // Pinned as-is, not as-should-be: this spells the nonsense token "-1.-5",
-        // which the console rejects (#830). The vector's job is to keep the two
-        // cores identical, so it records today's output and the drift guard will
-        // fail here — deliberately — when #830 is fixed.
-        ("a negative number truncates toward zero", -1.5),
-        // `%03d` pads to a total width of three *including* the sign, so these
-        // three sub numbers render "-500" → "-50" → "-05", not "-500" →
-        // "-050" → "-005". A port that reaches for a digits-only pad (.NET's
-        // "D3") agrees with the -1.5 case above and diverges on both of these,
-        // so the two magnitude classes below are what actually pin the format.
-        ("a two-digit negative sub number keeps the sign inside the pad", -1.05),
-        ("a one-digit negative sub number keeps the sign inside the pad", -1.005),
-        // 3e6 × 1000 is 3e9, past Int32.max. Swift's `Int` is 64-bit and keeps
-        // counting; a port that casts to a 32-bit int saturates at 2147483647
-        // and silently reports 2147483.647. Out of the validator's range like
-        // the negatives above, so likewise a corrupt-file path only.
-        ("a cue number past Int32.max stays 64-bit", 3_000_000)
+        ("the minimum of the numbering domain", 0.001),
+        ("the maximum of the numbering domain", 9999.999),
+        // #830 domain guard. Anything outside 0.001...9999.999 renders as an
+        // unnumbered cue rather than as the malformed token "-1.-5" (negatives)
+        // or a trapped `Int` conversion (huge values). These four pin that the
+        // C# port applies the *same* window before its own formatting: a port
+        // that guards on `> 0` instead of `>= 0.001` diverges on 0.0005, and one
+        // that guards only the negatives diverges on the two above the maximum.
+        ("zero is below the minimum", 0),
+        ("a negative number collapses to unnumbered", -1.5),
+        ("a value below the minimum collapses to unnumbered", 0.0005),
+        ("a value above the maximum collapses to unnumbered", 10_000),
+        // Formerly the Int32 probe: 3e6 × 1000 is 3e9, past Int32.max, where a
+        // 32-bit port saturated at 2147483647 and reported 2147483.647. The
+        // guard retires that hazard — in domain the scaled value tops out at
+        // 9_999_999 — so this now pins the collapse instead.
+        ("a value past Int32.max collapses to unnumbered", 3_000_000)
     ]
 
     private static func cueNumberCases() -> [MA2TelnetGoldenVector.CueNumberCase] {

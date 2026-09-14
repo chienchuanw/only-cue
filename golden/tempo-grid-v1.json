@@ -1,0 +1,1322 @@
+{
+  "cases" : [
+    {
+      "cues" : [
+        {
+          "time" : "0.0"
+        },
+        {
+          "beatsPerBar" : 4,
+          "time" : "3.0"
+        }
+      ],
+      "itemDuration" : "10.0",
+      "name" : "no bpm cues yields an empty grid",
+      "points" : [
+        {
+          "seconds" : "0.0"
+        },
+        {
+          "seconds" : "5.0"
+        }
+      ],
+      "ranges" : [
+        {
+          "bars" : [
+
+          ],
+          "beats" : [
+
+          ],
+          "lowerBound" : "0.0",
+          "upperBound" : "10.0"
+        }
+      ],
+      "segments" : [
+
+      ]
+    },
+    {
+      "cues" : [
+        {
+          "beatsPerBar" : 4,
+          "bpm" : "120.0",
+          "time" : "0.0"
+        }
+      ],
+      "itemDuration" : "10.0",
+      "name" : "a single 120 bpm segment runs to the item end",
+      "points" : [
+        {
+          "nearestBar" : "0.0",
+          "nearestBeat" : "0.5",
+          "seconds" : "0.25"
+        },
+        {
+          "nearestBar" : "0.0",
+          "nearestBeat" : "0.5",
+          "seconds" : "0.74"
+        },
+        {
+          "nearestBar" : "0.0",
+          "nearestBeat" : "1.0",
+          "seconds" : "0.76"
+        },
+        {
+          "nearestBar" : "0.0",
+          "nearestBeat" : "1.0",
+          "seconds" : "0.9"
+        },
+        {
+          "nearestBar" : "8.0",
+          "nearestBeat" : "9.5",
+          "seconds" : "10.0"
+        },
+        {
+          "nearestBar" : "8.0",
+          "nearestBeat" : "9.5",
+          "seconds" : "20.0"
+        },
+        {
+          "seconds" : "-5.0"
+        }
+      ],
+      "ranges" : [
+        {
+          "bars" : [
+            "0.0",
+            "2.0",
+            "4.0",
+            "6.0",
+            "8.0",
+            "10.0"
+          ],
+          "beats" : [
+            {
+              "isDownbeat" : true,
+              "time" : "0.0"
+            },
+            {
+              "isDownbeat" : false,
+              "time" : "0.5"
+            },
+            {
+              "isDownbeat" : false,
+              "time" : "1.0"
+            },
+            {
+              "isDownbeat" : false,
+              "time" : "1.5"
+            },
+            {
+              "isDownbeat" : true,
+              "time" : "2.0"
+            },
+            {
+              "isDownbeat" : false,
+              "time" : "2.5"
+            },
+            {
+              "isDownbeat" : false,
+              "time" : "3.0"
+            },
+            {
+              "isDownbeat" : false,
+              "time" : "3.5"
+            },
+            {
+              "isDownbeat" : true,
+              "time" : "4.0"
+            },
+            {
+              "isDownbeat" : false,
+              "time" : "4.5"
+            },
+            {
+              "isDownbeat" : false,
+              "time" : "5.0"
+            },
+            {
+              "isDownbeat" : false,
+              "time" : "5.5"
+            },
+            {
+              "isDownbeat" : true,
+              "time" : "6.0"
+            },
+            {
+              "isDownbeat" : false,
+              "time" : "6.5"
+            },
+            {
+              "isDownbeat" : false,
+              "time" : "7.0"
+            },
+            {
+              "isDownbeat" : false,
+              "time" : "7.5"
+            },
+            {
+              "isDownbeat" : true,
+              "time" : "8.0"
+            },
+            {
+              "isDownbeat" : false,
+              "time" : "8.5"
+            },
+            {
+              "isDownbeat" : false,
+              "time" : "9.0"
+            },
+            {
+              "isDownbeat" : false,
+              "time" : "9.5"
+            },
+            {
+              "isDownbeat" : true,
+              "time" : "10.0"
+            }
+          ],
+          "lowerBound" : "0.0",
+          "upperBound" : "10.0"
+        },
+        {
+          "bars" : [
+            "2.0"
+          ],
+          "beats" : [
+            {
+              "isDownbeat" : false,
+              "time" : "1.5"
+            },
+            {
+              "isDownbeat" : true,
+              "time" : "2.0"
+            },
+            {
+              "isDownbeat" : false,
+              "time" : "2.5"
+            },
+            {
+              "isDownbeat" : false,
+              "time" : "3.0"
+            }
+          ],
+          "lowerBound" : "1.2",
+          "upperBound" : "3.3"
+        },
+        {
+          "bars" : [
+            "0.0"
+          ],
+          "beats" : [
+            {
+              "isDownbeat" : true,
+              "time" : "0.0"
+            },
+            {
+              "isDownbeat" : false,
+              "time" : "0.5"
+            },
+            {
+              "isDownbeat" : false,
+              "time" : "1.0"
+            }
+          ],
+          "lowerBound" : "-1.0",
+          "upperBound" : "1.0"
+        }
+      ],
+      "segments" : [
+        {
+          "barDuration" : "2.0",
+          "beatDuration" : "0.5",
+          "beatsPerBar" : 4,
+          "bpm" : "120.0",
+          "startSeconds" : "0.0"
+        }
+      ]
+    },
+    {
+      "cues" : [
+        {
+          "beatsPerBar" : 3,
+          "bpm" : "120.0",
+          "time" : "0.0"
+        },
+        {
+          "bpm" : "90.0",
+          "time" : "4.0"
+        }
+      ],
+      "itemDuration" : "12.0",
+      "name" : "beatsPerBar is inherited from the previous segment",
+      "points" : [
+        {
+          "nearestBar" : "4.0",
+          "nearestBeat" : "4.0",
+          "seconds" : "3.9"
+        },
+        {
+          "nearestBar" : "4.0",
+          "nearestBeat" : "4.0",
+          "seconds" : "4.0"
+        },
+        {
+          "nearestBar" : "4.0",
+          "nearestBeat" : "4.0",
+          "seconds" : "4.1"
+        }
+      ],
+      "ranges" : [
+        {
+          "bars" : [
+            "0.0",
+            "1.5",
+            "3.0",
+            "4.0",
+            "6.0",
+            "8.0",
+            "10.0",
+            "12.0"
+          ],
+          "beats" : [
+            {
+              "isDownbeat" : true,
+              "time" : "0.0"
+            },
+            {
+              "isDownbeat" : false,
+              "time" : "0.5"
+            },
+            {
+              "isDownbeat" : false,
+              "time" : "1.0"
+            },
+            {
+              "isDownbeat" : true,
+              "time" : "1.5"
+            },
+            {
+              "isDownbeat" : false,
+              "time" : "2.0"
+            },
+            {
+              "isDownbeat" : false,
+              "time" : "2.5"
+            },
+            {
+              "isDownbeat" : true,
+              "time" : "3.0"
+            },
+            {
+              "isDownbeat" : false,
+              "time" : "3.5"
+            },
+            {
+              "isDownbeat" : true,
+              "time" : "4.0"
+            },
+            {
+              "isDownbeat" : false,
+              "time" : "4.666666666666667"
+            },
+            {
+              "isDownbeat" : false,
+              "time" : "5.333333333333333"
+            },
+            {
+              "isDownbeat" : true,
+              "time" : "6.0"
+            },
+            {
+              "isDownbeat" : false,
+              "time" : "6.666666666666666"
+            },
+            {
+              "isDownbeat" : false,
+              "time" : "7.333333333333333"
+            },
+            {
+              "isDownbeat" : true,
+              "time" : "8.0"
+            },
+            {
+              "isDownbeat" : false,
+              "time" : "8.666666666666666"
+            },
+            {
+              "isDownbeat" : false,
+              "time" : "9.333333333333332"
+            },
+            {
+              "isDownbeat" : true,
+              "time" : "10.0"
+            },
+            {
+              "isDownbeat" : false,
+              "time" : "10.666666666666666"
+            },
+            {
+              "isDownbeat" : false,
+              "time" : "11.333333333333332"
+            },
+            {
+              "isDownbeat" : true,
+              "time" : "12.0"
+            }
+          ],
+          "lowerBound" : "0.0",
+          "upperBound" : "12.0"
+        }
+      ],
+      "segments" : [
+        {
+          "barDuration" : "1.5",
+          "beatDuration" : "0.5",
+          "beatsPerBar" : 3,
+          "bpm" : "120.0",
+          "startSeconds" : "0.0"
+        },
+        {
+          "barDuration" : "2.0",
+          "beatDuration" : "0.6666666666666666",
+          "beatsPerBar" : 3,
+          "bpm" : "90.0",
+          "startSeconds" : "4.0"
+        }
+      ]
+    },
+    {
+      "cues" : [
+        {
+          "bpm" : "100.0",
+          "time" : "0.0"
+        }
+      ],
+      "itemDuration" : "6.0",
+      "name" : "beatsPerBar defaults to 4 when no cue sets it",
+      "points" : [
+        {
+          "nearestBar" : "2.4",
+          "nearestBeat" : "1.7999999999999998",
+          "seconds" : "1.7"
+        }
+      ],
+      "ranges" : [
+        {
+          "bars" : [
+            "0.0",
+            "2.4",
+            "4.8"
+          ],
+          "beats" : [
+            {
+              "isDownbeat" : true,
+              "time" : "0.0"
+            },
+            {
+              "isDownbeat" : false,
+              "time" : "0.6"
+            },
+            {
+              "isDownbeat" : false,
+              "time" : "1.2"
+            },
+            {
+              "isDownbeat" : false,
+              "time" : "1.7999999999999998"
+            },
+            {
+              "isDownbeat" : true,
+              "time" : "2.4"
+            },
+            {
+              "isDownbeat" : false,
+              "time" : "3.0"
+            },
+            {
+              "isDownbeat" : false,
+              "time" : "3.5999999999999996"
+            },
+            {
+              "isDownbeat" : false,
+              "time" : "4.2"
+            },
+            {
+              "isDownbeat" : true,
+              "time" : "4.8"
+            },
+            {
+              "isDownbeat" : false,
+              "time" : "5.3999999999999995"
+            },
+            {
+              "isDownbeat" : false,
+              "time" : "6.0"
+            }
+          ],
+          "lowerBound" : "0.0",
+          "upperBound" : "6.0"
+        }
+      ],
+      "segments" : [
+        {
+          "barDuration" : "2.4",
+          "beatDuration" : "0.6",
+          "beatsPerBar" : 4,
+          "bpm" : "100.0",
+          "startSeconds" : "0.0"
+        }
+      ]
+    },
+    {
+      "cues" : [
+        {
+          "beatsPerBar" : 99,
+          "bpm" : "500.0",
+          "time" : "0.0"
+        },
+        {
+          "beatsPerBar" : 0,
+          "bpm" : "5.0",
+          "time" : "3.0"
+        }
+      ],
+      "itemDuration" : "6.0",
+      "name" : "bpm and meter are clamped to their legal ranges",
+      "points" : [
+        {
+          "nearestBar" : "0.0",
+          "nearestBeat" : "1.05",
+          "seconds" : "1.0"
+        },
+        {
+          "nearestBar" : "3.0",
+          "nearestBeat" : "3.0",
+          "seconds" : "4.0"
+        }
+      ],
+      "ranges" : [
+        {
+          "bars" : [
+            "0.0",
+            "2.4",
+            "3.0",
+            "6.0"
+          ],
+          "beats" : [
+            {
+              "isDownbeat" : true,
+              "time" : "0.0"
+            },
+            {
+              "isDownbeat" : false,
+              "time" : "0.15"
+            },
+            {
+              "isDownbeat" : false,
+              "time" : "0.3"
+            },
+            {
+              "isDownbeat" : false,
+              "time" : "0.44999999999999996"
+            },
+            {
+              "isDownbeat" : false,
+              "time" : "0.6"
+            },
+            {
+              "isDownbeat" : false,
+              "time" : "0.75"
+            },
+            {
+              "isDownbeat" : false,
+              "time" : "0.8999999999999999"
+            },
+            {
+              "isDownbeat" : false,
+              "time" : "1.05"
+            },
+            {
+              "isDownbeat" : false,
+              "time" : "1.2"
+            },
+            {
+              "isDownbeat" : false,
+              "time" : "1.3499999999999999"
+            },
+            {
+              "isDownbeat" : false,
+              "time" : "1.5"
+            },
+            {
+              "isDownbeat" : false,
+              "time" : "1.65"
+            },
+            {
+              "isDownbeat" : false,
+              "time" : "1.7999999999999998"
+            },
+            {
+              "isDownbeat" : false,
+              "time" : "1.95"
+            },
+            {
+              "isDownbeat" : false,
+              "time" : "2.1"
+            },
+            {
+              "isDownbeat" : false,
+              "time" : "2.25"
+            },
+            {
+              "isDownbeat" : true,
+              "time" : "2.4"
+            },
+            {
+              "isDownbeat" : false,
+              "time" : "2.55"
+            },
+            {
+              "isDownbeat" : false,
+              "time" : "2.6999999999999997"
+            },
+            {
+              "isDownbeat" : false,
+              "time" : "2.85"
+            },
+            {
+              "isDownbeat" : true,
+              "time" : "3.0"
+            },
+            {
+              "isDownbeat" : true,
+              "time" : "6.0"
+            }
+          ],
+          "lowerBound" : "0.0",
+          "upperBound" : "6.0"
+        }
+      ],
+      "segments" : [
+        {
+          "barDuration" : "2.4",
+          "beatDuration" : "0.15",
+          "beatsPerBar" : 16,
+          "bpm" : "400.0",
+          "startSeconds" : "0.0"
+        },
+        {
+          "barDuration" : "3.0",
+          "beatDuration" : "3.0",
+          "beatsPerBar" : 1,
+          "bpm" : "20.0",
+          "startSeconds" : "3.0"
+        }
+      ]
+    },
+    {
+      "cues" : [
+        {
+          "beatsPerBar" : 4,
+          "bpm" : "120.0",
+          "time" : "-2.0"
+        }
+      ],
+      "itemDuration" : "4.0",
+      "name" : "a negative cue time anchors the segment at zero",
+      "points" : [
+        {
+          "seconds" : "-1.0"
+        },
+        {
+          "nearestBar" : "0.0",
+          "nearestBeat" : "0.0",
+          "seconds" : "0.0"
+        },
+        {
+          "nearestBar" : "2.0",
+          "nearestBeat" : "1.0",
+          "seconds" : "1.0"
+        }
+      ],
+      "ranges" : [
+        {
+          "bars" : [
+            "0.0",
+            "2.0",
+            "4.0"
+          ],
+          "beats" : [
+            {
+              "isDownbeat" : true,
+              "time" : "0.0"
+            },
+            {
+              "isDownbeat" : false,
+              "time" : "0.5"
+            },
+            {
+              "isDownbeat" : false,
+              "time" : "1.0"
+            },
+            {
+              "isDownbeat" : false,
+              "time" : "1.5"
+            },
+            {
+              "isDownbeat" : true,
+              "time" : "2.0"
+            },
+            {
+              "isDownbeat" : false,
+              "time" : "2.5"
+            },
+            {
+              "isDownbeat" : false,
+              "time" : "3.0"
+            },
+            {
+              "isDownbeat" : false,
+              "time" : "3.5"
+            },
+            {
+              "isDownbeat" : true,
+              "time" : "4.0"
+            }
+          ],
+          "lowerBound" : "-3.0",
+          "upperBound" : "4.0"
+        }
+      ],
+      "segments" : [
+        {
+          "barDuration" : "2.0",
+          "beatDuration" : "0.5",
+          "beatsPerBar" : 4,
+          "bpm" : "120.0",
+          "startSeconds" : "0.0"
+        }
+      ]
+    },
+    {
+      "cues" : [
+        {
+          "beatsPerBar" : 4,
+          "bpm" : "120.0",
+          "time" : "2.0"
+        },
+        {
+          "beatsPerBar" : 3,
+          "bpm" : "90.0",
+          "time" : "2.0"
+        }
+      ],
+      "itemDuration" : "8.0",
+      "name" : "co-located bpm cues de-duplicate last-wins",
+      "points" : [
+        {
+          "nearestBar" : "2.0",
+          "nearestBeat" : "2.0",
+          "seconds" : "2.0"
+        },
+        {
+          "nearestBar" : "6.0",
+          "nearestBeat" : "5.333333333333333",
+          "seconds" : "5.0"
+        }
+      ],
+      "ranges" : [
+        {
+          "bars" : [
+            "2.0",
+            "4.0",
+            "6.0",
+            "8.0"
+          ],
+          "beats" : [
+            {
+              "isDownbeat" : true,
+              "time" : "2.0"
+            },
+            {
+              "isDownbeat" : false,
+              "time" : "2.6666666666666665"
+            },
+            {
+              "isDownbeat" : false,
+              "time" : "3.333333333333333"
+            },
+            {
+              "isDownbeat" : true,
+              "time" : "4.0"
+            },
+            {
+              "isDownbeat" : false,
+              "time" : "4.666666666666666"
+            },
+            {
+              "isDownbeat" : false,
+              "time" : "5.333333333333333"
+            },
+            {
+              "isDownbeat" : true,
+              "time" : "6.0"
+            },
+            {
+              "isDownbeat" : false,
+              "time" : "6.666666666666666"
+            },
+            {
+              "isDownbeat" : false,
+              "time" : "7.333333333333333"
+            },
+            {
+              "isDownbeat" : true,
+              "time" : "8.0"
+            }
+          ],
+          "lowerBound" : "0.0",
+          "upperBound" : "8.0"
+        }
+      ],
+      "segments" : [
+        {
+          "barDuration" : "2.0",
+          "beatDuration" : "0.6666666666666666",
+          "beatsPerBar" : 3,
+          "bpm" : "90.0",
+          "startSeconds" : "2.0"
+        }
+      ]
+    },
+    {
+      "cues" : [
+        {
+          "beatsPerBar" : 4,
+          "bpm" : "120.0",
+          "time" : "0.0"
+        },
+        {
+          "beatsPerBar" : 4,
+          "bpm" : "240.0",
+          "time" : "2.0"
+        }
+      ],
+      "itemDuration" : "4.0",
+      "name" : "a segment boundary beat belongs to the later segment",
+      "points" : [
+        {
+          "nearestBar" : "2.0",
+          "nearestBeat" : "2.0",
+          "seconds" : "1.9"
+        },
+        {
+          "nearestBar" : "2.0",
+          "nearestBeat" : "2.0",
+          "seconds" : "2.0"
+        },
+        {
+          "nearestBar" : "2.0",
+          "nearestBeat" : "2.0",
+          "seconds" : "2.1"
+        }
+      ],
+      "ranges" : [
+        {
+          "bars" : [
+            "0.0",
+            "2.0",
+            "3.0",
+            "4.0"
+          ],
+          "beats" : [
+            {
+              "isDownbeat" : true,
+              "time" : "0.0"
+            },
+            {
+              "isDownbeat" : false,
+              "time" : "0.5"
+            },
+            {
+              "isDownbeat" : false,
+              "time" : "1.0"
+            },
+            {
+              "isDownbeat" : false,
+              "time" : "1.5"
+            },
+            {
+              "isDownbeat" : true,
+              "time" : "2.0"
+            },
+            {
+              "isDownbeat" : false,
+              "time" : "2.25"
+            },
+            {
+              "isDownbeat" : false,
+              "time" : "2.5"
+            },
+            {
+              "isDownbeat" : false,
+              "time" : "2.75"
+            },
+            {
+              "isDownbeat" : true,
+              "time" : "3.0"
+            },
+            {
+              "isDownbeat" : false,
+              "time" : "3.25"
+            },
+            {
+              "isDownbeat" : false,
+              "time" : "3.5"
+            },
+            {
+              "isDownbeat" : false,
+              "time" : "3.75"
+            },
+            {
+              "isDownbeat" : true,
+              "time" : "4.0"
+            }
+          ],
+          "lowerBound" : "0.0",
+          "upperBound" : "4.0"
+        },
+        {
+          "bars" : [
+            "2.0"
+          ],
+          "beats" : [
+            {
+              "isDownbeat" : true,
+              "time" : "2.0"
+            }
+          ],
+          "lowerBound" : "1.9",
+          "upperBound" : "2.1"
+        }
+      ],
+      "segments" : [
+        {
+          "barDuration" : "2.0",
+          "beatDuration" : "0.5",
+          "beatsPerBar" : 4,
+          "bpm" : "120.0",
+          "startSeconds" : "0.0"
+        },
+        {
+          "barDuration" : "1.0",
+          "beatDuration" : "0.25",
+          "beatsPerBar" : 4,
+          "bpm" : "240.0",
+          "startSeconds" : "2.0"
+        }
+      ]
+    },
+    {
+      "cues" : [
+        {
+          "beatsPerBar" : 4,
+          "bpm" : "120.0",
+          "time" : "0.0"
+        },
+        {
+          "beatsPerBar" : 4,
+          "bpm" : "120.0",
+          "time" : "3.1"
+        }
+      ],
+      "itemDuration" : "6.0",
+      "name" : "nearest prefers the next segment start when it is closer",
+      "points" : [
+        {
+          "nearestBar" : "3.1",
+          "nearestBeat" : "3.1",
+          "seconds" : "3.06"
+        },
+        {
+          "nearestBar" : "3.1",
+          "nearestBeat" : "3.0",
+          "seconds" : "2.9"
+        }
+      ],
+      "ranges" : [
+        {
+          "bars" : [
+            "3.1"
+          ],
+          "beats" : [
+            {
+              "isDownbeat" : false,
+              "time" : "2.5"
+            },
+            {
+              "isDownbeat" : false,
+              "time" : "3.0"
+            },
+            {
+              "isDownbeat" : true,
+              "time" : "3.1"
+            }
+          ],
+          "lowerBound" : "2.5",
+          "upperBound" : "3.5"
+        }
+      ],
+      "segments" : [
+        {
+          "barDuration" : "2.0",
+          "beatDuration" : "0.5",
+          "beatsPerBar" : 4,
+          "bpm" : "120.0",
+          "startSeconds" : "0.0"
+        },
+        {
+          "barDuration" : "2.0",
+          "beatDuration" : "0.5",
+          "beatsPerBar" : 4,
+          "bpm" : "120.0",
+          "startSeconds" : "3.1"
+        }
+      ]
+    },
+    {
+      "cues" : [
+        {
+          "beatsPerBar" : 4,
+          "bpm" : "120.0",
+          "time" : "5.0"
+        }
+      ],
+      "itemDuration" : "10.0",
+      "name" : "a point before the first segment has no nearest grid line",
+      "points" : [
+        {
+          "seconds" : "1.0"
+        },
+        {
+          "seconds" : "4.999"
+        },
+        {
+          "nearestBar" : "5.0",
+          "nearestBeat" : "5.0",
+          "seconds" : "5.0"
+        }
+      ],
+      "ranges" : [
+        {
+          "bars" : [
+
+          ],
+          "beats" : [
+
+          ],
+          "lowerBound" : "0.0",
+          "upperBound" : "4.0"
+        },
+        {
+          "bars" : [
+            "5.0",
+            "7.0",
+            "9.0"
+          ],
+          "beats" : [
+            {
+              "isDownbeat" : true,
+              "time" : "5.0"
+            },
+            {
+              "isDownbeat" : false,
+              "time" : "5.5"
+            },
+            {
+              "isDownbeat" : false,
+              "time" : "6.0"
+            },
+            {
+              "isDownbeat" : false,
+              "time" : "6.5"
+            },
+            {
+              "isDownbeat" : true,
+              "time" : "7.0"
+            },
+            {
+              "isDownbeat" : false,
+              "time" : "7.5"
+            },
+            {
+              "isDownbeat" : false,
+              "time" : "8.0"
+            },
+            {
+              "isDownbeat" : false,
+              "time" : "8.5"
+            },
+            {
+              "isDownbeat" : true,
+              "time" : "9.0"
+            },
+            {
+              "isDownbeat" : false,
+              "time" : "9.5"
+            },
+            {
+              "isDownbeat" : false,
+              "time" : "10.0"
+            }
+          ],
+          "lowerBound" : "0.0",
+          "upperBound" : "10.0"
+        }
+      ],
+      "segments" : [
+        {
+          "barDuration" : "2.0",
+          "beatDuration" : "0.5",
+          "beatsPerBar" : 4,
+          "bpm" : "120.0",
+          "startSeconds" : "5.0"
+        }
+      ]
+    },
+    {
+      "cues" : [
+        {
+          "bpm" : "90.0",
+          "time" : "6.0"
+        },
+        {
+          "beatsPerBar" : 3,
+          "bpm" : "120.0",
+          "time" : "2.0"
+        }
+      ],
+      "itemDuration" : "10.0",
+      "name" : "bpm cues are sorted by time regardless of input order",
+      "points" : [
+        {
+          "nearestBar" : "8.0",
+          "nearestBeat" : "7.333333333333333",
+          "seconds" : "7.0"
+        }
+      ],
+      "ranges" : [
+        {
+          "bars" : [
+            "2.0",
+            "3.5",
+            "5.0",
+            "6.0",
+            "8.0",
+            "10.0"
+          ],
+          "beats" : [
+            {
+              "isDownbeat" : true,
+              "time" : "2.0"
+            },
+            {
+              "isDownbeat" : false,
+              "time" : "2.5"
+            },
+            {
+              "isDownbeat" : false,
+              "time" : "3.0"
+            },
+            {
+              "isDownbeat" : true,
+              "time" : "3.5"
+            },
+            {
+              "isDownbeat" : false,
+              "time" : "4.0"
+            },
+            {
+              "isDownbeat" : false,
+              "time" : "4.5"
+            },
+            {
+              "isDownbeat" : true,
+              "time" : "5.0"
+            },
+            {
+              "isDownbeat" : false,
+              "time" : "5.5"
+            },
+            {
+              "isDownbeat" : true,
+              "time" : "6.0"
+            },
+            {
+              "isDownbeat" : false,
+              "time" : "6.666666666666667"
+            },
+            {
+              "isDownbeat" : false,
+              "time" : "7.333333333333333"
+            },
+            {
+              "isDownbeat" : true,
+              "time" : "8.0"
+            },
+            {
+              "isDownbeat" : false,
+              "time" : "8.666666666666666"
+            },
+            {
+              "isDownbeat" : false,
+              "time" : "9.333333333333332"
+            },
+            {
+              "isDownbeat" : true,
+              "time" : "10.0"
+            }
+          ],
+          "lowerBound" : "0.0",
+          "upperBound" : "10.0"
+        }
+      ],
+      "segments" : [
+        {
+          "barDuration" : "1.5",
+          "beatDuration" : "0.5",
+          "beatsPerBar" : 3,
+          "bpm" : "120.0",
+          "startSeconds" : "2.0"
+        },
+        {
+          "barDuration" : "2.0",
+          "beatDuration" : "0.6666666666666666",
+          "beatsPerBar" : 3,
+          "bpm" : "90.0",
+          "startSeconds" : "6.0"
+        }
+      ]
+    },
+    {
+      "cues" : [
+        {
+          "beatsPerBar" : 5,
+          "bpm" : "133.0",
+          "time" : "0.0"
+        }
+      ],
+      "itemDuration" : "5.0",
+      "name" : "a non-terminating beat duration stresses float determinism",
+      "points" : [
+        {
+          "nearestBar" : "0.0",
+          "nearestBeat" : "0.45112781954887216",
+          "seconds" : "0.3"
+        },
+        {
+          "nearestBar" : "2.2556390977443606",
+          "nearestBeat" : "2.706766917293233",
+          "seconds" : "2.7"
+        },
+        {
+          "nearestBar" : "4.511278195488721",
+          "nearestBeat" : "4.962406015037594",
+          "seconds" : "4.9"
+        }
+      ],
+      "ranges" : [
+        {
+          "bars" : [
+            "0.0",
+            "2.2556390977443606",
+            "4.511278195488721"
+          ],
+          "beats" : [
+            {
+              "isDownbeat" : true,
+              "time" : "0.0"
+            },
+            {
+              "isDownbeat" : false,
+              "time" : "0.45112781954887216"
+            },
+            {
+              "isDownbeat" : false,
+              "time" : "0.9022556390977443"
+            },
+            {
+              "isDownbeat" : false,
+              "time" : "1.3533834586466165"
+            },
+            {
+              "isDownbeat" : false,
+              "time" : "1.8045112781954886"
+            },
+            {
+              "isDownbeat" : true,
+              "time" : "2.2556390977443606"
+            },
+            {
+              "isDownbeat" : false,
+              "time" : "2.706766917293233"
+            },
+            {
+              "isDownbeat" : false,
+              "time" : "3.1578947368421053"
+            },
+            {
+              "isDownbeat" : false,
+              "time" : "3.6090225563909772"
+            },
+            {
+              "isDownbeat" : false,
+              "time" : "4.060150375939849"
+            },
+            {
+              "isDownbeat" : true,
+              "time" : "4.511278195488721"
+            },
+            {
+              "isDownbeat" : false,
+              "time" : "4.962406015037594"
+            }
+          ],
+          "lowerBound" : "0.0",
+          "upperBound" : "5.0"
+        },
+        {
+          "bars" : [
+
+          ],
+          "beats" : [
+            {
+              "isDownbeat" : false,
+              "time" : "1.3533834586466165"
+            },
+            {
+              "isDownbeat" : false,
+              "time" : "1.8045112781954886"
+            }
+          ],
+          "lowerBound" : "1.1",
+          "upperBound" : "2.2"
+        }
+      ],
+      "segments" : [
+        {
+          "barDuration" : "2.2556390977443606",
+          "beatDuration" : "0.45112781954887216",
+          "beatsPerBar" : 5,
+          "bpm" : "133.0",
+          "startSeconds" : "0.0"
+        }
+      ]
+    }
+  ],
+  "contract" : "tempo-grid",
+  "note" : "macOS-generated golden vectors for OnlyCue's DerivedTempoGrid. The C# OnlyCue.Core re-implementation must reproduce every case exactly. Cue inputs are raw: apply the Cue clamping (bpm 20…400, beatsPerBar 1…16, non-finite bpm to null) before deriving. Doubles are round-trip-exact decimal strings; compare the parsed IEEE-754 values, not the text. To regenerate after a deliberate change, delete golden/tempo-grid-v1.json and re-run the test suite.",
+  "version" : 1
+}

@@ -1,0 +1,478 @@
+{
+  "autoFill" : [
+    {
+      "cues" : [
+
+      ],
+      "expect" : [
+
+      ],
+      "name" : "empty list assigns nothing"
+    },
+    {
+      "cues" : [
+        {
+          "cueNumber" : "1.0",
+          "time" : "1.0"
+        },
+        {
+          "cueNumber" : "2.0",
+          "time" : "2.0"
+        }
+      ],
+      "expect" : [
+
+      ],
+      "name" : "a fully numbered list assigns nothing"
+    },
+    {
+      "cues" : [
+        {
+          "cueNumber" : "1.0",
+          "time" : "1.0"
+        },
+        {
+          "time" : "2.0"
+        },
+        {
+          "cueNumber" : "3.0",
+          "time" : "3.0"
+        }
+      ],
+      "expect" : [
+        {
+          "index" : 1,
+          "number" : "2.0"
+        }
+      ],
+      "name" : "an integer fits the gap"
+    },
+    {
+      "cues" : [
+        {
+          "cueNumber" : "1.0",
+          "time" : "1.0"
+        },
+        {
+          "time" : "2.0"
+        },
+        {
+          "cueNumber" : "2.0",
+          "time" : "3.0"
+        }
+      ],
+      "expect" : [
+        {
+          "index" : 1,
+          "number" : "1.1"
+        }
+      ],
+      "name" : "no integer fits so it steps by 0.1"
+    },
+    {
+      "cues" : [
+        {
+          "cueNumber" : "1.0",
+          "time" : "1.0"
+        },
+        {
+          "time" : "2.0"
+        },
+        {
+          "time" : "3.0"
+        },
+        {
+          "cueNumber" : "2.0",
+          "time" : "4.0"
+        }
+      ],
+      "expect" : [
+        {
+          "index" : 1,
+          "number" : "1.1"
+        },
+        {
+          "index" : 2,
+          "number" : "1.2"
+        }
+      ],
+      "name" : "consecutive gaps stay strictly increasing"
+    },
+    {
+      "cues" : [
+        {
+          "time" : "1.0"
+        },
+        {
+          "cueNumber" : "5.0",
+          "time" : "2.0"
+        }
+      ],
+      "expect" : [
+        {
+          "index" : 0,
+          "number" : "1.0"
+        }
+      ],
+      "name" : "an open lower bound starts at 1"
+    },
+    {
+      "cues" : [
+        {
+          "cueNumber" : "3.0",
+          "time" : "1.0"
+        },
+        {
+          "time" : "2.0"
+        }
+      ],
+      "expect" : [
+        {
+          "index" : 1,
+          "number" : "4.0"
+        }
+      ],
+      "name" : "an open upper bound steps up from the lower"
+    },
+    {
+      "cues" : [
+        {
+          "time" : "1.0"
+        },
+        {
+          "time" : "2.0"
+        }
+      ],
+      "expect" : [
+        {
+          "index" : 0,
+          "number" : "1.0"
+        },
+        {
+          "index" : 1,
+          "number" : "2.0"
+        }
+      ],
+      "name" : "a wholly unnumbered list counts from 1"
+    },
+    {
+      "cues" : [
+        {
+          "cueNumber" : "1.0",
+          "time" : "1.0"
+        },
+        {
+          "time" : "2.0"
+        },
+        {
+          "cueNumber" : "1.05",
+          "time" : "3.0"
+        }
+      ],
+      "expect" : [
+        {
+          "index" : 1,
+          "number" : "1.025"
+        }
+      ],
+      "name" : "a tight upper bound falls back to subdivision"
+    },
+    {
+      "cues" : [
+        {
+          "cueNumber" : "1.0",
+          "time" : "1.0"
+        },
+        {
+          "time" : "2.0"
+        },
+        {
+          "cueNumber" : "1.001",
+          "time" : "3.0"
+        }
+      ],
+      "expect" : [
+
+      ],
+      "name" : "a one-thousandth gap holds no unique value"
+    },
+    {
+      "cues" : [
+        {
+          "time" : "1.0"
+        },
+        {
+          "cueNumber" : "0.0005",
+          "time" : "2.0"
+        }
+      ],
+      "expect" : [
+
+      ],
+      "name" : "a sub-thousandth gap holds no unique value"
+    },
+    {
+      "cues" : [
+        {
+          "cueNumber" : "0.001",
+          "time" : "1.0"
+        },
+        {
+          "time" : "2.0"
+        },
+        {
+          "cueNumber" : "0.004",
+          "time" : "3.0"
+        }
+      ],
+      "expect" : [
+        {
+          "index" : 1,
+          "number" : "0.003"
+        }
+      ],
+      "name" : "a midpoint candidate rounds away from zero"
+    },
+    {
+      "cues" : [
+        {
+          "cueNumber" : "0.0025",
+          "time" : "1.0"
+        },
+        {
+          "time" : "2.0"
+        },
+        {
+          "cueNumber" : "0.004",
+          "time" : "3.0"
+        }
+      ],
+      "expect" : [
+
+      ],
+      "name" : "a midpoint existing number seeds the used set away from zero"
+    },
+    {
+      "cues" : [
+        {
+          "cueNumber" : "5.0",
+          "time" : "1.0"
+        },
+        {
+          "time" : "2.0"
+        },
+        {
+          "cueNumber" : "2.0",
+          "time" : "3.0"
+        }
+      ],
+      "expect" : [
+
+      ],
+      "name" : "numbers running backwards against time assign nothing"
+    },
+    {
+      "cues" : [
+        {
+          "cueNumber" : "1.0",
+          "time" : "1.0"
+        },
+        {
+          "time" : "2.0"
+        },
+        {
+          "cueNumber" : "5.0",
+          "time" : "3.0"
+        },
+        {
+          "cueNumber" : "2.0",
+          "time" : "4.0"
+        }
+      ],
+      "expect" : [
+        {
+          "index" : 1,
+          "number" : "3.0"
+        }
+      ],
+      "name" : "an integer already used out of time order is skipped"
+    },
+    {
+      "cues" : [
+        {
+          "time" : "2.0"
+        },
+        {
+          "cueNumber" : "1.0",
+          "time" : "2.0"
+        }
+      ],
+      "expect" : [
+        {
+          "index" : 0,
+          "number" : "0.1"
+        }
+      ],
+      "name" : "equal times are ordered by original index"
+    }
+  ],
+  "contract" : "cue-numbering",
+  "insertion" : [
+    {
+      "atTime" : "5.0",
+      "cues" : [
+
+      ],
+      "expect" : "1.0",
+      "name" : "empty list falls back to 1"
+    },
+    {
+      "atTime" : "1.5",
+      "cues" : [
+        {
+          "time" : "1.0"
+        },
+        {
+          "time" : "2.0"
+        }
+      ],
+      "expect" : "1.0",
+      "name" : "no numbered cues falls back to 1"
+    },
+    {
+      "atTime" : "1.0",
+      "cues" : [
+        {
+          "cueNumber" : "5.0",
+          "time" : "10.0"
+        }
+      ],
+      "expect" : "4.0",
+      "name" : "before the first numbered cue steps down"
+    },
+    {
+      "atTime" : "10.0",
+      "cues" : [
+        {
+          "cueNumber" : "3.0",
+          "time" : "1.0"
+        }
+      ],
+      "expect" : "4.0",
+      "name" : "after the last numbered cue steps up"
+    },
+    {
+      "atTime" : "2.0",
+      "cues" : [
+        {
+          "cueNumber" : "1.0",
+          "time" : "1.0"
+        },
+        {
+          "cueNumber" : "2.0",
+          "time" : "3.0"
+        }
+      ],
+      "expect" : "1.5",
+      "name" : "between two numbered cues takes the midpoint"
+    },
+    {
+      "atTime" : "3.0",
+      "cues" : [
+        {
+          "cueNumber" : "1.0",
+          "time" : "1.0"
+        },
+        {
+          "cueNumber" : "2.0",
+          "time" : "3.0"
+        }
+      ],
+      "expect" : "3.0",
+      "name" : "the earlier neighbour boundary is inclusive"
+    },
+    {
+      "atTime" : "6.0",
+      "cues" : [
+        {
+          "time" : "1.0"
+        },
+        {
+          "cueNumber" : "1.0",
+          "time" : "2.0"
+        },
+        {
+          "time" : "5.0"
+        },
+        {
+          "cueNumber" : "4.0",
+          "time" : "9.0"
+        }
+      ],
+      "expect" : "2.5",
+      "name" : "unnumbered cues are skipped when picking neighbours"
+    },
+    {
+      "atTime" : "5.0",
+      "cues" : [
+        {
+          "cueNumber" : "1.0",
+          "time" : "2.0"
+        },
+        {
+          "cueNumber" : "3.0",
+          "time" : "2.0"
+        }
+      ],
+      "expect" : "2.0",
+      "name" : "an equal-time tie on the earlier side keeps the first"
+    },
+    {
+      "atTime" : "4.0",
+      "cues" : [
+        {
+          "cueNumber" : "1.0",
+          "time" : "2.0"
+        },
+        {
+          "cueNumber" : "5.0",
+          "time" : "8.0"
+        },
+        {
+          "cueNumber" : "9.0",
+          "time" : "8.0"
+        }
+      ],
+      "expect" : "3.0",
+      "name" : "an equal-time tie on the later side keeps the first"
+    },
+    {
+      "atTime" : "1.5",
+      "cues" : [
+        {
+          "cueNumber" : "0.5",
+          "time" : "1.0"
+        },
+        {
+          "cueNumber" : "0.75",
+          "time" : "2.0"
+        }
+      ],
+      "expect" : "0.625",
+      "name" : "fractional neighbours halve exactly"
+    },
+    {
+      "atTime" : "1.0",
+      "cues" : [
+        {
+          "cueNumber" : "0.5",
+          "time" : "5.0"
+        }
+      ],
+      "expect" : "-0.5",
+      "name" : "stepping down below 1 is not clamped"
+    }
+  ],
+  "note" : "macOS-generated golden vectors for OnlyCue cue-number assignment (CueNumberAssignment.next and CueNumberAutoFill.assignments). The C# OnlyCue.Core re-implementation must reproduce every case exactly. Doubles are round-trip-exact decimal strings; compare the parsed IEEE-754 values, not the text. Cues are identified by index. To regenerate after a deliberate change, delete golden/cue-numbering-v1.json and re-run the test suite.",
+  "version" : 1
+}

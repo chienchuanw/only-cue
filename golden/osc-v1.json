@@ -711,6 +711,73 @@
         }
       ],
       "name" : "unterminated bytes after an address still yield the address-only message"
+    },
+    {
+      "command" : {
+        "kind" : "play"
+      },
+      "datagram" : "77u/L29ubHljdWUvcGxheQAAAAAsAAAA",
+      "messages" : [
+        {
+          "address" : "/onlycue/play",
+          "arguments" : [
+
+          ]
+        }
+      ],
+      "name" : "a byte-order mark before the address is dropped, not kept"
+    },
+    {
+      "command" : {
+        "kind" : "play"
+      },
+      "datagram" : "77u/I2J1bmRsZQAAAAAAAAAAAAEAAAAUL29ubHljdWUvcGxheQAAACwAAAA=",
+      "messages" : [
+        {
+          "address" : "/onlycue/play",
+          "arguments" : [
+
+          ]
+        }
+      ],
+      "name" : "a byte-order mark before #bundle still reads as a bundle"
+    },
+    {
+      "datagram" : "L29ubHljdWUvc2tpcAAAACxzAADvu7/vu794AA==",
+      "messages" : [
+        {
+          "address" : "/onlycue/skip",
+          "arguments" : [
+            {
+              "text" : "﻿x",
+              "type" : "string"
+            }
+          ]
+        }
+      ],
+      "name" : "only the first byte-order mark in a string argument is dropped"
+    },
+    {
+      "command" : {
+        "kind" : "play"
+      },
+      "datagram" : "L29ubHljdWUvcGxheQAAACzMgQA=",
+      "messages" : [
+        {
+          "address" : "/onlycue/play",
+          "arguments" : [
+
+          ]
+        }
+      ],
+      "name" : "a combining mark on the type-tag comma falls through to address-only"
+    },
+    {
+      "datagram" : "L8yBb25seWN1ZS9wbGF5ACwAAAA=",
+      "messages" : [
+
+      ],
+      "name" : "a combining mark on the leading slash rejects the address"
     }
   ],
   "contract" : "osc",

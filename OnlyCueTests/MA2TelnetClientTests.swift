@@ -10,6 +10,9 @@ final class MA2TelnetClientTests: XCTestCase {
 
     /// Loopback TCP server: accepts one telnet session, greets with a banner,
     /// answers each received CRLF line via `handler` (nil = stay silent).
+    ///
+    /// `bannerDelay` holds the greeting back, so "the banner arrives late" is a
+    /// fixture setting rather than a race against machine load (#816).
     private final class Fixture: @unchecked Sendable {
         private let listener: NWListener
         private let queue = DispatchQueue(label: "MA2TelnetClientTests.Fixture")
@@ -17,9 +20,11 @@ final class MA2TelnetClientTests: XCTestCase {
         private var lineBuffer = Data()
         private var lines: [String] = []
         private let handler: @Sendable (String) -> String?
+        private let bannerDelay: TimeInterval
 
-        init(handler: @escaping @Sendable (String) -> String?) throws {
+        init(bannerDelay: TimeInterval = 0, handler: @escaping @Sendable (String) -> String?) throws {
             self.handler = handler
+            self.bannerDelay = bannerDelay
             listener = try NWListener(using: .tcp, on: .any)
             let ready = DispatchSemaphore(value: 0)
             listener.stateUpdateHandler = { state in
@@ -50,10 +55,17 @@ final class MA2TelnetClientTests: XCTestCase {
             connection.start(queue: queue)
             // Real consoles greet with a banner before login; the client must
             // not mistake it for a command response.
-            connection.send(
-                content: Data("Welcome to grandMA2\r\n".utf8),
-                completion: .contentProcessed { _ in }
-            )
+            let greet = {
+                connection.send(
+                    content: Data("Welcome to grandMA2\r\n".utf8),
+                    completion: .contentProcessed { _ in }
+                )
+            }
+            if bannerDelay > 0 {
+                queue.asyncAfter(deadline: .now() + bannerDelay, execute: greet)
+            } else {
+                greet()
+            }
             receiveLoop(connection)
         }
 
@@ -184,6 +196,48 @@ final class MA2TelnetClientTests: XCTestCase {
     func test_silentConsole_returnsEmptyResponse() async throws {
         // Some accepted commands print nothing; silence must not fail a push.
         let fixture = try Fixture { _ in nil }
+        defer { fixture.stop() }
+        let client = client(port: fixture.port)
+        try await client.connect()
+
+        let response = try await client.send("Label Sequence 18 \"X\"")
+
+        XCTAssertEqual(response, "")
+        await client.disconnect()
+    }
+
+    /// #816 — `connect()` drains the greeting so it cannot be mistaken for the
+    /// first command's response. It used to do that by sleeping one `settle`
+    /// and clearing whatever had turned up, which is a bet that the banner beats
+    /// the clock: on a loaded machine it does not, and the greeting then lands in
+    /// the *next* harvest. That is what made this suite fail nondeterministically
+    /// on a full local run while passing in isolation — the two tests that
+    /// compare the response exactly were the ones that noticed.
+    ///
+    /// `bannerDelay` here is longer than `settle`, so the old timer-based drain
+    /// fails this every time rather than once in a few hundred runs.
+    func test_slowBanner_isNotHarvestedAsTheFirstResponse() async throws {
+        let fixture = try Fixture(bannerDelay: 0.12) { _ in "Error #12 at line 1\r\n" }
+        defer { fixture.stop() }
+        let client = client(port: fixture.port)
+        try await client.connect()
+
+        do {
+            _ = try await client.send("Import \"x\" At 18 /nc")
+            XCTFail("expected console failure")
+        } catch let failure as MA2TelnetClient.Failure {
+            XCTAssertEqual(failure, .console(
+                command: "Import \"x\" At 18 /nc",
+                response: "Error #12 at line 1"
+            ))
+        }
+        await client.disconnect()
+    }
+
+    /// The same race with nothing to hide behind: a silent command has no
+    /// response of its own, so a late banner becomes the response outright.
+    func test_slowBanner_doesNotBecomeASilentCommandsResponse() async throws {
+        let fixture = try Fixture(bannerDelay: 0.12) { _ in nil }
         defer { fixture.stop() }
         let client = client(port: fixture.port)
         try await client.connect()

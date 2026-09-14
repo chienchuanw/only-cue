@@ -100,7 +100,11 @@ enum MA2TelnetGolden {
                 MA2GoldenInput.cue(2, "Out only", at: 1, fadeOut: 3),
                 // `0.1 + 0.2` is the classic shortest-round-trip stress value:
                 // Swift and .NET must both spell it `0.30000000000000004`.
-                MA2GoldenInput.cue(3, "Both", at: 2, notes: "hold", fadeIn: 0.1 + 0.2, fadeOut: 1.25)
+                MA2GoldenInput.cue(3, "Both", at: 2, notes: "hold", fadeIn: 0.1 + 0.2, fadeOut: 1.25),
+                // Below 1e-4 `String(Double)` switches to exponential, and Swift
+                // spells the marker lowercase where .NET's "R" spells it `E-05`.
+                // `FadeTime.parse("0.00001")` accepts this, so it is reachable.
+                MA2GoldenInput.cue(4, "Exponent", at: 3, fadeIn: 0.00001)
             ],
             target: assigned,
             sequenceName: "Fades",
@@ -310,6 +314,9 @@ final class MA2TelnetGoldenVectorTests: XCTestCase {
         XCTAssertEqual(FadeTime.formatNumber(2.5), "2.5")
         XCTAssertEqual(FadeTime.formatNumber(3), "3")
         XCTAssertEqual(FadeTime.formatNumber(0.1 + 0.2), "0.30000000000000004")
+        // Under 1e-4 Swift goes exponential, lowercase marker, two exponent
+        // digits. .NET's "R" agrees on everything but the case of the `e`.
+        XCTAssertEqual(FadeTime.formatNumber(0.00001), "1e-05")
     }
 
     /// Drift guard + bootstrap, matching the M1a/M1b generators. A missing file is

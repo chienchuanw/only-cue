@@ -161,42 +161,78 @@ enum CuelistEnvelopeGolden {
     }
 
     private static let probes: [Probe] = [
-        Probe(name: "openDocument",
-              fixture: CuelistEnvelopeFixture.cuelistDocument,
-              magic: "OCUE", allowLegacyPlaintext: true),
-        Probe(name: "openExport",
-              fixture: CuelistEnvelopeFixture.cueListExport,
-              magic: "OCCU", allowLegacyPlaintext: false),
-        Probe(name: "legacyPlaintextPassesThrough",
-              fixture: CuelistEnvelopeFixture.legacyPlaintext,
-              magic: "OCUE", allowLegacyPlaintext: true),
-        Probe(name: "legacyPlaintextRejectedForExport",
-              fixture: CuelistEnvelopeFixture.legacyPlaintext,
-              magic: "OCCU", allowLegacyPlaintext: false),
-        Probe(name: "badMagicPassesThroughWhenLegacyAllowed",
-              fixture: CuelistEnvelopeFixture.badMagic,
-              magic: "OCUE", allowLegacyPlaintext: true),
-        Probe(name: "badMagicRejectedWhenLegacyDisallowed",
-              fixture: CuelistEnvelopeFixture.badMagic,
-              magic: "OCUE", allowLegacyPlaintext: false),
-        Probe(name: "documentOpenedAsExport",
-              fixture: CuelistEnvelopeFixture.cuelistDocument,
-              magic: "OCCU", allowLegacyPlaintext: false),
-        Probe(name: "exportOpenedAsDocument",
-              fixture: CuelistEnvelopeFixture.cueListExport,
-              magic: "OCUE", allowLegacyPlaintext: true),
-        Probe(name: "unsupportedVersion",
-              fixture: CuelistEnvelopeFixture.badVersion,
-              magic: "OCUE", allowLegacyPlaintext: true),
-        Probe(name: "truncatedHeader",
-              fixture: CuelistEnvelopeFixture.truncated,
-              magic: "OCUE", allowLegacyPlaintext: true),
-        Probe(name: "tamperedTag",
-              fixture: CuelistEnvelopeFixture.tamperedTag,
-              magic: "OCUE", allowLegacyPlaintext: true),
-        Probe(name: "tamperedCiphertext",
-              fixture: CuelistEnvelopeFixture.tamperedCiphertext,
-              magic: "OCUE", allowLegacyPlaintext: true)
+        Probe(
+            name: "openDocument",
+            fixture: CuelistEnvelopeFixture.cuelistDocument,
+            magic: "OCUE",
+            allowLegacyPlaintext: true
+        ),
+        Probe(
+            name: "openExport",
+            fixture: CuelistEnvelopeFixture.cueListExport,
+            magic: "OCCU",
+            allowLegacyPlaintext: false
+        ),
+        Probe(
+            name: "legacyPlaintextPassesThrough",
+            fixture: CuelistEnvelopeFixture.legacyPlaintext,
+            magic: "OCUE",
+            allowLegacyPlaintext: true
+        ),
+        Probe(
+            name: "legacyPlaintextRejectedForExport",
+            fixture: CuelistEnvelopeFixture.legacyPlaintext,
+            magic: "OCCU",
+            allowLegacyPlaintext: false
+        ),
+        Probe(
+            name: "badMagicPassesThroughWhenLegacyAllowed",
+            fixture: CuelistEnvelopeFixture.badMagic,
+            magic: "OCUE",
+            allowLegacyPlaintext: true
+        ),
+        Probe(
+            name: "badMagicRejectedWhenLegacyDisallowed",
+            fixture: CuelistEnvelopeFixture.badMagic,
+            magic: "OCUE",
+            allowLegacyPlaintext: false
+        ),
+        Probe(
+            name: "documentOpenedAsExport",
+            fixture: CuelistEnvelopeFixture.cuelistDocument,
+            magic: "OCCU",
+            allowLegacyPlaintext: false
+        ),
+        Probe(
+            name: "exportOpenedAsDocument",
+            fixture: CuelistEnvelopeFixture.cueListExport,
+            magic: "OCUE",
+            allowLegacyPlaintext: true
+        ),
+        Probe(
+            name: "unsupportedVersion",
+            fixture: CuelistEnvelopeFixture.badVersion,
+            magic: "OCUE",
+            allowLegacyPlaintext: true
+        ),
+        Probe(
+            name: "truncatedHeader",
+            fixture: CuelistEnvelopeFixture.truncated,
+            magic: "OCUE",
+            allowLegacyPlaintext: true
+        ),
+        Probe(
+            name: "tamperedTag",
+            fixture: CuelistEnvelopeFixture.tamperedTag,
+            magic: "OCUE",
+            allowLegacyPlaintext: true
+        ),
+        Probe(
+            name: "tamperedCiphertext",
+            fixture: CuelistEnvelopeFixture.tamperedCiphertext,
+            magic: "OCUE",
+            allowLegacyPlaintext: true
+        )
     ]
 
     private static func magicData(_ name: String) -> Data {
@@ -255,7 +291,7 @@ final class CuelistEnvelopeGoldenVectorTests: XCTestCase {
         let document = try XCTUnwrap(Data(base64Encoded: CuelistEnvelopeFixture.cuelistDocument))
         let opened = try CuelistCrypto.open(document)
         XCTAssertEqual(
-            String(decoding: opened, as: UTF8.self),
+            String(bytes: opened, encoding: .utf8),
             CuelistEnvelopeFixture.documentJSON,
             "the committed OCUE fixture must decrypt to the documented plaintext"
         )
@@ -265,7 +301,7 @@ final class CuelistEnvelopeGoldenVectorTests: XCTestCase {
             export, magic: CuelistCrypto.cueListExportMagic, allowLegacyPlaintext: false
         )
         XCTAssertEqual(
-            String(decoding: openedExport, as: UTF8.self),
+            String(bytes: openedExport, encoding: .utf8),
             CuelistEnvelopeFixture.cueListExportJSON
         )
     }

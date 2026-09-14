@@ -168,6 +168,18 @@
                   "fadeIn" : 0,
                   "fadeOut" : 0
                 },
+                "id" : "04444444-4444-4444-4444-444444444444",
+                "name" : "B stacked",
+                "notes" : "",
+                "time" : 15,
+                "typeID" : "CCCC3333-CCCC-3333-CCCC-3333CCCC3333"
+              },
+              {
+                "cueNumber" : 3,
+                "fadeTime" : {
+                  "fadeIn" : 0,
+                  "fadeOut" : 0
+                },
                 "id" : "33333333-3333-3333-3333-333333333333",
                 "name" : "B",
                 "notes" : "",
@@ -175,7 +187,7 @@
                 "typeID" : "CCCC3333-CCCC-3333-CCCC-3333CCCC3333"
               },
               {
-                "cueNumber" : 3,
+                "cueNumber" : 4,
                 "fadeTime" : {
                   "fadeIn" : 0,
                   "fadeOut" : 0
@@ -212,7 +224,7 @@
           "framerate" : "30"
         }
       },
-      "inputJSON" : "{\n  \"schemaVersion\": 3,\n  \"id\": \"9F2E0F8A-9C2D-4F2A-9E1A-0E1A2D3C4B5A\",\n  \"name\": \"Show\",\n  \"cuePointTypes\": [\n    {\n      \"id\": \"CCCC3333-CCCC-3333-CCCC-3333CCCC3333\",\n      \"name\": \"General\",\n      \"colorHex\": \"#4ECDC4\",\n      \"defaultFadeTime\": 0,\n      \"defaultNamePattern\": \"Cue\",\n      \"isVisible\": true,\n      \"isExportEnabled\": true\n    }\n  ],\n  \"items\": [\n    {\n      \"id\": \"AABBCCDD-1111-2222-3333-444455556666\",\n      \"media\": {\n        \"displayName\": \"act1.wav\",\n        \"kind\": \"audio\",\n        \"duration\": 100,\n        \"bookmarkData\": \"AQID\"\n      },\n      \"cues\": [\n        {\n          \"id\": \"11111111-1111-1111-1111-111111111111\",\n          \"typeID\": \"CCCC3333-CCCC-3333-CCCC-3333CCCC3333\",\n          \"name\": \"C\",\n          \"time\": 30.0,\n          \"colorHex\": \"#FF6B6B\",\n          \"notes\": \"\"\n        },\n        {\n          \"id\": \"22222222-2222-2222-2222-222222222222\",\n          \"typeID\": \"CCCC3333-CCCC-3333-CCCC-3333CCCC3333\",\n          \"name\": \"A\",\n          \"time\": 5.0,\n          \"colorHex\": \"#4ECDC4\",\n          \"notes\": \"\"\n        },\n        {\n          \"id\": \"33333333-3333-3333-3333-333333333333\",\n          \"typeID\": \"CCCC3333-CCCC-3333-CCCC-3333CCCC3333\",\n          \"name\": \"B\",\n          \"time\": 15.0,\n          \"colorHex\": \"#4ECDC4\",\n          \"notes\": \"\"\n        }\n      ]\n    }\n  ],\n  \"activeItemID\": \"AABBCCDD-1111-2222-3333-444455556666\"\n}",
+      "inputJSON" : "{\n  \"schemaVersion\": 3,\n  \"id\": \"9F2E0F8A-9C2D-4F2A-9E1A-0E1A2D3C4B5A\",\n  \"name\": \"Show\",\n  \"cuePointTypes\": [\n    {\n      \"id\": \"CCCC3333-CCCC-3333-CCCC-3333CCCC3333\",\n      \"name\": \"General\",\n      \"colorHex\": \"#4ECDC4\",\n      \"defaultFadeTime\": 0,\n      \"defaultNamePattern\": \"Cue\",\n      \"isVisible\": true,\n      \"isExportEnabled\": true\n    }\n  ],\n  \"items\": [\n    {\n      \"id\": \"AABBCCDD-1111-2222-3333-444455556666\",\n      \"media\": {\n        \"displayName\": \"act1.wav\",\n        \"kind\": \"audio\",\n        \"duration\": 100,\n        \"bookmarkData\": \"AQID\"\n      },\n      \"cues\": [\n        {\n          \"id\": \"11111111-1111-1111-1111-111111111111\",\n          \"typeID\": \"CCCC3333-CCCC-3333-CCCC-3333CCCC3333\",\n          \"name\": \"C\",\n          \"time\": 30.0,\n          \"colorHex\": \"#FF6B6B\",\n          \"notes\": \"\"\n        },\n        {\n          \"id\": \"22222222-2222-2222-2222-222222222222\",\n          \"typeID\": \"CCCC3333-CCCC-3333-CCCC-3333CCCC3333\",\n          \"name\": \"A\",\n          \"time\": 5.0,\n          \"colorHex\": \"#4ECDC4\",\n          \"notes\": \"\"\n        },\n        {\n          \"id\": \"33333333-3333-3333-3333-333333333333\",\n          \"typeID\": \"CCCC3333-CCCC-3333-CCCC-3333CCCC3333\",\n          \"name\": \"B\",\n          \"time\": 15.0,\n          \"colorHex\": \"#4ECDC4\",\n          \"notes\": \"\"\n        },\n        {\n          \"id\": \"04444444-4444-4444-4444-444444444444\",\n          \"typeID\": \"CCCC3333-CCCC-3333-CCCC-3333CCCC3333\",\n          \"name\": \"B stacked\",\n          \"time\": 15.0,\n          \"colorHex\": \"#4ECDC4\",\n          \"notes\": \"\"\n        }\n      ]\n    }\n  ],\n  \"activeItemID\": \"AABBCCDD-1111-2222-3333-444455556666\"\n}",
       "name" : "v3",
       "schemaVersion" : 3
     },
@@ -624,6 +636,30 @@
                 "typeID" : "AAAA0001-0000-0000-0000-000000000001"
               },
               {
+                "beatsPerBar" : 3,
+                "bpm" : 120,
+                "fadeTime" : {
+                  "fadeIn" : 0,
+                  "fadeOut" : 0
+                },
+                "id" : "BBBB0002-0000-0000-0000-000000000002",
+                "name" : "near",
+                "notes" : "",
+                "time" : 10,
+                "typeID" : "AAAA0001-0000-0000-0000-000000000001"
+              },
+              {
+                "fadeTime" : {
+                  "fadeIn" : 0,
+                  "fadeOut" : 0
+                },
+                "id" : "BBBB0003-0000-0000-0000-000000000003",
+                "name" : "far",
+                "notes" : "",
+                "time" : 25,
+                "typeID" : "AAAA0001-0000-0000-0000-000000000001"
+              },
+              {
                 "beatsPerBar" : 4,
                 "bpm" : 75,
                 "fadeTime" : {
@@ -662,7 +698,7 @@
           "framerate" : "30"
         }
       },
-      "inputJSON" : "{\n  \"schemaVersion\": 10,\n  \"id\": \"11110000-1111-0000-1111-000011110000\",\n  \"name\": \"doc\",\n  \"cuePointTypes\": [{\n    \"id\":\"AAAA0001-0000-0000-0000-000000000001\",\"name\":\"G\",\"colorHex\":\"#fff\",\n    \"defaultFadeTime\":0,\"defaultNamePattern\":\"Cue\",\"hotkey\":null,\n    \"isVisible\":true,\"isExportEnabled\":true\n  }],\n  \"items\": [{\n    \"id\": \"22220000-2222-0000-2222-000022220000\",\n    \"media\": {\"displayName\":\"x\",\"kind\":\"audio\",\"duration\":60,\"bookmarkData\":\"AQID\"},\n    \"cues\": [{\n      \"id\":\"BBBB0001-0000-0000-0000-000000000001\",\"typeID\":\"AAAA0001-0000-0000-0000-000000000001\",\"cueNumber\":null,\n      \"name\":\"c\",\"time\":0.0,\"notes\":\"\",\"fadeTime\":{\"fadeIn\":0,\"fadeOut\":0}\n    }],\n    \"tempoMap\": {\"sections\":[\n      {\n        \"id\":\"33330000-3333-0000-3333-000033330000\",\n        \"startSeconds\":0.0,\"bpm\":120.0,\"beatsPerBar\":4,\"downbeatOffsetSeconds\":0.0\n      },\n      {\n        \"id\":\"44440000-4444-0000-4444-000044440000\",\n        \"startSeconds\":30.0,\"bpm\":75.0,\"beatsPerBar\":4,\"downbeatOffsetSeconds\":0.0\n      }\n    ]},\n    \"startTimecodeFrames\": 0,\n    \"ltcMuted\": false\n  }],\n  \"activeItemID\": null,\n  \"timecodeSettings\": {\"framerate\":\"30\"}\n}",
+      "inputJSON" : "{\n  \"schemaVersion\": 10,\n  \"id\": \"11110000-1111-0000-1111-000011110000\",\n  \"name\": \"doc\",\n  \"cuePointTypes\": [{\n    \"id\":\"AAAA0001-0000-0000-0000-000000000001\",\"name\":\"G\",\"colorHex\":\"#fff\",\n    \"defaultFadeTime\":0,\"defaultNamePattern\":\"Cue\",\"hotkey\":null,\n    \"isVisible\":true,\"isExportEnabled\":true\n  }],\n  \"items\": [{\n    \"id\": \"22220000-2222-0000-2222-000022220000\",\n    \"media\": {\"displayName\":\"x\",\"kind\":\"audio\",\"duration\":60,\"bookmarkData\":\"AQID\"},\n    \"cues\": [{\n      \"id\":\"BBBB0001-0000-0000-0000-000000000001\",\"typeID\":\"AAAA0001-0000-0000-0000-000000000001\",\"cueNumber\":null,\n      \"name\":\"c\",\"time\":0.0,\"notes\":\"\",\"fadeTime\":{\"fadeIn\":0,\"fadeOut\":0}\n    },{\n      \"id\":\"BBBB0002-0000-0000-0000-000000000002\",\"typeID\":\"AAAA0001-0000-0000-0000-000000000001\",\"cueNumber\":null,\n      \"name\":\"near\",\"time\":10.0,\"notes\":\"\",\"fadeTime\":{\"fadeIn\":0,\"fadeOut\":0}\n    },{\n      \"id\":\"BBBB0003-0000-0000-0000-000000000003\",\"typeID\":\"AAAA0001-0000-0000-0000-000000000001\",\"cueNumber\":null,\n      \"name\":\"far\",\"time\":25.0,\"notes\":\"\",\"fadeTime\":{\"fadeIn\":0,\"fadeOut\":0}\n    }],\n    \"tempoMap\": {\"sections\":[\n      {\n        \"id\":\"33330000-3333-0000-3333-000033330000\",\n        \"startSeconds\":0.0,\"bpm\":120.0,\"beatsPerBar\":4,\"downbeatOffsetSeconds\":0.0\n      },\n      {\n        \"id\":\"55550000-5555-0000-5555-000055550000\",\n        \"startSeconds\":10.0,\"bpm\":120.0,\"beatsPerBar\":3,\"downbeatOffsetSeconds\":0.4\n      },\n      {\n        \"id\":\"44440000-4444-0000-4444-000044440000\",\n        \"startSeconds\":30.0,\"bpm\":75.0,\"beatsPerBar\":4,\"downbeatOffsetSeconds\":0.0\n      }\n    ]},\n    \"startTimecodeFrames\": 0,\n    \"ltcMuted\": false\n  }],\n  \"activeItemID\": null,\n  \"timecodeSettings\": {\"framerate\":\"30\"}\n}",
       "name" : "v10",
       "schemaVersion" : 10
     },

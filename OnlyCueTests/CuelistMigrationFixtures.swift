@@ -74,7 +74,11 @@ enum CuelistMigrationFixture {
     }
     """
 
-    /// Cues deliberately out of time order, so the vector pins the sort too.
+    /// Cues deliberately out of time order, so the vector pins the sort too. The last
+    /// two share `time: 15.0` and are listed with the *higher* id first, so the pair
+    /// only comes out in `id.uuidString` order if the tie-break in
+    /// `assignCueNumbersBySort` is applied — a port that leant on its language's stable
+    /// sort instead would hand them the opposite `cueNumber`s.
     static let v3 = """
     {
       "schemaVersion": 3,
@@ -121,6 +125,14 @@ enum CuelistMigrationFixture {
               "id": "33333333-3333-3333-3333-333333333333",
               "typeID": "CCCC3333-CCCC-3333-CCCC-3333CCCC3333",
               "name": "B",
+              "time": 15.0,
+              "colorHex": "#4ECDC4",
+              "notes": ""
+            },
+            {
+              "id": "04444444-4444-4444-4444-444444444444",
+              "typeID": "CCCC3333-CCCC-3333-CCCC-3333CCCC3333",
+              "name": "B stacked",
               "time": 15.0,
               "colorHex": "#4ECDC4",
               "notes": ""

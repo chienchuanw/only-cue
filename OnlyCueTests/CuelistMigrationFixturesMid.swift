@@ -172,9 +172,16 @@ extension CuelistMigrationFixture {
     }
     """
 
-    /// The one rung that mints cue identifiers: two tempo sections fan out, and the
+    /// The one rung that mints cue identifiers: three tempo sections fan out, and the
     /// section that has no cue within tolerance gets a synthetic "Tempo" cue with a
     /// fresh `UUID()`. That is why the vector normalises minted ids.
+    ///
+    /// The three sections straddle the one-beat tolerance (`60 / bpm`) deliberately, so
+    /// the vector pins the *width* of that window and not merely the landed/minted
+    /// split: at 0.0 a cue sits exactly on the anchor; at 10.4 one sits 0.4 s away
+    /// against a 0.5 s window, so it lands but only just; at 30.0 the nearest cue is
+    /// 5.0 s away against a 0.8 s window, so it mints with room to spare. Widening or
+    /// narrowing the tolerance flips one of the latter two.
     static let v10 = """
     {
       "schemaVersion": 10,
@@ -191,11 +198,21 @@ extension CuelistMigrationFixture {
         "cues": [{
           "id":"BBBB0001-0000-0000-0000-000000000001","typeID":"AAAA0001-0000-0000-0000-000000000001","cueNumber":null,
           "name":"c","time":0.0,"notes":"","fadeTime":{"fadeIn":0,"fadeOut":0}
+        },{
+          "id":"BBBB0002-0000-0000-0000-000000000002","typeID":"AAAA0001-0000-0000-0000-000000000001","cueNumber":null,
+          "name":"near","time":10.0,"notes":"","fadeTime":{"fadeIn":0,"fadeOut":0}
+        },{
+          "id":"BBBB0003-0000-0000-0000-000000000003","typeID":"AAAA0001-0000-0000-0000-000000000001","cueNumber":null,
+          "name":"far","time":25.0,"notes":"","fadeTime":{"fadeIn":0,"fadeOut":0}
         }],
         "tempoMap": {"sections":[
           {
             "id":"33330000-3333-0000-3333-000033330000",
             "startSeconds":0.0,"bpm":120.0,"beatsPerBar":4,"downbeatOffsetSeconds":0.0
+          },
+          {
+            "id":"55550000-5555-0000-5555-000055550000",
+            "startSeconds":10.0,"bpm":120.0,"beatsPerBar":3,"downbeatOffsetSeconds":0.4
           },
           {
             "id":"44440000-4444-0000-4444-000044440000",

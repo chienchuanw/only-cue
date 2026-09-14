@@ -193,6 +193,8 @@ final class FadeTimeTests: XCTestCase {
         XCTAssertEqual(FadeTime.formatNumber(1e19), "1e+19")
         XCTAssertEqual(FadeTime.formatNumber(1e21), "1e+21")
         XCTAssertEqual(FadeTime.formatNumber(1.5e20), "1.5e+20")
+        XCTAssertEqual(FadeTime.formatNumber(-1e19), "-1e+19")
+        XCTAssertEqual(FadeTime.formatNumber(-1e21), "-1e+21")
     }
 
     func test_formatNumber_nonFinite_doesNotTrap() {

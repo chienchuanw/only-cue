@@ -21,7 +21,8 @@ import XCTest
 // NaN float arguments are deliberately absent. `GoldenDouble` carries them as
 // the text "nan", and .NET's `double.NaN` has the sign bit set (0xFFF8…) while a
 // widened binary32 NaN does not (0x7FF8…), so the two would never compare equal
-// bitwise. That is a limitation of the transport, not of the parser.
+// bitwise. That is a limitation of the transport, not of the parser (#833); once
+// the helper carries bit patterns, a NaN case belongs here.
 
 // MARK: - Contract model (mirrored by the C# verifier's DTO)
 

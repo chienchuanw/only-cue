@@ -78,6 +78,84 @@ final class CueCommandsRenumberTests: XCTestCase {
         XCTAssertNil(activeCues(document).first?.cueNumber)
     }
 
+    // MARK: - domain (#830)
+    //
+    // `renumberSelected` computes `start + index * interval` and writes it
+    // straight onto the cue — the only `cueNumber` writer that never consults
+    // `CueNumberValidator`. `RenumberCuesSheet` binds `start` to a plain
+    // `TextField`, and the neighbouring `Stepper(in:)` constrains only the
+    // stepper buttons, so a typed value reaches this command unfiltered. That
+    // makes #830's `-1.-5` token reachable from the UI, not just from a
+    // hand-edited document.
+
+    func test_renumberSelected_rejectsNegativeStart() {
+        let document = makeDocumentWithItem()
+        let undo = makeUndoManager()
+        CueCommands.addCueAtPlayhead(time: 1, document: document, undoManager: undo)
+        CueCommands.addCueAtPlayhead(time: 2, document: document, undoManager: undo)
+        let selected = Set(activeCues(document).map(\.id))
+
+        CueCommands.renumberSelected(selected, start: -1.5, interval: 1, document: document, undoManager: undo)
+
+        XCTAssertEqual(activeCues(document).compactMap(\.cueNumber), [])
+    }
+
+    func test_renumberSelected_rejectsStartBelowTheMinimum() {
+        let document = makeDocumentWithItem()
+        let undo = makeUndoManager()
+        CueCommands.addCueAtPlayhead(time: 1, document: document, undoManager: undo)
+        let selected = Set(activeCues(document).map(\.id))
+
+        CueCommands.renumberSelected(selected, start: 0, interval: 1, document: document, undoManager: undo)
+
+        XCTAssertEqual(activeCues(document).compactMap(\.cueNumber), [])
+    }
+
+    // A run that starts in range but walks out of it is rejected whole: half a
+    // renumber is worse than none, and the caller asked for something the
+    // numbering domain cannot express.
+    func test_renumberSelected_rejectsRunThatLeavesTheDomain() {
+        let document = makeDocumentWithItem()
+        let undo = makeUndoManager()
+        CueCommands.addCueAtPlayhead(time: 1, document: document, undoManager: undo)
+        CueCommands.addCueAtPlayhead(time: 2, document: document, undoManager: undo)
+        let selected = Set(activeCues(document).map(\.id))
+
+        CueCommands.renumberSelected(selected, start: 9999.5, interval: 1, document: document, undoManager: undo)
+
+        XCTAssertEqual(activeCues(document).compactMap(\.cueNumber), [])
+    }
+
+    func test_renumberSelected_rejectsNonFiniteStart() {
+        let document = makeDocumentWithItem()
+        let undo = makeUndoManager()
+        CueCommands.addCueAtPlayhead(time: 1, document: document, undoManager: undo)
+        let selected = Set(activeCues(document).map(\.id))
+
+        CueCommands.renumberSelected(selected, start: .nan, interval: 1, document: document, undoManager: undo)
+        CueCommands.renumberSelected(selected, start: 1, interval: .infinity, document: document, undoManager: undo)
+
+        XCTAssertEqual(activeCues(document).compactMap(\.cueNumber), [])
+    }
+
+    // The bounds themselves stay usable — the guard rejects, it does not shrink.
+    func test_renumberSelected_acceptsTheDomainBounds() throws {
+        let document = makeDocumentWithItem()
+        let undo = makeUndoManager()
+        CueCommands.addCueAtPlayhead(time: 1, document: document, undoManager: undo)
+        let selected = Set(activeCues(document).map(\.id))
+
+        CueCommands.renumberSelected(
+            selected, start: CueNumberValidator.minimum, interval: 1, document: document, undoManager: undo
+        )
+        XCTAssertEqual(try XCTUnwrap(number(document, at: 1)), CueNumberValidator.minimum, accuracy: 0.0001)
+
+        CueCommands.renumberSelected(
+            selected, start: CueNumberValidator.maximum, interval: 1, document: document, undoManager: undo
+        )
+        XCTAssertEqual(try XCTUnwrap(number(document, at: 1)), CueNumberValidator.maximum, accuracy: 0.0001)
+    }
+
     // MARK: - Helpers
 
     private func makeDocumentWithItem() -> CueListDocument {

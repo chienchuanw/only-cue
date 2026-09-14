@@ -212,6 +212,14 @@
           "name" : "Both",
           "notes" : "hold",
           "time" : "2.0"
+        },
+        {
+          "cueNumber" : "4.0",
+          "fadeIn" : "1e-05",
+          "fadeOut" : "0.0",
+          "name" : "Exponent",
+          "notes" : "",
+          "time" : "3.0"
         }
       ],
       "expect" : [
@@ -230,6 +238,10 @@
         "Assign Sequence 7 Cue 3 /fade=0.30000000000000004",
         "Assign Sequence 7 Cue 3 /outfade=1.25",
         "Assign Sequence 7 Cue 3 /info=\"hold\"",
+        "Store Sequence 7 Cue 4 \"Exponent\" /nc",
+        "Assign Sequence 7 Cue 4 /Trig=Timecode",
+        "Assign Sequence 7 Cue 4 /TrigTime=3",
+        "Assign Sequence 7 Cue 4 /fade=1e-05",
         "Label Sequence 7 \"Fades\"",
         "Assign Sequence 7 At Exec 1.5"
       ],

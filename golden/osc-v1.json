@@ -609,6 +609,13 @@
       "name" : "a bundle with a negative element size yields nothing"
     },
     {
+      "datagram" : "I2J1bmRsZQAAAAAAAAAAAQAAAAAAAAAUL29ubHljdWUvcGxheQAAACwAAAA=",
+      "messages" : [
+
+      ],
+      "name" : "a bundle stops at a zero element size rather than skipping past it"
+    },
+    {
       "datagram" : "I2J1bmRsZQAAAAAAAAAAAQAAAEABAgME",
       "messages" : [
 

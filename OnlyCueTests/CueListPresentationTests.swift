@@ -96,83 +96,77 @@ final class CueListPresentationTests: XCTestCase {
 
     // MARK: - CueListGoFilter
 
-    private static let liveType = CuePointType(
-        id: UUID(uuidString: "11111111-1111-1111-1111-111111111111")!,
-        name: "Lighting",
-        colorHex: "#FF0000"
-    )
+    /// Fixed ids, so a failure message names the same value on every run.
+    private static let liveID = "11111111-1111-1111-1111-111111111111"
+    private static let otherID = "33333333-3333-3333-3333-333333333333"
+
+    private func liveType() throws -> CuePointType {
+        CuePointType(id: try XCTUnwrap(UUID(uuidString: Self.liveID)), name: "Lighting", colorHex: "#FF0000")
+    }
 
     /// The filter only exists in Show mode (#657): the stored id is per-window
     /// scene state and survives a mode switch, so it must be gated on the mode
     /// rather than on the id being present.
-    func test_goFilter_isNilOutsideShowMode() {
+    func test_goFilter_isNilOutsideShowMode() throws {
+        let type = try liveType()
         XCTAssertNil(
-            CueListGoFilter.resolve(
-                rawID: Self.liveType.id.uuidString,
-                types: [Self.liveType],
-                isShowMode: false
-            )
+            CueListGoFilter.resolve(rawID: Self.liveID, types: [type], isShowMode: false)
         )
     }
 
-    func test_goFilter_resolvesALiveType() {
+    func test_goFilter_resolvesALiveType() throws {
+        let type = try liveType()
         XCTAssertEqual(
-            CueListGoFilter.resolve(
-                rawID: Self.liveType.id.uuidString,
-                types: [Self.liveType],
-                isShowMode: true
-            ),
-            Self.liveType.id
+            CueListGoFilter.resolve(rawID: Self.liveID, types: [type], isShowMode: true),
+            type.id
         )
     }
 
     /// "" is the `@SceneStorage` default and means All cues — never a filter.
-    func test_goFilter_emptyRawIDReadsAsAllCues() {
-        XCTAssertNil(CueListGoFilter.resolve(rawID: "", types: [Self.liveType], isShowMode: true))
+    func test_goFilter_emptyRawIDReadsAsAllCues() throws {
+        XCTAssertNil(CueListGoFilter.resolve(rawID: "", types: [try liveType()], isShowMode: true))
     }
 
     /// A syntactically valid id for a type that has since been deleted also
     /// reads as All, rather than filtering the list down to nothing.
-    func test_goFilter_deletedTypeReadsAsAllCues() {
+    func test_goFilter_deletedTypeReadsAsAllCues() throws {
         XCTAssertNil(
             CueListGoFilter.resolve(
                 rawID: "22222222-2222-2222-2222-222222222222",
-                types: [Self.liveType],
+                types: [try liveType()],
                 isShowMode: true
             )
         )
     }
 
-    func test_goFilter_malformedRawIDReadsAsAllCues() {
+    func test_goFilter_malformedRawIDReadsAsAllCues() throws {
         XCTAssertNil(
-            CueListGoFilter.resolve(rawID: "not-a-uuid", types: [Self.liveType], isShowMode: true)
+            CueListGoFilter.resolve(rawID: "not-a-uuid", types: [try liveType()], isShowMode: true)
         )
     }
 
     // MARK: - CueListRowOpacity
 
     /// No filter → every row is full strength, in any mode.
-    func test_rowOpacity_isFullWhenNoFilterIsActive() {
+    func test_rowOpacity_isFullWhenNoFilterIsActive() throws {
         XCTAssertEqual(
-            CueListRowOpacity.value(cueTypeID: Self.liveType.id, filter: nil, dimmed: 0.35),
+            CueListRowOpacity.value(cueTypeID: try liveType().id, filter: nil, dimmed: 0.35),
             1
         )
     }
 
-    func test_rowOpacity_isFullForTheFilteredType() {
-        XCTAssertEqual(
-            CueListRowOpacity.value(cueTypeID: Self.liveType.id, filter: Self.liveType.id, dimmed: 0.35),
-            1
-        )
+    func test_rowOpacity_isFullForTheFilteredType() throws {
+        let id = try liveType().id
+        XCTAssertEqual(CueListRowOpacity.value(cueTypeID: id, filter: id, dimmed: 0.35), 1)
     }
 
     /// Other types dim rather than disappear (#657) — the walked type stands out
     /// but the surrounding cues stay readable.
-    func test_rowOpacity_dimsOtherTypes() {
+    func test_rowOpacity_dimsOtherTypes() throws {
         XCTAssertEqual(
             CueListRowOpacity.value(
-                cueTypeID: UUID(uuidString: "33333333-3333-3333-3333-333333333333")!,
-                filter: Self.liveType.id,
+                cueTypeID: try XCTUnwrap(UUID(uuidString: Self.otherID)),
+                filter: try liveType().id,
                 dimmed: 0.35
             ),
             0.35

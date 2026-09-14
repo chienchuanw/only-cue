@@ -6,17 +6,16 @@ import SwiftUI
 extension DocumentView {
 
     /// The resolved Show-mode GO/step/highlight cue-type filter (#657): nil = All
-    /// cues. Non-nil only in Show mode when the stored id (`showGoTypeIDRaw`)
-    /// still matches a live cue type — "", a deleted type, or any non-Show mode
-    /// all read as All, preserving pre-#657 behaviour. Kept equivalent to
-    /// `CueListPane.showGoTypeID` (which gates on `isReadOnly`) so the picker /
-    /// row dim always agree with what GO walks.
+    /// cues. Shares `CueListGoFilter.resolve` with `CueListPane.showGoTypeID`, so
+    /// the picker and the row dim always agree with what GO walks (#837) —
+    /// previously the two spelled the same rule twice and a comment asked a
+    /// reader to keep them in step.
     var showGoTypeID: CuePointType.ID? {
-        guard editorMode == .show,
-              let id = UUID(uuidString: showGoTypeIDRaw),
-              document.model.cuePointTypes.contains(where: { $0.id == id })
-        else { return nil }
-        return id
+        CueListGoFilter.resolve(
+            rawID: showGoTypeIDRaw,
+            types: document.model.cuePointTypes,
+            isShowMode: editorMode == .show
+        )
     }
 
     /// Steps the playhead to the previous / next cue (transport prev/next-cue

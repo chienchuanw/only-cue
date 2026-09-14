@@ -1,0 +1,1398 @@
+{
+  "cases" : [
+    {
+      "expect" : {
+        "activeItemID" : "MINTED-0001",
+        "cuePointTypes" : [
+          {
+            "colorHex" : "#4ECDC4",
+            "defaultFadeTime" : 0,
+            "defaultNamePattern" : "Cue",
+            "id" : "MINTED-0002",
+            "isExportEnabled" : true,
+            "isVisible" : true,
+            "name" : "General"
+          }
+        ],
+        "id" : "9F2E0F8A-9C2D-4F2A-9E1A-0E1A2D3C4B5A",
+        "items" : [
+          {
+            "cues" : [
+              {
+                "cueNumber" : 1,
+                "fadeTime" : {
+                  "fadeIn" : 0,
+                  "fadeOut" : 0
+                },
+                "id" : "11111111-1111-1111-1111-111111111111",
+                "name" : "Spot up SR",
+                "notes" : "",
+                "time" : 4.25,
+                "typeID" : "MINTED-0002"
+              }
+            ],
+            "id" : "MINTED-0001",
+            "ltcMuted" : false,
+            "lyrics" : {
+              "lines" : [
+
+              ],
+              "offsetSeconds" : 0
+            },
+            "media" : {
+              "bookmarkData" : "AQID",
+              "displayName" : "act1.wav",
+              "duration" : 184.32,
+              "kind" : "audio"
+            },
+            "playsOriginalSourceAudio" : false,
+            "startTimecodeFrames" : 0
+          }
+        ],
+        "name" : "Opening Number",
+        "playbackMode" : "playOnce",
+        "schemaVersion" : 23,
+        "timecodeSettings" : {
+          "framerate" : "30"
+        }
+      },
+      "inputJSON" : "{\n  \"schemaVersion\": 1,\n  \"id\": \"9F2E0F8A-9C2D-4F2A-9E1A-0E1A2D3C4B5A\",\n  \"name\": \"Opening Number\",\n  \"media\": {\n    \"displayName\": \"act1.wav\",\n    \"kind\": \"audio\",\n    \"duration\": 184.32,\n    \"bookmarkData\": \"AQID\"\n  },\n  \"cues\": [\n    {\n      \"id\": \"11111111-1111-1111-1111-111111111111\",\n      \"name\": \"Spot up SR\",\n      \"time\": 4.25,\n      \"colorHex\": \"#FF6B6B\",\n      \"notes\": \"\"\n    }\n  ]\n}",
+      "name" : "v1",
+      "schemaVersion" : 1
+    },
+    {
+      "expect" : {
+        "activeItemID" : "AABBCCDD-1111-2222-3333-444455556666",
+        "cuePointTypes" : [
+          {
+            "colorHex" : "#4ECDC4",
+            "defaultFadeTime" : 0,
+            "defaultNamePattern" : "Cue",
+            "id" : "MINTED-0001",
+            "isExportEnabled" : true,
+            "isVisible" : true,
+            "name" : "General"
+          }
+        ],
+        "id" : "9F2E0F8A-9C2D-4F2A-9E1A-0E1A2D3C4B5A",
+        "items" : [
+          {
+            "cues" : [
+              {
+                "cueNumber" : 1,
+                "fadeTime" : {
+                  "fadeIn" : 0,
+                  "fadeOut" : 0
+                },
+                "id" : "11111111-1111-1111-1111-111111111111",
+                "name" : "Spot up SR",
+                "notes" : "",
+                "time" : 4.25,
+                "typeID" : "MINTED-0001"
+              },
+              {
+                "cueNumber" : 2,
+                "fadeTime" : {
+                  "fadeIn" : 0,
+                  "fadeOut" : 0
+                },
+                "id" : "22222222-2222-2222-2222-222222222222",
+                "name" : "Wash full",
+                "notes" : "",
+                "time" : 12,
+                "typeID" : "MINTED-0001"
+              }
+            ],
+            "id" : "AABBCCDD-1111-2222-3333-444455556666",
+            "ltcMuted" : false,
+            "lyrics" : {
+              "lines" : [
+
+              ],
+              "offsetSeconds" : 0
+            },
+            "media" : {
+              "bookmarkData" : "AQID",
+              "displayName" : "act1.wav",
+              "duration" : 184.32,
+              "kind" : "audio"
+            },
+            "playsOriginalSourceAudio" : false,
+            "startTimecodeFrames" : 0
+          }
+        ],
+        "name" : "Show A",
+        "playbackMode" : "playOnce",
+        "schemaVersion" : 23,
+        "timecodeSettings" : {
+          "framerate" : "30"
+        }
+      },
+      "inputJSON" : "{\n  \"schemaVersion\": 2,\n  \"id\": \"9F2E0F8A-9C2D-4F2A-9E1A-0E1A2D3C4B5A\",\n  \"name\": \"Show A\",\n  \"items\": [\n    {\n      \"id\": \"AABBCCDD-1111-2222-3333-444455556666\",\n      \"media\": {\n        \"displayName\": \"act1.wav\",\n        \"kind\": \"audio\",\n        \"duration\": 184.32,\n        \"bookmarkData\": \"AQID\"\n      },\n      \"cues\": [\n        {\n          \"id\": \"11111111-1111-1111-1111-111111111111\",\n          \"name\": \"Spot up SR\",\n          \"time\": 4.25,\n          \"colorHex\": \"#FF6B6B\",\n          \"notes\": \"\"\n        },\n        {\n          \"id\": \"22222222-2222-2222-2222-222222222222\",\n          \"name\": \"Wash full\",\n          \"time\": 12.0,\n          \"colorHex\": \"#4ECDC4\",\n          \"notes\": \"\"\n        }\n      ]\n    }\n  ],\n  \"activeItemID\": \"AABBCCDD-1111-2222-3333-444455556666\"\n}",
+      "name" : "v2",
+      "schemaVersion" : 2
+    },
+    {
+      "expect" : {
+        "activeItemID" : "AABBCCDD-1111-2222-3333-444455556666",
+        "cuePointTypes" : [
+          {
+            "colorHex" : "#4ECDC4",
+            "defaultFadeTime" : 0,
+            "defaultNamePattern" : "Cue",
+            "id" : "CCCC3333-CCCC-3333-CCCC-3333CCCC3333",
+            "isExportEnabled" : true,
+            "isVisible" : true,
+            "name" : "General"
+          }
+        ],
+        "id" : "9F2E0F8A-9C2D-4F2A-9E1A-0E1A2D3C4B5A",
+        "items" : [
+          {
+            "cues" : [
+              {
+                "cueNumber" : 1,
+                "fadeTime" : {
+                  "fadeIn" : 0,
+                  "fadeOut" : 0
+                },
+                "id" : "22222222-2222-2222-2222-222222222222",
+                "name" : "A",
+                "notes" : "",
+                "time" : 5,
+                "typeID" : "CCCC3333-CCCC-3333-CCCC-3333CCCC3333"
+              },
+              {
+                "cueNumber" : 2,
+                "fadeTime" : {
+                  "fadeIn" : 0,
+                  "fadeOut" : 0
+                },
+                "id" : "33333333-3333-3333-3333-333333333333",
+                "name" : "B",
+                "notes" : "",
+                "time" : 15,
+                "typeID" : "CCCC3333-CCCC-3333-CCCC-3333CCCC3333"
+              },
+              {
+                "cueNumber" : 3,
+                "fadeTime" : {
+                  "fadeIn" : 0,
+                  "fadeOut" : 0
+                },
+                "id" : "11111111-1111-1111-1111-111111111111",
+                "name" : "C",
+                "notes" : "",
+                "time" : 30,
+                "typeID" : "CCCC3333-CCCC-3333-CCCC-3333CCCC3333"
+              }
+            ],
+            "id" : "AABBCCDD-1111-2222-3333-444455556666",
+            "ltcMuted" : false,
+            "lyrics" : {
+              "lines" : [
+
+              ],
+              "offsetSeconds" : 0
+            },
+            "media" : {
+              "bookmarkData" : "AQID",
+              "displayName" : "act1.wav",
+              "duration" : 100,
+              "kind" : "audio"
+            },
+            "playsOriginalSourceAudio" : false,
+            "startTimecodeFrames" : 0
+          }
+        ],
+        "name" : "Show",
+        "playbackMode" : "playOnce",
+        "schemaVersion" : 23,
+        "timecodeSettings" : {
+          "framerate" : "30"
+        }
+      },
+      "inputJSON" : "{\n  \"schemaVersion\": 3,\n  \"id\": \"9F2E0F8A-9C2D-4F2A-9E1A-0E1A2D3C4B5A\",\n  \"name\": \"Show\",\n  \"cuePointTypes\": [\n    {\n      \"id\": \"CCCC3333-CCCC-3333-CCCC-3333CCCC3333\",\n      \"name\": \"General\",\n      \"colorHex\": \"#4ECDC4\",\n      \"defaultFadeTime\": 0,\n      \"defaultNamePattern\": \"Cue\",\n      \"isVisible\": true,\n      \"isExportEnabled\": true\n    }\n  ],\n  \"items\": [\n    {\n      \"id\": \"AABBCCDD-1111-2222-3333-444455556666\",\n      \"media\": {\n        \"displayName\": \"act1.wav\",\n        \"kind\": \"audio\",\n        \"duration\": 100,\n        \"bookmarkData\": \"AQID\"\n      },\n      \"cues\": [\n        {\n          \"id\": \"11111111-1111-1111-1111-111111111111\",\n          \"typeID\": \"CCCC3333-CCCC-3333-CCCC-3333CCCC3333\",\n          \"name\": \"C\",\n          \"time\": 30.0,\n          \"colorHex\": \"#FF6B6B\",\n          \"notes\": \"\"\n        },\n        {\n          \"id\": \"22222222-2222-2222-2222-222222222222\",\n          \"typeID\": \"CCCC3333-CCCC-3333-CCCC-3333CCCC3333\",\n          \"name\": \"A\",\n          \"time\": 5.0,\n          \"colorHex\": \"#4ECDC4\",\n          \"notes\": \"\"\n        },\n        {\n          \"id\": \"33333333-3333-3333-3333-333333333333\",\n          \"typeID\": \"CCCC3333-CCCC-3333-CCCC-3333CCCC3333\",\n          \"name\": \"B\",\n          \"time\": 15.0,\n          \"colorHex\": \"#4ECDC4\",\n          \"notes\": \"\"\n        }\n      ]\n    }\n  ],\n  \"activeItemID\": \"AABBCCDD-1111-2222-3333-444455556666\"\n}",
+      "name" : "v3",
+      "schemaVersion" : 3
+    },
+    {
+      "expect" : {
+        "activeItemID" : "AABBCCDD-1111-2222-3333-444455556666",
+        "cuePointTypes" : [
+          {
+            "colorHex" : "#4ECDC4",
+            "defaultFadeTime" : 0,
+            "defaultNamePattern" : "Cue",
+            "id" : "CCCC3333-CCCC-3333-CCCC-3333CCCC3333",
+            "isExportEnabled" : true,
+            "isVisible" : true,
+            "name" : "General"
+          }
+        ],
+        "id" : "9F2E0F8A-9C2D-4F2A-9E1A-0E1A2D3C4B5A",
+        "items" : [
+          {
+            "cues" : [
+              {
+                "cueNumber" : 1,
+                "fadeTime" : {
+                  "fadeIn" : 0,
+                  "fadeOut" : 0
+                },
+                "id" : "11111111-1111-1111-1111-111111111111",
+                "name" : "Cue 1",
+                "notes" : "",
+                "time" : 5,
+                "typeID" : "CCCC3333-CCCC-3333-CCCC-3333CCCC3333"
+              },
+              {
+                "cueNumber" : 2,
+                "fadeTime" : {
+                  "fadeIn" : 0,
+                  "fadeOut" : 0
+                },
+                "id" : "22222222-2222-2222-2222-222222222222",
+                "name" : "Cue 2",
+                "notes" : "",
+                "time" : 15,
+                "typeID" : "CCCC3333-CCCC-3333-CCCC-3333CCCC3333"
+              }
+            ],
+            "id" : "AABBCCDD-1111-2222-3333-444455556666",
+            "ltcMuted" : false,
+            "lyrics" : {
+              "lines" : [
+
+              ],
+              "offsetSeconds" : 0
+            },
+            "media" : {
+              "bookmarkData" : "AQID",
+              "displayName" : "act1.wav",
+              "duration" : 100,
+              "kind" : "audio"
+            },
+            "playsOriginalSourceAudio" : false,
+            "startTimecodeFrames" : 0
+          }
+        ],
+        "name" : "Show",
+        "playbackMode" : "playOnce",
+        "schemaVersion" : 23,
+        "timecodeSettings" : {
+          "framerate" : "30"
+        }
+      },
+      "inputJSON" : "{\n  \"schemaVersion\": 4,\n  \"id\": \"9F2E0F8A-9C2D-4F2A-9E1A-0E1A2D3C4B5A\",\n  \"name\": \"Show\",\n  \"cuePointTypes\": [\n    {\n      \"id\": \"CCCC3333-CCCC-3333-CCCC-3333CCCC3333\",\n      \"name\": \"General\",\n      \"colorHex\": \"#4ECDC4\",\n      \"defaultFadeTime\": 0,\n      \"defaultNamePattern\": \"Cue\",\n      \"isVisible\": true,\n      \"isExportEnabled\": true\n    }\n  ],\n  \"items\": [\n    {\n      \"id\": \"AABBCCDD-1111-2222-3333-444455556666\",\n      \"media\": {\n        \"displayName\": \"act1.wav\",\n        \"kind\": \"audio\",\n        \"duration\": 100,\n        \"bookmarkData\": \"AQID\"\n      },\n      \"cues\": [\n        {\n          \"id\": \"11111111-1111-1111-1111-111111111111\",\n          \"typeID\": \"CCCC3333-CCCC-3333-CCCC-3333CCCC3333\",\n          \"cueNumber\": 1,\n          \"name\": \"Cue 1\",\n          \"time\": 5.0,\n          \"colorHex\": \"#FF6B6B\",\n          \"notes\": \"\"\n        },\n        {\n          \"id\": \"22222222-2222-2222-2222-222222222222\",\n          \"typeID\": \"CCCC3333-CCCC-3333-CCCC-3333CCCC3333\",\n          \"cueNumber\": 2,\n          \"name\": \"Cue 2\",\n          \"time\": 15.0,\n          \"colorHex\": \"#4ECDC4\",\n          \"notes\": \"\"\n        }\n      ]\n    }\n  ],\n  \"activeItemID\": \"AABBCCDD-1111-2222-3333-444455556666\"\n}",
+      "name" : "v4",
+      "schemaVersion" : 4
+    },
+    {
+      "expect" : {
+        "activeItemID" : "AABBCCDD-1111-2222-3333-444455556666",
+        "cuePointTypes" : [
+          {
+            "colorHex" : "#4ECDC4",
+            "defaultFadeTime" : 0,
+            "defaultNamePattern" : "Cue",
+            "id" : "CCCC3333-CCCC-3333-CCCC-3333CCCC3333",
+            "isExportEnabled" : true,
+            "isVisible" : true,
+            "name" : "General"
+          }
+        ],
+        "id" : "9F2E0F8A-9C2D-4F2A-9E1A-0E1A2D3C4B5A",
+        "items" : [
+          {
+            "cues" : [
+              {
+                "cueNumber" : 1,
+                "fadeTime" : {
+                  "fadeIn" : 1.5,
+                  "fadeOut" : 1.5
+                },
+                "id" : "11111111-1111-1111-1111-111111111111",
+                "name" : "Cue 1",
+                "notes" : "",
+                "time" : 5,
+                "typeID" : "CCCC3333-CCCC-3333-CCCC-3333CCCC3333"
+              },
+              {
+                "cueNumber" : 2,
+                "fadeTime" : {
+                  "fadeIn" : 1,
+                  "fadeOut" : 2
+                },
+                "id" : "22222222-2222-2222-2222-222222222222",
+                "name" : "Cue 2",
+                "notes" : "",
+                "time" : 15,
+                "typeID" : "CCCC3333-CCCC-3333-CCCC-3333CCCC3333"
+              }
+            ],
+            "id" : "AABBCCDD-1111-2222-3333-444455556666",
+            "ltcMuted" : false,
+            "lyrics" : {
+              "lines" : [
+
+              ],
+              "offsetSeconds" : 0
+            },
+            "media" : {
+              "bookmarkData" : "AQID",
+              "displayName" : "act1.wav",
+              "duration" : 100,
+              "kind" : "audio"
+            },
+            "playsOriginalSourceAudio" : false,
+            "startTimecodeFrames" : 0
+          }
+        ],
+        "name" : "Show",
+        "playbackMode" : "playOnce",
+        "schemaVersion" : 23,
+        "timecodeSettings" : {
+          "framerate" : "30"
+        }
+      },
+      "inputJSON" : "{\n  \"schemaVersion\": 5,\n  \"id\": \"9F2E0F8A-9C2D-4F2A-9E1A-0E1A2D3C4B5A\",\n  \"name\": \"Show\",\n  \"cuePointTypes\": [\n    {\n      \"id\": \"CCCC3333-CCCC-3333-CCCC-3333CCCC3333\",\n      \"name\": \"General\",\n      \"colorHex\": \"#4ECDC4\",\n      \"defaultFadeTime\": 0,\n      \"defaultNamePattern\": \"Cue\",\n      \"isVisible\": true,\n      \"isExportEnabled\": true\n    }\n  ],\n  \"items\": [\n    {\n      \"id\": \"AABBCCDD-1111-2222-3333-444455556666\",\n      \"media\": {\n        \"displayName\": \"act1.wav\",\n        \"kind\": \"audio\",\n        \"duration\": 100,\n        \"bookmarkData\": \"AQID\"\n      },\n      \"cues\": [\n        {\n          \"id\": \"11111111-1111-1111-1111-111111111111\",\n          \"typeID\": \"CCCC3333-CCCC-3333-CCCC-3333CCCC3333\",\n          \"cueNumber\": 1,\n          \"name\": \"Cue 1\",\n          \"time\": 5.0,\n          \"colorHex\": \"#FF6B6B\",\n          \"notes\": \"\",\n          \"fadeTime\": { \"fadeIn\": 1.5, \"fadeOut\": 1.5 }\n        },\n        {\n          \"id\": \"22222222-2222-2222-2222-222222222222\",\n          \"typeID\": \"CCCC3333-CCCC-3333-CCCC-3333CCCC3333\",\n          \"cueNumber\": 2,\n          \"name\": \"Cue 2\",\n          \"time\": 15.0,\n          \"colorHex\": \"#4ECDC4\",\n          \"notes\": \"\",\n          \"fadeTime\": { \"fadeIn\": 1.0, \"fadeOut\": 2.0 }\n        }\n      ]\n    }\n  ],\n  \"activeItemID\": \"AABBCCDD-1111-2222-3333-444455556666\"\n}",
+      "name" : "v5",
+      "schemaVersion" : 5
+    },
+    {
+      "expect" : {
+        "cuePointTypes" : [
+          {
+            "colorHex" : "#4ECDC4",
+            "defaultFadeTime" : 0,
+            "defaultNamePattern" : "Cue",
+            "id" : "CCCC3333-CCCC-3333-CCCC-3333CCCC3333",
+            "isExportEnabled" : true,
+            "isVisible" : true,
+            "name" : "General"
+          }
+        ],
+        "id" : "9F2E0F8A-9C2D-4F2A-9E1A-0E1A2D3C4B5A",
+        "items" : [
+
+        ],
+        "name" : "Legacy v6 show",
+        "playbackMode" : "playOnce",
+        "schemaVersion" : 23,
+        "timecodeSettings" : {
+          "framerate" : "30"
+        }
+      },
+      "inputJSON" : "{\n  \"schemaVersion\": 6,\n  \"id\": \"9F2E0F8A-9C2D-4F2A-9E1A-0E1A2D3C4B5A\",\n  \"name\": \"Legacy v6 show\",\n  \"activeItemID\": null,\n  \"cuePointTypes\": [\n    {\n      \"id\": \"CCCC3333-CCCC-3333-CCCC-3333CCCC3333\",\n      \"name\": \"General\",\n      \"colorHex\": \"#4ECDC4\",\n      \"defaultFadeTime\": 0,\n      \"defaultNamePattern\": \"Cue\",\n      \"hotkey\": null,\n      \"isVisible\": true,\n      \"isExportEnabled\": true\n    }\n  ],\n  \"items\": []\n}",
+      "name" : "v6",
+      "schemaVersion" : 6
+    },
+    {
+      "expect" : {
+        "activeItemID" : "AABBCCDD-1111-2222-3333-444455556666",
+        "cuePointTypes" : [
+          {
+            "colorHex" : "#4ECDC4",
+            "defaultFadeTime" : 0,
+            "defaultNamePattern" : "Cue",
+            "id" : "CCCC3333-CCCC-3333-CCCC-3333CCCC3333",
+            "isExportEnabled" : true,
+            "isVisible" : true,
+            "name" : "General"
+          }
+        ],
+        "id" : "7E7E7E7E-7E7E-7E7E-7E7E-7E7E7E7E7E7E",
+        "items" : [
+          {
+            "cues" : [
+              {
+                "cueNumber" : 1,
+                "fadeTime" : {
+                  "fadeIn" : 0,
+                  "fadeOut" : 0
+                },
+                "id" : "11111111-1111-1111-1111-111111111111",
+                "name" : "Cue 1",
+                "notes" : "",
+                "time" : 5,
+                "typeID" : "CCCC3333-CCCC-3333-CCCC-3333CCCC3333"
+              }
+            ],
+            "id" : "AABBCCDD-1111-2222-3333-444455556666",
+            "ltcMuted" : false,
+            "lyrics" : {
+              "lines" : [
+
+              ],
+              "offsetSeconds" : 0
+            },
+            "media" : {
+              "bookmarkData" : "AQID",
+              "displayName" : "act1.wav",
+              "duration" : 100,
+              "kind" : "audio"
+            },
+            "playsOriginalSourceAudio" : false,
+            "startTimecodeFrames" : 90000
+          }
+        ],
+        "name" : "Show",
+        "playbackMode" : "playOnce",
+        "schemaVersion" : 23,
+        "timecodeSettings" : {
+          "framerate" : "25"
+        }
+      },
+      "inputJSON" : "{\n  \"schemaVersion\": 7,\n  \"id\": \"7E7E7E7E-7E7E-7E7E-7E7E-7E7E7E7E7E7E\",\n  \"name\": \"Show\",\n  \"cuePointTypes\": [\n    {\n      \"id\": \"CCCC3333-CCCC-3333-CCCC-3333CCCC3333\",\n      \"name\": \"General\",\n      \"colorHex\": \"#4ECDC4\",\n      \"defaultFadeTime\": 0,\n      \"defaultNamePattern\": \"Cue\",\n      \"isVisible\": true,\n      \"isExportEnabled\": true\n    }\n  ],\n  \"items\": [\n    {\n      \"id\": \"AABBCCDD-1111-2222-3333-444455556666\",\n      \"media\": {\n        \"displayName\": \"act1.wav\",\n        \"kind\": \"audio\",\n        \"duration\": 100,\n        \"bookmarkData\": \"AQID\"\n      },\n      \"cues\": [\n        {\n          \"id\": \"11111111-1111-1111-1111-111111111111\",\n          \"typeID\": \"CCCC3333-CCCC-3333-CCCC-3333CCCC3333\",\n          \"cueNumber\": 1,\n          \"name\": \"Cue 1\",\n          \"time\": 5.0,\n          \"notes\": \"\",\n          \"fadeTime\": { \"fadeIn\": 0, \"fadeOut\": 0 }\n        }\n      ]\n    }\n  ],\n  \"activeItemID\": \"AABBCCDD-1111-2222-3333-444455556666\",\n  \"timecodeSettings\": { \"framerate\": \"25\", \"startOffsetFrames\": 90000 }\n}",
+      "name" : "v7",
+      "schemaVersion" : 7
+    },
+    {
+      "expect" : {
+        "activeItemID" : "AABBCCDD-1111-2222-3333-444455556666",
+        "cuePointTypes" : [
+          {
+            "colorHex" : "#4ECDC4",
+            "defaultFadeTime" : 0,
+            "defaultNamePattern" : "Cue",
+            "id" : "CCCC3333-CCCC-3333-CCCC-3333CCCC3333",
+            "isExportEnabled" : true,
+            "isVisible" : true,
+            "name" : "General"
+          }
+        ],
+        "id" : "88888888-8888-8888-8888-888888888888",
+        "items" : [
+          {
+            "cues" : [
+              {
+                "cueNumber" : 1,
+                "fadeTime" : {
+                  "fadeIn" : 0,
+                  "fadeOut" : 0
+                },
+                "id" : "11111111-1111-1111-1111-111111111111",
+                "name" : "Cue 1",
+                "notes" : "",
+                "time" : 5,
+                "typeID" : "CCCC3333-CCCC-3333-CCCC-3333CCCC3333"
+              },
+              {
+                "cueNumber" : 1.5,
+                "fadeTime" : {
+                  "fadeIn" : 0,
+                  "fadeOut" : 0
+                },
+                "id" : "22222222-2222-2222-2222-222222222222",
+                "name" : "Cue 1.5",
+                "notes" : "",
+                "time" : 7.5,
+                "typeID" : "CCCC3333-CCCC-3333-CCCC-3333CCCC3333"
+              },
+              {
+                "cueNumber" : 2,
+                "fadeTime" : {
+                  "fadeIn" : 0,
+                  "fadeOut" : 0
+                },
+                "id" : "33333333-3333-3333-3333-333333333333",
+                "name" : "Cue 2",
+                "notes" : "",
+                "time" : 10,
+                "typeID" : "CCCC3333-CCCC-3333-CCCC-3333CCCC3333"
+              }
+            ],
+            "id" : "AABBCCDD-1111-2222-3333-444455556666",
+            "ltcMuted" : false,
+            "lyrics" : {
+              "lines" : [
+
+              ],
+              "offsetSeconds" : 0
+            },
+            "media" : {
+              "bookmarkData" : "AQID",
+              "displayName" : "act1.wav",
+              "duration" : 100,
+              "kind" : "audio"
+            },
+            "playsOriginalSourceAudio" : false,
+            "startTimecodeFrames" : 90000
+          }
+        ],
+        "name" : "ShowV8",
+        "playbackMode" : "playOnce",
+        "schemaVersion" : 23,
+        "timecodeSettings" : {
+          "framerate" : "25"
+        }
+      },
+      "inputJSON" : "{\n  \"schemaVersion\": 8,\n  \"id\": \"88888888-8888-8888-8888-888888888888\",\n  \"name\": \"ShowV8\",\n  \"cuePointTypes\": [\n    {\n      \"id\": \"CCCC3333-CCCC-3333-CCCC-3333CCCC3333\",\n      \"name\": \"General\",\n      \"colorHex\": \"#4ECDC4\",\n      \"defaultFadeTime\": 0,\n      \"defaultNamePattern\": \"Cue\",\n      \"isVisible\": true,\n      \"isExportEnabled\": true\n    }\n  ],\n  \"items\": [\n    {\n      \"id\": \"AABBCCDD-1111-2222-3333-444455556666\",\n      \"media\": {\n        \"displayName\": \"act1.wav\",\n        \"kind\": \"audio\",\n        \"duration\": 100,\n        \"bookmarkData\": \"AQID\"\n      },\n      \"cues\": [\n        {\n          \"id\": \"11111111-1111-1111-1111-111111111111\",\n          \"typeID\": \"CCCC3333-CCCC-3333-CCCC-3333CCCC3333\",\n          \"cueNumber\": 1,\n          \"name\": \"Cue 1\",\n          \"time\": 5.0,\n          \"notes\": \"\",\n          \"fadeTime\": { \"fadeIn\": 0, \"fadeOut\": 0 }\n        },\n        {\n          \"id\": \"22222222-2222-2222-2222-222222222222\",\n          \"typeID\": \"CCCC3333-CCCC-3333-CCCC-3333CCCC3333\",\n          \"cueNumber\": 1.5,\n          \"name\": \"Cue 1.5\",\n          \"time\": 7.5,\n          \"notes\": \"\",\n          \"fadeTime\": { \"fadeIn\": 0, \"fadeOut\": 0 }\n        },\n        {\n          \"id\": \"33333333-3333-3333-3333-333333333333\",\n          \"typeID\": \"CCCC3333-CCCC-3333-CCCC-3333CCCC3333\",\n          \"cueNumber\": 2,\n          \"name\": \"Cue 2\",\n          \"time\": 10.0,\n          \"notes\": \"\",\n          \"fadeTime\": { \"fadeIn\": 0, \"fadeOut\": 0 }\n        }\n      ],\n      \"tempoMap\": { \"sections\": [] }\n    }\n  ],\n  \"activeItemID\": \"AABBCCDD-1111-2222-3333-444455556666\",\n  \"timecodeSettings\": { \"framerate\": \"25\", \"startOffsetFrames\": 90000 }\n}",
+      "name" : "v8",
+      "schemaVersion" : 8
+    },
+    {
+      "expect" : {
+        "cuePointTypes" : [
+
+        ],
+        "id" : "AAAA9999-AAAA-9999-AAAA-9999AAAA9999",
+        "items" : [
+          {
+            "cues" : [
+
+            ],
+            "id" : "11110000-1111-0000-1111-000011110000",
+            "ltcMuted" : false,
+            "lyrics" : {
+              "lines" : [
+
+              ],
+              "offsetSeconds" : 0
+            },
+            "media" : {
+              "bookmarkData" : "AQID",
+              "displayName" : "act1.wav",
+              "duration" : 60,
+              "kind" : "audio"
+            },
+            "playsOriginalSourceAudio" : false,
+            "startTimecodeFrames" : 90000
+          },
+          {
+            "cues" : [
+
+            ],
+            "id" : "22220000-2222-0000-2222-000022220000",
+            "ltcMuted" : false,
+            "lyrics" : {
+              "lines" : [
+
+              ],
+              "offsetSeconds" : 0
+            },
+            "media" : {
+              "bookmarkData" : "AQID",
+              "displayName" : "act2.wav",
+              "duration" : 90,
+              "kind" : "audio"
+            },
+            "playsOriginalSourceAudio" : false,
+            "startTimecodeFrames" : 90000
+          }
+        ],
+        "name" : "ShowV9",
+        "playbackMode" : "playOnce",
+        "schemaVersion" : 23,
+        "timecodeSettings" : {
+          "framerate" : "25"
+        }
+      },
+      "inputJSON" : "{\n  \"schemaVersion\": 9,\n  \"id\": \"AAAA9999-AAAA-9999-AAAA-9999AAAA9999\",\n  \"name\": \"ShowV9\",\n  \"cuePointTypes\": [],\n  \"items\": [\n    {\n      \"id\": \"11110000-1111-0000-1111-000011110000\",\n      \"media\": {\n        \"displayName\": \"act1.wav\",\n        \"kind\": \"audio\",\n        \"duration\": 60,\n        \"bookmarkData\": \"AQID\"\n      },\n      \"cues\": [],\n      \"tempoMap\": { \"sections\": [] }\n    },\n    {\n      \"id\": \"22220000-2222-0000-2222-000022220000\",\n      \"media\": {\n        \"displayName\": \"act2.wav\",\n        \"kind\": \"audio\",\n        \"duration\": 90,\n        \"bookmarkData\": \"AQID\"\n      },\n      \"cues\": [],\n      \"tempoMap\": { \"sections\": [] }\n    }\n  ],\n  \"activeItemID\": null,\n  \"timecodeSettings\": { \"framerate\": \"25\", \"startOffsetFrames\": 90000 }\n}",
+      "name" : "v9",
+      "schemaVersion" : 9
+    },
+    {
+      "expect" : {
+        "cuePointTypes" : [
+          {
+            "colorHex" : "#fff",
+            "defaultFadeTime" : 0,
+            "defaultNamePattern" : "Cue",
+            "id" : "AAAA0001-0000-0000-0000-000000000001",
+            "isExportEnabled" : true,
+            "isVisible" : true,
+            "name" : "G"
+          }
+        ],
+        "id" : "11110000-1111-0000-1111-000011110000",
+        "items" : [
+          {
+            "cues" : [
+              {
+                "beatsPerBar" : 4,
+                "bpm" : 120,
+                "fadeTime" : {
+                  "fadeIn" : 0,
+                  "fadeOut" : 0
+                },
+                "id" : "BBBB0001-0000-0000-0000-000000000001",
+                "name" : "c",
+                "notes" : "",
+                "time" : 0,
+                "typeID" : "AAAA0001-0000-0000-0000-000000000001"
+              },
+              {
+                "beatsPerBar" : 4,
+                "bpm" : 75,
+                "fadeTime" : {
+                  "fadeIn" : 0,
+                  "fadeOut" : 0
+                },
+                "id" : "MINTED-0001",
+                "name" : "Tempo",
+                "notes" : "",
+                "time" : 30,
+                "typeID" : "AAAA0001-0000-0000-0000-000000000001"
+              }
+            ],
+            "id" : "22220000-2222-0000-2222-000022220000",
+            "ltcMuted" : false,
+            "lyrics" : {
+              "lines" : [
+
+              ],
+              "offsetSeconds" : 0
+            },
+            "media" : {
+              "bookmarkData" : "AQID",
+              "displayName" : "x",
+              "duration" : 60,
+              "kind" : "audio"
+            },
+            "playsOriginalSourceAudio" : false,
+            "startTimecodeFrames" : 0
+          }
+        ],
+        "name" : "doc",
+        "playbackMode" : "playOnce",
+        "schemaVersion" : 23,
+        "timecodeSettings" : {
+          "framerate" : "30"
+        }
+      },
+      "inputJSON" : "{\n  \"schemaVersion\": 10,\n  \"id\": \"11110000-1111-0000-1111-000011110000\",\n  \"name\": \"doc\",\n  \"cuePointTypes\": [{\n    \"id\":\"AAAA0001-0000-0000-0000-000000000001\",\"name\":\"G\",\"colorHex\":\"#fff\",\n    \"defaultFadeTime\":0,\"defaultNamePattern\":\"Cue\",\"hotkey\":null,\n    \"isVisible\":true,\"isExportEnabled\":true\n  }],\n  \"items\": [{\n    \"id\": \"22220000-2222-0000-2222-000022220000\",\n    \"media\": {\"displayName\":\"x\",\"kind\":\"audio\",\"duration\":60,\"bookmarkData\":\"AQID\"},\n    \"cues\": [{\n      \"id\":\"BBBB0001-0000-0000-0000-000000000001\",\"typeID\":\"AAAA0001-0000-0000-0000-000000000001\",\"cueNumber\":null,\n      \"name\":\"c\",\"time\":0.0,\"notes\":\"\",\"fadeTime\":{\"fadeIn\":0,\"fadeOut\":0}\n    }],\n    \"tempoMap\": {\"sections\":[\n      {\n        \"id\":\"33330000-3333-0000-3333-000033330000\",\n        \"startSeconds\":0.0,\"bpm\":120.0,\"beatsPerBar\":4,\"downbeatOffsetSeconds\":0.0\n      },\n      {\n        \"id\":\"44440000-4444-0000-4444-000044440000\",\n        \"startSeconds\":30.0,\"bpm\":75.0,\"beatsPerBar\":4,\"downbeatOffsetSeconds\":0.0\n      }\n    ]},\n    \"startTimecodeFrames\": 0,\n    \"ltcMuted\": false\n  }],\n  \"activeItemID\": null,\n  \"timecodeSettings\": {\"framerate\":\"30\"}\n}",
+      "name" : "v10",
+      "schemaVersion" : 10
+    },
+    {
+      "expect" : {
+        "cuePointTypes" : [
+          {
+            "colorHex" : "#fff",
+            "defaultFadeTime" : 0,
+            "defaultNamePattern" : "Cue",
+            "id" : "AAAA0001-0000-0000-0000-000000000001",
+            "isExportEnabled" : true,
+            "isVisible" : true,
+            "name" : "G"
+          }
+        ],
+        "id" : "11110000-1111-0000-1111-000011110000",
+        "items" : [
+          {
+            "cues" : [
+
+            ],
+            "id" : "22220000-2222-0000-2222-000022220000",
+            "ltcMuted" : true,
+            "lyrics" : {
+              "lines" : [
+
+              ],
+              "offsetSeconds" : 0
+            },
+            "media" : {
+              "bookmarkData" : "AQID",
+              "displayName" : "song.wav",
+              "duration" : 60,
+              "kind" : "audio"
+            },
+            "playsOriginalSourceAudio" : false,
+            "startTimecodeFrames" : 240
+          }
+        ],
+        "name" : "doc",
+        "playbackMode" : "playOnce",
+        "schemaVersion" : 23,
+        "timecodeSettings" : {
+          "framerate" : "30"
+        }
+      },
+      "inputJSON" : "{\n  \"schemaVersion\": 11,\n  \"id\": \"11110000-1111-0000-1111-000011110000\",\n  \"name\": \"doc\",\n  \"cuePointTypes\": [{\n    \"id\":\"AAAA0001-0000-0000-0000-000000000001\",\"name\":\"G\",\"colorHex\":\"#fff\",\n    \"defaultFadeTime\":0,\"defaultNamePattern\":\"Cue\",\"hotkey\":null,\n    \"isVisible\":true,\"isExportEnabled\":true\n  }],\n  \"items\": [{\n    \"id\": \"22220000-2222-0000-2222-000022220000\",\n    \"media\": {\"displayName\":\"song.wav\",\"kind\":\"audio\",\"duration\":60,\"bookmarkData\":\"AQID\"},\n    \"cues\": [],\n    \"startTimecodeFrames\": 240,\n    \"ltcMuted\": true\n  }],\n  \"activeItemID\": null,\n  \"timecodeSettings\": {\"framerate\":\"30\"}\n}",
+      "name" : "v11",
+      "schemaVersion" : 11
+    },
+    {
+      "expect" : {
+        "cuePointTypes" : [
+          {
+            "colorHex" : "#FFFFFF",
+            "defaultFadeTime" : 0,
+            "defaultNamePattern" : "Cue",
+            "id" : "AAAA0001-0000-0000-0000-000000000001",
+            "isExportEnabled" : true,
+            "isVisible" : true,
+            "name" : "G"
+          }
+        ],
+        "id" : "11110000-1111-0000-1111-000011110000",
+        "items" : [
+          {
+            "alternateName" : "Act 1",
+            "cues" : [
+              {
+                "fadeTime" : {
+                  "fadeIn" : 0,
+                  "fadeOut" : 0
+                },
+                "id" : "BBBB0001-0000-0000-0000-000000000001",
+                "name" : "c",
+                "notes" : "n",
+                "time" : 1.5,
+                "typeID" : "AAAA0001-0000-0000-0000-000000000001"
+              }
+            ],
+            "id" : "22220000-2222-0000-2222-000022220000",
+            "ltcMuted" : true,
+            "lyrics" : {
+              "lines" : [
+
+              ],
+              "offsetSeconds" : 0
+            },
+            "media" : {
+              "bookmarkData" : "AQID",
+              "displayName" : "x.wav",
+              "duration" : 60,
+              "kind" : "audio"
+            },
+            "playsOriginalSourceAudio" : false,
+            "startTimecodeFrames" : 90
+          }
+        ],
+        "name" : "doc",
+        "playbackMode" : "playOnce",
+        "schemaVersion" : 23,
+        "timecodeSettings" : {
+          "framerate" : "30"
+        }
+      },
+      "inputJSON" : "{\n  \"schemaVersion\": 12,\n  \"id\": \"11110000-1111-0000-1111-000011110000\",\n  \"name\": \"doc\",\n  \"cuePointTypes\": [{\n    \"id\":\"AAAA0001-0000-0000-0000-000000000001\",\"name\":\"G\",\"colorHex\":\"#FFFFFF\",\n    \"defaultFadeTime\":0,\"defaultNamePattern\":\"Cue\",\"hotkey\":null,\n    \"isVisible\":true,\"isExportEnabled\":true\n  }],\n  \"items\": [{\n    \"id\": \"22220000-2222-0000-2222-000022220000\",\n    \"media\": {\"displayName\":\"x.wav\",\"kind\":\"audio\",\"duration\":60,\"bookmarkData\":\"AQID\"},\n    \"cues\": [{\n      \"id\":\"BBBB0001-0000-0000-0000-000000000001\",\"typeID\":\"AAAA0001-0000-0000-0000-000000000001\",\n      \"cueNumber\":null,\"name\":\"c\",\"time\":1.5,\"notes\":\"n\",\"fadeTime\":{\"fadeIn\":0,\"fadeOut\":0}\n    }],\n    \"startTimecodeFrames\": 90,\n    \"ltcMuted\": true,\n    \"alternateName\": \"Act 1\"\n  }],\n  \"activeItemID\": null,\n  \"timecodeSettings\": {\"framerate\":\"30\"}\n}",
+      "name" : "v12",
+      "schemaVersion" : 12
+    },
+    {
+      "expect" : {
+        "cuePointTypes" : [
+          {
+            "colorHex" : "#FFFFFF",
+            "defaultFadeTime" : 0,
+            "defaultNamePattern" : "Cue",
+            "id" : "AAAA0001-0000-0000-0000-000000000001",
+            "isExportEnabled" : true,
+            "isVisible" : true,
+            "name" : "G"
+          }
+        ],
+        "id" : "11110000-1111-0000-1111-000011110000",
+        "items" : [
+          {
+            "cues" : [
+
+            ],
+            "id" : "22220000-2222-0000-2222-000022220000",
+            "ltcMuted" : false,
+            "lyrics" : {
+              "lines" : [
+                {
+                  "id" : "CCCC0001-0000-0000-0000-000000000001",
+                  "text" : "hello",
+                  "time" : 3.5
+                }
+              ],
+              "offsetSeconds" : 12
+            },
+            "media" : {
+              "bookmarkData" : "AQID",
+              "displayName" : "x.wav",
+              "duration" : 60,
+              "kind" : "audio"
+            },
+            "playsOriginalSourceAudio" : false,
+            "startTimecodeFrames" : 0
+          }
+        ],
+        "name" : "doc",
+        "playbackMode" : "playOnce",
+        "schemaVersion" : 23,
+        "timecodeSettings" : {
+          "framerate" : "30"
+        }
+      },
+      "inputJSON" : "{\n  \"schemaVersion\": 13,\n  \"id\": \"11110000-1111-0000-1111-000011110000\",\n  \"name\": \"doc\",\n  \"cuePointTypes\": [{\n    \"id\":\"AAAA0001-0000-0000-0000-000000000001\",\"name\":\"G\",\"colorHex\":\"#FFFFFF\",\n    \"defaultFadeTime\":0,\"defaultNamePattern\":\"Cue\",\"hotkey\":null,\n    \"isVisible\":true,\"isExportEnabled\":true\n  }],\n  \"items\": [{\n    \"id\": \"22220000-2222-0000-2222-000022220000\",\n    \"media\": {\"displayName\":\"x.wav\",\"kind\":\"audio\",\"duration\":60,\"bookmarkData\":\"AQID\"},\n    \"cues\": [],\n    \"startTimecodeFrames\": 0,\n    \"ltcMuted\": false,\n    \"alternateName\": null,\n    \"lyrics\": {\"offsetSeconds\": 12, \"lines\": [\n      {\"id\":\"CCCC0001-0000-0000-0000-000000000001\",\"time\":3.5,\"text\":\"hello\"}\n    ]}\n  }],\n  \"activeItemID\": null,\n  \"timecodeSettings\": {\"framerate\":\"30\"}\n}",
+      "name" : "v13",
+      "schemaVersion" : 13
+    },
+    {
+      "expect" : {
+        "cuePointTypes" : [
+          {
+            "colorHex" : "#FFFFFF",
+            "defaultFadeTime" : 0,
+            "defaultNamePattern" : "Cue",
+            "id" : "AAAA0001-0000-0000-0000-000000000001",
+            "isExportEnabled" : true,
+            "isVisible" : true,
+            "name" : "G"
+          }
+        ],
+        "id" : "11110000-1111-0000-1111-000011110000",
+        "items" : [
+          {
+            "cues" : [
+
+            ],
+            "id" : "22220000-2222-0000-2222-000022220000",
+            "ltcMuted" : false,
+            "lyrics" : {
+              "lines" : [
+
+              ],
+              "offsetSeconds" : 0
+            },
+            "media" : {
+              "bookmarkData" : "AQID",
+              "displayName" : "x.wav",
+              "duration" : 60,
+              "kind" : "audio"
+            },
+            "playsOriginalSourceAudio" : false,
+            "startTimecodeFrames" : 0
+          }
+        ],
+        "name" : "doc",
+        "playbackMode" : "playOnce",
+        "schemaVersion" : 23,
+        "timecodeSettings" : {
+          "framerate" : "30"
+        }
+      },
+      "inputJSON" : "{\n  \"schemaVersion\": 14,\n  \"id\": \"11110000-1111-0000-1111-000011110000\",\n  \"name\": \"doc\",\n  \"cuePointTypes\": [{\n    \"id\":\"AAAA0001-0000-0000-0000-000000000001\",\"name\":\"G\",\"colorHex\":\"#FFFFFF\",\n    \"defaultFadeTime\":0,\"defaultNamePattern\":\"Cue\",\"hotkey\":null,\n    \"isVisible\":true,\"isExportEnabled\":true\n  }],\n  \"items\": [{\n    \"id\": \"22220000-2222-0000-2222-000022220000\",\n    \"media\": {\"displayName\":\"x.wav\",\"kind\":\"audio\",\"duration\":60,\"bookmarkData\":\"AQID\"},\n    \"cues\": [],\n    \"startTimecodeFrames\": 0,\n    \"ltcMuted\": false,\n    \"alternateName\": null,\n    \"lyrics\": {\"lines\": [], \"offsetSeconds\": 0}\n  }],\n  \"activeItemID\": null,\n  \"timecodeSettings\": {\"framerate\":\"30\"}\n}",
+      "name" : "v14",
+      "schemaVersion" : 14
+    },
+    {
+      "expect" : {
+        "cuePointTypes" : [
+          {
+            "colorHex" : "#FFFFFF",
+            "defaultFadeTime" : 0,
+            "defaultNamePattern" : "Cue",
+            "id" : "AAAA0001-0000-0000-0000-000000000001",
+            "isExportEnabled" : true,
+            "isVisible" : true,
+            "name" : "G"
+          }
+        ],
+        "id" : "11110000-1111-0000-1111-000011110000",
+        "items" : [
+          {
+            "cues" : [
+
+            ],
+            "id" : "22220000-2222-0000-2222-000022220000",
+            "ltcMuted" : false,
+            "lyrics" : {
+              "lines" : [
+
+              ],
+              "offsetSeconds" : 0
+            },
+            "media" : {
+              "bookmarkData" : "AQID",
+              "displayName" : "x.wav",
+              "duration" : 60,
+              "kind" : "audio"
+            },
+            "playsOriginalSourceAudio" : false,
+            "startTimecodeFrames" : 0
+          }
+        ],
+        "name" : "doc",
+        "playbackMode" : "playOnce",
+        "schemaVersion" : 23,
+        "timecodeSettings" : {
+          "framerate" : "30"
+        }
+      },
+      "inputJSON" : "{\n  \"schemaVersion\": 15,\n  \"id\": \"11110000-1111-0000-1111-000011110000\",\n  \"name\": \"doc\",\n  \"cuePointTypes\": [{\n    \"id\":\"AAAA0001-0000-0000-0000-000000000001\",\"name\":\"G\",\"colorHex\":\"#FFFFFF\",\n    \"defaultFadeTime\":0,\"defaultNamePattern\":\"Cue\",\"hotkey\":null,\n    \"isVisible\":true,\"isExportEnabled\":true\n  }],\n  \"items\": [{\n    \"id\": \"22220000-2222-0000-2222-000022220000\",\n    \"media\": {\"displayName\":\"x.wav\",\"kind\":\"audio\",\"duration\":60,\"bookmarkData\":\"AQID\"},\n    \"cues\": [],\n    \"startTimecodeFrames\": 0,\n    \"ltcMuted\": false,\n    \"alternateName\": null,\n    \"lyrics\": {\"offsetSeconds\": 0, \"lines\": []}\n  }],\n  \"activeItemID\": null,\n  \"timecodeSettings\": {\"framerate\":\"30\"},\n  \"playbackMode\": \"playOnce\"\n}",
+      "name" : "v15",
+      "schemaVersion" : 15
+    },
+    {
+      "expect" : {
+        "cuePointTypes" : [
+          {
+            "colorHex" : "#FFFFFF",
+            "defaultFadeTime" : 0,
+            "defaultNamePattern" : "Cue",
+            "id" : "AAAA0001-0000-0000-0000-000000000001",
+            "isExportEnabled" : true,
+            "isVisible" : true,
+            "name" : "G"
+          }
+        ],
+        "id" : "11110000-1111-0000-1111-000011110000",
+        "items" : [
+          {
+            "cues" : [
+
+            ],
+            "id" : "22220000-2222-0000-2222-000022220000",
+            "ltcMuted" : false,
+            "lyrics" : {
+              "lines" : [
+
+              ],
+              "offsetSeconds" : 0
+            },
+            "ma2PushTarget" : {
+              "executorNumber" : 5,
+              "executorPage" : 2,
+              "includedTypeIDs" : [
+
+              ],
+              "sequenceSlot" : 12,
+              "timecodeCommand" : "go",
+              "timecodeSlot" : 3
+            },
+            "media" : {
+              "bookmarkData" : "AQID",
+              "displayName" : "x.wav",
+              "duration" : 60,
+              "kind" : "audio"
+            },
+            "playsOriginalSourceAudio" : false,
+            "startTimecodeFrames" : 0
+          }
+        ],
+        "name" : "doc",
+        "playbackMode" : "playOnce",
+        "schemaVersion" : 23,
+        "timecodeSettings" : {
+          "framerate" : "30"
+        }
+      },
+      "inputJSON" : "{\n  \"schemaVersion\": 16,\n  \"id\": \"11110000-1111-0000-1111-000011110000\",\n  \"name\": \"doc\",\n  \"cuePointTypes\": [{\n    \"id\":\"AAAA0001-0000-0000-0000-000000000001\",\"name\":\"G\",\"colorHex\":\"#FFFFFF\",\n    \"defaultFadeTime\":0,\"defaultNamePattern\":\"Cue\",\"hotkey\":null,\n    \"isVisible\":true,\"isExportEnabled\":true\n  }],\n  \"items\": [{\n    \"id\": \"22220000-2222-0000-2222-000022220000\",\n    \"media\": {\"displayName\":\"x.wav\",\"kind\":\"audio\",\"duration\":60,\"bookmarkData\":\"AQID\"},\n    \"cues\": [],\n    \"startTimecodeFrames\": 0,\n    \"ltcMuted\": false,\n    \"alternateName\": null,\n    \"lyrics\": {\"offsetSeconds\": 0, \"lines\": []},\n    \"ma2PushTarget\": {\n      \"sequenceSlot\": 12, \"timecodeSlot\": 3,\n      \"executorPage\": 2, \"executorNumber\": 5,\n      \"timecodeCommand\": \"go\", \"includedTypeIDs\": []\n    }\n  }],\n  \"activeItemID\": null,\n  \"timecodeSettings\": {\"framerate\":\"30\"},\n  \"playbackMode\": \"playOnce\"\n}",
+      "name" : "v16",
+      "schemaVersion" : 16
+    },
+    {
+      "expect" : {
+        "cuePointTypes" : [
+          {
+            "colorHex" : "#FFFFFF",
+            "defaultFadeTime" : 0,
+            "defaultNamePattern" : "Cue",
+            "id" : "AAAA0001-0000-0000-0000-000000000001",
+            "isExportEnabled" : true,
+            "isVisible" : true,
+            "name" : "G"
+          },
+          {
+            "colorHex" : "#FF6B6B",
+            "defaultFadeTime" : 1.5,
+            "defaultNamePattern" : "Spot",
+            "hotkey" : 2,
+            "id" : "AAAA0002-0000-0000-0000-000000000002",
+            "isExportEnabled" : true,
+            "isVisible" : true,
+            "name" : "Spot"
+          }
+        ],
+        "id" : "11110000-1111-0000-1111-000011110000",
+        "items" : [
+          {
+            "cues" : [
+
+            ],
+            "id" : "22220000-2222-0000-2222-000022220000",
+            "ltcMuted" : false,
+            "lyrics" : {
+              "lines" : [
+
+              ],
+              "offsetSeconds" : 0
+            },
+            "ma2PushTarget" : {
+              "executorNumber" : 5,
+              "executorPage" : 2,
+              "includedTypeIDs" : [
+                "AAAA0001-0000-0000-0000-000000000001",
+                "AAAA0002-0000-0000-0000-000000000002"
+              ],
+              "sequenceName" : "Act One",
+              "sequenceSlot" : 12,
+              "timecodeCommand" : "goto",
+              "timecodeSlot" : 3
+            },
+            "media" : {
+              "bookmarkData" : "AQID",
+              "displayName" : "x.wav",
+              "duration" : 60,
+              "kind" : "audio"
+            },
+            "playsOriginalSourceAudio" : false,
+            "startTimecodeFrames" : 0
+          }
+        ],
+        "name" : "doc",
+        "playbackMode" : "playOnce",
+        "schemaVersion" : 23,
+        "timecodeSettings" : {
+          "framerate" : "30"
+        }
+      },
+      "inputJSON" : "{\n  \"schemaVersion\": 17,\n  \"id\": \"11110000-1111-0000-1111-000011110000\",\n  \"name\": \"doc\",\n  \"cuePointTypes\": [\n    {\n      \"id\":\"AAAA0001-0000-0000-0000-000000000001\",\"name\":\"G\",\"colorHex\":\"#FFFFFF\",\n      \"defaultFadeTime\":0,\"defaultNamePattern\":\"Cue\",\"hotkey\":null,\n      \"isVisible\":true,\"isExportEnabled\":true\n    },\n    {\n      \"id\":\"AAAA0002-0000-0000-0000-000000000002\",\"name\":\"Spot\",\"colorHex\":\"#FF6B6B\",\n      \"defaultFadeTime\":1.5,\"defaultNamePattern\":\"Spot\",\"hotkey\":2,\n      \"isVisible\":true,\"isExportEnabled\":true\n    }\n  ],\n  \"items\": [{\n    \"id\": \"22220000-2222-0000-2222-000022220000\",\n    \"media\": {\"displayName\":\"x.wav\",\"kind\":\"audio\",\"duration\":60,\"bookmarkData\":\"AQID\"},\n    \"cues\": [],\n    \"startTimecodeFrames\": 0,\n    \"ltcMuted\": false,\n    \"alternateName\": null,\n    \"lyrics\": {\"offsetSeconds\": 0, \"lines\": []},\n    \"ma2PushTarget\": {\n      \"sequenceSlot\": 12, \"timecodeSlot\": 3,\n      \"executorPage\": 2, \"executorNumber\": 5,\n      \"timecodeCommand\": \"goto\",\n      \"includedTypeIDs\": [\n        \"AAAA0002-0000-0000-0000-000000000002\",\n        \"AAAA0001-0000-0000-0000-000000000001\"\n      ],\n      \"sequenceName\": \"Act One\"\n    }\n  }],\n  \"activeItemID\": null,\n  \"timecodeSettings\": {\"framerate\":\"30\"},\n  \"playbackMode\": \"playOnce\"\n}",
+      "name" : "v17",
+      "schemaVersion" : 17
+    },
+    {
+      "expect" : {
+        "cuePointTypes" : [
+          {
+            "colorHex" : "#FFFFFF",
+            "defaultFadeTime" : 0,
+            "defaultNamePattern" : "Cue",
+            "id" : "AAAA0001-0000-0000-0000-000000000001",
+            "isExportEnabled" : true,
+            "isVisible" : true,
+            "name" : "G"
+          }
+        ],
+        "id" : "11110000-1111-0000-1111-000011110000",
+        "items" : [
+          {
+            "cues" : [
+
+            ],
+            "id" : "22220000-2222-0000-2222-000022220000",
+            "ltcMuted" : false,
+            "lyrics" : {
+              "lines" : [
+
+              ],
+              "offsetSeconds" : 0
+            },
+            "media" : {
+              "bookmarkData" : "AQID",
+              "displayName" : "x.wav",
+              "duration" : 60,
+              "kind" : "audio"
+            },
+            "playsOriginalSourceAudio" : false,
+            "startTimecodeFrames" : 0
+          }
+        ],
+        "name" : "doc",
+        "playbackMode" : "playOnce",
+        "schemaVersion" : 23,
+        "timecodeSettings" : {
+          "framerate" : "30"
+        }
+      },
+      "inputJSON" : "{\n  \"schemaVersion\": 18,\n  \"id\": \"11110000-1111-0000-1111-000011110000\",\n  \"name\": \"doc\",\n  \"cuePointTypes\": [{\n    \"id\":\"AAAA0001-0000-0000-0000-000000000001\",\"name\":\"G\",\"colorHex\":\"#FFFFFF\",\n    \"defaultFadeTime\":0,\"defaultNamePattern\":\"Cue\",\"hotkey\":null,\n    \"isVisible\":true,\"isExportEnabled\":true\n  }],\n  \"items\": [{\n    \"id\": \"22220000-2222-0000-2222-000022220000\",\n    \"media\": {\"displayName\":\"x.wav\",\"kind\":\"audio\",\"duration\":60,\"bookmarkData\":\"AQID\"},\n    \"cues\": [],\n    \"startTimecodeFrames\": 0,\n    \"ltcMuted\": false,\n    \"alternateName\": null,\n    \"lyrics\": {\"offsetSeconds\": 0, \"lines\": []}\n  }],\n  \"activeItemID\": null,\n  \"timecodeSettings\": {\"framerate\":\"30\"},\n  \"playbackMode\": \"playOnce\"\n}",
+      "name" : "v18",
+      "schemaVersion" : 18
+    },
+    {
+      "expect" : {
+        "cuePointTypes" : [
+          {
+            "colorHex" : "#FFFFFF",
+            "defaultFadeTime" : 0,
+            "defaultNamePattern" : "Cue",
+            "id" : "AAAA0001-0000-0000-0000-000000000001",
+            "isExportEnabled" : true,
+            "isVisible" : true,
+            "name" : "G"
+          }
+        ],
+        "id" : "11110000-1111-0000-1111-000011110000",
+        "items" : [
+          {
+            "cues" : [
+
+            ],
+            "id" : "22220000-2222-0000-2222-000022220000",
+            "ltcMuted" : false,
+            "lyrics" : {
+              "lines" : [
+
+              ],
+              "offsetSeconds" : 0
+            },
+            "media" : {
+              "bookmarkData" : "AQID",
+              "displayName" : "x.wav",
+              "duration" : 60,
+              "kind" : "audio"
+            },
+            "playsOriginalSourceAudio" : false,
+            "startTimecodeFrames" : 0
+          }
+        ],
+        "name" : "doc",
+        "playbackMode" : "playOnce",
+        "schemaVersion" : 23,
+        "timecodeSettings" : {
+          "framerate" : "30"
+        }
+      },
+      "inputJSON" : "{\n  \"schemaVersion\": 19,\n  \"id\": \"11110000-1111-0000-1111-000011110000\",\n  \"name\": \"doc\",\n  \"cuePointTypes\": [{\n    \"id\":\"AAAA0001-0000-0000-0000-000000000001\",\"name\":\"G\",\"colorHex\":\"#FFFFFF\",\n    \"defaultFadeTime\":0,\"defaultNamePattern\":\"Cue\",\"hotkey\":null,\n    \"isVisible\":true,\"isExportEnabled\":true\n  }],\n  \"items\": [{\n    \"id\": \"22220000-2222-0000-2222-000022220000\",\n    \"media\": {\"displayName\":\"x.wav\",\"kind\":\"audio\",\"duration\":60,\"bookmarkData\":\"AQID\"},\n    \"cues\": [],\n    \"startTimecodeFrames\": 0,\n    \"ltcMuted\": false,\n    \"alternateName\": null,\n    \"lyrics\": {\"offsetSeconds\": 0, \"lines\": []},\n    \"playsOriginalSourceAudio\": false\n  }],\n  \"activeItemID\": null,\n  \"timecodeSettings\": {\"framerate\":\"30\"},\n  \"playbackMode\": \"playOnce\"\n}",
+      "name" : "v19",
+      "schemaVersion" : 19
+    },
+    {
+      "expect" : {
+        "cuePointTypes" : [
+          {
+            "colorHex" : "#FFFFFF",
+            "defaultFadeTime" : 0,
+            "defaultNamePattern" : "Cue",
+            "id" : "AAAA0001-0000-0000-0000-000000000001",
+            "isExportEnabled" : true,
+            "isVisible" : true,
+            "name" : "G"
+          }
+        ],
+        "id" : "11110000-1111-0000-1111-000011110000",
+        "items" : [
+          {
+            "cues" : [
+
+            ],
+            "id" : "22220000-2222-0000-2222-000022220000",
+            "ltcMuted" : false,
+            "lyrics" : {
+              "lines" : [
+
+              ],
+              "offsetSeconds" : 0
+            },
+            "ma2PushTarget" : {
+              "executorNumber" : 5,
+              "executorPage" : 2,
+              "includedTypeIDs" : [
+
+              ],
+              "sequenceSlot" : 12,
+              "timecodeCommand" : "goto",
+              "timecodeSlot" : 3
+            },
+            "media" : {
+              "bookmarkData" : "AQID",
+              "displayName" : "x.wav",
+              "duration" : 60,
+              "kind" : "audio"
+            },
+            "playsOriginalSourceAudio" : false,
+            "startTimecodeFrames" : 0
+          }
+        ],
+        "name" : "doc",
+        "playbackMode" : "playOnce",
+        "schemaVersion" : 23,
+        "timecodeSettings" : {
+          "framerate" : "30"
+        }
+      },
+      "inputJSON" : "{\n  \"schemaVersion\": 20,\n  \"id\": \"11110000-1111-0000-1111-000011110000\",\n  \"name\": \"doc\",\n  \"cuePointTypes\": [{\n    \"id\":\"AAAA0001-0000-0000-0000-000000000001\",\"name\":\"G\",\"colorHex\":\"#FFFFFF\",\n    \"defaultFadeTime\":0,\"defaultNamePattern\":\"Cue\",\"hotkey\":null,\n    \"isVisible\":true,\"isExportEnabled\":true\n  }],\n  \"items\": [{\n    \"id\": \"22220000-2222-0000-2222-000022220000\",\n    \"media\": {\"displayName\":\"x.wav\",\"kind\":\"audio\",\"duration\":60,\"bookmarkData\":\"AQID\"},\n    \"cues\": [],\n    \"startTimecodeFrames\": 0,\n    \"ltcMuted\": false,\n    \"alternateName\": null,\n    \"lyrics\": {\"offsetSeconds\": 0, \"lines\": []},\n    \"playsOriginalSourceAudio\": false,\n    \"ma2PushTarget\": {\n      \"sequenceSlot\": 12, \"timecodeSlot\": 3,\n      \"executorPage\": 2, \"executorNumber\": 5,\n      \"timecodeCommand\": \"goto\", \"includedTypeIDs\": []\n    }\n  }],\n  \"activeItemID\": null,\n  \"timecodeSettings\": {\"framerate\":\"30\"},\n  \"playbackMode\": \"playOnce\"\n}",
+      "name" : "v20",
+      "schemaVersion" : 20
+    },
+    {
+      "expect" : {
+        "activeItemID" : "22220000-2222-0000-2222-000022220000",
+        "cuePointTypes" : [
+          {
+            "colorHex" : "#FFFFFF",
+            "defaultFadeTime" : 0,
+            "defaultNamePattern" : "Cue",
+            "id" : "AAAA0001-0000-0000-0000-000000000001",
+            "isExportEnabled" : true,
+            "isVisible" : true,
+            "name" : "G"
+          }
+        ],
+        "id" : "11110000-1111-0000-1111-000011110000",
+        "items" : [
+          {
+            "alternateName" : "Overture",
+            "cues" : [
+
+            ],
+            "id" : "22220000-2222-0000-2222-000022220000",
+            "ltcMuted" : true,
+            "lyrics" : {
+              "lines" : [
+
+              ],
+              "offsetSeconds" : 0
+            },
+            "media" : {
+              "bookmarkData" : "AQID",
+              "displayName" : "x.wav",
+              "duration" : 60,
+              "kind" : "audio"
+            },
+            "playsOriginalSourceAudio" : false,
+            "startTimecodeFrames" : 0
+          }
+        ],
+        "name" : "doc",
+        "playbackMode" : "playOnce",
+        "schemaVersion" : 23,
+        "timecodeSettings" : {
+          "framerate" : "30"
+        }
+      },
+      "inputJSON" : "{\n  \"schemaVersion\": 21,\n  \"id\": \"11110000-1111-0000-1111-000011110000\",\n  \"name\": \"doc\",\n  \"cuePointTypes\": [{\n    \"id\":\"AAAA0001-0000-0000-0000-000000000001\",\"name\":\"G\",\"colorHex\":\"#FFFFFF\",\n    \"defaultFadeTime\":0,\"defaultNamePattern\":\"Cue\",\"hotkey\":null,\n    \"isVisible\":true,\"isExportEnabled\":true\n  }],\n  \"items\": [{\n    \"id\": \"22220000-2222-0000-2222-000022220000\",\n    \"media\": {\"displayName\":\"x.wav\",\"kind\":\"audio\",\"duration\":60,\"bookmarkData\":\"AQID\"},\n    \"cues\": [],\n    \"startTimecodeFrames\": 0,\n    \"ltcMuted\": true,\n    \"alternateName\": \"Overture\",\n    \"lyrics\": {\"offsetSeconds\": 0, \"lines\": []},\n    \"playsOriginalSourceAudio\": false\n  }],\n  \"activeItemID\": \"22220000-2222-0000-2222-000022220000\",\n  \"timecodeSettings\": {\"framerate\":\"30\"},\n  \"playbackMode\": \"playOnce\"\n}",
+      "name" : "v21",
+      "schemaVersion" : 21
+    },
+    {
+      "expect" : {
+        "activeItemID" : "22220000-2222-0000-2222-000022220000",
+        "cuePointTypes" : [
+          {
+            "colorHex" : "#FFFFFF",
+            "defaultFadeTime" : 0,
+            "defaultNamePattern" : "Cue",
+            "id" : "AAAA0001-0000-0000-0000-000000000001",
+            "isExportEnabled" : true,
+            "isVisible" : true,
+            "name" : "G"
+          }
+        ],
+        "id" : "11110000-1111-0000-1111-000011110000",
+        "items" : [
+          {
+            "alternateName" : "Overture",
+            "colorHex" : "#FF6B6B",
+            "cues" : [
+
+            ],
+            "id" : "22220000-2222-0000-2222-000022220000",
+            "ltcMuted" : true,
+            "lyrics" : {
+              "lines" : [
+
+              ],
+              "offsetSeconds" : 0
+            },
+            "media" : {
+              "bookmarkData" : "AQID",
+              "displayName" : "x.wav",
+              "duration" : 60,
+              "kind" : "audio"
+            },
+            "playsOriginalSourceAudio" : false,
+            "startTimecodeFrames" : 0
+          }
+        ],
+        "name" : "doc",
+        "playbackMode" : "playOnce",
+        "schemaVersion" : 23,
+        "timecodeSettings" : {
+          "framerate" : "30"
+        }
+      },
+      "inputJSON" : "{\n  \"schemaVersion\": 22,\n  \"id\": \"11110000-1111-0000-1111-000011110000\",\n  \"name\": \"doc\",\n  \"cuePointTypes\": [{\n    \"id\":\"AAAA0001-0000-0000-0000-000000000001\",\"name\":\"G\",\"colorHex\":\"#FFFFFF\",\n    \"defaultFadeTime\":0,\"defaultNamePattern\":\"Cue\",\"hotkey\":null,\n    \"isVisible\":true,\"isExportEnabled\":true\n  }],\n  \"items\": [{\n    \"id\": \"22220000-2222-0000-2222-000022220000\",\n    \"media\": {\"displayName\":\"x.wav\",\"kind\":\"audio\",\"duration\":60,\"bookmarkData\":\"AQID\"},\n    \"cues\": [],\n    \"startTimecodeFrames\": 0,\n    \"ltcMuted\": true,\n    \"alternateName\": \"Overture\",\n    \"lyrics\": {\"offsetSeconds\": 0, \"lines\": []},\n    \"playsOriginalSourceAudio\": false,\n    \"colorHex\": \"#FF6B6B\"\n  }],\n  \"activeItemID\": \"22220000-2222-0000-2222-000022220000\",\n  \"timecodeSettings\": {\"framerate\":\"30\"},\n  \"playbackMode\": \"playOnce\"\n}",
+      "name" : "v22",
+      "schemaVersion" : 22
+    },
+    {
+      "expect" : {
+        "activeItemID" : "22220000-2222-0000-2222-000022220000",
+        "cuePointTypes" : [
+          {
+            "colorHex" : "#FFFFFF",
+            "defaultFadeTime" : 0,
+            "defaultNamePattern" : "Cue",
+            "id" : "AAAA0001-0000-0000-0000-000000000001",
+            "isExportEnabled" : true,
+            "isVisible" : true,
+            "name" : "G"
+          }
+        ],
+        "id" : "11110000-1111-0000-1111-000011110000",
+        "items" : [
+          {
+            "alternateName" : "Overture",
+            "colorHex" : "#FF6B6B",
+            "cues" : [
+              {
+                "beatsPerBar" : 4,
+                "bpm" : 128,
+                "cueNumber" : 1.5,
+                "fadeTime" : {
+                  "fadeIn" : 0.5,
+                  "fadeOut" : 2
+                },
+                "id" : "BBBB0001-0000-0000-0000-000000000001",
+                "name" : "c",
+                "notes" : "n",
+                "time" : 1.25,
+                "typeID" : "AAAA0001-0000-0000-0000-000000000001"
+              }
+            ],
+            "id" : "22220000-2222-0000-2222-000022220000",
+            "ltcChannelSelection" : "channel:1",
+            "ltcMuted" : true,
+            "lyrics" : {
+              "lines" : [
+                {
+                  "id" : "CCCC0001-0000-0000-0000-000000000001",
+                  "text" : "hello",
+                  "time" : 3.5
+                },
+                {
+                  "id" : "CCCC0002-0000-0000-0000-000000000002",
+                  "text" : "unplaced"
+                }
+              ],
+              "offsetSeconds" : 1.5
+            },
+            "media" : {
+              "bookmarkData" : "AQID",
+              "bundlePath" : "/Volumes/Show/x.wav",
+              "displayName" : "x.wav",
+              "duration" : 60,
+              "kind" : "audio"
+            },
+            "playsOriginalSourceAudio" : true,
+            "rememberedLTC" : {
+              "anchorPlaybackSeconds" : 2,
+              "anchorTimecode" : {
+                "frames" : 0,
+                "hours" : 0,
+                "minutes" : 0,
+                "rate" : "30",
+                "seconds" : 30
+              },
+              "ltcChannel" : 1,
+              "validFrom" : 0,
+              "validUntil" : 55
+            },
+            "startTimecodeFrames" : 90
+          }
+        ],
+        "name" : "doc",
+        "playbackMode" : "loop",
+        "schemaVersion" : 23,
+        "timecodeSettings" : {
+          "framerate" : "30"
+        }
+      },
+      "inputJSON" : "{\n  \"schemaVersion\": 23,\n  \"id\": \"11110000-1111-0000-1111-000011110000\",\n  \"name\": \"doc\",\n  \"cuePointTypes\": [{\n    \"id\":\"AAAA0001-0000-0000-0000-000000000001\",\"name\":\"G\",\"colorHex\":\"#FFFFFF\",\n    \"defaultFadeTime\":0,\"defaultNamePattern\":\"Cue\",\"hotkey\":null,\n    \"isVisible\":true,\"isExportEnabled\":true\n  }],\n  \"items\": [{\n    \"id\": \"22220000-2222-0000-2222-000022220000\",\n    \"media\": {\n      \"displayName\":\"x.wav\",\"kind\":\"audio\",\"duration\":60,\"bookmarkData\":\"AQID\",\n      \"bundlePath\":\"/Volumes/Show/x.wav\"\n    },\n    \"cues\": [{\n      \"id\":\"BBBB0001-0000-0000-0000-000000000001\",\n      \"typeID\":\"AAAA0001-0000-0000-0000-000000000001\",\n      \"cueNumber\":1.5,\"name\":\"c\",\"time\":1.25,\"notes\":\"n\",\n      \"fadeTime\":{\"fadeIn\":0.5,\"fadeOut\":2},\n      \"bpm\":128.0,\"beatsPerBar\":4\n    }],\n    \"startTimecodeFrames\": 90,\n    \"ltcMuted\": true,\n    \"alternateName\": \"Overture\",\n    \"lyrics\": {\"offsetSeconds\": 1.5, \"lines\": [\n      {\"id\":\"CCCC0001-0000-0000-0000-000000000001\",\"time\":3.5,\"text\":\"hello\"},\n      {\"id\":\"CCCC0002-0000-0000-0000-000000000002\",\"text\":\"unplaced\"}\n    ]},\n    \"playsOriginalSourceAudio\": true,\n    \"colorHex\": \"#FF6B6B\",\n    \"ltcChannelSelection\": \"channel:1\",\n    \"rememberedLTC\": {\n      \"anchorTimecode\": {\"rate\":\"30\",\"hours\":0,\"minutes\":0,\"seconds\":30,\"frames\":0},\n      \"anchorPlaybackSeconds\": 2.0,\n      \"ltcChannel\": 1,\n      \"validFrom\": 0.0,\n      \"validUntil\": 55.0\n    }\n  }],\n  \"activeItemID\": \"22220000-2222-0000-2222-000022220000\",\n  \"timecodeSettings\": {\"framerate\":\"30\"},\n  \"playbackMode\": \"loop\"\n}",
+      "name" : "v23",
+      "schemaVersion" : 23
+    }
+  ],
+  "contract" : "cuelist-migration",
+  "note" : "macOS-generated golden vectors for the OnlyCue schema ladder. One representative document per schema version 1...23, each paired with the v23 model the Swift ladder produces. The C# OnlyCue.Core re-implementation must reproduce every case. UUIDs that the migration mints (v1, v2, and the v8-v10 tempo fan-out) appear as MINTED-000N placeholders, numbered by first appearance, because their real values differ on every run; ids carried over from the input stay literal. includedTypeIDs is sorted because it is a Swift Set and its JSON order is randomised per process. To regenerate after a deliberate ladder change, delete golden/cuelist-migration-v1.json and re-run the test suite.",
+  "version" : 1
+}

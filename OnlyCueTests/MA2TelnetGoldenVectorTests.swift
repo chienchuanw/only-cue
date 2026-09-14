@@ -104,7 +104,15 @@ enum MA2TelnetGolden {
                 // Below 1e-4 `String(Double)` switches to exponential, and Swift
                 // spells the marker lowercase where .NET's "R" spells it `E-05`.
                 // `FadeTime.parse("0.00001")` accepts this, so it is reachable.
-                MA2GoldenInput.cue(4, "Exponent", at: 3, fadeIn: 0.00001)
+                MA2GoldenInput.cue(4, "Exponent", at: 3, fadeIn: 0.00001),
+                // The mirror of the case above, at the top of the range. Swift's
+                // `String(Int(seconds))` spells this in full; .NET's "R" would go
+                // exponential ("1E+17") from 1e17 up, so the whole-number branch
+                // is load-bearing on the C# side rather than mere tidying.
+                // `FadeTime.parse` has no upper clamp, so this is reachable — but
+                // only just: above `Int64.max` the Swift side *traps* (#829), and
+                // that region is therefore deliberately absent from the contract.
+                MA2GoldenInput.cue(5, "Astronomical", at: 4, fadeIn: 1e17)
             ],
             target: assigned,
             sequenceName: "Fades",
@@ -175,12 +183,18 @@ enum MA2TelnetGolden {
 
     /// `0.5 × 25` and `0.75 × 30` are *exactly* 12.5 and 22.5 as doubles, so they
     /// separate `.rounded()` (13 / 23) from banker's rounding (12 / 22).
+    ///
+    /// A midpoint alone is not enough, though: `.rounded(.up)` also answers 13 and
+    /// 23 there, and every other time below lands on a whole frame. `0.29 × 25` is
+    /// 7.2499…, the one case whose fraction is strictly inside `(0, 0.5)`, so it is
+    /// what separates round-to-nearest from round-up.
     private static let trigTimeSpecs: [TrigTimeSpec] = [
         .init("frame zero trims to a bare integer", 0, rate: .fps25),
         .init("a whole second at 25 fps", 5, rate: .fps25),
         .init("a repeating decimal keeps six places", 2.1333333, rate: .fps30),
         .init("an exact midpoint rounds away from zero at 25 fps", 0.5, rate: .fps25),
         .init("an exact midpoint rounds away from zero at 30 fps", 0.75, rate: .fps30),
+        .init("an off-grid time snaps to the nearest frame, not the next", 0.29, rate: .fps25),
         .init("a start offset shifts the absolute time", 1, start: 2_500, rate: .fps25),
         .init("drop-frame uses the nominal 30 fps base", 1.5, rate: .fps30drop),
         .init("24 fps thirds do not terminate", 1, start: 7, rate: .fps24)
@@ -205,6 +219,10 @@ enum MA2TelnetGolden {
 
     /// `0.0125 × 1000` and `1.0025 × 1000` are *exactly* 12.5 and 1002.5, so they
     /// separate `.rounded()` (13 / 1003) from banker's rounding (12 / 1002).
+    ///
+    /// `1.0001 × 1000` is 1000.1 — the only value here whose fraction is strictly
+    /// inside `(0, 0.5)` — and is what separates round-to-nearest from
+    /// `.rounded(.up)`, which agrees with `.rounded()` on both midpoints above.
     private static let cueNumberSpecs: [(name: String, value: Double)] = [
         ("zero", 0),
         ("a whole number drops the sub number", 3),
@@ -213,7 +231,12 @@ enum MA2TelnetGolden {
         ("binary noise is absorbed by thousandth rounding", 1.3),
         ("an exact midpoint rounds away from zero", 0.0125),
         ("an exact midpoint above one rounds away from zero", 1.0025),
+        ("a fourth decimal place rounds down, not up", 1.0001),
         ("a trailing zero in the sub number is trimmed", 4.12),
+        // Pinned as-is, not as-should-be: this spells the nonsense token "-1.-5",
+        // which the console rejects (#830). The vector's job is to keep the two
+        // cores identical, so it records today's output and the drift guard will
+        // fail here — deliberately — when #830 is fixed.
         ("a negative number truncates toward zero", -1.5)
     ]
 
@@ -299,12 +322,20 @@ final class MA2TelnetGoldenVectorTests: XCTestCase {
         XCTAssertEqual(MA2TrigTime.command(cueTime: 0.75, startTimecodeFrames: 0, framerate: .fps30), "0.766667")
         // A whole number of frames trims the decimal point entirely.
         XCTAssertEqual(MA2TrigTime.command(cueTime: 5, startTimecodeFrames: 0, framerate: .fps25), "5")
+        // 0.29 s × 25 fps == 7.2499…, the only fraction here inside (0, 0.5): it
+        // rounds *down* to 7 frames → 7/25 s. `.rounded(.up)` would give 8 → 0.32,
+        // and it is the sole case that rules round-up out.
+        XCTAssertEqual(MA2TrigTime.command(cueTime: 0.29, startTimecodeFrames: 0, framerate: .fps25), "0.28")
 
         // 0.0125 × 1000 == 12.5 exactly → 13 thousandths; banker's would give 12.
         XCTAssertEqual(MA2CueNumber.components(from: 0.0125), .init(number: 0, subNumber: 13))
         XCTAssertEqual(MA2CueNumber.commandString(from: 0.0125), "0.013")
         XCTAssertEqual(MA2CueNumber.commandString(from: 3), "3")
         XCTAssertEqual(MA2CueNumber.commandString(from: 4.12), "4.12")
+        // 1.0001 × 1000 == 1000.1 → rounds down to 1000; round-up would give
+        // 1001, i.e. cue "1.001" instead of cue "1".
+        XCTAssertEqual(MA2CueNumber.components(from: 1.0001), .init(number: 1, subNumber: 0))
+        XCTAssertEqual(MA2CueNumber.commandString(from: 1.0001), "1")
 
         XCTAssertEqual(MA2Name.sanitize("Song \t  One  ", fallbackSlot: 7), "Song One")
         XCTAssertEqual(MA2Name.sanitize("Set 🎵 One", fallbackSlot: 7), "Set One")
@@ -317,6 +348,9 @@ final class MA2TelnetGoldenVectorTests: XCTestCase {
         // Under 1e-4 Swift goes exponential, lowercase marker, two exponent
         // digits. .NET's "R" agrees on everything but the case of the `e`.
         XCTAssertEqual(FadeTime.formatNumber(0.00001), "1e-05")
+        // At the other end, a whole number stays fully spelled out: .NET's "R"
+        // turns exponential here, so this is what keeps the two sides aligned.
+        XCTAssertEqual(FadeTime.formatNumber(1e17), "100000000000000000")
     }
 
     /// Drift guard + bootstrap, matching the M1a/M1b generators. A missing file is

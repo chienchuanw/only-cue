@@ -51,6 +51,13 @@
       "value" : "1.0025"
     },
     {
+      "expectCommandString" : "1",
+      "expectNumber" : 1,
+      "expectSubNumber" : 0,
+      "name" : "a fourth decimal place rounds down, not up",
+      "value" : "1.0001"
+    },
+    {
       "expectCommandString" : "4.12",
       "expectNumber" : 4,
       "expectSubNumber" : 120,
@@ -220,6 +227,14 @@
           "name" : "Exponent",
           "notes" : "",
           "time" : "3.0"
+        },
+        {
+          "cueNumber" : "5.0",
+          "fadeIn" : "1e+17",
+          "fadeOut" : "0.0",
+          "name" : "Astronomical",
+          "notes" : "",
+          "time" : "4.0"
         }
       ],
       "expect" : [
@@ -242,6 +257,10 @@
         "Assign Sequence 7 Cue 4 /Trig=Timecode",
         "Assign Sequence 7 Cue 4 /TrigTime=3",
         "Assign Sequence 7 Cue 4 /fade=1e-05",
+        "Store Sequence 7 Cue 5 \"Astronomical\" /nc",
+        "Assign Sequence 7 Cue 5 /Trig=Timecode",
+        "Assign Sequence 7 Cue 5 /TrigTime=4",
+        "Assign Sequence 7 Cue 5 /fade=100000000000000000",
         "Label Sequence 7 \"Fades\"",
         "Assign Sequence 7 At Exec 1.5"
       ],
@@ -454,6 +473,14 @@
       "expectSeconds" : "0.7666666666666667",
       "framerate" : "30",
       "name" : "an exact midpoint rounds away from zero at 30 fps",
+      "startTimecodeFrames" : 0
+    },
+    {
+      "cueTime" : "0.29",
+      "expectCommand" : "0.28",
+      "expectSeconds" : "0.28",
+      "framerate" : "25",
+      "name" : "an off-grid time snaps to the nearest frame, not the next",
       "startTimecodeFrames" : 0
     },
     {

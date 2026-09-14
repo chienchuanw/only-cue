@@ -36,6 +36,46 @@ final class MA2SequenceXMLGeneratorTests: XCTestCase {
         XCTAssertEqual(MA2CueNumber.components(from: 1.3), .init(number: 1, subNumber: 300))
     }
 
+    // MARK: - domain guard (#830)
+    //
+    // `components` is the last stop before the wire, so it is total over
+    // `Double` rather than trusting its callers. Anything outside MA2's
+    // 0.001...9999.999 numbering domain renders exactly like an unnumbered cue —
+    // the same `0 / 0` the `cue.cueNumber ?? 0` call sites already produce —
+    // instead of spelling the nonsense token `-1.-5` or trapping the `Int`
+    // conversion.
+
+    func test_cueNumberComponents_collapsesOutOfDomainValuesToZero() {
+        for value in [-1.5, -1.05, -1.005, 0, 0.0005, 9999.9995, 10_000, 3_000_000, 1e16, 1e21] {
+            XCTAssertEqual(
+                MA2CueNumber.components(from: value), .init(number: 0, subNumber: 0),
+                "expected \(value) to collapse to an unnumbered cue"
+            )
+        }
+    }
+
+    func test_cueNumberComponents_isTotalOverNonFinite() {
+        XCTAssertEqual(MA2CueNumber.components(from: .infinity), .init(number: 0, subNumber: 0))
+        XCTAssertEqual(MA2CueNumber.components(from: -.infinity), .init(number: 0, subNumber: 0))
+        XCTAssertEqual(MA2CueNumber.components(from: .nan), .init(number: 0, subNumber: 0))
+    }
+
+    func test_cueNumberComponents_keepsTheDomainBounds() {
+        XCTAssertEqual(MA2CueNumber.components(from: 0.001), .init(number: 0, subNumber: 1))
+        XCTAssertEqual(MA2CueNumber.components(from: 9999.999), .init(number: 9999, subNumber: 999))
+    }
+
+    // The malformed token from #830 is gone: no command string may carry a sign
+    // or a second separator inside the fraction.
+    func test_cueNumberCommandString_neverEmitsAMalformedToken() {
+        XCTAssertEqual(MA2CueNumber.commandString(from: -1.5), "0")
+        XCTAssertEqual(MA2CueNumber.commandString(from: -1.05), "0")
+        XCTAssertEqual(MA2CueNumber.commandString(from: -1.005), "0")
+        XCTAssertEqual(MA2CueNumber.commandString(from: 3_000_000), "0")
+        XCTAssertEqual(MA2CueNumber.commandString(from: .nan), "0")
+        XCTAssertEqual(MA2CueNumber.commandString(from: 9999.999), "9999.999")
+    }
+
     func test_fullDocument_goldenSkeleton() {
         let cues = [
             cue(number: 1, name: "Intro", notes: "house out", fadeIn: 2.5),

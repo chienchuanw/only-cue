@@ -70,6 +70,14 @@ enum CueNumberValidator {
     /// both MA2 generators, so discarding it would be gratuitous data loss,
     /// whereas a value outside the window has no MA2 meaning and traps or
     /// misformats downstream (#830).
+    ///
+    /// `isFinite` is stated rather than relied upon: IEEE comparison already
+    /// rejects NaN and both infinities through the bounds alone, and dropping it
+    /// fails no test on either core (verified by mutation on Swift *and* on the
+    /// C# mirror, which behaves identically). It stays because reordering the
+    /// bounds or folding them into a clamp helper would silently change the
+    /// non-finite answer, and because `FadeTime.clamped` next door needs the
+    /// same guard for real — there `min`/`max` would propagate NaN.
     static func isInDomain(_ value: Double) -> Bool {
         value.isFinite && value >= minimum && value <= maximum
     }

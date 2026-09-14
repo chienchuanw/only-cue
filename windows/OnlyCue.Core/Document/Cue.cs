@@ -1,4 +1,5 @@
 using System.Text.Json.Serialization;
+using OnlyCue.Core.Planning;
 
 namespace OnlyCue.Core.Document;
 
@@ -12,6 +13,27 @@ public sealed class FadeTime
     public static FadeTime Zero => Symmetric(0);
 
     public static FadeTime Symmetric(double seconds) => new() { FadeIn = seconds, FadeOut = seconds };
+
+    /// <summary>
+    /// Upper bound for a single fade leg, in seconds. Mirrors Swift
+    /// <c>FadeTime.maximum</c> (#829).
+    /// </summary>
+    public const double Maximum = 3600;
+
+    /// <summary>
+    /// Coerces an untrusted seconds value into <c>0...Maximum</c>, as Swift's
+    /// <c>FadeTime.init(from:)</c> does at the file boundary (#829). NaN and
+    /// infinity defeat min/max, so they drop to zero rather than propagating.
+    /// </summary>
+    /// <remarks>
+    /// Applied by <see cref="Cue.Clamped"/> rather than by the deserialiser,
+    /// because that is where this port does the work Swift's decoding
+    /// initialisers do. Deliberately <i>not</i> applied to in-process
+    /// construction: the MA2 golden vectors seat an out-of-range fade on purpose
+    /// to pin cross-platform formatter parity.
+    /// </remarks>
+    public static double Clamped(double seconds) =>
+        double.IsFinite(seconds) ? Math.Min(Math.Max(seconds, 0), Maximum) : 0;
 }
 
 /// <summary>
@@ -59,6 +81,14 @@ public sealed class Cue
     {
         Bpm = Bpm is { } bpm && double.IsFinite(bpm) ? Math.Min(Math.Max(bpm, 20), 400) : null;
         BeatsPerBar = BeatsPerBar is { } beats ? Math.Max(1, Math.Min(beats, 16)) : null;
+        // Coerced to null, not clamped: a number outside grandMA2's window means
+        // nothing, and clamping would invent one the designer never chose (#830).
+        CueNumber = CueNumber is { } number && CueNumberDomain.IsInDomain(number) ? number : (double?)null;
+        FadeTime = new FadeTime
+        {
+            FadeIn = Document.FadeTime.Clamped(FadeTime.FadeIn),
+            FadeOut = Document.FadeTime.Clamped(FadeTime.FadeOut)
+        };
         return this;
     }
 }

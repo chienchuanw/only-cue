@@ -39,15 +39,33 @@ struct Cue: Codable, Identifiable, Equatable {
         self.beatsPerBar = beatsPerBar.map { max(1, min($0, 16)) }
     }
 
+    /// Drops a `cueNumber` outside grandMA2's numbering domain, so an
+    /// out-of-domain value on disk reads as *unnumbered* rather than as a number
+    /// that means nothing (#830). Coerced rather than clamped: clamping would
+    /// invent a number the designer never chose, and the same choice `init`
+    /// already makes for a non-finite `bpm`.
+    ///
+    /// Range and finiteness only — not `CueNumberValidator`'s three-decimal
+    /// rule. A fourth decimal place is rounded harmlessly into thousandths by
+    /// both MA2 generators, so nil-ing it would be gratuitous data loss.
+    private static func inDomainNumber(_ value: Double?) -> Double? {
+        guard let value, CueNumberValidator.isInDomain(value) else { return nil }
+        return value
+    }
+
     /// Route every decode through the clamping init so an out-of-range
     /// `bpm`/`beatsPerBar` on disk (hand-edited document, future-format leak)
     /// is normalized rather than silently accepted.
+    ///
+    /// `cueNumber` is filtered here rather than in the memberwise initialiser on
+    /// purpose: in-process construction is trusted, and the MA2 golden vectors
+    /// seat out-of-domain numbers deliberately to pin generator parity.
     init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
         self.init(
             id: try container.decode(UUID.self, forKey: .id),
             typeID: try container.decode(UUID.self, forKey: .typeID),
-            cueNumber: try container.decodeIfPresent(Double.self, forKey: .cueNumber),
+            cueNumber: Self.inDomainNumber(try container.decodeIfPresent(Double.self, forKey: .cueNumber)),
             name: try container.decode(String.self, forKey: .name),
             time: try container.decode(TimeInterval.self, forKey: .time),
             notes: try container.decode(String.self, forKey: .notes),

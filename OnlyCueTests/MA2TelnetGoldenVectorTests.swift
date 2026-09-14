@@ -38,24 +38,23 @@ final class MA2TelnetGoldenVectorTests: XCTestCase {
         XCTAssertEqual(MA2CueNumber.components(from: 1.0001), .init(number: 1, subNumber: 0))
         XCTAssertEqual(MA2CueNumber.commandString(from: 1.0001), "1")
 
-        // `%03d` pads to a total width of three *including* the sign, so a
-        // negative sub number gets one fewer digit than a positive one. .NET's
-        // "D3" pads the digits and prepends the sign instead, and the two agree
-        // only when |subNumber| >= 100 — which is why -1.5 alone could not tell
-        // them apart: sub -500 spells "-500" either way and trims to "-5".
-        // -1.05 × 1000 == -1050 → number -1, sub -50 → "-50" → trims to "-5".
-        // "D3" would spell "-050", i.e. cue "-1.-05" instead of "-1.-5".
-        XCTAssertEqual(MA2CueNumber.components(from: -1.05), .init(number: -1, subNumber: -50))
-        XCTAssertEqual(MA2CueNumber.commandString(from: -1.05), "-1.-5")
-        // -1.005 → sub -5 → "-05" (the sign eats one of the two pad zeros); no
-        // trailing zero to trim. "D3" would spell "-005" → "-1.-005".
-        XCTAssertEqual(MA2CueNumber.components(from: -1.005), .init(number: -1, subNumber: -5))
-        XCTAssertEqual(MA2CueNumber.commandString(from: -1.005), "-1.-05")
-        // 3e6 × 1000 == 3e9, past Int32.max (2147483647). Swift's Int is 64-bit
-        // so this is ordinary; a port using a 32-bit int saturates there and
-        // mis-splits the number instead of trapping.
-        XCTAssertEqual(MA2CueNumber.components(from: 3_000_000), .init(number: 3_000_000, subNumber: 0))
-        XCTAssertEqual(MA2CueNumber.commandString(from: 3_000_000), "3000000")
+        // #830: outside grandMA2's 0.001...9999.999 numbering domain the split
+        // collapses to an unnumbered cue. This used to be where the two cores
+        // were most fragile — `%03d` pads to three columns *including* the sign
+        // while .NET's "D3" pads the digits and prepends it, so -1.05 spelled
+        // "-1.-5" on one side and "-1.-05" on the other — and it is unreachable
+        // on both now, because no negative sub number is ever produced.
+        XCTAssertEqual(MA2CueNumber.components(from: -1.5), .init(number: 0, subNumber: 0))
+        XCTAssertEqual(MA2CueNumber.commandString(from: -1.5), "0")
+        XCTAssertEqual(MA2CueNumber.commandString(from: 0.0005), "0")
+        XCTAssertEqual(MA2CueNumber.commandString(from: 10_000), "0")
+        // The guard also retires the Int32 hazard: 3e6 × 1000 is 3e9, past
+        // Int32.max (2147483647), where a 32-bit port would have saturated.
+        // In domain the scaled value tops out at 9_999_999, so 32-bit and
+        // 64-bit agree everywhere the function still computes.
+        XCTAssertEqual(MA2CueNumber.commandString(from: 3_000_000), "0")
+        XCTAssertEqual(MA2CueNumber.components(from: 9999.999), .init(number: 9999, subNumber: 999))
+        XCTAssertEqual(MA2CueNumber.commandString(from: 9999.999), "9999.999")
 
         XCTAssertEqual(MA2Name.sanitize("Song \t  One  ", fallbackSlot: 7), "Song One")
         XCTAssertEqual(MA2Name.sanitize("Set 🎵 One", fallbackSlot: 7), "Set One")

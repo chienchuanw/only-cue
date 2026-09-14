@@ -82,8 +82,13 @@ final class CueNumberDomainTests: XCTestCase {
 
     func test_memberwiseInit_keepsOutOfDomainNumbers() {
         let cue = Cue(
-            id: UUID(), typeID: UUID(), cueNumber: -1.5,
-            name: "x", time: 0, notes: "", fadeTime: .zero
+            id: UUID(),
+            typeID: UUID(),
+            cueNumber: -1.5,
+            name: "x",
+            time: 0,
+            notes: "",
+            fadeTime: .zero
         )
         XCTAssertEqual(cue.cueNumber, -1.5)
     }

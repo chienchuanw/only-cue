@@ -23,7 +23,16 @@ extension CueCommands {
         var assigned: [Cue.ID: Double] = [:]
         for (index, cue) in ordered.enumerated() {
             let raw = start + Double(index) * interval
-            assigned[cue.id] = (raw * 1000).rounded() / 1000 // keep <= 3 decimals
+            let number = (raw * 1000).rounded() / 1000 // keep <= 3 decimals
+            // Reject the whole run if any number leaves grandMA2's numbering
+            // domain (#830). `RenumberCuesSheet` binds `start` to a plain
+            // `TextField` — the `Stepper(in:)` beside it constrains only the
+            // stepper buttons — so a negative or absurd value arrives here
+            // unfiltered and would otherwise reach the MA2 generators, which
+            // spell it as the malformed token `-1.-5`. Rejecting whole rather
+            // than per-cue: half a renumber is worse than none.
+            guard CueNumberValidator.isInDomain(number) else { return }
+            assigned[cue.id] = number
         }
 
         mutateCues(document, undoManager: undoManager, actionName: "Renumber Cues") { current in

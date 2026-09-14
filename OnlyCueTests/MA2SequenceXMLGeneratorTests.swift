@@ -48,7 +48,8 @@ final class MA2SequenceXMLGeneratorTests: XCTestCase {
     func test_cueNumberComponents_collapsesOutOfDomainValuesToZero() {
         for value in [-1.5, -1.05, -1.005, 0, 0.0005, 9999.9995, 10_000, 3_000_000, 1e16, 1e21] {
             XCTAssertEqual(
-                MA2CueNumber.components(from: value), .init(number: 0, subNumber: 0),
+                MA2CueNumber.components(from: value),
+                .init(number: 0, subNumber: 0),
                 "expected \(value) to collapse to an unnumbered cue"
             )
         }

@@ -1,0 +1,712 @@
+{
+  "cases" : [
+    {
+      "command" : {
+        "kind" : "play"
+      },
+      "datagram" : "L29ubHljdWUvcGxheQAAACwAAAA=",
+      "messages" : [
+        {
+          "address" : "/onlycue/play",
+          "arguments" : [
+
+          ]
+        }
+      ],
+      "name" : "play maps from an empty type-tag string"
+    },
+    {
+      "command" : {
+        "kind" : "pause"
+      },
+      "datagram" : "L29ubHljdWUvcGF1c2UAACwAAAA=",
+      "messages" : [
+        {
+          "address" : "/onlycue/pause",
+          "arguments" : [
+
+          ]
+        }
+      ],
+      "name" : "pause maps"
+    },
+    {
+      "command" : {
+        "kind" : "stop"
+      },
+      "datagram" : "L29ubHljdWUvc3RvcAAAACwAAAA=",
+      "messages" : [
+        {
+          "address" : "/onlycue/stop",
+          "arguments" : [
+
+          ]
+        }
+      ],
+      "name" : "stop maps"
+    },
+    {
+      "command" : {
+        "kind" : "cueAdd"
+      },
+      "datagram" : "L29ubHljdWUvY3VlL2FkZAAAAAAsAAAA",
+      "messages" : [
+        {
+          "address" : "/onlycue/cue/add",
+          "arguments" : [
+
+          ]
+        }
+      ],
+      "name" : "cue add maps"
+    },
+    {
+      "command" : {
+        "kind" : "cueNext"
+      },
+      "datagram" : "L29ubHljdWUvY3VlL25leHQAAAAsAAAA",
+      "messages" : [
+        {
+          "address" : "/onlycue/cue/next",
+          "arguments" : [
+
+          ]
+        }
+      ],
+      "name" : "cue next maps"
+    },
+    {
+      "command" : {
+        "kind" : "cuePrev"
+      },
+      "datagram" : "L29ubHljdWUvY3VlL3ByZXYAAAAsAAAA",
+      "messages" : [
+        {
+          "address" : "/onlycue/cue/prev",
+          "arguments" : [
+
+          ]
+        }
+      ],
+      "name" : "cue prev maps"
+    },
+    {
+      "command" : {
+        "kind" : "cueGo"
+      },
+      "datagram" : "L29ubHljdWUvY3VlL2dvACwAAAA=",
+      "messages" : [
+        {
+          "address" : "/onlycue/cue/go",
+          "arguments" : [
+
+          ]
+        }
+      ],
+      "name" : "cue go maps"
+    },
+    {
+      "command" : {
+        "kind" : "play"
+      },
+      "datagram" : "L29ubHljdWUvcGxheQAAAA==",
+      "messages" : [
+        {
+          "address" : "/onlycue/play",
+          "arguments" : [
+
+          ]
+        }
+      ],
+      "name" : "an address with no type-tag string at all is accepted"
+    },
+    {
+      "datagram" : "L29ubHljdWUvdW5rbm93bgAAAAAsaQAAAAAAAQ==",
+      "messages" : [
+        {
+          "address" : "/onlycue/unknown",
+          "arguments" : [
+            {
+              "int" : 1,
+              "type" : "int32"
+            }
+          ]
+        }
+      ],
+      "name" : "an unknown address parses but maps to nothing"
+    },
+    {
+      "command" : {
+        "kind" : "skip",
+        "seconds" : "5.0"
+      },
+      "datagram" : "L29ubHljdWUvc2tpcAAAACxpAAAAAAAF",
+      "messages" : [
+        {
+          "address" : "/onlycue/skip",
+          "arguments" : [
+            {
+              "int" : 5,
+              "type" : "int32"
+            }
+          ]
+        }
+      ],
+      "name" : "skip takes an int argument"
+    },
+    {
+      "command" : {
+        "kind" : "skip",
+        "seconds" : "-5.0"
+      },
+      "datagram" : "L29ubHljdWUvc2tpcAAAACxpAAD////7",
+      "messages" : [
+        {
+          "address" : "/onlycue/skip",
+          "arguments" : [
+            {
+              "int" : -5,
+              "type" : "int32"
+            }
+          ]
+        }
+      ],
+      "name" : "skip takes a negative int argument"
+    },
+    {
+      "command" : {
+        "kind" : "skip",
+        "seconds" : "2.5"
+      },
+      "datagram" : "L29ubHljdWUvc2tpcAAAACxmAABAIAAA",
+      "messages" : [
+        {
+          "address" : "/onlycue/skip",
+          "arguments" : [
+            {
+              "float" : "2.5",
+              "type" : "float32"
+            }
+          ]
+        }
+      ],
+      "name" : "skip takes a float argument"
+    },
+    {
+      "command" : {
+        "kind" : "locate",
+        "seconds" : "90.0"
+      },
+      "datagram" : "L29ubHljdWUvbG9jYXRlACxpAAAAAABa",
+      "messages" : [
+        {
+          "address" : "/onlycue/locate",
+          "arguments" : [
+            {
+              "int" : 90,
+              "type" : "int32"
+            }
+          ]
+        }
+      ],
+      "name" : "locate takes an int argument"
+    },
+    {
+      "command" : {
+        "kind" : "locate",
+        "seconds" : "90.5"
+      },
+      "datagram" : "L29ubHljdWUvbG9jYXRlACxmAABCtQAA",
+      "messages" : [
+        {
+          "address" : "/onlycue/locate",
+          "arguments" : [
+            {
+              "float" : "90.5",
+              "type" : "float32"
+            }
+          ]
+        }
+      ],
+      "name" : "locate takes a float argument"
+    },
+    {
+      "command" : {
+        "kind" : "skip",
+        "seconds" : "0.10000000149011612"
+      },
+      "datagram" : "L29ubHljdWUvc2tpcAAAACxmAAA9zMzN",
+      "messages" : [
+        {
+          "address" : "/onlycue/skip",
+          "arguments" : [
+            {
+              "float" : "0.10000000149011612",
+              "type" : "float32"
+            }
+          ]
+        }
+      ],
+      "name" : "a float argument widens to the double the float actually holds"
+    },
+    {
+      "command" : {
+        "kind" : "skip",
+        "seconds" : "-0.0"
+      },
+      "datagram" : "L29ubHljdWUvc2tpcAAAACxmAACAAAAA",
+      "messages" : [
+        {
+          "address" : "/onlycue/skip",
+          "arguments" : [
+            {
+              "float" : "-0.0",
+              "type" : "float32"
+            }
+          ]
+        }
+      ],
+      "name" : "a float argument keeps its negative zero"
+    },
+    {
+      "command" : {
+        "kind" : "skip",
+        "seconds" : "inf"
+      },
+      "datagram" : "L29ubHljdWUvc2tpcAAAACxmAAB/gAAA",
+      "messages" : [
+        {
+          "address" : "/onlycue/skip",
+          "arguments" : [
+            {
+              "float" : "inf",
+              "type" : "float32"
+            }
+          ]
+        }
+      ],
+      "name" : "a float argument widens infinity"
+    },
+    {
+      "datagram" : "L29ubHljdWUvc2tpcAAAACxzAAA1AAAA",
+      "messages" : [
+        {
+          "address" : "/onlycue/skip",
+          "arguments" : [
+            {
+              "text" : "5",
+              "type" : "string"
+            }
+          ]
+        }
+      ],
+      "name" : "a string argument yields no command"
+    },
+    {
+      "datagram" : "L29ubHljdWUvc2tpcAAAACwAAAA=",
+      "messages" : [
+        {
+          "address" : "/onlycue/skip",
+          "arguments" : [
+
+          ]
+        }
+      ],
+      "name" : "an empty argument list yields no command"
+    },
+    {
+      "datagram" : "L29ubHljdWUvc2tpcAAAAA==",
+      "messages" : [
+        {
+          "address" : "/onlycue/skip",
+          "arguments" : [
+
+          ]
+        }
+      ],
+      "name" : "a missing type-tag string yields no command"
+    },
+    {
+      "command" : {
+        "kind" : "play"
+      },
+      "datagram" : "L29ubHljdWUvcGxheQAAACxURk5JAAAA",
+      "messages" : [
+        {
+          "address" : "/onlycue/play",
+          "arguments" : [
+            {
+              "type" : "true"
+            },
+            {
+              "type" : "false"
+            },
+            {
+              "type" : "null"
+            },
+            {
+              "type" : "impulse"
+            }
+          ]
+        }
+      ],
+      "name" : "the four zero-byte types carry no payload"
+    },
+    {
+      "command" : {
+        "kind" : "skip",
+        "seconds" : "3.0"
+      },
+      "datagram" : "L29ubHljdWUvc2tpcAAAACxpZnMAAAAAAAAAAz/AAAB4AAAA",
+      "messages" : [
+        {
+          "address" : "/onlycue/skip",
+          "arguments" : [
+            {
+              "int" : 3,
+              "type" : "int32"
+            },
+            {
+              "float" : "1.5",
+              "type" : "float32"
+            },
+            {
+              "text" : "x",
+              "type" : "string"
+            }
+          ]
+        }
+      ],
+      "name" : "only the first argument is consulted for a command"
+    },
+    {
+      "datagram" : "L29ubHljdWUvc2tpcAAAACxzaQBhAAAAAAAABw==",
+      "messages" : [
+        {
+          "address" : "/onlycue/skip",
+          "arguments" : [
+            {
+              "text" : "a",
+              "type" : "string"
+            },
+            {
+              "int" : 7,
+              "type" : "int32"
+            }
+          ]
+        }
+      ],
+      "name" : "a leading non-numeric argument yields no command even when a number follows"
+    },
+    {
+      "datagram" : "L29ubHljdWUvc2tpcAAAACxzaQBhYmMAAAAAKg==",
+      "messages" : [
+        {
+          "address" : "/onlycue/skip",
+          "arguments" : [
+            {
+              "text" : "abc",
+              "type" : "string"
+            },
+            {
+              "int" : 42,
+              "type" : "int32"
+            }
+          ]
+        }
+      ],
+      "name" : "a 3-byte string argument needs no padding"
+    },
+    {
+      "datagram" : "L29ubHljdWUvc2tpcAAAACxzaQBhYmNkAAAAAAAAACo=",
+      "messages" : [
+        {
+          "address" : "/onlycue/skip",
+          "arguments" : [
+            {
+              "text" : "abcd",
+              "type" : "string"
+            },
+            {
+              "int" : 42,
+              "type" : "int32"
+            }
+          ]
+        }
+      ],
+      "name" : "a 4-byte string argument pads by three"
+    },
+    {
+      "datagram" : "L29ubHljdWUvc2tpcAAAACxzaQBhYmNkZQAAAAAAACo=",
+      "messages" : [
+        {
+          "address" : "/onlycue/skip",
+          "arguments" : [
+            {
+              "text" : "abcde",
+              "type" : "string"
+            },
+            {
+              "int" : 42,
+              "type" : "int32"
+            }
+          ]
+        }
+      ],
+      "name" : "a 5-byte string argument pads by two"
+    },
+    {
+      "datagram" : "L29ubHljdWUvc2tpcAAAACxzaQAAAAAAAAAAKg==",
+      "messages" : [
+        {
+          "address" : "/onlycue/skip",
+          "arguments" : [
+            {
+              "text" : "",
+              "type" : "string"
+            },
+            {
+              "int" : 42,
+              "type" : "int32"
+            }
+          ]
+        }
+      ],
+      "name" : "an empty string argument still consumes a word"
+    },
+    {
+      "datagram" : "L2FiYwAAAAAsaQAAAAAAAQ==",
+      "messages" : [
+        {
+          "address" : "/abc",
+          "arguments" : [
+            {
+              "int" : 1,
+              "type" : "int32"
+            }
+          ]
+        }
+      ],
+      "name" : "a short address pads to the next word"
+    },
+    {
+      "command" : {
+        "kind" : "play"
+      },
+      "datagram" : "I2J1bmRsZQAAAAAAAAAAAQAAABQvb25seWN1ZS9wbGF5AAAALAAAAA==",
+      "messages" : [
+        {
+          "address" : "/onlycue/play",
+          "arguments" : [
+
+          ]
+        }
+      ],
+      "name" : "a bundle with one message yields it"
+    },
+    {
+      "command" : {
+        "kind" : "skip",
+        "seconds" : "1.0"
+      },
+      "datagram" : "I2J1bmRsZQAAAAAAAAAAAQAAABgvb25seWN1ZS9za2lwAAAALGkAAAAAAAEAAAAUL29ubHljdWUvcGxheQAAACwAAAAAAAAUL29ubHljdWUvc3RvcAAAACwAAAA=",
+      "messages" : [
+        {
+          "address" : "/onlycue/skip",
+          "arguments" : [
+            {
+              "int" : 1,
+              "type" : "int32"
+            }
+          ]
+        },
+        {
+          "address" : "/onlycue/play",
+          "arguments" : [
+
+          ]
+        },
+        {
+          "address" : "/onlycue/stop",
+          "arguments" : [
+
+          ]
+        }
+      ],
+      "name" : "a bundle with several messages yields all of them"
+    },
+    {
+      "command" : {
+        "kind" : "cueGo"
+      },
+      "datagram" : "I2J1bmRsZQAAAAAAAAAAAQAAACgjYnVuZGxlAAAAAAAAAAABAAAAFC9vbmx5Y3VlL2N1ZS9nbwAsAAAA",
+      "messages" : [
+        {
+          "address" : "/onlycue/cue/go",
+          "arguments" : [
+
+          ]
+        }
+      ],
+      "name" : "a nested bundle is flattened"
+    },
+    {
+      "command" : {
+        "kind" : "stop"
+      },
+      "datagram" : "I2J1bmRsZQAAAAAAAAAAAQAAAARoaQAAAAAAFC9vbmx5Y3VlL3N0b3AAAAAsAAAA",
+      "messages" : [
+        {
+          "address" : "/onlycue/stop",
+          "arguments" : [
+
+          ]
+        }
+      ],
+      "name" : "a malformed bundle element is skipped and the next still parses"
+    },
+    {
+      "command" : {
+        "kind" : "play"
+      },
+      "datagram" : "I2J1bmRsZQAAAAAAAAAAAQAAABQvb25seWN1ZS9wbGF5AAAALAAAAAECAw==",
+      "messages" : [
+        {
+          "address" : "/onlycue/play",
+          "arguments" : [
+
+          ]
+        }
+      ],
+      "name" : "a bundle with trailing bytes shorter than a size word stops cleanly"
+    },
+    {
+      "datagram" : "I2J1bmRsZQAAAAAAAAAAAQ==",
+      "messages" : [
+
+      ],
+      "name" : "an empty bundle yields nothing"
+    },
+    {
+      "datagram" : "I2J1bmRsZQA=",
+      "messages" : [
+
+      ],
+      "name" : "a bundle with no time tag yields nothing"
+    },
+    {
+      "datagram" : "I2J1bmRsZQAAAAAAAAAAAQAAAAAvb25seWN1ZS9wbGF5AAAALAAAAA==",
+      "messages" : [
+
+      ],
+      "name" : "a bundle with a zero element size yields nothing"
+    },
+    {
+      "datagram" : "I2J1bmRsZQAAAAAAAAAAAf////8vb25seWN1ZS9wbGF5AAAALAAAAA==",
+      "messages" : [
+
+      ],
+      "name" : "a bundle with a negative element size yields nothing"
+    },
+    {
+      "datagram" : "I2J1bmRsZQAAAAAAAAAAAQAAAEABAgME",
+      "messages" : [
+
+      ],
+      "name" : "a bundle truncated mid-element yields nothing"
+    },
+    {
+      "datagram" : "",
+      "messages" : [
+
+      ],
+      "name" : "an empty datagram yields nothing"
+    },
+    {
+      "datagram" : "aGVsbG8AAAA=",
+      "messages" : [
+
+      ],
+      "name" : "a head that is neither a bundle nor an address yields nothing"
+    },
+    {
+      "datagram" : "AAAAAA==",
+      "messages" : [
+
+      ],
+      "name" : "an empty address yields nothing"
+    },
+    {
+      "datagram" : "YWJjZA==",
+      "messages" : [
+
+      ],
+      "name" : "an unterminated string yields nothing"
+    },
+    {
+      "datagram" : "L//+AA==",
+      "messages" : [
+
+      ],
+      "name" : "an address with invalid UTF-8 yields nothing"
+    },
+    {
+      "datagram" : "L29ubHljdWUvc2tpcAAAACxzAAD//gAA",
+      "messages" : [
+
+      ],
+      "name" : "a string argument with invalid UTF-8 drops the whole message"
+    },
+    {
+      "datagram" : "L29ubHljdWUvc2tpcAAAACxpAAAAAA==",
+      "messages" : [
+
+      ],
+      "name" : "a truncated int argument drops the whole message"
+    },
+    {
+      "datagram" : "L29ubHljdWUvc2tpcAAAACx6AAAAAAAB",
+      "messages" : [
+
+      ],
+      "name" : "an unknown type tag drops the whole message"
+    },
+    {
+      "datagram" : "L29ubHljdWUvc2tpcAAAACxpZgAAAAADAAA=",
+      "messages" : [
+
+      ],
+      "name" : "a partially parseable argument list drops the whole message"
+    },
+    {
+      "datagram" : "L29ubHljdWUvc2tpcAAAAGhlbGxvAAAA",
+      "messages" : [
+        {
+          "address" : "/onlycue/skip",
+          "arguments" : [
+
+          ]
+        }
+      ],
+      "name" : "a type-tag string without the comma is treated as no arguments"
+    },
+    {
+      "command" : {
+        "kind" : "play"
+      },
+      "datagram" : "L29ubHljdWUvcGxheQAAAAECAw==",
+      "messages" : [
+        {
+          "address" : "/onlycue/play",
+          "arguments" : [
+
+          ]
+        }
+      ],
+      "name" : "unterminated bytes after an address still yield the address-only message"
+    }
+  ],
+  "contract" : "osc",
+  "note" : "macOS-generated golden vectors for OnlyCue's OSC receive path (OSCParser.parseMessages / .parse and OSCCommand.from). Each case is a base64 datagram, the full message list it parses to, and the command the first message maps to. An empty message list is the contract for malformed input: the parser must return nothing and must not throw. Floats are carried as their exactly-widened double, in round-trip-exact decimal; compare the parsed IEEE-754 bit patterns, not the text. To regenerate after a deliberate change, delete golden/osc-v1.json and re-run the test suite.",
+  "version" : 1
+}

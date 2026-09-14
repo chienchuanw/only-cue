@@ -134,6 +134,24 @@ enum MA2ExportGolden {
             lengthFrames: 1_800,
             framerate: .fps30drop
         ),
+        // The timecode generator rounds cue times to frames at its own call site,
+        // independent of `MA2TrigTime`, so it needs its own rounding case. Every
+        // other case here lands on a whole frame or an exact midpoint, and
+        // `.rounded(.up)` agrees with `.rounded()` on both — only a fraction
+        // strictly inside `(0, 0.5)` tells them apart. `0.29 × 25` is 7.2499…;
+        // `0.5 × 25` is exactly 12.5, which separates away-from-zero (13) from
+        // banker's (12) and from truncation (12).
+        ExportSpec(
+            name: "off-grid cue times snap to the nearest frame, not the next",
+            cues: [MA2GoldenInput.cue(1, "Nearest down", at: 0.29), MA2GoldenInput.cue(2, "Midpoint up", at: 0.5)],
+            target: assigned,
+            sequenceName: "Song C",
+            timecodeName: "Song C TC",
+            pluginName: "Song C",
+            startFrames: 0,
+            lengthFrames: 750,
+            framerate: .fps25
+        ),
         ExportSpec(
             name: "an apostrophe in a name reaches the lua literal through a Label command",
             cues: [MA2GoldenInput.cue(1.0025, "Don't Stop", at: 0.75)],

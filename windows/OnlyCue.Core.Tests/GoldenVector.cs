@@ -1,4 +1,3 @@
-using System.Text.Json;
 using System.Text.Json.Serialization;
 
 namespace OnlyCue.Core.Tests;
@@ -16,36 +15,7 @@ public sealed record GoldenVector(
 {
     private const string RelativePath = "golden/timecode-v1.json";
 
-    /// <summary>The repo root, found by walking up from the test assembly until
-    /// the golden file is visible. Keeps the verifier independent of where the
-    /// build output lands (local <c>bin/</c> vs the CI runner's workspace).</summary>
-    public static string RepoRoot { get; } = FindRepoRoot();
-
-    public static GoldenVector Load()
-    {
-        var path = Path.Combine(RepoRoot, RelativePath);
-        var json = File.ReadAllText(path);
-        return JsonSerializer.Deserialize<GoldenVector>(json)
-            ?? throw new InvalidDataException($"{path} did not deserialize to a golden vector");
-    }
-
-    private static string FindRepoRoot()
-    {
-        var dir = new DirectoryInfo(AppContext.BaseDirectory);
-        while (dir is not null)
-        {
-            if (File.Exists(Path.Combine(dir.FullName, RelativePath)))
-            {
-                return dir.FullName;
-            }
-
-            dir = dir.Parent;
-        }
-
-        throw new FileNotFoundException(
-            $"could not locate {RelativePath} in any ancestor of {AppContext.BaseDirectory} — "
-            + "the golden-vector contract is missing from the checkout");
-    }
+    public static GoldenVector Load() => GoldenFiles.Load<GoldenVector>(RelativePath);
 }
 
 public sealed record GoldenCase(

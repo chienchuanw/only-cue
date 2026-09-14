@@ -403,3 +403,39 @@ jobs:
           if-no-files-found: ignore
           retention-days: 14
 
+  # The cross-platform correctness gate for the Windows port (epic #728, M0).
+  # macOS is the source of truth: `OnlyCueTests/TimecodeGoldenVectorTests.swift`
+  # emits `golden/timecode-v1.json` from the Swift `Timecode` and fails if the
+  # committed file drifts. This job asserts the hand-maintained C# re-write in
+  # `windows/OnlyCue.Core` reproduces every one of those cases — so the two cores
+  # diverging is a red check, not a bug report from a Windows user.
+  #
+  # Independent of the macOS job on purpose: it must still run (and can still
+  # fail) when the self-hosted Mac mini is offline, and a Swift-side Timecode
+  # change that reddens the golden file should redden this too, in the same run.
+  #
+  # `windows-latest` rather than the cheaper `ubuntu-latest`, even though
+  # `OnlyCue.Core` targets plain `net10.0` and the math is OS-independent: this
+  # is the port's only Windows signal today, and it does exercise the things that
+  # actually differ — path handling in the repo-root walk, line endings, and the
+  # default culture the formatting/parsing must not depend on. The repo is
+  # public, so hosted runners are free and the 2x Windows multiplier is moot.
+  windows-core:
+    name: Golden vectors (Windows, C# core)
+    runs-on: windows-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+
+      # `--no-restore` is deliberately not used: there is no lockfile or cache
+      # step here yet, and the solution is two tiny projects.
+      - name: dotnet test
+        run: dotnet test windows/OnlyCue.sln --configuration Release --verbosity normal
+

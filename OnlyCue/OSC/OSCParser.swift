@@ -8,6 +8,19 @@ import Foundation
 /// simply ignored, never crashes.
 enum OSCParser {
 
+    /// Maximum `#bundle` nesting accepted. Each level costs a stack frame, and
+    /// the nesting comes from the network, so without a cap an attacker sizes
+    /// our stack usage. A stack overflow is not a parse failure that can be
+    /// caught and ignored — it is a segfault here and an uncatchable
+    /// `StackOverflowException` on .NET — so it has to be prevented by refusing
+    /// to recurse, not handled after the fact (#835).
+    ///
+    /// 32 is far above real traffic (senders nest one or two deep) and far below
+    /// the ~2800 that segfaults a 512 KB dispatch worker. The exact number is
+    /// not load-bearing; that it is shared with the Windows core is, so it is
+    /// pinned by `golden/osc-v1.json` at the boundary.
+    static let maximumBundleDepth = 32
+
     /// Parse a single datagram. For a bundle, returns the first contained
     /// message (sufficient for OnlyCue's command-per-button usage; senders
     /// that bundle multiple commands are rare and out of scope for v1).
@@ -18,10 +31,20 @@ enum OSCParser {
     /// Parse a datagram into zero or more messages. A plain message yields
     /// one; a `#bundle` yields its (recursively flattened) contents.
     static func parseMessages(_ data: Data) -> [OSCMessage] {
+        parseMessages(data, depth: 0)
+    }
+
+    /// `depth` counts enclosing `#bundle` containers; the outermost body parses
+    /// at depth 1. An over-deep element yields no messages rather than
+    /// abandoning the bundle that contains it — the same rule a malformed
+    /// element already follows, so one hostile branch cannot silently drop its
+    /// well-formed siblings.
+    private static func parseMessages(_ data: Data, depth: Int) -> [OSCMessage] {
         var reader = Reader(data)
         guard let head = reader.readOSCString() else { return [] }
         if head == "#bundle" {
-            return parseBundle(&reader)
+            guard depth < maximumBundleDepth else { return [] }
+            return parseBundle(&reader, depth: depth + 1)
         }
         guard head.hasPrefix("/") else { return [] }
         guard let message = parsePlainMessage(address: head, &reader) else { return [] }
@@ -31,13 +54,13 @@ enum OSCParser {
     // MARK: - Branches
 
     /// `#bundle` body: an 8-byte time tag, then `[Int32 size][element bytes]` ×N.
-    private static func parseBundle(_ reader: inout Reader) -> [OSCMessage] {
+    private static func parseBundle(_ reader: inout Reader, depth: Int) -> [OSCMessage] {
         guard reader.skip(8) else { return [] }
         var out: [OSCMessage] = []
         while reader.remaining >= 4 {
             guard let size = reader.readInt32(), size > 0,
                   let element = reader.readBytes(Int(size)) else { break }
-            out.append(contentsOf: parseMessages(element))
+            out.append(contentsOf: parseMessages(element, depth: depth))
         }
         return out
     }

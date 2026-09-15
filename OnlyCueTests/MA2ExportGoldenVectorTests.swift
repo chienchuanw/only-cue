@@ -152,6 +152,31 @@ enum MA2ExportGolden {
             lengthFrames: 750,
             framerate: .fps25
         ),
+        // The export artifacts are where a tie actually corrupts data: the
+        // timecode XML references each cue by its **number**-ordered 1-based
+        // index while emitting events in **time** order, so if the two platforms
+        // broke a tie differently the events would point at different cues from
+        // the same project — silently (#834). This case ties on both keys at
+        // once. Numbers are 0, 2, 0, 2 (the two unnumbered cues collapse onto 0),
+        // giving sequence order A, "Tied second", "Two A", "Two B"; times are
+        // 2, 1, 1, 3, so "Two A" and "Tied second" tie at 1 and the events can
+        // only agree if input order decides.
+        ExportSpec(
+            name: "cues tied on number and on time keep their input order",
+            cues: [
+                MA2GoldenInput.cue(nil, "Tied first", at: 2),
+                MA2GoldenInput.cue(2, "Two A", at: 1),
+                MA2GoldenInput.cue(nil, "Tied second", at: 1),
+                MA2GoldenInput.cue(2, "Two B", at: 3)
+            ],
+            target: assigned,
+            sequenceName: "Ties",
+            timecodeName: "Ties TC",
+            pluginName: "Ties",
+            startFrames: 0,
+            lengthFrames: 750,
+            framerate: .fps25
+        ),
         ExportSpec(
             name: "an apostrophe in a name reaches the lua literal through a Label command",
             cues: [MA2GoldenInput.cue(1.0025, "Don't Stop", at: 0.75)],

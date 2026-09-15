@@ -151,6 +151,25 @@ enum MA2TelnetGolden {
             startFrames: 0,
             framerate: .fps25
         ),
+        // Ties are the normal case, not an exotic one: every cue created through
+        // `CueCommands` starts unnumbered, and `?? 0` collapses all of them onto
+        // the same key (#834). Three cues share key 0 here, so the commands can
+        // only come out in one order if the tie rule is total — a sort that
+        // merely happens to be stable would pass this today and stop passing the
+        // day either standard library changed its algorithm.
+        PlanSpec(
+            name: "cues tied on number keep their input order",
+            cues: [
+                MA2GoldenInput.cue(nil, "Tied A", at: 2),
+                MA2GoldenInput.cue(2, "Numbered", at: 1),
+                MA2GoldenInput.cue(nil, "Tied B", at: 0),
+                MA2GoldenInput.cue(0, "Explicit zero", at: 3)
+            ],
+            target: assigned,
+            sequenceName: "Ties",
+            startFrames: 0,
+            framerate: .fps25
+        ),
         PlanSpec(
             name: "drop-frame with a start offset",
             cues: [MA2GoldenInput.cue(1.0025, "DF", at: 0.75)],

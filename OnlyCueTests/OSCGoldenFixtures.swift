@@ -72,6 +72,17 @@ enum OSCPack {
         return rawBundle(payload)
     }
 
+    /// `payload` wrapped in `levels` nested `#bundle` containers, for the
+    /// depth-cap cases. `levels` counts containers, so the payload sits at
+    /// depth `levels`.
+    static func nested(_ payload: Data, levels: Int) -> Data {
+        var data = payload
+        for _ in 0 ..< levels {
+            data = bundle([data])
+        }
+        return data
+    }
+
     /// A bundle whose body is supplied verbatim, for the malformed size cases.
     /// The time tag is OSC's "immediate" value; nothing reads it.
     static func rawBundle(_ payload: Data) -> Data {
@@ -175,8 +186,30 @@ enum OSCGoldenCases {
         .init("a bundle stops at a zero element size rather than skipping past it",
               OSCPack.rawBundle(OSCPack.int32(0) + sized(OSCPack.message("/onlycue/play", ",")))),
         .init("a bundle truncated mid-element yields nothing",
-              OSCPack.rawBundle(OSCPack.int32(64) + Data([1, 2, 3, 4])))
+              OSCPack.rawBundle(OSCPack.int32(64) + Data([1, 2, 3, 4]))),
+        // Nesting depth cap (#835). Both sides recurse once per level, so an
+        // uncapped parser lets the network pick our stack depth. The pair
+        // straddles the boundary: a cap of the wrong value, or on one platform
+        // only, moves exactly one of these two and goes red.
+        .init("a bundle nested to the depth limit still parses",
+              OSCPack.nested(OSCPack.message("/onlycue/play", ","), levels: depthLimit)),
+        .init("a bundle nested one past the depth limit yields nothing",
+              OSCPack.nested(OSCPack.message("/onlycue/play", ","), levels: depthLimit + 1)),
+        // Refusing the over-deep branch must not take its siblings with it —
+        // the cap follows the same "skip the bad element" rule as a malformed
+        // one. A port that bails out of the whole bundle passes both cases
+        // above and fails this one.
+        .init("an over-deep element is skipped but its sibling still parses",
+              OSCPack.bundle([OSCPack.nested(OSCPack.message("/onlycue/play", ","), levels: depthLimit),
+                              OSCPack.message("/onlycue/stop", ",")]))
     ]
+
+    /// Spelled out rather than read from `OSCParser.maximumBundleDepth`, and
+    /// deliberately so: a fixture derived from the constant would regenerate
+    /// itself when the constant changed, and the vector would keep passing
+    /// while the contract moved underneath it. A literal makes the drift guard
+    /// go red instead, which is the whole point of pinning the boundary.
+    private static let depthLimit = 32
 
     /// An element with its `Int32` length prefix, for the raw-bundle fixtures.
     private static func sized(_ element: Data) -> Data {

@@ -130,4 +130,68 @@ final class OSCParserTests: XCTestCase {
             + bigEndianInt32(Int32(inner2.count)) + inner2
         XCTAssertEqual(OSCParser.parse(datagram)?.addressPattern, "/onlycue/play")
     }
+
+    // MARK: - Nesting depth (#835)
+
+    /// Wraps `payload` in `levels` nested `#bundle` containers.
+    private func nested(_ payload: Data, levels: Int) -> Data {
+        var data = payload
+        for _ in 0 ..< levels {
+            data = oscString("#bundle")
+                + Data(repeating: 0, count: 8)
+                + bigEndianInt32(Int32(data.count)) + data
+        }
+        return data
+    }
+
+    func test_bundleNesting_atTheLimit_stillParses() {
+        let datagram = nested(oscString("/onlycue/play"), levels: OSCParser.maximumBundleDepth)
+        XCTAssertEqual(OSCParser.parseMessages(datagram).map(\.addressPattern), ["/onlycue/play"])
+    }
+
+    func test_bundleNesting_oneBeyondTheLimit_yieldsNothing() {
+        let datagram = nested(oscString("/onlycue/play"), levels: OSCParser.maximumBundleDepth + 1)
+        XCTAssertEqual(OSCParser.parseMessages(datagram), [])
+    }
+
+    /// The cap must not abandon the enclosing bundle — that is the same
+    /// "skip the bad element, keep the rest" rule a malformed element follows.
+    /// Without this, capping would turn one over-deep element into a silent
+    /// drop of its well-formed siblings.
+    func test_bundleNesting_anOverDeepElement_doesNotDropItsSiblings() {
+        let tooDeep = nested(oscString("/onlycue/play"), levels: OSCParser.maximumBundleDepth)
+        let sibling = oscString("/onlycue/stop")
+        let datagram = oscString("#bundle")
+            + Data(repeating: 0, count: 8)
+            + bigEndianInt32(Int32(tooDeep.count)) + tooDeep
+            + bigEndianInt32(Int32(sibling.count)) + sibling
+        XCTAssertEqual(OSCParser.parseMessages(datagram).map(\.addressPattern), ["/onlycue/stop"])
+    }
+
+    /// The real reason the cap exists: recursion depth is attacker-controlled,
+    /// and a stack overflow is a crash, not a parse failure.
+    ///
+    /// Deliberately run on a 512 KB thread rather than inline. XCTest runs on
+    /// the main thread's 8 MB stack, where 8000 levels simply *parse* — measured
+    /// while writing this test, and the reason an earlier version of it was
+    /// worthless: it asserted a crash that the test environment cannot produce,
+    /// so it would have passed for the wrong reason. 512 KB is the stack size a
+    /// dispatch worker actually gets, and ~2800 levels is where that segfaults
+    /// (#835), so this exercises the real failure mode.
+    func test_bundleNesting_pathologicalDepth_onASmallStack_returnsEmpty() throws {
+        let datagram = nested(oscString("/onlycue/play"), levels: 8000)
+        var result: [OSCMessage]?
+
+        let thread = Thread { result = OSCParser.parseMessages(datagram) }
+        thread.stackSize = 512 * 1024
+        thread.start()
+
+        let deadline = Date().addingTimeInterval(10)
+        while !thread.isFinished, Date() < deadline {
+            RunLoop.current.run(mode: .default, before: Date().addingTimeInterval(0.01))
+        }
+
+        XCTAssertTrue(thread.isFinished, "parser did not finish on a 512 KB stack")
+        XCTAssertEqual(try XCTUnwrap(result), [])
+    }
 }

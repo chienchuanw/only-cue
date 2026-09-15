@@ -60,8 +60,26 @@ public sealed record OscCommand(OscCommandKind Kind, double? Seconds = null)
     /// <summary>Only the <em>first</em> argument is consulted, and only if it is
     /// an int32 or a float32 — a leading string yields no command even when a
     /// number follows it.</summary>
+    /// <remarks>
+    /// A non-finite argument yields no command either, and that rule exists for
+    /// this side of the port specifically. The dispatcher folds
+    /// <c>Skip</c> through <c>max(0, currentTime + seconds)</c>, and the two
+    /// platforms' <c>max</c> disagree about NaN: Swift's is <c>y &gt;= x ? y : x</c>,
+    /// so <c>max(0, nan)</c> is <c>0</c> while <c>max(nan, 0)</c> is <c>nan</c>;
+    /// <see cref="Math.Max(double, double)"/> propagates NaN either way round.
+    /// The same datagram would rewind the playhead to 0 on macOS and seek to NaN
+    /// here. Refusing the argument at this boundary means the dispatcher never
+    /// has to be careful, on either platform (#845).
+    ///
+    /// <see cref="double.IsFinite"/> and Swift's <c>isFinite</c> are the same
+    /// IEEE-754 predicate — not NaN, not ±∞ — so unlike <c>max</c> they cannot
+    /// drift apart. Int32 arguments widen to a finite double always, so this
+    /// only ever bites floats.
+    /// </remarks>
     private static OscCommand? Numeric(OscMessage message, OscCommandKind kind) =>
-        message.Arguments.Count > 0 && message.Arguments[0].NumericValue is { } seconds
+        message.Arguments.Count > 0
+        && message.Arguments[0].NumericValue is { } seconds
+        && double.IsFinite(seconds)
             ? new OscCommand(kind, seconds)
             : null;
 }

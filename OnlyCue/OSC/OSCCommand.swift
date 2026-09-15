@@ -44,15 +44,36 @@ enum OSCCommand: Equatable {
         case "/onlycue/play": .play
         case "/onlycue/pause": .pause
         case "/onlycue/stop": .stop
-        case "/onlycue/skip":
-            message.arguments.first?.numericValue.map { .skip(seconds: $0) }
-        case "/onlycue/locate":
-            message.arguments.first?.numericValue.map { .locate(seconds: $0) }
+        case "/onlycue/skip": numeric(message, Self.skip)
+        case "/onlycue/locate": numeric(message, Self.locate)
         case "/onlycue/cue/add": .cueAdd
         case "/onlycue/cue/next": .cueNext
         case "/onlycue/cue/prev": .cuePrev
         case "/onlycue/cue/go": .cueGo
         default: nil
         }
+    }
+
+    /// Only the *first* argument is consulted, and only if it is an int32 or a
+    /// float32 — a leading string yields no command even when a number follows
+    /// it.
+    ///
+    /// A non-finite argument yields no command either, which is a rule about the
+    /// port as much as about the sender. `OSCServerHost.resolvedSeekTime` folds
+    /// `skip` through `max(0, currentTime + seconds)`, and Swift's `max` and
+    /// .NET's `Math.Max` disagree about NaN in both directions: Swift's is
+    /// `y >= x ? y : x`, so `max(0, .nan)` is `0` but `max(.nan, 0)` is `nan`,
+    /// while `Math.Max` propagates NaN whichever way round it is called. The
+    /// same datagram would silently rewind the playhead to 0 on macOS and seek
+    /// to NaN on Windows. Reordering the `max` arguments would paper over it
+    /// without fixing it (#845).
+    ///
+    /// Refusing at the boundary is also the less surprising answer on macOS's
+    /// own terms — a sender that skips by NaN did not ask to rewind to the top.
+    /// `isFinite` and `double.IsFinite` are the same IEEE-754 predicate, so
+    /// unlike `max` they cannot drift apart.
+    private static func numeric(_ message: OSCMessage, _ make: (Double) -> Self) -> Self? {
+        guard let seconds = message.arguments.first?.numericValue, seconds.isFinite else { return nil }
+        return make(seconds)
     }
 }

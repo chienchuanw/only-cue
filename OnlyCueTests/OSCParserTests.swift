@@ -108,6 +108,52 @@ final class OSCParserTests: XCTestCase {
         XCTAssertNil(OSCParser.parse(datagram))
     }
 
+    // MARK: - The leading "/" and "," are scalars, not grapheme clusters (#836)
+
+    // OSC is a byte protocol: "the address pattern begins with the character /"
+    // means byte 0x2F. Testing it by extended grapheme cluster dragged UAX #29 —
+    // and therefore each runtime's Unicode Character Database — into a
+    // wire-format parser. .NET 10 ships UCD 16.0 and Swift 6.3 ships UCD 17.0,
+    // so 42 combining scalars joined the leading cluster on one side and not the
+    // other, and the same datagram parsed differently on the two platforms.
+
+    func test_combiningMarkAfterTheSlash_isPartOfTheAddress_notOfTheSlash() {
+        // Under the cluster rule "/" + U+0301 was one cluster that was not "/",
+        // so the whole datagram was rejected. By scalar the first scalar is "/",
+        // so this is simply an address nothing maps to — it reaches the recent-
+        // messages buffer instead of vanishing inside the parser.
+        let datagram = oscString("/\u{0301}onlycue/play") + oscString(",")
+        XCTAssertEqual(OSCParser.parse(datagram)?.addressPattern, "/\u{0301}onlycue/play")
+    }
+
+    func test_u1ACFAfterTheSlash_parsesTheSame_asAnyOtherCombiningMark() {
+        // U+1ACF is one of the 42 scalars the two UCDs disagree about. The point
+        // of this test is that it is no longer special: it takes the same branch
+        // as U+0301 above, which is what makes the result independent of which
+        // Unicode version either toolchain happens to ship.
+        let datagram = oscString("/\u{1ACF}onlycue/play") + oscString(",")
+        XCTAssertEqual(OSCParser.parse(datagram)?.addressPattern, "/\u{1ACF}onlycue/play")
+    }
+
+    func test_combiningMarkOnTheTypeTagComma_dropsTheMessage() {
+        // The type-tag path moves the other way, and deliberately. The word
+        // starts with "," so it *is* a type-tag string, and U+0301 in it is an
+        // unknown tag — the same bail-out as ",d" above. Under the cluster rule
+        // the word was "not a type-tag string" at all, so the parser fell
+        // through to the address-only form and OnlyCue *played*. Acting on a
+        // malformed datagram is worse than ignoring it.
+        let datagram = oscString("/onlycue/play") + oscString(",\u{0301}")
+        XCTAssertNil(OSCParser.parse(datagram))
+    }
+
+    func test_nonASCIIAddress_stillParses() {
+        // Guards the rejected alternative: restricting the test to ASCII would
+        // have dropped every address whose first character is non-ASCII, which
+        // is far more collateral than the 42 scalars it was meant to fix.
+        let datagram = oscString("/播放") + oscString(",")
+        XCTAssertEqual(OSCParser.parse(datagram)?.addressPattern, "/播放")
+    }
+
     // MARK: - Bundles
 
     func test_bundle_flattensToContainedMessages() {

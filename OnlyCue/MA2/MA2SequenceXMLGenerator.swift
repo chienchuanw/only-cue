@@ -51,7 +51,7 @@ enum MA2SequenceXMLGenerator {
         // MA2 sequences are number-ordered; the timecode generator references
         // cues by this number-sorted 1-based index. Cue numbers need not be
         // monotonic with cue times in OnlyCue.
-        let ordered = cues.sorted { ($0.cueNumber ?? 0) < ($1.cueNumber ?? 0) }
+        let ordered = MA2CueOrdering.byNumber(cues)
 
         var lines: [String] = []
         lines.append("<?xml version=\"1.0\" encoding=\"utf-8\"?>")

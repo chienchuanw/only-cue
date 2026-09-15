@@ -25,12 +25,8 @@ enum MA2TimecodeXMLGenerator {
         // The sequence import is number-ordered; the third <No> of each event's
         // cue reference is that number-sorted 1-based index. Events themselves
         // run in time order (cue numbers need not be monotonic with time).
-        let numberOrdered = cues.sorted { ($0.cueNumber ?? 0) < ($1.cueNumber ?? 0) }
-        var sequenceIndexByCueID: [UUID: Int] = [:]
-        for (position, cue) in numberOrdered.enumerated() {
-            sequenceIndexByCueID[cue.id] = position + 1
-        }
-        let timeOrdered = cues.sorted { $0.time < $1.time }
+        let sequenceIndexByCueID = MA2CueOrdering.sequenceIndexByCueID(cues)
+        let timeOrdered = MA2CueOrdering.byTime(cues)
 
         let escape = MA2SequenceXMLGenerator.escape
 

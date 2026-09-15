@@ -27,7 +27,7 @@ enum MA2CommandPlanner {
     ) -> [String] {
         let seq = target.sequenceSlot
         // MA2 sequences are number-ordered; emit cues in cue-number order.
-        let ordered = cues.sorted { ($0.cueNumber ?? 0) < ($1.cueNumber ?? 0) }
+        let ordered = MA2CueOrdering.byNumber(cues)
 
         var commands: [String] = ["Delete Sequence \(seq) /nc"]
 

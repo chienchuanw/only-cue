@@ -7,16 +7,19 @@ enum CuePresentationFadeFixtures {
 
     /// Strings fed to `FadeTime.parse`.
     ///
-    /// The four confirmed Swift/.NET divergences are the reason this group is
-    /// the longest (measured on Swift 6.3.3 / .NET 10.0.11, not assumed):
+    /// The confirmed Swift/.NET divergences are the reason this group is the
+    /// longest (measured on Swift 6.3.3 / .NET 10.0.11, not assumed):
     ///
     /// - **newline / carriage return.** Swift's `.whitespaces` is Unicode `Zs`
     ///   plus tab and excludes line separators, so `"1.5\n"` does *not* trim and
     ///   `Double("1.5\n")` then fails. .NET's `Trim()` strips them, so a naive
     ///   port accepts. Tab and NBSP are in the set on both sides and agree —
     ///   pinned too, so the port cannot "fix" the divergence by trimming nothing.
-    /// - **hex float.** Swift's `Double(String)` accepts C99 `0x1p3` (= 8);
-    ///   .NET's `double.Parse` rejects it.
+    /// - **hex float.** Swift's `Double(String)` accepted C99 `0x1p3` (= 8)
+    ///   where .NET's `double.Parse` rejects it. Closed by narrowing the macOS
+    ///   grammar rather than porting a hex-float parser (#841), so the case now
+    ///   pins *rejection* — and pins that the fix did not leak into the decimal
+    ///   spellings that merely start with a zero.
     /// - **leading plus.** Rejected only by the explicit `hasPrefix("+")` guard;
     ///   .NET's `NumberStyles.Float` allows a leading sign, so dropping the guard
     ///   is invisible without this case.
@@ -44,7 +47,11 @@ enum CuePresentationFadeFixtures {
         ("a trailing carriage return is NOT trimmed and is rejected", "1.5\r"),
         ("interior whitespace is never trimmed", "1 5"),
         // Number grammar the two platforms read differently.
-        ("a C99 hex float is accepted", "0x1p3"),
+        ("a C99 hex float is rejected", "0x1p3"),
+        ("a hex float with a sign is rejected", "-0x0p0"),
+        ("a hex integer is rejected", "0x10"),
+        ("a leading zero decimal is still accepted", "00.5"),
+        ("a zero with an exponent is still accepted", "0e0"),
         ("a leading plus is rejected", "+1"),
         ("a leading plus on the out leg is rejected", "1/+2"),
         ("the word infinity is rejected", "infinity"),

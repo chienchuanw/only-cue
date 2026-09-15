@@ -27,9 +27,10 @@ final class CuePresentationGoldenVectorTests: XCTestCase {
         // Tab and NBSP *are* in the set on both sides.
         XCTAssertEqual(FadeTime.parse("1.5\t"), FadeTime.symmetric(1.5))
         XCTAssertEqual(FadeTime.parse("\u{00A0}1.5"), FadeTime.symmetric(1.5))
-        // Swift's `Double(String)` accepts the C99 hex-float grammar; .NET's does
-        // not. 0x1p3 is 1 × 2³.
-        XCTAssertEqual(FadeTime.parse("0x1p3"), FadeTime.symmetric(8))
+        // Swift's `Double(String)` accepts the C99 hex-float grammar and .NET's
+        // does not, so the grammar was narrowed on the macOS side to close the
+        // gap rather than porting a hex-float parser (#841). Both now reject.
+        XCTAssertNil(FadeTime.parse("0x1p3"))
         // Rejected only by the explicit `hasPrefix("+")` guard.
         XCTAssertNil(FadeTime.parse("+1"))
         // .NET's TryParse accepts both spellings, so the finiteness check is

@@ -81,12 +81,25 @@ extension FadeTime {
     private static func parseNonNegative(_ text: Substring) -> TimeInterval? {
         guard !text.isEmpty,
               !text.hasPrefix("+"),
+              !isHexFloat(text),
               let value = Double(text),
               value.isFinite,
               value >= 0,
               value <= maximum
         else { return nil }
         return value
+    }
+
+    /// `Double(String)` implements the whole C99 `strtod` grammar, so `"0x1p3"`
+    /// would otherwise be accepted as an 8 second fade (#841). Nothing in the
+    /// fade grammar intends that, and .NET has no hex-float parse at all, so the
+    /// Windows core could not agree without one (epic #728).
+    ///
+    /// The sign is stepped over rather than left to the `value >= 0` guard
+    /// below: `"-0x0p0"` reaches `-0.0`, and `-0.0 >= 0` is true.
+    private static func isHexFloat(_ text: Substring) -> Bool {
+        let body = text.hasPrefix("-") ? text.dropFirst() : text
+        return body.hasPrefix("0x") || body.hasPrefix("0X")
     }
 
     /// Drops trailing `.0` on whole numbers; otherwise returns `String(value)`.

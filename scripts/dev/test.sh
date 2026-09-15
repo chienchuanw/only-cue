@@ -39,8 +39,15 @@ case "${args[*]:-}" in
   *) args+=("-only-testing:OnlyCueTests") ;;
 esac
 
+# The local side's question is simply "is a CI job running?" — a live
+# Runner.Worker lasts the whole job, so it answers it completely. The two work
+# roots are a cheap second signal for the case the worker has died but its
+# xcodebuild has not.
 if ! "$repo_root/scripts/ci/machine-busy.sh" \
-      --self "$repo_root" --include-runner --wait "$wait_budget"; then
+      --runner \
+      --under "$HOME/actions-runner/_work" \
+      --under "$HOME/github-runner/_work" \
+      --wait "$wait_budget"; then
   echo "scripts/dev/test.sh: refusing to start — see above (#816)." >&2
   echo "  Results from a contended run are not evidence about the code." >&2
   exit 1

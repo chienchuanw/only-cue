@@ -33,18 +33,33 @@ namespace OnlyCue.Core.Osc;
 /// the datagram, not the end of the current field.</item>
 /// </list>
 ///
-/// Nesting depth is <em>not</em> capped, matching Swift. Both parsers recurse once
-/// per bundle level and would overflow the stack on a sufficiently nested
-/// datagram; at 20 bytes per level a 65507-byte UDP datagram buys at most 3275
-/// levels (the innermost bundle carries no size word, so depth D costs 20D-4
-/// bytes), measured to survive a 1 MB stack. #835 tracks capping both sides
-/// together — capping only this one would itself be a parity break.
+/// Nesting depth is capped at <see cref="MaximumBundleDepth"/> on both sides
+/// (#835). Before that cap, both parsers recursed once per bundle level with no
+/// limit, so the datagram chose our stack depth: at 20 bytes per level a
+/// 65507-byte UDP datagram buys 3275 levels (the innermost bundle carries no
+/// size word, so depth D costs 20D-4 bytes), which survived a 1 MB stack — but
+/// only because the UDP size limit happened to sit below it.
 /// </remarks>
 public static class OscParser
 {
     private static readonly UTF8Encoding StrictUtf8 = new(encoderShouldEmitUTF8Identifier: false, throwOnInvalidBytes: true);
 
     private static readonly IReadOnlyList<OscMessage> None = [];
+
+    /// <summary>
+    /// Maximum <c>#bundle</c> nesting accepted. Mirrors Swift
+    /// <c>OSCParser.maximumBundleDepth</c> and must stay equal to it — the two
+    /// are pinned together at the boundary by <c>golden/osc-v1.json</c>.
+    /// </summary>
+    /// <remarks>
+    /// The cap exists because a <see cref="StackOverflowException"/> cannot be
+    /// caught on .NET: it terminates the process, so the overflow has to be
+    /// prevented by refusing to recurse rather than handled once it happens.
+    /// 32 is far above real traffic (senders nest one or two deep) and far
+    /// below the depth that exhausts any stack the parser might run on. The
+    /// exact number is not load-bearing; sharing it with macOS is.
+    /// </remarks>
+    public const int MaximumBundleDepth = 32;
 
     /// <summary>
     /// Parse a single datagram. For a bundle, returns the first contained message
@@ -60,7 +75,17 @@ public static class OscParser
     /// Parse a datagram into zero or more messages. A plain message yields one; a
     /// <c>#bundle</c> yields its (recursively flattened) contents.
     /// </summary>
-    public static IReadOnlyList<OscMessage> ParseMessages(ReadOnlySpan<byte> data)
+    public static IReadOnlyList<OscMessage> ParseMessages(ReadOnlySpan<byte> data) =>
+        ParseMessages(data, depth: 0);
+
+    /// <summary>
+    /// <paramref name="depth"/> counts enclosing <c>#bundle</c> containers; the
+    /// outermost body parses at depth 1. An over-deep element yields no messages
+    /// but does not abandon the bundle containing it — the same rule a malformed
+    /// element follows, so one hostile branch cannot silently drop its
+    /// well-formed siblings.
+    /// </summary>
+    private static IReadOnlyList<OscMessage> ParseMessages(ReadOnlySpan<byte> data, int depth)
     {
         var reader = new Reader(data);
         if (reader.ReadOscString() is not { } head)
@@ -70,7 +95,7 @@ public static class OscParser
 
         if (head == "#bundle")
         {
-            return ParseBundle(ref reader);
+            return depth < MaximumBundleDepth ? ParseBundle(ref reader, depth + 1) : None;
         }
 
         if (!StartsWithCluster(head, '/'))
@@ -85,7 +110,7 @@ public static class OscParser
     /// <c>[Int32 size][element bytes]</c> × N. A malformed element contributes no
     /// messages but does not abandon the rest of the bundle; a non-positive or
     /// over-long size ends the loop, which is what keeps it bounded.</summary>
-    private static IReadOnlyList<OscMessage> ParseBundle(ref Reader reader)
+    private static IReadOnlyList<OscMessage> ParseBundle(ref Reader reader, int depth)
     {
         if (!reader.Skip(8))
         {
@@ -100,7 +125,7 @@ public static class OscParser
                 break;
             }
 
-            output.AddRange(ParseMessages(element));
+            output.AddRange(ParseMessages(element, depth));
         }
 
         return output;

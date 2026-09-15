@@ -31,7 +31,10 @@ jobs:
   test:
     name: Build & test (macOS, self-hosted)
     runs-on: [self-hosted, macos, arm64]
-    timeout-minutes: 90
+    # 105, not 90: the worst case was already ~82 min (two watchdog-capped UI
+    # attempts at 2400s plus the earlier steps), and `Reset stale test state`
+    # can now spend up to 900s waiting for a local test run to finish (#816).
+    timeout-minutes: 105
 
     steps:
       - name: Checkout
@@ -53,7 +56,9 @@ jobs:
       # The UI-test watchdog is the thing standing between a wedge and a wasted
       # 90-minute job, so it gets its own tests and they gate every run (~15s).
       - name: CI script tests
-        run: scripts/ci/run-with-watchdog.test.sh
+        run: |
+          scripts/ci/run-with-watchdog.test.sh
+          scripts/ci/machine-busy.test.sh
 
       # Runs here rather than beside the UI steps on purpose: those are gated on
       # push-to-dev, so a PR that orphaned a suite would not hear about it until
@@ -87,6 +92,26 @@ jobs:
       # best-effort `sudo -n` (#605).
       - name: Reset stale test state
         run: |
+          # First, before anything is killed: is a *local* test run using this
+          # machine? The runner shares the maintainer's Mac mini, and a local
+          # xcodebuild makes the UI-test step fail with repeated "Lost
+          # connection to the application" — three consecutive dev runs went red
+          # that way on 2026-09-15 and read as a code regression (#816). The
+          # kills below would also reap a local run's processes, so this has to
+          # come first.
+          #
+          # Warn and continue, never fail: a red `dev` for a reason that has
+          # nothing to do with `dev` is precisely what this guard exists to
+          # stop, so it must not create one. Placed here rather than beside the
+          # UI step so `Unit tests` benefits from the same single wait.
+          # Asked positively — "is anything running out of the maintainer's
+          # working copy?" — not "is anything running that isn't mine". The
+          # negative form makes CI wait on its *own* leftovers, because
+          # DerivedData lives in ~/Library/Developer/Xcode/DerivedData, not
+          # under $GITHUB_WORKSPACE. `--runner` is deliberately absent: the only
+          # Runner.Worker on this machine is this job.
+          scripts/ci/machine-busy.sh --under "$HOME/Projects" --wait 900 || \
+            echo "::warning::A local test run was still using this machine after 15 min — results below may be contended (#816)."
           pkill -9 -x OnlyCue 2>/dev/null || true
           pkill -9 -f 'OnlyCue.app/Contents/MacOS/OnlyCue' 2>/dev/null || true
           pkill -9 -f XCTRunner 2>/dev/null || true
@@ -248,6 +273,14 @@ jobs:
           UI_TEST_LOG_DIR: ${{ runner.temp }}/ui-test-logs
         run: |
           set -o pipefail
+          # Zero-wait re-check, purely to annotate. `Reset stale test state`
+          # already did the waiting; a local run that started after it is not
+          # caught by anything, so when this step fails its own log should say
+          # whether the machine was contended at the time instead of leaving it
+          # to be reconstructed from `ps` afterwards (#816).
+          scripts/ci/machine-busy.sh --under "$HOME/Projects" || \
+            echo "::warning::UI tests are starting while a local test run holds this machine — treat any failure below as contended, not as a regression (#816)."
+
           # NOTE: a caffeinate wrapper and -test-timeouts-enabled were tried in
           # #603 but reverted (#605) — both correlated with the UI runner
           # failing to enable automation mode at init, deterministically, on

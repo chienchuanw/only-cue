@@ -127,8 +127,15 @@ enum OSCGoldenCases {
         // Only a bitwise comparison can tell this from `0.0`.
         .init("a float argument keeps its negative zero",
               OSCPack.message("/onlycue/skip", ",f", [OSCPack.float32(-0.0)])),
+        // These four parse to a message and then map to *no* command: a
+        // non-finite `skip`/`locate` argument is refused at the mapping boundary
+        // so the dispatcher's `max` never sees NaN, which Swift and .NET fold
+        // differently (#845). The argument is still pinned bit-for-bit, so a
+        // parser that dropped or normalised it would still show up here.
         .init("a float argument widens infinity",
               OSCPack.message("/onlycue/skip", ",f", [OSCPack.float32(.infinity)])),
+        .init("a float argument widens negative infinity",
+              OSCPack.message("/onlycue/locate", ",f", [OSCPack.float32(-.infinity)])),
         // The case #828 had to leave out: until `GoldenDouble` carried bit
         // patterns there was no spelling both platforms read the same way
         // (#833). The quiet NaN widens to 0x7FF8000000000000 — the pattern .NET

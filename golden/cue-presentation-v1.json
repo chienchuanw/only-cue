@@ -1260,10 +1260,28 @@
       "name" : "interior whitespace is never trimmed"
     },
     {
-      "expectFadeIn" : "8.0",
-      "expectFadeOut" : "8.0",
       "input" : "0x1p3",
-      "name" : "a C99 hex float is accepted"
+      "name" : "a C99 hex float is rejected"
+    },
+    {
+      "input" : "-0x0p0",
+      "name" : "a hex float with a sign is rejected"
+    },
+    {
+      "input" : "0x10",
+      "name" : "a hex integer is rejected"
+    },
+    {
+      "expectFadeIn" : "0.5",
+      "expectFadeOut" : "0.5",
+      "input" : "00.5",
+      "name" : "a leading zero decimal is still accepted"
+    },
+    {
+      "expectFadeIn" : "0.0",
+      "expectFadeOut" : "0.0",
+      "input" : "0e0",
+      "name" : "a zero with an exponent is still accepted"
     },
     {
       "input" : "+1",

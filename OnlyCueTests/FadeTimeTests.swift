@@ -55,6 +55,27 @@ final class FadeTimeTests: XCTestCase {
         }
     }
 
+    /// `Double(String)` implements the whole C99 `strtod` grammar, so a hex
+    /// float silently becomes a fade — `"0x1p3"` read as 8 seconds (#841). The
+    /// leading-`+` guard next door already exists for the same reason; this one
+    /// was missed until the Windows port needed the two cores to agree, and
+    /// .NET has no hex-float parse at all.
+    func test_parse_rejectsHexFloats() {
+        let rejected = ["0x1p3", "0X1P3", "0x1.8p3", "0x10", "0xA", "-0x0p0", "1/0x2", "0x2/1"]
+        for input in rejected {
+            XCTAssertNil(FadeTime.parse(input), "expected parse to reject hex float \(input.debugDescription)")
+        }
+    }
+
+    /// The guard keys off a `0x` prefix, so the decimal spellings that merely
+    /// start with a zero must survive it.
+    func test_parse_stillAcceptsLeadingZeroDecimals() {
+        XCTAssertEqual(FadeTime.parse("0"), FadeTime.symmetric(0))
+        XCTAssertEqual(FadeTime.parse("0.5"), FadeTime.symmetric(0.5))
+        XCTAssertEqual(FadeTime.parse("00.5"), FadeTime.symmetric(0.5))
+        XCTAssertEqual(FadeTime.parse("0e0"), FadeTime.symmetric(0))
+    }
+
     // MARK: - format
 
     func test_format_symmetric_decimal() {

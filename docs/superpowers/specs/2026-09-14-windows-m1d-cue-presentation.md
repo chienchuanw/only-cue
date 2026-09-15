@@ -56,13 +56,33 @@ into the cross-platform contract:
    value it crashes on. The fix belongs in `parseNonNegative` (the trust
    boundary), with `formatNumber` made total as belt-and-braces.
 2. **#830** — negative cue numbers emit the malformed token `-1.-5`. Investigated
-   while writing this spec: `CueCommands.setCueNumber`
-   (`OnlyCue/Commands/CueCommands.swift:91`) is the only UI path and it gates on
-   `CueNumberValidator`, whose `minimum` is `0.001` — so a negative number
-   **cannot be entered through the UI**. `Cue.swift:50` decodes `cueNumber` via
-   `decodeIfPresent` with **no validation**, so the only way one enters the model
-   is a hand-edited or corrupted `.cuelist`. It is therefore a *trust-boundary*
-   defect, and the fix belongs at decode, not only in the generator.
+   while writing this spec, and the first reading was **wrong**: it found
+   `CueCommands.setCueNumber` (`OnlyCue/Commands/CueCommands.swift:91`), saw that
+   it gates on `CueNumberValidator` (`minimum` `0.001`), and concluded a negative
+   number could not be entered through the UI at all. It called
+   `setCueNumber` "the only UI path" without checking, and there are three
+   writers of `cueNumber`, not one — `setCueNumber`, `autoFillCueNumbers` and
+   `renumberSelected`, and only the first consulted the validator.
+   `renumberSelected` was a live UI path to a negative number:
+   `RenumberCuesSheet` binds `start` to a plain `TextField`, and the
+   `Stepper(in:)` beside it constrains only the stepper buttons, so a typed
+   `-1.5` arrived unfiltered and reached the MA2 generators.
+
+   So #830 is **two** defects, not one, and needs both halves:
+
+   - *Live UI defect* — closed by the domain guard now at
+     `CueCommands+Renumber.swift:34`, which rejects the whole run rather than
+     numbering half of it. (`autoFillCueNumbers` is safe for a different
+     reason: `CueNumberAutoFill.assignments` generates its own numbers and
+     never takes one from the user.)
+   - *Trust-boundary defect* — `Cue.swift:50` decodes `cueNumber` via
+     `decodeIfPresent` with **no validation**, so a hand-edited or corrupted
+     `.cuelist` is a second way in. Fixed at decode by coercing an
+     out-of-domain number to `nil` (unnumbered) rather than clamping it or
+     failing the load.
+
+   The lesson worth keeping: "the only path" is a claim about *all* the code,
+   and a `grep` for the property — not for the function — is what checks it.
 
 #830 forces `golden/ma2-telnet-v1.json` and `golden/ma2-export-v1.json` to be
 regenerated and `Ma2CueNumber.cs` updated in the same change; the drift guard
@@ -129,16 +149,36 @@ Show-mode suites all keep passing unchanged — that is the regression harness.
 ## Confirmed cross-platform divergences
 
 Measured on this machine (Swift 6.3.3 / .NET 10.0.11), not assumed. Each gets a
-vector case, and each must be mutation-proved load-bearing.
+vector case, and each is mutation-tested — which is not the same as each being
+load-bearing. A guard whose mutant survives is not automatically a gap; see the
+mutation section for how the two that survived were told apart.
 
 | Input | Swift `FadeTime.parse` | Naive C# port | Cause |
 |---|---|---|---|
 | `"1.5\n"`, `"1.5\r"` | **nil** | `1.5` | Swift `.whitespaces` is `Zs`+tab and excludes newlines; .NET `Trim()` strips them |
 | `"1.5\t"`, `"\u{00A0}1.5"` | `1.5` | `1.5` | agree — both trim tab and NBSP |
-| `"0x1p3"` | **8.0** | reject | Swift's `Double(String)` accepts C99 hex-float; .NET's `double.Parse` does not |
+| `"0x1p3"` | **nil** (was `8.0`) | reject | Swift's `Double(String)` implements the whole C99 `strtod` grammar; .NET has none. Closed on the **Swift** side — see #841 below |
 | `"+1"` | **nil** | `1.0` | rejected only by the explicit `hasPrefix("+")` guard; .NET `NumberStyles.Float` allows a leading sign |
-| `"infinity"`, `"nan"` | nil | nil *if* `IsFinite` is kept | .NET `TryParse` **accepts** both spellings, so the guard is load-bearing on that side, not decorative |
+| `"infinity"`, `"nan"` | nil | nil | .NET `TryParse` **accepts** both spellings whatever the styles, so only the port turns them away — and the `0...maximum` bounds are what do it |
 | `"1."`, `".5"` | `1.0`, `0.5` | same | agree |
+
+**#841 — the hex-float divergence was resolved by changing macOS, not the port.**
+This is the one case where the port did not simply mirror what Swift already
+did, so it is worth stating why. `FadeTime.parse("0x1p3")` returned an 8 second
+fade because `Double(String)` accepts C99 hex floats — nobody types that into a
+fade field on purpose, so accepting it was a bug on its own terms, not merely an
+inconvenience for the port. The options were to teach the port a hex-float
+grammar or to narrow the macOS one; narrowing won, because the alternative
+spreads a grammar neither platform's users want across both cores. Swift now
+rejects any `0x` prefix explicitly.
+
+The consequence for the port is that it needs **no** counterpart guard: .NET has
+no hex-float grammar, so every `0x…` spelling is already rejected by the
+narrowed `NumberStyles` (measured, including `"0x10"` and `"-0x0p0"`). Adding
+one anyway would be dead code no mutation could kill, which reads as protection
+that isn't there. The vector's hex cases pin the shared *rejection*, and also
+pin that the macOS fix did not leak into decimal spellings that merely begin
+with a zero (`"00.5"`, `"0e0"`).
 
 Two further notes, both negative results worth recording so a reviewer need not
 re-derive them:
@@ -161,6 +201,26 @@ either a genuine coverage gap or a provably equivalent implementation:
 `IsFinite` · hyphen for en dash · `MaxBy` swapped to last-wins · `.ok` returned
 before the duplicate check · row-fill branch order inverted (`isSelected` tested
 before `isCurrent`).
+
+**Result: 30 mutants, 28 killed, 2 survived — both proven equivalent
+empirically rather than by argument**, which is the part that matters, since
+"this mutant is equivalent" is exactly what someone with a coverage gap would
+also say.
+
+- *Dropping `IsFinite`* — survives. The `0...maximum` bounds already reject
+  every non-finite value: `+∞` and `NaN` both fail `<= 3600`, `-∞` fails
+  `>= 0`. Evaluated directly rather than reasoned about. The check stays
+  anyway — stated, not relied upon — because reordering the bounds or folding
+  them into a clamp helper would silently change the non-finite answer. The
+  same mutant survives on the Swift original, so the two cores match here too.
+- *`!(lower < number)` weakened to `lower < number` on the equality edge* —
+  survives because the branch is **unreachable**, not because it is untested. A
+  candidate equal to a neighbour's number is returned as `Duplicate` before the
+  ordering rule runs. Proven by instrumenting the validator to `throw` if the
+  ordering check was ever reached with `previous == number` or `next == number`:
+  121 tests passed and the probe never fired. A separate mutant already pins
+  that the duplicate check precedes the ordering one, so the ordering that makes
+  this branch unreachable cannot itself be silently removed.
 
 ## Out of scope
 

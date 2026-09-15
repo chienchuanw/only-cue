@@ -79,8 +79,17 @@ public class GoldenDoubleTests
         Assert.Throws<InvalidDataException>(() => GoldenDouble.Parse(text));
     }
 
+    /// <remarks>
+    /// <c>"nan:0x7FF8"</c> earns its place: a mutation run showed every other
+    /// case here still failing without the 16-digit length check, because they
+    /// are all unparseable hex. A <em>short but valid</em> pattern is the one
+    /// that goes quietly wrong — it reads back as <c>0x7FF8</c>, a denormal
+    /// around 1.6e-319, which is a finite number where a NaN was meant.
+    /// </remarks>
     [Theory]
     [InlineData("nan:0x")]
+    [InlineData("nan:0x7FF8")]
+    [InlineData("nan:0x0")]
     [InlineData("nan:0xZZZ8000000000000")]
     [InlineData("nan:7FF8000000000000")]
     [InlineData("nan:0x7FF80000000000000")]

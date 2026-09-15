@@ -14,14 +14,26 @@
 #                 regression; the first run with the machine left alone passed
 #                 first try.
 #
-# Both callers ask the same question, so they share this script:
+# The two sides ask *different* questions, and conflating them is a trap:
 #
-#   scripts/dev/test.sh    --self <repo>             --include-runner --wait 1800
-#   ci.yml                 --self $GITHUB_WORKSPACE                   --wait 900
+#   local  "is a CI job running?"                 --runner
+#   CI     "is anything running out of the        --under <dir>
+#           maintainer's working copy?"
+#
+# An earlier design had both sides pass their own checkout and treat everything
+# else as foreign. That breaks CI: its DerivedData lives in
+# ~/Library/Developer/Xcode/DerivedData, not under $GITHUB_WORKSPACE, so a
+# stale OnlyCue.app from an interrupted previous run reads as foreign and the
+# job waits out its whole budget — for a process the very next lines of `Reset
+# stale test state` were about to kill. Asking positively ("under the local
+# checkout") cannot make that mistake.
 #
 # Usage:
 #
-#     machine-busy.sh --self <dir> [--include-runner] [--wait <sec>] [--interval <sec>]
+#     machine-busy.sh [--runner] [--under <dir>]… [--wait <sec>] [--interval <sec>]
+#
+# Busy if any enabled predicate matches. With neither --runner nor --under,
+# nothing can ever match, so at least one is required.
 #
 # Exit 0  the machine is clear (immediately, or it cleared within --wait).
 # Exit 1  still busy when the wait ran out. Offending processes go to stderr.
@@ -39,45 +51,41 @@
 
 set -uo pipefail
 
-self=""
-include_runner=0
+watch_runner=0
+roots=""
 wait_budget=0
 interval=15
 
 usage() {
-  echo "usage: machine-busy.sh --self <dir> [--include-runner] [--wait <sec>] [--interval <sec>]" >&2
+  echo "usage: machine-busy.sh [--runner] [--under <dir>]... [--wait <sec>] [--interval <sec>]" >&2
   exit 2
 }
 
 while [ $# -gt 0 ]; do
   case "$1" in
-    --self) [ $# -ge 2 ] || usage; self="$2"; shift 2 ;;
-    --include-runner) include_runner=1; shift ;;
+    --runner) watch_runner=1; shift ;;
+    --under) [ $# -ge 2 ] || usage; roots="$roots$2"$'\n'; shift 2 ;;
     --wait) [ $# -ge 2 ] || usage; wait_budget="$2"; shift 2 ;;
     --interval) [ $# -ge 2 ] || usage; interval="$2"; shift 2 ;;
     *) usage ;;
   esac
 done
 
-# Required, never defaulted to $PWD: a wrong --self silently reclassifies every
-# process as foreign, which would make the guard fire forever.
-[ -n "$self" ] || usage
+[ "$watch_runner" -eq 1 ] || [ -n "$roots" ] || usage
 
 ps_command="${MACHINE_BUSY_PS:-ps -Ao pid=,command=}"
 
-# One line per foreign process, "<pid> <command>". Empty means clear.
+# One line per busy process, "<pid> <command>". Empty means clear.
 #
 # `xcodebuild` alone is not enough: it hands off to the UI runner, so the app
 # and XCTRunner can outlive it, and `Lost connection to the application` is the
-# app dying. Runner.Worker carries no path on its command line and so cannot be
-# classified — for the local caller every worker is foreign, but for CI the only
-# worker is its own job, which is why it is opt-in rather than always counted.
+# app dying.
 #
-# The *executable* decides whether a process is interesting; the *whole command
-# line* decides whether it is mine. Matching the whole line for both flagged the
-# shell that invoked this script, because the command being typed mentioned
-# xcodebuild — every shell, editor or grep naming the binary would have held the
-# guard busy forever.
+# The *executable* decides whether a process is interesting; its *arguments*
+# decide whether it is one of the watched roots. Matching the whole line for
+# both flagged the shell that invoked this script, because the command being
+# typed mentioned xcodebuild — every shell, editor or grep naming the binary
+# would have held the guard busy forever.
 foreign() {
   $ps_command 2>/dev/null | while IFS= read -r line; do
     [ -n "$line" ] || continue
@@ -89,23 +97,27 @@ foreign() {
 
     case "$exe" in
       *Runner.Worker)
-        [ "$include_runner" -eq 1 ] && printf '%s\n' "$line"
+        # Carries no path, so it can only ever be answered yes-or-no. For the
+        # local caller any worker means CI is mid-job; for CI the only worker is
+        # its own, which is why this is opt-in.
+        [ "$watch_runner" -eq 1 ] && printf '%s\n' "$line"
         continue
         ;;
       */xcodebuild|xcodebuild|*/OnlyCue.app/Contents/MacOS/OnlyCue|*/XCTRunner) ;;
       *) continue ;;
     esac
 
-    # Mine if the command line mentions my checkout — the only classifier
-    # available, since the runner runs as the same user as local development.
-    case "$line" in
-      *"$self"*) ;;
-      *) printf '%s\n' "$line" ;;
-    esac
+    [ -n "$roots" ] || continue
+    printf '%s\n' "$roots" | while IFS= read -r root; do
+      [ -n "$root" ] || continue
+      case "$line" in
+        *"$root"*) printf '%s\n' "$line"; break ;;
+      esac
+    done
   done
 }
 
-report() { # the foreign lines
+report() { # the busy lines
   echo "machine-busy: another OnlyCue test run is using this machine (#816):" >&2
   printf '%s\n' "$1" | sed 's/^/  /' >&2
   echo "  1-minute load: $(uptime | sed 's/.*load averages*: //')" >&2

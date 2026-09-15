@@ -129,6 +129,16 @@ enum OSCGoldenCases {
               OSCPack.message("/onlycue/skip", ",f", [OSCPack.float32(-0.0)])),
         .init("a float argument widens infinity",
               OSCPack.message("/onlycue/skip", ",f", [OSCPack.float32(.infinity)])),
+        // The case #828 had to leave out: until `GoldenDouble` carried bit
+        // patterns there was no spelling both platforms read the same way
+        // (#833). The quiet NaN widens to 0x7FF8000000000000 — the pattern .NET
+        // cannot name, which is exactly why it is worth pinning.
+        .init("a float argument widens a quiet NaN",
+              OSCPack.message("/onlycue/skip", ",f", [OSCPack.float32(Float(bitPattern: 0x7FC0_0000))])),
+        // Sign and payload ride along through the widening, so a parser that
+        // normalised NaN — or compared with `==` — would show up here.
+        .init("a float argument keeps a signed NaN payload",
+              OSCPack.message("/onlycue/skip", ",f", [OSCPack.float32(Float(bitPattern: 0xFFC0_0001))])),
         .init("a string argument yields no command", OSCPack.message("/onlycue/skip", ",s", [OSCPack.string("5")])),
         .init("an empty argument list yields no command", OSCPack.message("/onlycue/skip", ",")),
         .init("a missing type-tag string yields no command", OSCPack.message("/onlycue/skip")),

@@ -16,23 +16,53 @@ namespace OnlyCue.Core.Tests;
 /// Bit-pattern comparison (not <c>==</c>) is deliberate: it keeps <c>-0.0</c>
 /// distinct from <c>0.0</c> and makes <c>NaN</c> equal itself, so a vector can
 /// pin those instead of silently passing them.
+///
+/// NaN arrives as <c>nan:0x&lt;16 hex digits&gt;</c> rather than as a mnemonic,
+/// because no text this runtime understands can name the NaN Swift writes
+/// (#833). Measured: Swift's <c>Double.nan</c>, and every NaN obtained by
+/// widening a binary32 NaN, is <c>0x7FF8000000000000</c>; <c>double.NaN</c> here
+/// is <c>0xFFF8000000000000</c>, and <c>TryParse</c> maps <em>both</em>
+/// <c>"nan"</c> and <c>"-nan"</c> onto that sign-bit-set pattern. So the
+/// mnemonics are now refused rather than reinterpreted — accepting one would mean
+/// choosing a sign on the writer's behalf.
 /// </remarks>
 internal static class GoldenDouble
 {
+    private const string NanMarker = "nan:0x";
+
+    /// <summary>The characters Swift's <c>description</c> emits for a finite
+    /// double. Restricting the fallback to them refuses, in one place, every
+    /// spelling exactly one platform accepts: <c>"NaN"</c>/<c>"Infinity"</c>
+    /// (.NET only) and hex floats like <c>0x1p3</c> (Swift only, where it is
+    /// silently 8.0).</summary>
+    private const string DecimalCharacters = "0123456789+-.eE";
+
     public static double Parse(string text)
     {
-        // Swift writes "inf"/"-inf"/"nan"; .NET's invariant culture spells them
-        // differently, so handle them before falling back to the numeric parse.
+        if (text.StartsWith(NanMarker, StringComparison.Ordinal))
+        {
+            var hex = text.AsSpan(NanMarker.Length);
+            return hex.Length == 16 && long.TryParse(hex, NumberStyles.HexNumber, CultureInfo.InvariantCulture, out var bits)
+                ? BitConverter.Int64BitsToDouble(bits)
+                : throw new InvalidDataException($"'{text}' is not a 64-bit NaN pattern");
+        }
+
+        // The infinities keep their mnemonics — one bit pattern each, so nothing
+        // is lost — and .NET's invariant culture does not spell them this way.
         switch (text)
         {
             case "inf": return double.PositiveInfinity;
             case "-inf": return double.NegativeInfinity;
-            case "nan": return double.NaN;
-            default:
-                return double.TryParse(text, NumberStyles.Float, CultureInfo.InvariantCulture, out var value)
-                    ? value
-                    : throw new InvalidDataException($"'{text}' is not a parseable double");
         }
+
+        if (text.Length == 0 || text.AsSpan().IndexOfAnyExcept(DecimalCharacters) >= 0)
+        {
+            throw new InvalidDataException($"'{text}' is not a spelling the contract writes");
+        }
+
+        return double.TryParse(text, NumberStyles.Float, CultureInfo.InvariantCulture, out var value)
+            ? value
+            : throw new InvalidDataException($"'{text}' is not a parseable double");
     }
 
     /// <summary>The optional form. A <c>null</c> in the vector is a real result —

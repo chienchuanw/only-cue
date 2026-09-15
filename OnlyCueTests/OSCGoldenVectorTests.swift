@@ -18,11 +18,11 @@ import XCTest
 // float arguments would hide `-0.0`. The fixtures in `OSCGoldenFixtures.swift`
 // pin all three, along with the padding arithmetic and every malformed branch.
 //
-// NaN float arguments are deliberately absent. `GoldenDouble` carries them as
-// the text "nan", and .NET's `double.NaN` has the sign bit set (0xFFF8…) while a
-// widened binary32 NaN does not (0x7FF8…), so the two would never compare equal
-// bitwise. That is a limitation of the transport, not of the parser (#833); once
-// the helper carries bit patterns, a NaN case belongs here.
+// NaN float arguments are now among them, which they could not be until #833:
+// the transport spelled them "nan", and .NET reads that back as its own
+// `double.NaN` (0xFFF8…) where a widened binary32 NaN is 0x7FF8…, so the bitwise
+// comparison would have reported drift that isn't there. `GoldenDouble` carries
+// the bit pattern instead, which is what lets the two NaN cases exist at all.
 
 // MARK: - Contract model (mirrored by the C# verifier's DTO)
 

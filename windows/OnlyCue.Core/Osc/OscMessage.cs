@@ -35,9 +35,9 @@ public enum OscArgumentType
 /// in <em>both</em> directions: it treats <c>-0.0f</c> and <c>0.0f</c> as equal
 /// where Swift's <c>Float.==</c> also does, but it reports <c>NaN == NaN</c> as
 /// <b>true</b> where Swift reports false. The golden verifier therefore compares
-/// float arguments by bit pattern rather than leaning on <c>==</c>. NaN is not yet
-/// in the vector at all — <c>GoldenDouble</c> cannot round-trip its bit pattern
-/// (#833).
+/// float arguments by bit pattern rather than leaning on <c>==</c>. Two NaN cases
+/// are in the vector now that <c>GoldenDouble</c> carries bit patterns (#833), so
+/// that disagreement is pinned rather than merely described.
 /// </remarks>
 public sealed record OscArgument
 {

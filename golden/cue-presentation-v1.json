@@ -1017,7 +1017,7 @@
       "targetID" : "00000000-0000-0000-0000-0000000000c2"
     },
     {
-      "candidate" : "nan",
+      "candidate" : "nan:0x7FF8000000000000",
       "cues" : [
         {
           "cueNumber" : "1.0",

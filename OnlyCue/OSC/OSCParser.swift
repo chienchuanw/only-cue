@@ -46,7 +46,7 @@ enum OSCParser {
             guard depth < maximumBundleDepth else { return [] }
             return parseBundle(&reader, depth: depth + 1)
         }
-        guard head.hasPrefix("/") else { return [] }
+        guard head.startsWithScalar("/") else { return [] }
         guard let message = parsePlainMessage(address: head, &reader) else { return [] }
         return [message]
     }
@@ -70,26 +70,34 @@ enum OSCParser {
     /// but some senders omit it for no-arg messages — the address-only form is
     /// accepted.
     private static func parsePlainMessage(address: String, _ reader: inout Reader) -> OSCMessage? {
-        guard let typeTags = reader.readOSCString(), typeTags.hasPrefix(",") else {
+        guard let typeTags = reader.readOSCString(), typeTags.startsWithScalar(",") else {
             return OSCMessage(addressPattern: address, arguments: [])
         }
         guard let args = parseArguments(typeTags: typeTags, &reader) else { return nil }
         return OSCMessage(addressPattern: address, arguments: args)
     }
 
-    /// One argument per char in `typeTags` (after the leading `,`). Returns nil
+    /// One argument per scalar in `typeTags` (after the leading `,`). Returns nil
     /// if any value is short or an unknown type tag is hit (rather than
     /// guessing at the byte layout).
+    ///
+    /// Scalars, not `Character`s: `dropFirst()` on a `String` drops a whole
+    /// grapheme cluster, so `",\u{0301}"` would lose the combining mark along
+    /// with the comma and parse as a valid zero-argument list — while the C#
+    /// port, iterating UTF-16 units, would see U+0301 as an unknown tag and drop
+    /// the message. Pairing the scalar-wise prefix test in `parsePlainMessage`
+    /// with a cluster-wise loop here would trade one divergence for another
+    /// (#836).
     private static func parseArguments(typeTags: String, _ reader: inout Reader) -> [OSCArgument]? {
         var args: [OSCArgument] = []
-        for tag in typeTags.dropFirst() {
+        for tag in typeTags.unicodeScalars.dropFirst() {
             guard let argument = parseArgument(tag: tag, &reader) else { return nil }
             args.append(argument)
         }
         return args
     }
 
-    private static func parseArgument(tag: Character, _ reader: inout Reader) -> OSCArgument? {
+    private static func parseArgument(tag: Unicode.Scalar, _ reader: inout Reader) -> OSCArgument? {
         switch tag {
         case "i": reader.readInt32().map(OSCArgument.int32)
         case "f": reader.readFloat32().map(OSCArgument.float32)
@@ -155,5 +163,29 @@ enum OSCParser {
             offset += 4
             return bytes.withUnsafeBytes { UInt32(bigEndian: $0.loadUnaligned(as: UInt32.self)) }
         }
+    }
+}
+
+private extension String {
+
+    /// Does this OSC-string begin with `scalar`?
+    ///
+    /// OSC is a byte protocol: "the address pattern begins with the character
+    /// `/`" means byte 0x2F, and the same for the type-tag string's `,`. Asking
+    /// it as `hasPrefix("/")` answered a different question — *is the first
+    /// extended grapheme cluster exactly "/"* — which ran UAX #29 against
+    /// whichever Unicode Character Database the runtime happened to carry.
+    /// Swift 6.3 on macOS 26 ships UCD 17.0 and .NET 10 ships UCD 16.0, so 42
+    /// combining scalars joined the leading cluster on one side and not the
+    /// other and the same datagram parsed differently on the two platforms —
+    /// a divergence that no golden vector could usefully pin, because it would
+    /// have gone red on a toolchain upgrade rather than on a regression (#836).
+    ///
+    /// Comparing scalars removes the Unicode table from the parser entirely.
+    /// The rejected alternative was to demand ASCII after the `/`, which would
+    /// also have removed it but at the cost of dropping every address whose
+    /// first character is non-ASCII.
+    func startsWithScalar(_ scalar: Unicode.Scalar) -> Bool {
+        unicodeScalars.first == scalar
     }
 }

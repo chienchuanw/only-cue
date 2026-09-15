@@ -272,17 +272,26 @@ enum OSCGoldenCases {
         // Only the leading one: the second survives as a real scalar.
         .init("only the first byte-order mark in a string argument is dropped",
               OSCPack.message("/onlycue/skip", ",s", [OSCPack.terminated(Data(bom + bom + "x".utf8))])),
-        // `hasPrefix` compares grapheme clusters: "," plus a combining acute is a
-        // single cluster that is not ",". Swift therefore treats the word as "not
-        // a type-tag string" and falls through to the address-only form, which
-        // still plays. A char-wise `StartsWith(',')` accepts it, then chokes on
-        // U+0301 as an unknown tag and drops the message.
-        .init("a combining mark on the type-tag comma falls through to address-only",
+        // The leading "/" and "," are compared as scalars, so a combining mark
+        // after one is just the next scalar, not something that swallows it
+        // (#836). On the address that means the datagram parses and simply maps
+        // to nothing; on the type-tag word it means the word *is* a type-tag
+        // string whose first tag is unknown, so the message is dropped. Both
+        // sides must land on the same one of those two outcomes.
+        .init("a combining mark on the type-tag comma drops the message",
               OSCPack.message("/onlycue/play", ",\u{0301}")),
-        // The same rule on the address: the cluster is "/́", not "/", so the whole
-        // datagram is rejected.
-        .init("a combining mark on the leading slash rejects the address",
-              OSCPack.message("/\u{0301}onlycue/play", ","))
+        .init("a combining mark on the leading slash keeps the address",
+              OSCPack.message("/\u{0301}onlycue/play", ",")),
+        // U+1ACF is one of the 42 scalars Swift's UCD 17.0 joins into the leading
+        // cluster and .NET's UCD 16.0 does not. Pinning it was useless while the
+        // parser asked a UAX #29 question — the case would have flipped on a
+        // toolchain upgrade. Now it is pinnable precisely because the answer no
+        // longer depends on either Unicode table.
+        .init("a Unicode 17.0 combining mark on the slash parses like any other",
+              OSCPack.message("/\u{1ACF}onlycue/play", ",")),
+        // Guards the rejected fix: demanding ASCII after the "/" would also have
+        // removed the UCD dependency, and would have dropped this.
+        .init("a non-ASCII address still parses", OSCPack.message("/播放", ","))
     ]
 
     private static let bom: [UInt8] = [0xEF, 0xBB, 0xBF]

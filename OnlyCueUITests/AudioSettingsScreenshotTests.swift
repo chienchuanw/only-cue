@@ -44,13 +44,9 @@ final class AudioSettingsScreenshotTests: XCTestCase {
             "a document window should open within 5 seconds"
         )
 
-        let windowsBefore = app.windows.count
-        Foregrounding.activateRobustly(app)
-        app.typeKey(",", modifierFlags: .command)
-
         XCTAssertTrue(
-            SettingsWindowFinder.waitForNewWindow(in: app, above: windowsBefore, timeout: 15),
-            "pressing ⌘, should open the Settings window within 5 seconds"
+            SettingsWindowFinder.open(in: app, above: app.windows.count),
+            "pressing ⌘, should open the Settings window"
         )
 
         let audioTab = app.radioButtons["Audio"].exists ? app.radioButtons["Audio"] : app.buttons["Audio"]

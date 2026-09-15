@@ -25,13 +25,9 @@ final class MA2SettingsScreenshotTests: XCTestCase {
             "a document window should open within 15 seconds"
         )
 
-        let windowsBefore = app.windows.count
-        Foregrounding.activateRobustly(app)
-        app.typeKey(",", modifierFlags: .command)
-
         XCTAssertTrue(
-            SettingsWindowFinder.waitForNewWindow(in: app, above: windowsBefore, timeout: 15),
-            "pressing ⌘, should open the Settings window within 15 seconds"
+            SettingsWindowFinder.open(in: app, above: app.windows.count),
+            "pressing ⌘, should open the Settings window"
         )
 
         let ma2Tab = app.radioButtons["grandMA2"].exists ? app.radioButtons["grandMA2"] : app.buttons["grandMA2"]

@@ -41,18 +41,14 @@ final class OSCSettingsScreenshotTests: XCTestCase {
             "a document window should open within 5 seconds"
         )
 
-        let windowsBefore = app.windows.count
-        Foregrounding.activateRobustly(app)
-        app.typeKey(",", modifierFlags: .command)
-
         // Settings is a `TabView` on macOS, so the window's *title* follows the
         // selected pane ("OSC" by default) rather than being "OnlyCue Settings",
         // and SwiftUI `Form` rows aren't reliably in the a11y tree (PR #138's
         // export-sheet bugfix hit the same wall). Just confirm a new window
         // opened, then screenshot it.
         XCTAssertTrue(
-            SettingsWindowFinder.waitForNewWindow(in: app, above: windowsBefore, timeout: 15),
-            "pressing ⌘, should open the Settings window within 5 seconds"
+            SettingsWindowFinder.open(in: app, above: app.windows.count),
+            "pressing ⌘, should open the Settings window"
         )
         _ = app.checkBoxes["oscEnableToggle"].waitForExistence(timeout: 2)
 
@@ -84,31 +80,5 @@ final class OSCSettingsScreenshotTests: XCTestCase {
     private static var screenshotsDirectory: URL {
         URL(fileURLWithPath: NSTemporaryDirectory())
             .appendingPathComponent("screenshots", isDirectory: true)
-    }
-}
-
-/// Helpers for working with the macOS Settings window, whose title tracks the
-/// selected pane (`TabView` behaviour) so it can't be matched by a fixed name.
-enum SettingsWindowFinder {
-
-    /// Polls until the app has more than `baseline` windows (the Settings window
-    /// opened on top of the document window), or the timeout elapses.
-    static func waitForNewWindow(in app: XCUIApplication, above baseline: Int, timeout: TimeInterval) -> Bool {
-        let deadline = Date().addingTimeInterval(timeout)
-        while Date() < deadline {
-            if app.windows.count > baseline { return true }
-            Thread.sleep(forTimeInterval: 0.2)
-        }
-        return app.windows.count > baseline
-    }
-
-    /// The Settings window by one of the titles its panes produce, or `nil`
-    /// (in which case callers screenshot the whole screen instead).
-    static func window(in app: XCUIApplication) -> XCUIElement? {
-        for title in ["OnlyCue Settings", "Settings", "General", "Audio", "Keyboard", "OSC", "MIDI", "grandMA2"] {
-            let window = app.windows[title]
-            if window.exists { return window }
-        }
-        return nil
     }
 }

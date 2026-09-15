@@ -13,11 +13,8 @@ final class AudioSettingsUITests: OnlyCueUITestCase {
             "a document window should open within 5 seconds"
         )
 
-        let windowsBefore = app.windows.count
-        Foregrounding.activateRobustly(app)
-        app.typeKey(",", modifierFlags: .command)
         XCTAssertTrue(
-            SettingsWindowFinder.waitForNewWindow(in: app, above: windowsBefore, timeout: 15),
+            SettingsWindowFinder.open(in: app, above: app.windows.count),
             "pressing Command-comma should open the Settings window"
         )
 

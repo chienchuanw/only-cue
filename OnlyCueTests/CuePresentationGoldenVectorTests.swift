@@ -33,8 +33,10 @@ final class CuePresentationGoldenVectorTests: XCTestCase {
         XCTAssertNil(FadeTime.parse("0x1p3"))
         // Rejected only by the explicit `hasPrefix("+")` guard.
         XCTAssertNil(FadeTime.parse("+1"))
-        // .NET's TryParse accepts both spellings, so the finiteness check is
-        // load-bearing there.
+        // .NET's TryParse accepts both spellings and Swift's `Double(String)`
+        // does not, so only the port has to turn them away — and what does that
+        // there is the `0...maximum` range, not the finiteness check (verified
+        // by mutation). These pin the shared answer, not either spelling.
         XCTAssertNil(FadeTime.parse("infinity"))
         XCTAssertNil(FadeTime.parse("nan"))
     }

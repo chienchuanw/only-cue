@@ -99,6 +99,20 @@ merely flaky on the self-hosted runner does not qualify: parking it there means 
 guards is unverified on every push, which is how the Mini Player key-window bug (#770) survived three
 releases.
 
+Nine suites were parked there for exactly that disqualified reason and were promoted back to the
+behavioral step in #819. Measured 5× each locally under the CI flags first: eight were 5/5 clean, and
+`GeneralSettingsScreenshotTests` failed once in 25 (`⌘,` opened no Settings window inside 15 s).
+Twenty instrumented reruns could not reproduce it — activation succeeded, the app was frontmost, the
+window count went 1 → 2 every time — so the mechanism is still unproven. The handling is
+`SettingsWindowFinder.open(in:above:)`, which **retries the `⌘,` keystroke** rather than waiting
+longer, and prints the frontmost bundle id and window titles on each failed attempt so the next
+occurrence is self-describing. A suite is promoted on measurement, never on the assumption that a
+fix worked.
+
+Promoting a suite costs nothing in coverage: screenshots are `XCTAttachment`s written into the
+result bundle, so a promoted suite still captures them — on every push to `dev` rather than only when
+someone dispatches the workflow.
+
 ## Performance budgets
 
 Not formal perf tests, but anything outside these budgets is a bug to investigate, not ship around.

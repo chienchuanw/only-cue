@@ -263,6 +263,14 @@ jobs:
       # are excluded here and run via the manual "UI baseline screenshots" step
       # below. This keeps the push path to the UI tests that actually gate
       # behavior (menus, mode/inspector swaps, layout geometry, hit-testing).
+      #
+      # The skip list shrank from 17 to 8 in #819: nine of those suites were
+      # parked in the baseline step because they were *flaky on this runner*,
+      # not because they only produce screenshots — which is the one reason
+      # `docs/verification.md` says does not qualify. Re-measured 5x each, eight
+      # were clean; the ninth's `⌘,` race is handled by the keystroke retry in
+      # `SettingsWindowFinder.open`. Whatever stays below is here because it
+      # generates a baseline image, and nothing else.
       - name: UI tests (behavioral)
         if: github.event_name == 'push' && github.ref == 'refs/heads/dev'
         env:
@@ -334,18 +342,9 @@ jobs:
               -only-testing:OnlyCueUITests \
               -skip-testing:OnlyCueUITests/AudioSettingsScreenshotTests \
               -skip-testing:OnlyCueUITests/DocumentViewModeScreenshotTests \
-              -skip-testing:OnlyCueUITests/ExportSheetScreenshotTests \
-              -skip-testing:OnlyCueUITests/GeneralSettingsScreenshotTests \
-              -skip-testing:OnlyCueUITests/KeyboardSettingsScreenshotTests \
               -skip-testing:OnlyCueUITests/LyricsLaneEditingUITests \
-              -skip-testing:OnlyCueUITests/MA2PushSheetScreenshotTests \
-              -skip-testing:OnlyCueUITests/MA2SettingsScreenshotTests \
-              -skip-testing:OnlyCueUITests/MIDISettingsScreenshotTests \
               -skip-testing:OnlyCueUITests/OSCMonitorScreenshotTests \
-              -skip-testing:OnlyCueUITests/OSCSettingsScreenshotTests \
-              -skip-testing:OnlyCueUITests/Phase3ScreenshotTests \
               -skip-testing:OnlyCueUITests/ShowModeUITests \
-              -skip-testing:OnlyCueUITests/SplitChannelWaveformScreenshotTests \
               -skip-testing:OnlyCueUITests/TempoGridOverlayScreenshotTests \
               -skip-testing:OnlyCueUITests/TimecodeSettingsSheetScreenshotTests \
               -skip-testing:OnlyCueUITests/TransportBarScreenshotTests \
@@ -413,18 +412,9 @@ jobs:
             -destination 'platform=macOS' \
             -only-testing:OnlyCueUITests/AudioSettingsScreenshotTests \
             -only-testing:OnlyCueUITests/DocumentViewModeScreenshotTests \
-            -only-testing:OnlyCueUITests/ExportSheetScreenshotTests \
-            -only-testing:OnlyCueUITests/GeneralSettingsScreenshotTests \
-            -only-testing:OnlyCueUITests/KeyboardSettingsScreenshotTests \
             -only-testing:OnlyCueUITests/LyricsLaneEditingUITests \
-            -only-testing:OnlyCueUITests/MA2PushSheetScreenshotTests \
-            -only-testing:OnlyCueUITests/MA2SettingsScreenshotTests \
-            -only-testing:OnlyCueUITests/MIDISettingsScreenshotTests \
             -only-testing:OnlyCueUITests/OSCMonitorScreenshotTests \
-            -only-testing:OnlyCueUITests/OSCSettingsScreenshotTests \
-            -only-testing:OnlyCueUITests/Phase3ScreenshotTests \
             -only-testing:OnlyCueUITests/ShowModeUITests \
-            -only-testing:OnlyCueUITests/SplitChannelWaveformScreenshotTests \
             -only-testing:OnlyCueUITests/TempoGridOverlayScreenshotTests \
             -only-testing:OnlyCueUITests/TimecodeSettingsSheetScreenshotTests \
             -only-testing:OnlyCueUITests/TransportBarScreenshotTests \

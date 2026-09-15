@@ -215,6 +215,8 @@ A receive-only OSC server (epic #35) lets external controllers — Bitfocus Comp
 
 **Supported addresses.** `/onlycue/play`, `/pause`, `/stop`, `/skip <seconds>` (signed int/float), `/locate <seconds>`, `/cue/add`, `/cue/next`, `/cue/prev`. See `docs/osc-companion-ma3.md` for Companion and grandMA3 macro syntax per address.
 
+`OSCCommand.from(_:)` refuses a **non-finite** `skip` / `locate` argument — NaN or ±∞ yields no command, exactly as a string argument does. The argument still parses and still appears in the monitor; it simply maps to nothing. This is deliberately enforced at the mapping boundary rather than at the dispatcher, because the dispatcher folds `skip` through `max(0, currentTime + seconds)` and Swift's `max` and .NET's `Math.Max` disagree about NaN in both directions — the same datagram would rewind the playhead to 0 on macOS and seek to NaN on Windows. Refusing here means neither dispatcher has to be careful, and `isFinite` / `double.IsFinite` are the same IEEE-754 predicate so they cannot drift (ADR-016; #845).
+
 **Scope.** Receive-only (no state broadcast — that's Phase 3). Manual IP configuration (no Bonjour). Per-document ownership: each open window has its own `OSCServer` binding the same port with `allowLocalEndpointReuse`. On Darwin a unicast datagram is delivered to exactly one of the bound sockets (kernel-chosen), so with two document windows open one unpredictable document responds — fine for the single-document workflow OSC control implies. macOS shows a one-time firewall prompt on first bind; no App Sandbox entitlement is needed (the app isn't sandboxed — ADR-007). See ADR-016.
 
 ## Timeline breakdown view

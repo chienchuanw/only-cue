@@ -101,6 +101,21 @@ EOF
 MACHINE_BUSY_PS="$ps_cmd" "$detector" --self "$mine" >/dev/null 2>&1
 expect_eq "exits 0" "0" "$?"
 
+# --- 3b. only the executable counts, not the arguments ----------------------
+# Caught by running the detector for real, not by a canned table: the very shell
+# invoking it matched, because the command I had typed *mentioned* xcodebuild.
+# Any shell, editor, grep or CI step that names the binary would trip the guard
+# forever, and the guard's whole job is to not produce phantom failures.
+
+echo "ignores a process that merely mentions xcodebuild in its arguments"
+ps_cmd="$(fixture mentions <<EOF
+  4242 /bin/zsh -c eval 'killall testmanagerd; xcodebuild test -project $theirs/X.xcodeproj'
+  4243 /usr/bin/grep xcodebuild $theirs/ci.yml
+EOF
+)"
+MACHINE_BUSY_PS="$ps_cmd" "$detector" --self "$mine" >/dev/null 2>&1
+expect_eq "exits 0" "0" "$?"
+
 # --- 4. the app and the UI runner, not just xcodebuild ----------------------
 # `Lost connection to the application` is the *app* dying, and an xcodebuild
 # that has handed off to the UI runner may already have exited.

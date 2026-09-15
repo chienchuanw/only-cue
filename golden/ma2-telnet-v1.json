@@ -440,6 +440,68 @@
     {
       "cues" : [
         {
+          "fadeIn" : "0.0",
+          "fadeOut" : "0.0",
+          "name" : "Tied A",
+          "notes" : "",
+          "time" : "2.0"
+        },
+        {
+          "cueNumber" : "2.0",
+          "fadeIn" : "0.0",
+          "fadeOut" : "0.0",
+          "name" : "Numbered",
+          "notes" : "",
+          "time" : "1.0"
+        },
+        {
+          "fadeIn" : "0.0",
+          "fadeOut" : "0.0",
+          "name" : "Tied B",
+          "notes" : "",
+          "time" : "0.0"
+        },
+        {
+          "cueNumber" : "0.0",
+          "fadeIn" : "0.0",
+          "fadeOut" : "0.0",
+          "name" : "Explicit zero",
+          "notes" : "",
+          "time" : "3.0"
+        }
+      ],
+      "expect" : [
+        "Delete Sequence 7 /nc",
+        "Store Sequence 7 Cue 0 \"Tied A\" /nc",
+        "Assign Sequence 7 Cue 0 /Trig=Timecode",
+        "Assign Sequence 7 Cue 0 /TrigTime=2",
+        "Store Sequence 7 Cue 0 \"Tied B\" /nc",
+        "Assign Sequence 7 Cue 0 /Trig=Timecode",
+        "Assign Sequence 7 Cue 0 /TrigTime=0",
+        "Store Sequence 7 Cue 0 \"Explicit zero\" /nc",
+        "Assign Sequence 7 Cue 0 /Trig=Timecode",
+        "Assign Sequence 7 Cue 0 /TrigTime=3",
+        "Store Sequence 7 Cue 2 \"Numbered\" /nc",
+        "Assign Sequence 7 Cue 2 /Trig=Timecode",
+        "Assign Sequence 7 Cue 2 /TrigTime=1",
+        "Label Sequence 7 \"Ties\"",
+        "Assign Sequence 7 At Exec 1.5"
+      ],
+      "framerate" : "25",
+      "name" : "cues tied on number keep their input order",
+      "sequenceName" : "Ties",
+      "startTimecodeFrames" : 0,
+      "target" : {
+        "executorNumber" : 5,
+        "executorPage" : 1,
+        "sequenceSlot" : 7,
+        "timecodeCommand" : "goto",
+        "timecodeSlot" : 3
+      }
+    },
+    {
+      "cues" : [
+        {
           "cueNumber" : "1.0025",
           "fadeIn" : "0.0",
           "fadeOut" : "0.0",

@@ -33,6 +33,36 @@ final class OSCCommandTests: XCTestCase {
         XCTAssertNil(OSCCommand.from(message("/onlycue/skip", [.string("oops")])))
     }
 
+    // MARK: - Non-finite numeric arguments yield no command (#845)
+
+    func test_skip_withNaN_returnsNil() {
+        XCTAssertNil(OSCCommand.from(message("/onlycue/skip", [.float32(.nan)])))
+    }
+
+    func test_skip_withSignallingNaN_returnsNil() {
+        XCTAssertNil(OSCCommand.from(message("/onlycue/skip", [.float32(Float(bitPattern: 0x7F80_0001))])))
+    }
+
+    func test_skip_withInfinity_returnsNil() {
+        XCTAssertNil(OSCCommand.from(message("/onlycue/skip", [.float32(.infinity)])))
+        XCTAssertNil(OSCCommand.from(message("/onlycue/skip", [.float32(-.infinity)])))
+    }
+
+    func test_locate_withNonFiniteArgument_returnsNil() {
+        XCTAssertNil(OSCCommand.from(message("/onlycue/locate", [.float32(.nan)])))
+        XCTAssertNil(OSCCommand.from(message("/onlycue/locate", [.float32(.infinity)])))
+    }
+
+    /// The guard against over-rejecting: `greatestFiniteMagnitude` is absurd as a
+    /// seek but it is *finite*, so it still maps. Only NaN and ±∞ are refused.
+    func test_skip_withHugeButFiniteArgument_stillMaps() {
+        let huge = Float.greatestFiniteMagnitude
+        XCTAssertEqual(
+            OSCCommand.from(message("/onlycue/skip", [.float32(huge)])),
+            .skip(seconds: Double(huge))
+        )
+    }
+
     func test_locate_takesSeconds() {
         XCTAssertEqual(OSCCommand.from(message("/onlycue/locate", [.float32(30)])), .locate(seconds: 30))
         XCTAssertEqual(OSCCommand.from(message("/onlycue/locate", [.int32(0)])), .locate(seconds: 0))

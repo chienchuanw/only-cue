@@ -38,18 +38,45 @@ classified by uid. It can be classified by **path**: the runner's checkout lives
 ### `scripts/ci/machine-busy.sh` (new, shared by both sides)
 
 ```
-machine-busy.sh --self <dir> [--include-runner] [--wait <sec>] [--interval <sec>]
+machine-busy.sh [--runner] [--under <dir>]… [--wait <sec>] [--interval <sec>]
 ```
 
 | Flag | Meaning |
 |---|---|
-| `--self <dir>` | My own checkout. Processes whose command line mentions it are *mine* and never count as busy. Required. |
-| `--include-runner` | Also treat a live `Runner.Worker` as busy. Set by the local caller; **not** set by CI, where `Runner.Worker` is the caller's own job. |
+| `--runner` | A live `Runner.Worker` counts as busy. Set by the local caller; **not** by CI, where the only worker is the caller's own job. |
+| `--under <dir>` | Processes whose command line mentions `<dir>` count as busy. Repeatable. |
 | `--wait <sec>` | Poll until clear, up to this many seconds. Default `0` (check once). |
 | `--interval <sec>` | Poll interval. Default `15`. |
 
-**Detects** (any foreign instance ⇒ busy): `xcodebuild`, `OnlyCue.app/Contents/MacOS/OnlyCue`,
-`XCTRunner`, and — only with `--include-runner` — `Runner.Worker`.
+Busy if any enabled predicate matches. At least one of `--runner` / `--under` is required —
+with neither, nothing can ever match and the guard would pass unconditionally.
+
+**Watched executables**: `xcodebuild`, `OnlyCue.app/Contents/MacOS/OnlyCue`, `XCTRunner`, and
+`Runner.Worker`. The *executable* decides whether a process is interesting; its *arguments*
+decide whether it is under a watched root.
+
+**Correction to the first draft.** This started as `--self <dir> [--include-runner]`: each
+side passes its own checkout and everything else is foreign. Implementation exposed a flaw
+that would have hurt CI on every run. DerivedData lives in
+`~/Library/Developer/Xcode/DerivedData`, **not** under `$GITHUB_WORKSPACE`, so a stale
+`OnlyCue.app` left by an interrupted previous job reads as foreign — and CI would burn its
+entire 900 s budget waiting for a process the very next lines of `Reset stale test state`
+were about to kill. Asking *positively* ("is anything running under this root?") cannot make
+that mistake, and it lets the two sides ask the different questions they actually have:
+
+| Side | Question | Flags |
+|---|---|---|
+| local | is a CI job running? | `--runner` (+ the runner work roots, a second signal for a worker that died leaving its `xcodebuild`) |
+| CI | is anything running out of the maintainer's working copy? | `--under "$HOME/Projects"` |
+
+`scripts/ci/machine-busy.test.sh` pins the stale-own-app case so the negative form cannot
+come back.
+
+**Known gap.** A local run's *app host* lives under DerivedData and so is not attributable to
+`~/Projects`. CI catches the local `xcodebuild` instead, which is alive for the whole local
+run — and because the guard runs before the `pkill`s, a live local run is waited out rather
+than killed. Orphaned app processes with no live `xcodebuild` are what those `pkill`s are
+for.
 
 **Exit 0** machine clear (immediately, or it cleared within `--wait`).
 **Exit 1** still busy when the wait ran out. Prints each offending pid + command line, and
@@ -67,7 +94,7 @@ only.
 scripts/dev/test.sh [extra xcodebuild args…]
 ```
 
-1. `machine-busy.sh --self "$REPO_ROOT" --include-runner --wait 1800` — refuses to start if
+1. `machine-busy.sh --runner --under <runner work roots> --wait 1800` — refuses to start if
    CI is mid-job, rather than racing it. Exit 1 with the offending processes named.
 2. `killall -9 testmanagerd` (the #595 reset).
 3. `xcodebuild test` with `-destination 'platform=macOS,arch=arm64'`, ad-hoc signing
@@ -80,7 +107,7 @@ Deliberately thin: a guard, the daemon reset, and the invocation. It is not a bu
 ### `.github/workflows/ci.yml` (changed)
 
 - `Reset stale test state` gains, as its **first** action:
-  `scripts/ci/machine-busy.sh --self "$GITHUB_WORKSPACE" --wait 900 || echo "::warning::…"`.
+  `scripts/ci/machine-busy.sh --under "$HOME/Projects" --wait 900 || echo "::warning::…"`.
   Bounded wait, then **warn and continue** — never fail. A red `dev` for a reason that has
   nothing to do with `dev` is the thing this is trying to stop, so the guard must not
   create one. Placed here, before `Unit tests`, so both test steps benefit from the one wait.
@@ -112,16 +139,25 @@ Deliberately thin: a guard, the daemon reset, and the invocation. It is not a bu
   direction that actually caused the three red runs.
 - **Two runner installs.** Both `~/github-runner` and `~/actions-runner` have a live
   `Runner.Listener`. The detector matches on the process name, so it does not care which.
-- **Self-match.** `machine-busy.sh` must not see its own `pgrep`/`ps` invocation, nor the
+- **Self-match.** `machine-busy.sh` must not see its own `ps` invocation, nor the
   `xcodebuild` that `scripts/dev/test.sh` is about to launch (it launches after the check).
+  Found for real, not by a canned table: matching the whole command line flagged the *shell
+  that invoked the detector*, because the command being typed mentioned `xcodebuild`. Any
+  shell, editor or `grep` naming the binary would have held the guard busy forever. Hence
+  classifying on the executable and matching roots on the arguments.
 - **No foreign process, high load.** Not busy. See the no-load-gate note above.
 
 ## Acceptance
 
-- `scripts/ci/machine-busy.test.sh` passes, covering: clear machine → 0; foreign
-  `xcodebuild` → 1; own-checkout `xcodebuild` → 0; `Runner.Worker` ignored without
-  `--include-runner` and honoured with it; `--wait` returns 0 as soon as the process exits;
-  `--wait` returns 1 on timeout.
+- `scripts/ci/machine-busy.test.sh` passes, covering: clear machine → 0; `xcodebuild` under a
+  watched root → 1; `xcodebuild` outside every watched root → 0; a process that merely
+  *mentions* `xcodebuild` → 0; a stale app from CI's own previous run → 0; `OnlyCue.app` /
+  `XCTRunner` under a watched root → 1; `Runner.Worker` ignored without `--runner` and
+  honoured with it; `--wait` returns 0 as soon as the process exits; `--wait` returns 1 on
+  timeout; an invocation with no predicate → 2.
+- Those cases are mutation-tested: inverting the root match, ungating `Runner.Worker`,
+  classifying on the whole command line, dropping the no-predicate guard, and removing the
+  app/`XCTRunner` arms must each turn the suite red.
 - `scripts/dev/test.sh` exits non-zero without invoking `xcodebuild` while a `Runner.Worker`
   is alive.
 - A dev run's log shows the guard's verdict in `Reset stale test state`, and again at

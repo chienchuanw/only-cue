@@ -833,26 +833,47 @@
       "name" : "only the first byte-order mark in a string argument is dropped"
     },
     {
-      "command" : {
-        "kind" : "play"
-      },
       "datagram" : "L29ubHljdWUvcGxheQAAACzMgQA=",
       "messages" : [
+
+      ],
+      "name" : "a combining mark on the type-tag comma drops the message"
+    },
+    {
+      "datagram" : "L8yBb25seWN1ZS9wbGF5ACwAAAA=",
+      "messages" : [
         {
-          "address" : "/onlycue/play",
+          "address" : "/́onlycue/play",
           "arguments" : [
 
           ]
         }
       ],
-      "name" : "a combining mark on the type-tag comma falls through to address-only"
+      "name" : "a combining mark on the leading slash keeps the address"
     },
     {
-      "datagram" : "L8yBb25seWN1ZS9wbGF5ACwAAAA=",
+      "datagram" : "L+Grj29ubHljdWUvcGxheQAAAAAsAAAA",
       "messages" : [
+        {
+          "address" : "/᫏onlycue/play",
+          "arguments" : [
 
+          ]
+        }
       ],
-      "name" : "a combining mark on the leading slash rejects the address"
+      "name" : "a Unicode 17.0 combining mark on the slash parses like any other"
+    },
+    {
+      "datagram" : "L+aSreaUvgAsAAAA",
+      "messages" : [
+        {
+          "address" : "/播放",
+          "arguments" : [
+
+          ]
+        }
+      ],
+      "name" : "a non-ASCII address still parses"
     }
   ],
   "contract" : "osc",

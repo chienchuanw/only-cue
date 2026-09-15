@@ -1,5 +1,4 @@
 using System.Buffers.Binary;
-using System.Globalization;
 using System.Text;
 
 namespace OnlyCue.Core.Osc;
@@ -26,9 +25,11 @@ namespace OnlyCue.Core.Osc;
 /// message".</item>
 /// <item>That same decoder <em>keeps</em> a leading U+FEFF where Swift's
 /// NSString-backed one drops it, so <c>ReadOscString</c> strips one explicitly.</item>
-/// <item><c>StartsWith(char)</c> compares one UTF-16 unit where Swift's
-/// <c>hasPrefix</c> compares grapheme clusters, so the <c>/</c> and <c>,</c>
-/// tests go through <see cref="StartsWithCluster"/>.</item>
+/// <item>The <c>/</c> and <c>,</c> tests compare a <b>scalar</b> on both sides
+/// (#836). They briefly compared grapheme clusters, to match Swift's
+/// <c>hasPrefix</c>; that made the answer depend on each runtime's Unicode
+/// Character Database, which is not the same table. See
+/// <see cref="StartsWithScalar"/>.</item>
 /// <item>Slicing must not re-base the NUL search: Swift searches to the end of
 /// the datagram, not the end of the current field.</item>
 /// </list>
@@ -98,7 +99,7 @@ public static class OscParser
             return depth < MaximumBundleDepth ? ParseBundle(ref reader, depth + 1) : None;
         }
 
-        if (!StartsWithCluster(head, '/'))
+        if (!StartsWithScalar(head, '/'))
         {
             return None;
         }
@@ -138,7 +139,7 @@ public static class OscParser
     /// that simply does not begin with a comma.</summary>
     private static OscMessage? ParsePlainMessage(string address, ref Reader reader)
     {
-        if (reader.ReadOscString() is not { } typeTags || !StartsWithCluster(typeTags, ','))
+        if (reader.ReadOscString() is not { } typeTags || !StartsWithScalar(typeTags, ','))
         {
             return new OscMessage(address, []);
         }
@@ -152,16 +153,17 @@ public static class OscParser
     /// value is short or an unknown tag is hit, which drops the <em>whole</em>
     /// message rather than yielding a partially parsed one.</summary>
     /// <remarks>
-    /// Swift iterates <c>Character</c> (grapheme clusters) where this iterates
-    /// <c>char</c>. For the tags themselves the two cannot diverge: a cluster of
-    /// more than one scalar is never one of the seven single-ASCII-letter tags, so
-    /// Swift rejects it, and C# rejects it too because no ASCII letter combines
-    /// with a following scalar without that scalar itself being an invalid tag —
-    /// both end at "unknown tag", which drops the whole message either way.
+    /// Swift iterates <c>Unicode.Scalar</c> where this iterates <c>char</c>
+    /// (UTF-16 units). Those differ only on astral scalars, where Swift sees one
+    /// item and this sees a surrogate pair — and since every known tag is a single
+    /// ASCII letter, both sides hit "unknown tag" on the first of them and drop the
+    /// whole message. The counts differ; the outcome cannot.
     ///
-    /// That argument covers only the loop below. The <em>leading comma</em> test
-    /// is a real divergence and is handled by <see cref="StartsWithCluster"/>; a
-    /// plain <c>StartsWith(',')</c> here would be wrong.
+    /// What Swift must <b>not</b> do here is iterate <c>Character</c>. A
+    /// <c>dropFirst()</c> over grapheme clusters would swallow a combining mark
+    /// along with the leading comma, parsing <c>","</c> + U+0301 as a valid
+    /// zero-argument list while this loop still saw U+0301 as an unknown tag. That
+    /// is why #836 changed both the prefix test and the Swift loop together.
     /// </remarks>
     private static List<OscArgument>? ParseArguments(string typeTags, ref Reader reader)
     {
@@ -179,32 +181,29 @@ public static class OscParser
         return arguments;
     }
 
-    /// <summary>Swift's <c>hasPrefix</c> compares <c>Character</c>s — extended
-    /// grapheme clusters — so <c>",́".hasPrefix(",")</c> is <b>false</b>: the
-    /// comma and the combining acute are one cluster, and that cluster is not
-    /// ",". C#'s <c>StartsWith(char)</c> looks at one UTF-16 unit and says true.
-    /// The difference is observable: for a <c>/onlycue/play</c> whose type-tag
-    /// word is <c>,</c> + U+0301, Swift falls through to the address-only form and
-    /// plays, while a char-wise port treats U+0301 as an unknown tag and drops the
-    /// message. Same story for the <c>/</c> test on the address.</summary>
+    /// <summary>Does this OSC-string begin with <paramref name="expected"/>?
+    /// OSC is a byte protocol — "the address pattern begins with the character
+    /// <c>/</c>" means byte 0x2F — so this is a scalar comparison, and Swift's
+    /// <c>startsWithScalar</c> is the same comparison.</summary>
     /// <remarks>
-    /// <see cref="StringInfo.GetNextTextElementLength"/> implements the same UAX #29
-    /// algorithm Swift's <c>Character</c> does, so "first cluster is exactly this
-    /// ASCII char" is "starts with the char and the first cluster is one unit long".
+    /// This used to ask a grapheme-cluster question, via
+    /// <c>StringInfo.GetNextTextElementLength</c>, so that it matched Swift's
+    /// <c>hasPrefix</c>. Matching it that way was the mistake: UAX #29 runs against
+    /// whatever Unicode Character Database the runtime carries, and the two are not
+    /// the same table — .NET 10 ships UCD 16.0, Swift 6.3 on macOS 26 ships UCD
+    /// 17.0. 42 combining scalars joined the leading cluster on one side and not the
+    /// other, and no golden case could pin that: it would have gone red on a
+    /// toolchain upgrade rather than on a regression. Comparing scalars deletes the
+    /// Unicode table from the parser instead of trying to synchronise two of them
+    /// (#836).
     ///
-    /// Each side runs that algorithm against whatever UCD its own runtime carries,
-    /// which is <em>not</em> the same table: .NET 10 ships UCD 16.0 and Swift 6.3 on
-    /// macOS 26 ships UCD 17.0, leaving 42 scalars that one side joins into the
-    /// leading cluster and the other does not. A datagram whose <c>/</c> or <c>,</c>
-    /// is followed by one of those scalars still parses differently on the two
-    /// platforms. That gap cannot be closed from this file — it is a toolchain
-    /// version skew, not a port bug, and a golden case pinning it would go red on a
-    /// runtime upgrade rather than on a real regression. #836 tracks it.
+    /// <paramref name="expected"/> is a <c>char</c>, and only ever <c>/</c> or
+    /// <c>,</c>. Both are ASCII and therefore one UTF-16 unit, so comparing
+    /// <c>value[0]</c> really is comparing the first scalar; there is no surrogate
+    /// case to worry about.
     /// </remarks>
-    private static bool StartsWithCluster(string value, char expected) =>
-        value.Length > 0
-            && value[0] == expected
-            && StringInfo.GetNextTextElementLength(value) == 1;
+    private static bool StartsWithScalar(string value, char expected) =>
+        value.Length > 0 && value[0] == expected;
 
     private static OscArgument? ParseArgument(char tag, ref Reader reader) => tag switch
     {

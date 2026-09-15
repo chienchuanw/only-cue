@@ -58,9 +58,14 @@ final class GoldenDoubleTests: XCTestCase {
         }
     }
 
+    /// `nan:0x7FF8` earns its place: a mutation run showed every other case here
+    /// still failing without the 16-digit length check, because they are all
+    /// unparseable hex. A *short but valid* pattern is the one that goes quietly
+    /// wrong — it reads back as `0x7FF8`, a denormal around 1.6e-319, which is a
+    /// finite number where a NaN was meant.
     func test_aMalformedBitPattern_isRejected() {
-        for text in ["nan:0x", "nan:0xZZZ8000000000000", "nan:7FF8000000000000",
-                     "nan:0x7FF80000000000000"] {
+        for text in ["nan:0x", "nan:0x7FF8", "nan:0x0", "nan:0xZZZ8000000000000",
+                     "nan:7FF8000000000000", "nan:0x7FF80000000000000"] {
             XCTAssertThrowsError(try decode(text), "\(text) must not decode")
         }
     }

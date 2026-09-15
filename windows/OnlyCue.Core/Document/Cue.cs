@@ -4,7 +4,12 @@ using OnlyCue.Core.Planning;
 namespace OnlyCue.Core.Document;
 
 /// <summary>Symmetric or split fade, in seconds. Mirrors Swift <c>FadeTime</c>.</summary>
-public sealed class FadeTime
+/// <remarks>
+/// <c>partial</c> so the text half — parsing and the two display spellings —
+/// lives in <c>FadeTimeText.cs</c>, mirroring the split Swift already makes
+/// between the stored properties and the <c>extension FadeTime</c> below them.
+/// </remarks>
+public sealed partial class FadeTime
 {
     public double FadeIn { get; set; }
 

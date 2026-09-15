@@ -23,9 +23,12 @@ enum CuePresentationFadeFixtures {
     /// - **leading plus.** Rejected only by the explicit `hasPrefix("+")` guard;
     ///   .NET's `NumberStyles.Float` allows a leading sign, so dropping the guard
     ///   is invisible without this case.
-    /// - **infinity / nan spellings.** .NET `TryParse` accepts both words, so the
-    ///   `IsFinite` check is load-bearing on that side where on Swift it is
-    ///   belt-and-braces.
+    /// - **infinity / nan spellings.** .NET `TryParse` accepts both words
+    ///   whatever the number styles, and Swift rejects them outright — so only
+    ///   the port has to turn them away. What turns them away there is the
+    ///   `0...maximum` range, not the finiteness check: no non-finite value
+    ///   satisfies those bounds (verified by mutation on both sides). These
+    ///   cases pin the shared answer, not either implementation's spelling.
     static let parseInputs: [(name: String, input: String)] = [
         ("a whole number is symmetric", "1"),
         ("a decimal is symmetric", "1.5"),

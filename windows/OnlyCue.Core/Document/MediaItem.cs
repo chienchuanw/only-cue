@@ -159,4 +159,31 @@ public sealed class MediaItem
     [JsonIgnore]
     public string ResolvedName =>
         string.IsNullOrWhiteSpace(AlternateName) ? Media.DisplayName : AlternateName.Trim();
+
+    /// <summary>
+    /// The cue "active" at <paramref name="currentTime"/> — the one with the
+    /// largest <c>Time &lt;= currentTime</c>. <c>null</c> before the first cue and
+    /// on an empty list; the last cue once the playhead is past it, so show notes
+    /// persist to the end. <paramref name="typeId"/> (<c>null</c> = all cues)
+    /// narrows to one cue type for Show mode's GO-by-type highlight (#657).
+    /// Mirrors Swift <c>MediaItem.activeCue(at:typeID:)</c>.
+    /// </summary>
+    /// <remarks>
+    /// <c>MaxBy</c> keeps the <i>first</i> of a tie, because it replaces the
+    /// running best only on a strictly greater key — which is also what Swift's
+    /// <c>max(by:)</c> does (both measured). The two therefore agree on cues that
+    /// share a time. <c>OrderByDescending(…).FirstOrDefault()</c> would read as an
+    /// equivalent rewrite and is not one: its sort is stable the other way round,
+    /// so it would return the later entry.
+    /// </remarks>
+    public Cue? ActiveCue(double currentTime, Guid? typeId = null)
+    {
+        IEnumerable<Cue> candidates = Cues;
+        if (typeId is { } id)
+        {
+            candidates = candidates.Where(cue => cue.TypeId == id);
+        }
+
+        return candidates.Where(cue => cue.Time <= currentTime).MaxBy(cue => cue.Time);
+    }
 }

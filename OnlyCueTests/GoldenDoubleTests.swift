@@ -91,7 +91,7 @@ final class GoldenDoubleTests: XCTestCase {
     }
 
     private func decode(_ text: String) throws -> Double {
-        let data = try XCTUnwrap("[\"\(text)\"]".data(using: .utf8))
+        let data = Data("[\"\(text)\"]".utf8)
         return try JSONDecoder().decode([GoldenDouble].self, from: data)[0].value
     }
 }

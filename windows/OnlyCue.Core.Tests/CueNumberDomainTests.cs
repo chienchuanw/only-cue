@@ -11,10 +11,13 @@ namespace OnlyCue.Core.Tests;
 /// </summary>
 /// <remarks>
 /// <para>
-/// <c>golden/ma2-telnet-v1.json</c> pins the finite cases, so these cover what a
-/// JSON vector cannot carry: the non-finite inputs (<c>GoldenDouble</c>'s NaN
-/// spelling is still unsettled — #833) and the decode-side coercion, which has
-/// no vector because it is a <i>document</i> boundary rather than a formatter.
+/// <c>golden/ma2-telnet-v1.json</c> pins the finite cases, so these cover the
+/// decode-side coercion, which has no vector because it is a <i>document</i>
+/// boundary rather than a formatter. The non-finite inputs stay here as direct
+/// assertions, but they are no longer vector-impossible: since #833
+/// <c>GoldenDouble</c> carries bit patterns, and
+/// <c>golden/cue-presentation-v1.json</c> pins <c>nan</c> and <c>inf</c> as
+/// format errors on both sides.
 /// </para>
 /// <para>
 /// The Swift side asserts the same values in <c>CueNumberDomainTests</c> and

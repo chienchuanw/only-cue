@@ -288,6 +288,44 @@
       "name" : "a float argument widens infinity"
     },
     {
+      "command" : {
+        "kind" : "skip",
+        "seconds" : "nan:0x7FF8000000000000"
+      },
+      "datagram" : "L29ubHljdWUvc2tpcAAAACxmAAB/wAAA",
+      "messages" : [
+        {
+          "address" : "/onlycue/skip",
+          "arguments" : [
+            {
+              "float" : "nan:0x7FF8000000000000",
+              "type" : "float32"
+            }
+          ]
+        }
+      ],
+      "name" : "a float argument widens a quiet NaN"
+    },
+    {
+      "command" : {
+        "kind" : "skip",
+        "seconds" : "nan:0xFFF8000020000000"
+      },
+      "datagram" : "L29ubHljdWUvc2tpcAAAACxmAAD/wAAB",
+      "messages" : [
+        {
+          "address" : "/onlycue/skip",
+          "arguments" : [
+            {
+              "float" : "nan:0xFFF8000020000000",
+              "type" : "float32"
+            }
+          ]
+        }
+      ],
+      "name" : "a float argument keeps a signed NaN payload"
+    },
+    {
       "datagram" : "L29ubHljdWUvc2tpcAAAACxzAAA1AAAA",
       "messages" : [
         {

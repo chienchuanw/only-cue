@@ -7,17 +7,25 @@ import Foundation
 /// Built from a `Timecode`. The eight 4-bit user-bit ("binary group") fields
 /// and the colour-frame and binary-group-flag bits are zero; the drop-frame
 /// flag (bit 10) follows the timecode's rate. The bit-polarity-correction
-/// (parity) bit is set so the 80-bit word has an even number of 1s — v1 places
-/// it at bit 27 (the 24 / 30 fps convention) for *all* rates; the 25 fps
-/// standard moves it to bit 59, which a follow-up can add if a 25 fps reader
-/// needs it. The 16-bit sync word `0011 1111 1111 1101` occupies bits 64–79.
+/// (parity) bit is set so the 80-bit word has an even number of 1s, at the
+/// position SMPTE 12M assigns for the rate — bit 27 at 24 / 30 fps, bit 59 at
+/// 25 fps (#853). The 16-bit sync word `0011 1111 1111 1101` occupies bits 64–79.
 struct LTCFrame: Equatable, Sendable {
 
     /// Fixed sync word, bits 64–79, transmission order: `00` · twelve `1`s · `01`.
     static let syncWord: [Bool] = [false, false] + Array(repeating: true, count: 12) + [false, true]
 
-    /// Bit 27 — the bit-polarity-correction (parity) position used by `LTCFrame`.
-    static let parityBitIndex = 27
+    /// The bit-polarity-correction (parity) position for `rate`.
+    ///
+    /// SMPTE 12M swaps this bit with a binary-group flag between the 25 fps and
+    /// the 24 / 30 fps layouts: at 25 fps the correction lives at bit 59 and bit
+    /// 27 is BGF0; everywhere else the correction is at bit 27 and bit 59 is
+    /// BGF2. Writing it at 27 for all rates (as v1 did) both raised a flag a
+    /// conforming 25 fps reader acts on and left the real parity position clear,
+    /// so the word could go out with odd parity (#853).
+    static func parityBitIndex(for rate: SMPTEFramerate) -> Int {
+        rate == .fps25 ? 59 : 27
+    }
 
     /// Exactly 80 bits, transmission order.
     let bits: [Bool]
@@ -46,7 +54,7 @@ struct LTCFrame: Equatable, Sendable {
         for (offset, bit) in Self.syncWord.enumerated() { word[64 + offset] = bit }
 
         if word.lazy.filter({ $0 }).count.isMultiple(of: 2) == false {
-            word[Self.parityBitIndex] = true
+            word[Self.parityBitIndex(for: timecode.rate)] = true
         }
         self.bits = word
     }

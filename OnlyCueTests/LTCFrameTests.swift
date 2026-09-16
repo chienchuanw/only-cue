@@ -53,16 +53,30 @@ final class LTCFrameTests: XCTestCase {
         XCTAssertEqual(LTCFrame.syncWord, expected)
     }
 
+    /// The eighth user-bit group is bits **60…63**, not `59..<63` as this test
+    /// read until #853 — bit 59 is a flag (BGF2 at 24 / 30 fps, the correction
+    /// bit at 25 fps) and bit 63 is the top user bit, not a flag. The off-by-one
+    /// was invisible because every one of those bits is always zero today, so it
+    /// passed vacuously while asserting bit 59 was a user bit.
     func test_frame_userAndFlagBits_areZero() throws {
-        let frame = LTCFrame(timecode: try tc(12, 34, 56, 7, .fps30))
-        let userBitRanges = [4..<8, 12..<16, 20..<24, 28..<32, 36..<40, 44..<48, 52..<56, 59..<63]
-        for range in userBitRanges {
-            XCTAssertTrue(frame.bits[range].allSatisfy { !$0 }, "user bits \(range) should be zero")
+        let userBitRanges = [4..<8, 12..<16, 20..<24, 28..<32, 36..<40, 44..<48, 52..<56, 60..<64]
+        for rate in SMPTEFramerate.allCases {
+            let frame = LTCFrame(timecode: try tc(12, 34, 56, 7, rate))
+            for range in userBitRanges {
+                XCTAssertTrue(frame.bits[range].allSatisfy { !$0 }, "\(rate.rawValue): user bits \(range) should be zero")
+            }
+            XCTAssertFalse(frame.bits[11], "\(rate.rawValue): colour-frame flag should be zero")
+            XCTAssertFalse(frame.bits[43], "\(rate.rawValue): binary-group-flag bit should be zero")
+            XCTAssertFalse(frame.bits[58], "\(rate.rawValue): binary-group-flag bit should be zero")
+
+            // Of the two candidate correction positions only the one this rate
+            // assigns may ever be set; the other is a flag here. Asserting both
+            // were zero would be wrong — whether *this* timecode needs
+            // correcting depends on bit 10, so it differs between 30 and 30df.
+            let flagPosition = LTCFrame.parityBitIndex(for: rate) == 27 ? 59 : 27
+            XCTAssertFalse(frame.bits[flagPosition],
+                           "\(rate.rawValue): bit \(flagPosition) is a flag at this rate and must stay zero")
         }
-        XCTAssertFalse(frame.bits[11], "colour-frame flag should be zero")
-        XCTAssertFalse(frame.bits[43], "binary-group-flag bit should be zero")
-        XCTAssertFalse(frame.bits[58], "binary-group-flag bit should be zero")
-        XCTAssertFalse(frame.bits[63], "binary-group-flag bit should be zero")
     }
 
     // MARK: - Parity (bit-polarity correction)
@@ -77,13 +91,20 @@ final class LTCFrameTests: XCTestCase {
         XCTAssertTrue(LTCFrame(timecode: try tc(1, 2, 3, 4, .fps25)).hasEvenParity)
     }
 
-    func test_frame_parityBit27_isTheOnlyBitUsedForCorrection() throws {
-        for value in [[0, 0, 0, 1], [12, 34, 56, 23], [23, 59, 59, 29], [1, 11, 0, 0]] {
-            let frame = LTCFrame(timecode: try tc(value[0], value[1], value[2], value[3], .fps30))
-            var withoutParity = frame.bits
-            withoutParity[LTCFrame.parityBitIndex] = false
-            let oddWithoutParity = !withoutParity.lazy.filter { $0 }.count.isMultiple(of: 2)
-            XCTAssertEqual(frame.bits[LTCFrame.parityBitIndex], oddWithoutParity, "\(value)")
+    /// The rate's correction bit is set exactly when the rest of the word is
+    /// odd — never gratuitously. Parameterised over all four rates by #853; it
+    /// only ever built `.fps30` before, which is why the 25 fps placement bug
+    /// survived.
+    func test_frame_correctionBit_isSetExactlyWhenTheRestOfTheWordIsOdd() throws {
+        for rate in SMPTEFramerate.allCases {
+            let index = LTCFrame.parityBitIndex(for: rate)
+            for value in [[0, 0, 0, 1], [12, 34, 56, 7], [23, 59, 59, 23], [1, 11, 0, 2]] {
+                let frame = LTCFrame(timecode: try tc(value[0], value[1], value[2], value[3], rate))
+                var withoutParity = frame.bits
+                withoutParity[index] = false
+                let oddWithoutParity = !withoutParity.lazy.filter { $0 }.count.isMultiple(of: 2)
+                XCTAssertEqual(frame.bits[index], oddWithoutParity, "\(rate.rawValue) \(value)")
+            }
         }
     }
 

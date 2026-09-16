@@ -14,8 +14,12 @@ import Foundation
 /// 30, ×drop-frame from bit 10) is recovered, not assumed.
 ///
 /// v1 is tuned for clean signals (a file striped by software, or our own
-/// generator played back) — it does not do PLL-style jitter tracking, half-speed
-/// / reverse playback, or 25 fps's bit-59 parity variant.
+/// generator played back) — it does not do PLL-style jitter tracking or
+/// half-speed / reverse playback. The rate-dependent position of the
+/// bit-polarity-correction bit (#853) needs nothing here: parity is checked by
+/// counting the ones across the whole word, and neither candidate position is
+/// read as data, so both the 24 / 30 fps (bit 27) and the 25 fps (bit 59)
+/// layouts decode unchanged.
 enum LTCDecoder {
 
     /// One recovered frame: the timecode and the sample index where its first

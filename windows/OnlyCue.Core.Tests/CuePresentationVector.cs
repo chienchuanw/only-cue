@@ -26,6 +26,7 @@ public sealed record CuePresentationVector(
     [property: JsonPropertyName("cueNumberErrors")] IReadOnlyList<CueNumberErrorCase> CueNumberErrors,
     [property: JsonPropertyName("sectionCount")] IReadOnlyList<SectionCountCase> SectionCount,
     [property: JsonPropertyName("rowTapIntent")] IReadOnlyList<RowTapIntentCase> RowTapIntent,
+    [property: JsonPropertyName("rangeSelection")] IReadOnlyList<RangeSelectionCase> RangeSelection,
     [property: JsonPropertyName("rowFill")] IReadOnlyList<RowFillCase> RowFill,
     [property: JsonPropertyName("goFilter")] IReadOnlyList<GoFilterCase> GoFilter,
     [property: JsonPropertyName("rowOpacity")] IReadOnlyList<RowOpacityCase> RowOpacity,
@@ -89,9 +90,19 @@ public sealed record SectionCountCase(
 public sealed record RowTapIntentCase(
     [property: JsonPropertyName("name")] string Name,
     [property: JsonPropertyName("target")] string Target,
-    [property: JsonPropertyName("isExtending")] bool IsExtending,
+    [property: JsonPropertyName("modifier")] string Modifier,
     [property: JsonPropertyName("isReadOnly")] bool IsReadOnly,
     [property: JsonPropertyName("expect")] string Expect);
+
+/// <summary>A Shift-click range (#790). <c>Expect</c> is emitted in displayed
+/// order for a readable diff, but the function returns a <i>set</i> — compare it
+/// as one, and as parsed <c>Guid</c>s rather than strings.</summary>
+public sealed record RangeSelectionCase(
+    [property: JsonPropertyName("name")] string Name,
+    [property: JsonPropertyName("displayed")] IReadOnlyList<string> Displayed,
+    [property: JsonPropertyName("anchor")] string? Anchor,
+    [property: JsonPropertyName("target")] string Target,
+    [property: JsonPropertyName("expect")] IReadOnlyList<string> Expect);
 
 public sealed record RowFillCase(
     [property: JsonPropertyName("name")] string Name,

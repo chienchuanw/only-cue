@@ -29,15 +29,37 @@ enum LTCEncoder {
         amplitude: Float = defaultAmplitude,
         startLevel: Bool = false
     ) -> (samples: [Float], endLevel: Bool) {
+        samples(
+            for: LTCFrame(timecode: timecode),
+            framesPerSecond: timecode.rate.framesPerSecond,
+            sampleRate: sampleRate,
+            amplitude: amplitude,
+            startLevel: startLevel
+        )
+    }
+
+    /// The same modulation, driven by an explicit 80-bit word rather than by a
+    /// `Timecode`. Nothing in the app calls this — `LTCFrame(timecode:)` always
+    /// produces a well-formed word — but `golden/ltc-decode-v1.json` needs it:
+    /// its structural-corruption cases are built by flipping bits in a frame and
+    /// re-modulating, so that "bad parity" means a genuinely mis-parity word on
+    /// the wire rather than a smeared waveform. Going through the production
+    /// encoder is the point; a test-local modulator would pin itself.
+    static func samples(
+        for frame: LTCFrame,
+        framesPerSecond: Int,
+        sampleRate: Double,
+        amplitude: Float = defaultAmplitude,
+        startLevel: Bool = false
+    ) -> (samples: [Float], endLevel: Bool) {
         precondition(sampleRate > 0, "sample rate must be positive")
-        let frame = LTCFrame(timecode: timecode)
-        let halfBitSamples = sampleRate / (160.0 * Double(timecode.rate.framesPerSecond))
+        let halfBitSamples = sampleRate / (160.0 * Double(framesPerSecond))
         let high = amplitude
         let low = -amplitude
 
         var level = startLevel
         var samples: [Float] = []
-        samples.reserveCapacity(Int((sampleRate / Double(timecode.rate.framesPerSecond)).rounded()) + 2)
+        samples.reserveCapacity(Int((sampleRate / Double(framesPerSecond)).rounded()) + 2)
         var slot = 0
 
         func emitSlot() {

@@ -99,6 +99,7 @@ enum CuePresentationGolden {
             cueNumberErrors: errorCases(),
             sectionCount: CuePresentationRowGolden.sectionCountCases(),
             rowTapIntent: CuePresentationRowGolden.rowTapCases(),
+            rangeSelection: try CuePresentationRowGolden.rangeSelectionCases(),
             rowFill: CuePresentationRowGolden.rowFillCases(),
             goFilter: try CuePresentationRowGolden.goFilterCases(),
             rowOpacity: try CuePresentationRowGolden.rowOpacityCases(),
@@ -144,7 +145,7 @@ enum CuePresentationGolden {
 
     private static let note = """
         macOS-generated golden vectors for OnlyCue's cue-list presentation layer \
-        (epic #728, M1d). Eleven groups, each naming the Swift function it was \
+        (epic #728, M1d). Twelve groups, each naming the Swift function it was \
         generated from; see \
         docs/superpowers/specs/2026-09-14-windows-m1d-cue-presentation.md. Unlike \
         vectors 1-7 this one pins decisions rather than bytes on a wire, so the \

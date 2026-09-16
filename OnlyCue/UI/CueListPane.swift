@@ -33,6 +33,11 @@ struct CueListPane: View {
     /// fires, and a flag would stay armed and swallow the next external change.
     @State private var lastRowTapSelection: Set<Cue.ID>?
 
+    /// The row a ⇧-click ranges *from* (#790) — the last row selected without
+    /// ⇧. A ⇧-click never moves it, so repeated ⇧-clicks re-range from the
+    /// same origin, matching Finder and every spreadsheet.
+    @State private var selectionAnchor: Cue.ID?
+
     @Environment(\.undoManager) var undoManager
 
     /// Notes / Tempo sheets are scoped to a Cue.ID so they survive selection
@@ -357,12 +362,26 @@ extension CueListPane {
             // Both record what they set so the scroll `onChange` can recognise
             // its own pane's clicks and leave the list where it is.
             onSelect: {
+                selectionAnchor = cue.id
                 lastRowTapSelection = [cue.id]
                 selection = [cue.id]
             },
-            onExtendSelection: {
+            onToggleSelection: {
                 var updated = selection
                 updated.formSymmetricDifference([cue.id])
+                selectionAnchor = cue.id
+                lastRowTapSelection = updated
+                selection = updated
+            },
+            onExtendRange: {
+                let updated = CueRangeSelection.range(in: cues.map(\.id), from: selectionAnchor, to: cue.id)
+                // A ⇧-click deliberately leaves the anchor where it is, so
+                // repeated ⇧-clicks re-range from the same origin (#790) — but
+                // when there was no usable anchor the range degraded to this
+                // one row, which then becomes the origin.
+                if selectionAnchor == nil || !cues.contains(where: { $0.id == selectionAnchor }) {
+                    selectionAnchor = cue.id
+                }
                 lastRowTapSelection = updated
                 selection = updated
             },

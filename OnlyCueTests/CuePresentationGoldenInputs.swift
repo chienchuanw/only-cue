@@ -4,9 +4,9 @@ import Foundation
 /// Input shapes for vector 8's fixtures.
 ///
 /// These are plain structs rather than tuples because SwiftLint's `large_tuple`
-/// rule caps tuples at two members — and the rule is right here: `(name, target,
-/// isExtending, isReadOnly)` is unreadable at the call site, where two adjacent
-/// `Bool`s are exactly the kind of thing that silently swaps.
+/// rule caps tuples at two members — and the rule is right here: `(name,
+/// isSelected, isCurrent, hasTint)` is unreadable at the call site, where three
+/// adjacent `Bool`s are exactly the kind of thing that silently swaps.
 ///
 /// They carry *inputs only*. Every expectation is produced by running the Swift
 /// implementation; see `CuePresentationGolden`.
@@ -31,8 +31,16 @@ struct CuePresentationValidationInput {
 struct CuePresentationRowTapInput {
     let name: String
     let target: CueRowTapTarget
-    let isExtending: Bool
+    let modifier: CueRowTapModifier
     let isReadOnly: Bool
+}
+
+struct CuePresentationRangeSelectionInput {
+    let name: String
+    let displayed: [String]
+    /// Absent = no row has been selected without ⇧ yet.
+    let anchor: String?
+    let target: String
 }
 
 struct CuePresentationRowFillInput {

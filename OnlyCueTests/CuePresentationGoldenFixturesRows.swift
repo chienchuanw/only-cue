@@ -21,24 +21,96 @@ enum CuePresentationRowFixtures {
         ("large counts stay plural", 42)
     ]
 
-    /// All eight combinations, collapsing to the four intents. The stripe ignores
+    /// All twelve combinations, collapsing to the five intents. The stripe ignores
     /// `isReadOnly` because it is the only way left to jump the playhead from the
     /// cue list in Show mode, where the columns are `.disabled` (#786) — so a
     /// read-only stripe tap still seeks where a read-only field tap is `ignored`.
+    ///
+    /// Eight until #790 split ⌘ from ⇧: collapsing them into one `isExtending`
+    /// flag is exactly the bug that vector would have frozen as correct.
     static let rowTaps: [CuePresentationRowTapInput] =
         [CueRowTapTarget.field, .stripe].flatMap { target in
-            [false, true].flatMap { isExtending in
+            CueRowTapModifier.allCases.flatMap { modifier in
                 [false, true].map { isReadOnly in
                     CuePresentationRowTapInput(
                         name: "\(target == .field ? "field" : "stripe"), "
-                            + "extending=\(isExtending), readOnly=\(isReadOnly)",
+                            + "modifier=\(CuePresentationRowGolden.name(of: modifier)), "
+                            + "readOnly=\(isReadOnly)",
                         target: target,
-                        isExtending: isExtending,
+                        modifier: modifier,
                         isReadOnly: isReadOnly
                     )
                 }
             }
         }
+
+    /// Ten rows in displayed order. Deliberately *not* in ascending id order:
+    /// `rangeSelections` below ranges across `shuffled`, and if the range ever
+    /// started sorting ids instead of following the array, an ascending seed
+    /// would hide it.
+    static let rangeRows: [String] = (0..<10).map {
+        String(format: "00000000-0000-0000-0000-0000000007%02x", 9 - $0)
+    }
+
+    /// The same rows in an order that has nothing to do with the array above —
+    /// stands in for a filtered / reordered list.
+    static let rangeShuffled: [String] = [7, 1, 9, 3, 0].map { rangeRows[$0] }
+
+    /// A row id that is syntactically valid but is not displayed — a stale
+    /// anchor (filtered out, or deleted from another pane) or a target the
+    /// caller could not really have clicked.
+    static let rangeOrphan = "00000000-0000-0000-0000-0000000007ff"
+
+    static let rangeSelections: [CuePresentationRangeSelectionInput] = [
+        .init(
+            name: "a forward range includes both ends",
+            displayed: rangeRows,
+            anchor: rangeRows[2],
+            target: rangeRows[8]
+        ),
+        .init(
+            name: "a backward range covers the same rows",
+            displayed: rangeRows,
+            anchor: rangeRows[8],
+            target: rangeRows[2]
+        ),
+        .init(
+            name: "anchor equals target selects that one row",
+            displayed: rangeRows,
+            anchor: rangeRows[4],
+            target: rangeRows[4]
+        ),
+        .init(
+            name: "without an anchor only the clicked row is selected",
+            displayed: rangeRows,
+            anchor: nil,
+            target: rangeRows[6]
+        ),
+        .init(
+            name: "an anchor no longer displayed selects only the clicked row",
+            displayed: rangeRows,
+            anchor: rangeOrphan,
+            target: rangeRows[6]
+        ),
+        .init(
+            name: "a target not displayed still selects the clicked row",
+            displayed: rangeRows,
+            anchor: rangeRows[1],
+            target: rangeOrphan
+        ),
+        .init(
+            name: "the range follows displayed order, not id order",
+            displayed: rangeShuffled,
+            anchor: rangeShuffled[1],
+            target: rangeShuffled[3]
+        ),
+        .init(
+            name: "an empty list selects only the clicked row",
+            displayed: [],
+            anchor: nil,
+            target: rangeOrphan
+        )
+    ]
 
     /// All eight combinations, so the `isCurrent`-before-`isSelected` precedence
     /// is pinned from every direction (#671).

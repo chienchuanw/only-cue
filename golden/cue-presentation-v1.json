@@ -1425,7 +1425,167 @@
       ]
     }
   ],
-  "note" : "macOS-generated golden vectors for OnlyCue's cue-list presentation layer (epic #728, M1d). Eleven groups, each naming the Swift function it was generated from; see docs/superpowers/specs/2026-09-14-windows-m1d-cue-presentation.md. Unlike vectors 1-7 this one pins decisions rather than bytes on a wire, so the expectations are branch names and user-facing strings: compare them exactly, including the U+2013 EN DASH in the cue-number format message. Doubles are carried as round-trip-exact decimal strings; compare the parsed IEEE-754 bit patterns, not the text. Ids are likewise transport: Swift's uuidString uppercases the hex where .NET's Guid.ToString() lowercases it, so compare parsed Guid values and never the strings. To regenerate after a deliberate change, delete golden/cue-presentation-v1.json and re-run the test suite.",
+  "note" : "macOS-generated golden vectors for OnlyCue's cue-list presentation layer (epic #728, M1d). Twelve groups, each naming the Swift function it was generated from; see docs/superpowers/specs/2026-09-14-windows-m1d-cue-presentation.md. Unlike vectors 1-7 this one pins decisions rather than bytes on a wire, so the expectations are branch names and user-facing strings: compare them exactly, including the U+2013 EN DASH in the cue-number format message. Doubles are carried as round-trip-exact decimal strings; compare the parsed IEEE-754 bit patterns, not the text. Ids are likewise transport: Swift's uuidString uppercases the hex where .NET's Guid.ToString() lowercases it, so compare parsed Guid values and never the strings. To regenerate after a deliberate change, delete golden/cue-presentation-v1.json and re-run the test suite.",
+  "rangeSelection" : [
+    {
+      "anchor" : "00000000-0000-0000-0000-000000000707",
+      "displayed" : [
+        "00000000-0000-0000-0000-000000000709",
+        "00000000-0000-0000-0000-000000000708",
+        "00000000-0000-0000-0000-000000000707",
+        "00000000-0000-0000-0000-000000000706",
+        "00000000-0000-0000-0000-000000000705",
+        "00000000-0000-0000-0000-000000000704",
+        "00000000-0000-0000-0000-000000000703",
+        "00000000-0000-0000-0000-000000000702",
+        "00000000-0000-0000-0000-000000000701",
+        "00000000-0000-0000-0000-000000000700"
+      ],
+      "expect" : [
+        "00000000-0000-0000-0000-000000000707",
+        "00000000-0000-0000-0000-000000000706",
+        "00000000-0000-0000-0000-000000000705",
+        "00000000-0000-0000-0000-000000000704",
+        "00000000-0000-0000-0000-000000000703",
+        "00000000-0000-0000-0000-000000000702",
+        "00000000-0000-0000-0000-000000000701"
+      ],
+      "name" : "a forward range includes both ends",
+      "target" : "00000000-0000-0000-0000-000000000701"
+    },
+    {
+      "anchor" : "00000000-0000-0000-0000-000000000701",
+      "displayed" : [
+        "00000000-0000-0000-0000-000000000709",
+        "00000000-0000-0000-0000-000000000708",
+        "00000000-0000-0000-0000-000000000707",
+        "00000000-0000-0000-0000-000000000706",
+        "00000000-0000-0000-0000-000000000705",
+        "00000000-0000-0000-0000-000000000704",
+        "00000000-0000-0000-0000-000000000703",
+        "00000000-0000-0000-0000-000000000702",
+        "00000000-0000-0000-0000-000000000701",
+        "00000000-0000-0000-0000-000000000700"
+      ],
+      "expect" : [
+        "00000000-0000-0000-0000-000000000707",
+        "00000000-0000-0000-0000-000000000706",
+        "00000000-0000-0000-0000-000000000705",
+        "00000000-0000-0000-0000-000000000704",
+        "00000000-0000-0000-0000-000000000703",
+        "00000000-0000-0000-0000-000000000702",
+        "00000000-0000-0000-0000-000000000701"
+      ],
+      "name" : "a backward range covers the same rows",
+      "target" : "00000000-0000-0000-0000-000000000707"
+    },
+    {
+      "anchor" : "00000000-0000-0000-0000-000000000705",
+      "displayed" : [
+        "00000000-0000-0000-0000-000000000709",
+        "00000000-0000-0000-0000-000000000708",
+        "00000000-0000-0000-0000-000000000707",
+        "00000000-0000-0000-0000-000000000706",
+        "00000000-0000-0000-0000-000000000705",
+        "00000000-0000-0000-0000-000000000704",
+        "00000000-0000-0000-0000-000000000703",
+        "00000000-0000-0000-0000-000000000702",
+        "00000000-0000-0000-0000-000000000701",
+        "00000000-0000-0000-0000-000000000700"
+      ],
+      "expect" : [
+        "00000000-0000-0000-0000-000000000705"
+      ],
+      "name" : "anchor equals target selects that one row",
+      "target" : "00000000-0000-0000-0000-000000000705"
+    },
+    {
+      "displayed" : [
+        "00000000-0000-0000-0000-000000000709",
+        "00000000-0000-0000-0000-000000000708",
+        "00000000-0000-0000-0000-000000000707",
+        "00000000-0000-0000-0000-000000000706",
+        "00000000-0000-0000-0000-000000000705",
+        "00000000-0000-0000-0000-000000000704",
+        "00000000-0000-0000-0000-000000000703",
+        "00000000-0000-0000-0000-000000000702",
+        "00000000-0000-0000-0000-000000000701",
+        "00000000-0000-0000-0000-000000000700"
+      ],
+      "expect" : [
+        "00000000-0000-0000-0000-000000000703"
+      ],
+      "name" : "without an anchor only the clicked row is selected",
+      "target" : "00000000-0000-0000-0000-000000000703"
+    },
+    {
+      "anchor" : "00000000-0000-0000-0000-0000000007ff",
+      "displayed" : [
+        "00000000-0000-0000-0000-000000000709",
+        "00000000-0000-0000-0000-000000000708",
+        "00000000-0000-0000-0000-000000000707",
+        "00000000-0000-0000-0000-000000000706",
+        "00000000-0000-0000-0000-000000000705",
+        "00000000-0000-0000-0000-000000000704",
+        "00000000-0000-0000-0000-000000000703",
+        "00000000-0000-0000-0000-000000000702",
+        "00000000-0000-0000-0000-000000000701",
+        "00000000-0000-0000-0000-000000000700"
+      ],
+      "expect" : [
+        "00000000-0000-0000-0000-000000000703"
+      ],
+      "name" : "an anchor no longer displayed selects only the clicked row",
+      "target" : "00000000-0000-0000-0000-000000000703"
+    },
+    {
+      "anchor" : "00000000-0000-0000-0000-000000000708",
+      "displayed" : [
+        "00000000-0000-0000-0000-000000000709",
+        "00000000-0000-0000-0000-000000000708",
+        "00000000-0000-0000-0000-000000000707",
+        "00000000-0000-0000-0000-000000000706",
+        "00000000-0000-0000-0000-000000000705",
+        "00000000-0000-0000-0000-000000000704",
+        "00000000-0000-0000-0000-000000000703",
+        "00000000-0000-0000-0000-000000000702",
+        "00000000-0000-0000-0000-000000000701",
+        "00000000-0000-0000-0000-000000000700"
+      ],
+      "expect" : [
+        "00000000-0000-0000-0000-0000000007FF"
+      ],
+      "name" : "a target not displayed still selects the clicked row",
+      "target" : "00000000-0000-0000-0000-0000000007ff"
+    },
+    {
+      "anchor" : "00000000-0000-0000-0000-000000000708",
+      "displayed" : [
+        "00000000-0000-0000-0000-000000000702",
+        "00000000-0000-0000-0000-000000000708",
+        "00000000-0000-0000-0000-000000000700",
+        "00000000-0000-0000-0000-000000000706",
+        "00000000-0000-0000-0000-000000000709"
+      ],
+      "expect" : [
+        "00000000-0000-0000-0000-000000000708",
+        "00000000-0000-0000-0000-000000000700",
+        "00000000-0000-0000-0000-000000000706"
+      ],
+      "name" : "the range follows displayed order, not id order",
+      "target" : "00000000-0000-0000-0000-000000000706"
+    },
+    {
+      "displayed" : [
+
+      ],
+      "expect" : [
+        "00000000-0000-0000-0000-0000000007FF"
+      ],
+      "name" : "an empty list selects only the clicked row",
+      "target" : "00000000-0000-0000-0000-0000000007ff"
+    }
+  ],
   "rowFill" : [
     {
       "expect" : "clear",
@@ -1509,58 +1669,86 @@
   "rowTapIntent" : [
     {
       "expect" : "beginEdit",
-      "isExtending" : false,
       "isReadOnly" : false,
-      "name" : "field, extending=false, readOnly=false",
+      "modifier" : "plain",
+      "name" : "field, modifier=plain, readOnly=false",
       "target" : "field"
     },
     {
       "expect" : "ignored",
-      "isExtending" : false,
       "isReadOnly" : true,
-      "name" : "field, extending=false, readOnly=true",
+      "modifier" : "plain",
+      "name" : "field, modifier=plain, readOnly=true",
       "target" : "field"
     },
     {
-      "expect" : "extendSelection",
-      "isExtending" : true,
+      "expect" : "toggleSelection",
       "isReadOnly" : false,
-      "name" : "field, extending=true, readOnly=false",
+      "modifier" : "toggle",
+      "name" : "field, modifier=toggle, readOnly=false",
       "target" : "field"
     },
     {
       "expect" : "ignored",
-      "isExtending" : true,
       "isReadOnly" : true,
-      "name" : "field, extending=true, readOnly=true",
+      "modifier" : "toggle",
+      "name" : "field, modifier=toggle, readOnly=true",
+      "target" : "field"
+    },
+    {
+      "expect" : "extendRange",
+      "isReadOnly" : false,
+      "modifier" : "range",
+      "name" : "field, modifier=range, readOnly=false",
+      "target" : "field"
+    },
+    {
+      "expect" : "ignored",
+      "isReadOnly" : true,
+      "modifier" : "range",
+      "name" : "field, modifier=range, readOnly=true",
       "target" : "field"
     },
     {
       "expect" : "selectAndSeek",
-      "isExtending" : false,
       "isReadOnly" : false,
-      "name" : "stripe, extending=false, readOnly=false",
+      "modifier" : "plain",
+      "name" : "stripe, modifier=plain, readOnly=false",
       "target" : "stripe"
     },
     {
       "expect" : "selectAndSeek",
-      "isExtending" : false,
       "isReadOnly" : true,
-      "name" : "stripe, extending=false, readOnly=true",
+      "modifier" : "plain",
+      "name" : "stripe, modifier=plain, readOnly=true",
       "target" : "stripe"
     },
     {
-      "expect" : "extendSelection",
-      "isExtending" : true,
+      "expect" : "toggleSelection",
       "isReadOnly" : false,
-      "name" : "stripe, extending=true, readOnly=false",
+      "modifier" : "toggle",
+      "name" : "stripe, modifier=toggle, readOnly=false",
       "target" : "stripe"
     },
     {
-      "expect" : "extendSelection",
-      "isExtending" : true,
+      "expect" : "toggleSelection",
       "isReadOnly" : true,
-      "name" : "stripe, extending=true, readOnly=true",
+      "modifier" : "toggle",
+      "name" : "stripe, modifier=toggle, readOnly=true",
+      "target" : "stripe"
+    },
+    {
+      "expect" : "extendRange",
+      "isReadOnly" : false,
+      "modifier" : "range",
+      "name" : "stripe, modifier=range, readOnly=false",
+      "target" : "stripe"
+    },
+    {
+      "expect" : "extendRange",
+      "isReadOnly" : true,
+      "modifier" : "range",
+      "name" : "stripe, modifier=range, readOnly=true",
       "target" : "stripe"
     }
   ],

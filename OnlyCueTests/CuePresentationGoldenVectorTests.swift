@@ -105,6 +105,7 @@ final class CuePresentationGoldenVectorTests: XCTestCase {
         assertUnique(vector.cueNumberErrors.map(\.name), group: "cueNumberErrors")
         assertUnique(vector.sectionCount.map(\.name), group: "sectionCount")
         assertUnique(vector.rowTapIntent.map(\.name), group: "rowTapIntent")
+        assertUnique(vector.rangeSelection.map(\.name), group: "rangeSelection")
         assertUnique(vector.rowFill.map(\.name), group: "rowFill")
         assertUnique(vector.goFilter.map(\.name), group: "goFilter")
         assertUnique(vector.rowOpacity.map(\.name), group: "rowOpacity")
@@ -117,7 +118,7 @@ final class CuePresentationGoldenVectorTests: XCTestCase {
     func test_booleanGroupsAreExhaustive() throws {
         let vector = try CuePresentationGolden.make()
         XCTAssertEqual(vector.rowFill.count, 8)
-        XCTAssertEqual(vector.rowTapIntent.count, 8)
+        XCTAssertEqual(vector.rowTapIntent.count, CueRowTapModifier.allCases.count * 4)
         XCTAssertEqual(Set(CueRowFill.Resolution.allCases.map(\.rawValue)), Set(vector.rowFill.map(\.expect)))
     }
 

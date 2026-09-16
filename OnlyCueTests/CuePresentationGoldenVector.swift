@@ -12,8 +12,8 @@ import Foundation
 /// Unlike vectors 1–7 this one pins *decisions*, not bytes on a wire. That makes
 /// the failure mode quieter — a wrong branch renders a plausible cue list rather
 /// than a malformed payload — which is exactly why it is pinned. Four of the
-/// eleven groups did not exist as callable functions until #837 extracted them
-/// out of SwiftUI view properties.
+/// groups did not exist as callable functions until #837 extracted them out of
+/// SwiftUI view properties.
 ///
 /// The case structs live in `CuePresentationGoldenVectorCases.swift` (an
 /// extension, so this type body stays under SwiftLint's cap) and the inputs in
@@ -38,6 +38,8 @@ struct CuePresentationGoldenVector: Codable, Equatable {
     let sectionCount: [SectionCountCase]
     /// `CueRowTap.intent`.
     let rowTapIntent: [RowTapIntentCase]
+    /// `CueRangeSelection.range(in:from:to:)` — the ⇧-click range (#790).
+    let rangeSelection: [RangeSelectionCase]
     /// `CueRowFill.resolution` — the branch, never the `Color`.
     let rowFill: [RowFillCase]
     /// `CueListGoFilter.resolve`.

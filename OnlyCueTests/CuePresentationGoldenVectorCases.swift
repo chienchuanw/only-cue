@@ -75,9 +75,25 @@ extension CuePresentationGoldenVector {
     struct RowTapIntentCase: Codable, Equatable {
         let name: String
         let target: String
-        let isExtending: Bool
+        /// The case name of `CueRowTapModifier` — "plain", "toggle", "range".
+        /// Was a `Bool` until #790 split ⌘ from ⇧.
+        let modifier: String
         let isReadOnly: Bool
         let expect: String
+    }
+
+    struct RangeSelectionCase: Codable, Equatable {
+        let name: String
+        /// Row ids in the order they are drawn. The range is resolved against
+        /// this, never against id or time order.
+        let displayed: [String]
+        /// Absent = no row has been selected without ⇧ yet.
+        let anchor: String?
+        let target: String
+        /// The selected ids, emitted in displayed order for a readable diff.
+        /// The function returns a *set*, so compare as one — and compare parsed
+        /// `Guid`s, not strings (see the vector's `note`).
+        let expect: [String]
     }
 
     struct RowFillCase: Codable, Equatable {

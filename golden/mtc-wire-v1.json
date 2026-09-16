@@ -1,0 +1,1067 @@
+{
+  "cases" : [
+    {
+      "expect" : {
+        "byte" : 0
+      },
+      "input" : {
+
+      },
+      "label" : "rateBits/24",
+      "op" : "rateBits",
+      "rate" : "24"
+    },
+    {
+      "expect" : {
+        "byte" : 1
+      },
+      "input" : {
+
+      },
+      "label" : "rateBits/25",
+      "op" : "rateBits",
+      "rate" : "25"
+    },
+    {
+      "expect" : {
+        "byte" : 3
+      },
+      "input" : {
+
+      },
+      "label" : "rateBits/30",
+      "op" : "rateBits",
+      "rate" : "30"
+    },
+    {
+      "expect" : {
+        "byte" : 2
+      },
+      "input" : {
+
+      },
+      "label" : "rateBits/30df",
+      "op" : "rateBits",
+      "rate" : "30df"
+    },
+    {
+      "expect" : {
+        "bytes" : [
+          241,
+          0,
+          241,
+          16,
+          241,
+          32,
+          241,
+          48,
+          241,
+          64,
+          241,
+          80,
+          241,
+          96,
+          241,
+          112
+        ]
+      },
+      "input" : {
+        "frames" : 0,
+        "hours" : 0,
+        "minutes" : 0,
+        "seconds" : 0
+      },
+      "label" : "quarterFrameSequence/24/00:00:00:00",
+      "op" : "quarterFrameSequence",
+      "rate" : "24"
+    },
+    {
+      "expect" : {
+        "bytes" : [
+          241,
+          4,
+          241,
+          16,
+          241,
+          35,
+          241,
+          48,
+          241,
+          66,
+          241,
+          80,
+          241,
+          97,
+          241,
+          112
+        ]
+      },
+      "input" : {
+        "frames" : 4,
+        "hours" : 1,
+        "minutes" : 2,
+        "seconds" : 3
+      },
+      "label" : "quarterFrameSequence/24/01:02:03:04",
+      "op" : "quarterFrameSequence",
+      "rate" : "24"
+    },
+    {
+      "expect" : {
+        "bytes" : [
+          241,
+          12,
+          241,
+          16,
+          241,
+          45,
+          241,
+          50,
+          241,
+          78,
+          241,
+          81,
+          241,
+          97,
+          241,
+          113
+        ]
+      },
+      "input" : {
+        "frames" : 12,
+        "hours" : 17,
+        "minutes" : 30,
+        "seconds" : 45
+      },
+      "label" : "quarterFrameSequence/24/17:30:45:12",
+      "op" : "quarterFrameSequence",
+      "rate" : "24"
+    },
+    {
+      "expect" : {
+        "bytes" : [
+          241,
+          7,
+          241,
+          17,
+          241,
+          43,
+          241,
+          51,
+          241,
+          75,
+          241,
+          83,
+          241,
+          103,
+          241,
+          113
+        ]
+      },
+      "input" : {
+        "frames" : 23,
+        "hours" : 23,
+        "minutes" : 59,
+        "seconds" : 59
+      },
+      "label" : "quarterFrameSequence/24/23:59:59:23",
+      "op" : "quarterFrameSequence",
+      "rate" : "24"
+    },
+    {
+      "expect" : {
+        "bytes" : [
+          240,
+          127,
+          127,
+          1,
+          1,
+          0,
+          0,
+          0,
+          0,
+          247
+        ]
+      },
+      "input" : {
+        "frames" : 0,
+        "hours" : 0,
+        "minutes" : 0,
+        "seconds" : 0
+      },
+      "label" : "fullFrame/24/00:00:00:00",
+      "op" : "fullFrame",
+      "rate" : "24"
+    },
+    {
+      "expect" : {
+        "bytes" : [
+          240,
+          127,
+          127,
+          1,
+          1,
+          1,
+          2,
+          3,
+          4,
+          247
+        ]
+      },
+      "input" : {
+        "frames" : 4,
+        "hours" : 1,
+        "minutes" : 2,
+        "seconds" : 3
+      },
+      "label" : "fullFrame/24/01:02:03:04",
+      "op" : "fullFrame",
+      "rate" : "24"
+    },
+    {
+      "expect" : {
+        "bytes" : [
+          240,
+          127,
+          127,
+          1,
+          1,
+          17,
+          30,
+          45,
+          12,
+          247
+        ]
+      },
+      "input" : {
+        "frames" : 12,
+        "hours" : 17,
+        "minutes" : 30,
+        "seconds" : 45
+      },
+      "label" : "fullFrame/24/17:30:45:12",
+      "op" : "fullFrame",
+      "rate" : "24"
+    },
+    {
+      "expect" : {
+        "bytes" : [
+          240,
+          127,
+          127,
+          1,
+          1,
+          23,
+          59,
+          59,
+          23,
+          247
+        ]
+      },
+      "input" : {
+        "frames" : 23,
+        "hours" : 23,
+        "minutes" : 59,
+        "seconds" : 59
+      },
+      "label" : "fullFrame/24/23:59:59:23",
+      "op" : "fullFrame",
+      "rate" : "24"
+    },
+    {
+      "expect" : {
+        "byte" : 7
+      },
+      "input" : {
+        "frames" : 23,
+        "hours" : 23,
+        "minutes" : 59,
+        "piece" : -1,
+        "seconds" : 59
+      },
+      "label" : "quarterFrame/24/23:59:59:23/piece-1",
+      "op" : "quarterFrame",
+      "rate" : "24"
+    },
+    {
+      "expect" : {
+        "byte" : 113
+      },
+      "input" : {
+        "frames" : 23,
+        "hours" : 23,
+        "minutes" : 59,
+        "piece" : 8,
+        "seconds" : 59
+      },
+      "label" : "quarterFrame/24/23:59:59:23/piece8",
+      "op" : "quarterFrame",
+      "rate" : "24"
+    },
+    {
+      "expect" : {
+        "bytes" : [
+          241,
+          0,
+          241,
+          16,
+          241,
+          32,
+          241,
+          48,
+          241,
+          64,
+          241,
+          80,
+          241,
+          96,
+          241,
+          114
+        ]
+      },
+      "input" : {
+        "frames" : 0,
+        "hours" : 0,
+        "minutes" : 0,
+        "seconds" : 0
+      },
+      "label" : "quarterFrameSequence/25/00:00:00:00",
+      "op" : "quarterFrameSequence",
+      "rate" : "25"
+    },
+    {
+      "expect" : {
+        "bytes" : [
+          241,
+          4,
+          241,
+          16,
+          241,
+          35,
+          241,
+          48,
+          241,
+          66,
+          241,
+          80,
+          241,
+          97,
+          241,
+          114
+        ]
+      },
+      "input" : {
+        "frames" : 4,
+        "hours" : 1,
+        "minutes" : 2,
+        "seconds" : 3
+      },
+      "label" : "quarterFrameSequence/25/01:02:03:04",
+      "op" : "quarterFrameSequence",
+      "rate" : "25"
+    },
+    {
+      "expect" : {
+        "bytes" : [
+          241,
+          12,
+          241,
+          16,
+          241,
+          45,
+          241,
+          50,
+          241,
+          78,
+          241,
+          81,
+          241,
+          97,
+          241,
+          115
+        ]
+      },
+      "input" : {
+        "frames" : 12,
+        "hours" : 17,
+        "minutes" : 30,
+        "seconds" : 45
+      },
+      "label" : "quarterFrameSequence/25/17:30:45:12",
+      "op" : "quarterFrameSequence",
+      "rate" : "25"
+    },
+    {
+      "expect" : {
+        "bytes" : [
+          241,
+          8,
+          241,
+          17,
+          241,
+          43,
+          241,
+          51,
+          241,
+          75,
+          241,
+          83,
+          241,
+          103,
+          241,
+          115
+        ]
+      },
+      "input" : {
+        "frames" : 24,
+        "hours" : 23,
+        "minutes" : 59,
+        "seconds" : 59
+      },
+      "label" : "quarterFrameSequence/25/23:59:59:24",
+      "op" : "quarterFrameSequence",
+      "rate" : "25"
+    },
+    {
+      "expect" : {
+        "bytes" : [
+          240,
+          127,
+          127,
+          1,
+          1,
+          32,
+          0,
+          0,
+          0,
+          247
+        ]
+      },
+      "input" : {
+        "frames" : 0,
+        "hours" : 0,
+        "minutes" : 0,
+        "seconds" : 0
+      },
+      "label" : "fullFrame/25/00:00:00:00",
+      "op" : "fullFrame",
+      "rate" : "25"
+    },
+    {
+      "expect" : {
+        "bytes" : [
+          240,
+          127,
+          127,
+          1,
+          1,
+          33,
+          2,
+          3,
+          4,
+          247
+        ]
+      },
+      "input" : {
+        "frames" : 4,
+        "hours" : 1,
+        "minutes" : 2,
+        "seconds" : 3
+      },
+      "label" : "fullFrame/25/01:02:03:04",
+      "op" : "fullFrame",
+      "rate" : "25"
+    },
+    {
+      "expect" : {
+        "bytes" : [
+          240,
+          127,
+          127,
+          1,
+          1,
+          49,
+          30,
+          45,
+          12,
+          247
+        ]
+      },
+      "input" : {
+        "frames" : 12,
+        "hours" : 17,
+        "minutes" : 30,
+        "seconds" : 45
+      },
+      "label" : "fullFrame/25/17:30:45:12",
+      "op" : "fullFrame",
+      "rate" : "25"
+    },
+    {
+      "expect" : {
+        "bytes" : [
+          240,
+          127,
+          127,
+          1,
+          1,
+          55,
+          59,
+          59,
+          24,
+          247
+        ]
+      },
+      "input" : {
+        "frames" : 24,
+        "hours" : 23,
+        "minutes" : 59,
+        "seconds" : 59
+      },
+      "label" : "fullFrame/25/23:59:59:24",
+      "op" : "fullFrame",
+      "rate" : "25"
+    },
+    {
+      "expect" : {
+        "byte" : 8
+      },
+      "input" : {
+        "frames" : 24,
+        "hours" : 23,
+        "minutes" : 59,
+        "piece" : -1,
+        "seconds" : 59
+      },
+      "label" : "quarterFrame/25/23:59:59:24/piece-1",
+      "op" : "quarterFrame",
+      "rate" : "25"
+    },
+    {
+      "expect" : {
+        "byte" : 115
+      },
+      "input" : {
+        "frames" : 24,
+        "hours" : 23,
+        "minutes" : 59,
+        "piece" : 8,
+        "seconds" : 59
+      },
+      "label" : "quarterFrame/25/23:59:59:24/piece8",
+      "op" : "quarterFrame",
+      "rate" : "25"
+    },
+    {
+      "expect" : {
+        "bytes" : [
+          241,
+          0,
+          241,
+          16,
+          241,
+          32,
+          241,
+          48,
+          241,
+          64,
+          241,
+          80,
+          241,
+          96,
+          241,
+          118
+        ]
+      },
+      "input" : {
+        "frames" : 0,
+        "hours" : 0,
+        "minutes" : 0,
+        "seconds" : 0
+      },
+      "label" : "quarterFrameSequence/30/00:00:00:00",
+      "op" : "quarterFrameSequence",
+      "rate" : "30"
+    },
+    {
+      "expect" : {
+        "bytes" : [
+          241,
+          4,
+          241,
+          16,
+          241,
+          35,
+          241,
+          48,
+          241,
+          66,
+          241,
+          80,
+          241,
+          97,
+          241,
+          118
+        ]
+      },
+      "input" : {
+        "frames" : 4,
+        "hours" : 1,
+        "minutes" : 2,
+        "seconds" : 3
+      },
+      "label" : "quarterFrameSequence/30/01:02:03:04",
+      "op" : "quarterFrameSequence",
+      "rate" : "30"
+    },
+    {
+      "expect" : {
+        "bytes" : [
+          241,
+          12,
+          241,
+          16,
+          241,
+          45,
+          241,
+          50,
+          241,
+          78,
+          241,
+          81,
+          241,
+          97,
+          241,
+          119
+        ]
+      },
+      "input" : {
+        "frames" : 12,
+        "hours" : 17,
+        "minutes" : 30,
+        "seconds" : 45
+      },
+      "label" : "quarterFrameSequence/30/17:30:45:12",
+      "op" : "quarterFrameSequence",
+      "rate" : "30"
+    },
+    {
+      "expect" : {
+        "bytes" : [
+          241,
+          13,
+          241,
+          17,
+          241,
+          43,
+          241,
+          51,
+          241,
+          75,
+          241,
+          83,
+          241,
+          103,
+          241,
+          119
+        ]
+      },
+      "input" : {
+        "frames" : 29,
+        "hours" : 23,
+        "minutes" : 59,
+        "seconds" : 59
+      },
+      "label" : "quarterFrameSequence/30/23:59:59:29",
+      "op" : "quarterFrameSequence",
+      "rate" : "30"
+    },
+    {
+      "expect" : {
+        "bytes" : [
+          240,
+          127,
+          127,
+          1,
+          1,
+          96,
+          0,
+          0,
+          0,
+          247
+        ]
+      },
+      "input" : {
+        "frames" : 0,
+        "hours" : 0,
+        "minutes" : 0,
+        "seconds" : 0
+      },
+      "label" : "fullFrame/30/00:00:00:00",
+      "op" : "fullFrame",
+      "rate" : "30"
+    },
+    {
+      "expect" : {
+        "bytes" : [
+          240,
+          127,
+          127,
+          1,
+          1,
+          97,
+          2,
+          3,
+          4,
+          247
+        ]
+      },
+      "input" : {
+        "frames" : 4,
+        "hours" : 1,
+        "minutes" : 2,
+        "seconds" : 3
+      },
+      "label" : "fullFrame/30/01:02:03:04",
+      "op" : "fullFrame",
+      "rate" : "30"
+    },
+    {
+      "expect" : {
+        "bytes" : [
+          240,
+          127,
+          127,
+          1,
+          1,
+          113,
+          30,
+          45,
+          12,
+          247
+        ]
+      },
+      "input" : {
+        "frames" : 12,
+        "hours" : 17,
+        "minutes" : 30,
+        "seconds" : 45
+      },
+      "label" : "fullFrame/30/17:30:45:12",
+      "op" : "fullFrame",
+      "rate" : "30"
+    },
+    {
+      "expect" : {
+        "bytes" : [
+          240,
+          127,
+          127,
+          1,
+          1,
+          119,
+          59,
+          59,
+          29,
+          247
+        ]
+      },
+      "input" : {
+        "frames" : 29,
+        "hours" : 23,
+        "minutes" : 59,
+        "seconds" : 59
+      },
+      "label" : "fullFrame/30/23:59:59:29",
+      "op" : "fullFrame",
+      "rate" : "30"
+    },
+    {
+      "expect" : {
+        "byte" : 13
+      },
+      "input" : {
+        "frames" : 29,
+        "hours" : 23,
+        "minutes" : 59,
+        "piece" : -1,
+        "seconds" : 59
+      },
+      "label" : "quarterFrame/30/23:59:59:29/piece-1",
+      "op" : "quarterFrame",
+      "rate" : "30"
+    },
+    {
+      "expect" : {
+        "byte" : 119
+      },
+      "input" : {
+        "frames" : 29,
+        "hours" : 23,
+        "minutes" : 59,
+        "piece" : 8,
+        "seconds" : 59
+      },
+      "label" : "quarterFrame/30/23:59:59:29/piece8",
+      "op" : "quarterFrame",
+      "rate" : "30"
+    },
+    {
+      "expect" : {
+        "bytes" : [
+          241,
+          0,
+          241,
+          16,
+          241,
+          32,
+          241,
+          48,
+          241,
+          64,
+          241,
+          80,
+          241,
+          96,
+          241,
+          116
+        ]
+      },
+      "input" : {
+        "frames" : 0,
+        "hours" : 0,
+        "minutes" : 0,
+        "seconds" : 0
+      },
+      "label" : "quarterFrameSequence/30df/00:00:00;00",
+      "op" : "quarterFrameSequence",
+      "rate" : "30df"
+    },
+    {
+      "expect" : {
+        "bytes" : [
+          241,
+          4,
+          241,
+          16,
+          241,
+          35,
+          241,
+          48,
+          241,
+          66,
+          241,
+          80,
+          241,
+          97,
+          241,
+          116
+        ]
+      },
+      "input" : {
+        "frames" : 4,
+        "hours" : 1,
+        "minutes" : 2,
+        "seconds" : 3
+      },
+      "label" : "quarterFrameSequence/30df/01:02:03;04",
+      "op" : "quarterFrameSequence",
+      "rate" : "30df"
+    },
+    {
+      "expect" : {
+        "bytes" : [
+          241,
+          12,
+          241,
+          16,
+          241,
+          45,
+          241,
+          50,
+          241,
+          78,
+          241,
+          81,
+          241,
+          97,
+          241,
+          117
+        ]
+      },
+      "input" : {
+        "frames" : 12,
+        "hours" : 17,
+        "minutes" : 30,
+        "seconds" : 45
+      },
+      "label" : "quarterFrameSequence/30df/17:30:45;12",
+      "op" : "quarterFrameSequence",
+      "rate" : "30df"
+    },
+    {
+      "expect" : {
+        "bytes" : [
+          241,
+          13,
+          241,
+          17,
+          241,
+          43,
+          241,
+          51,
+          241,
+          75,
+          241,
+          83,
+          241,
+          103,
+          241,
+          117
+        ]
+      },
+      "input" : {
+        "frames" : 29,
+        "hours" : 23,
+        "minutes" : 59,
+        "seconds" : 59
+      },
+      "label" : "quarterFrameSequence/30df/23:59:59;29",
+      "op" : "quarterFrameSequence",
+      "rate" : "30df"
+    },
+    {
+      "expect" : {
+        "bytes" : [
+          240,
+          127,
+          127,
+          1,
+          1,
+          64,
+          0,
+          0,
+          0,
+          247
+        ]
+      },
+      "input" : {
+        "frames" : 0,
+        "hours" : 0,
+        "minutes" : 0,
+        "seconds" : 0
+      },
+      "label" : "fullFrame/30df/00:00:00;00",
+      "op" : "fullFrame",
+      "rate" : "30df"
+    },
+    {
+      "expect" : {
+        "bytes" : [
+          240,
+          127,
+          127,
+          1,
+          1,
+          65,
+          2,
+          3,
+          4,
+          247
+        ]
+      },
+      "input" : {
+        "frames" : 4,
+        "hours" : 1,
+        "minutes" : 2,
+        "seconds" : 3
+      },
+      "label" : "fullFrame/30df/01:02:03;04",
+      "op" : "fullFrame",
+      "rate" : "30df"
+    },
+    {
+      "expect" : {
+        "bytes" : [
+          240,
+          127,
+          127,
+          1,
+          1,
+          81,
+          30,
+          45,
+          12,
+          247
+        ]
+      },
+      "input" : {
+        "frames" : 12,
+        "hours" : 17,
+        "minutes" : 30,
+        "seconds" : 45
+      },
+      "label" : "fullFrame/30df/17:30:45;12",
+      "op" : "fullFrame",
+      "rate" : "30df"
+    },
+    {
+      "expect" : {
+        "bytes" : [
+          240,
+          127,
+          127,
+          1,
+          1,
+          87,
+          59,
+          59,
+          29,
+          247
+        ]
+      },
+      "input" : {
+        "frames" : 29,
+        "hours" : 23,
+        "minutes" : 59,
+        "seconds" : 59
+      },
+      "label" : "fullFrame/30df/23:59:59;29",
+      "op" : "fullFrame",
+      "rate" : "30df"
+    },
+    {
+      "expect" : {
+        "byte" : 13
+      },
+      "input" : {
+        "frames" : 29,
+        "hours" : 23,
+        "minutes" : 59,
+        "piece" : -1,
+        "seconds" : 59
+      },
+      "label" : "quarterFrame/30df/23:59:59;29/piece-1",
+      "op" : "quarterFrame",
+      "rate" : "30df"
+    },
+    {
+      "expect" : {
+        "byte" : 117
+      },
+      "input" : {
+        "frames" : 29,
+        "hours" : 23,
+        "minutes" : 59,
+        "piece" : 8,
+        "seconds" : 59
+      },
+      "label" : "quarterFrame/30df/23:59:59;29/piece8",
+      "op" : "quarterFrame",
+      "rate" : "30df"
+    }
+  ],
+  "contract" : "mtc-wire",
+  "note" : "macOS-generated golden vectors for the OnlyCue MTC wire format (rate bits, quarter-frame messages, and the Full Frame SysEx). The C# OnlyCue.Core re-implementation must reproduce every case exactly. To regenerate after a deliberate MTCFrame change, delete golden/mtc-wire-v1.json and re-run the test suite.",
+  "version" : 1
+}

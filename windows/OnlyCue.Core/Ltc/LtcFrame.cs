@@ -7,9 +7,10 @@ namespace OnlyCue.Core.Ltc;
 /// </summary>
 /// <remarks>
 /// Mirrors the Swift <c>LTCFrame</c> (<c>OnlyCue/LTC/LTCFrame.swift</c>); macOS is
-/// the source of truth and <c>golden/ltc-wire-v1.json</c> is the contract. Only
-/// the wire surface the vectors pin is mirrored — the decode-side accessors the
-/// Swift type carries for <c>LTCDecoder</c>'s benefit have no caller here yet.
+/// the source of truth, with <c>golden/ltc-wire-v1.json</c> pinning the encode
+/// direction and <c>golden/ltc-decode-v1.json</c> the read-back. The
+/// <c>AVFoundation</c>-flavoured parts of the Swift file have no mirror; the
+/// bit-level surface is complete in both directions.
 /// </remarks>
 public readonly struct LtcFrame
 {
@@ -24,6 +25,22 @@ public readonly struct LtcFrame
     private LtcFrame(bool[] bits) => _bits = bits;
 
     public IReadOnlyList<bool> Bits => _bits;
+
+    /// <summary>
+    /// Wraps a raw 80-bit transmission-order word — the shape a decoder recovers,
+    /// and the shape <c>golden/ltc-decode-v1.json</c>'s corruption recipes build
+    /// by flipping bits in a well-formed frame. Swift traps on a wrong length
+    /// (<c>precondition</c>); throwing keeps a bad caller failing on both sides.
+    /// </summary>
+    public static LtcFrame FromBits(IReadOnlyList<bool> bits)
+    {
+        if (bits.Count != BitCount)
+        {
+            throw new ArgumentException($"an LTC frame is exactly {BitCount} bits", nameof(bits));
+        }
+
+        return new LtcFrame([.. bits]);
+    }
 
     /// <summary>
     /// The bit-polarity-correction (parity) position for <paramref name="rate"/>.
@@ -72,9 +89,56 @@ public readonly struct LtcFrame
         return new LtcFrame(word);
     }
 
+    // Decoded fields — LSB first within each BCD digit.
+
+    public int Frames => Value(0, 4) + Value(8, 2) * 10;
+
+    public int Seconds => Value(16, 4) + Value(24, 3) * 10;
+
+    public int Minutes => Value(32, 4) + Value(40, 3) * 10;
+
+    public int Hours => Value(48, 4) + Value(56, 2) * 10;
+
+    public bool IsDropFrame => _bits[10];
+
     public bool HasEvenParity => _bits.Count(bit => bit) % 2 == 0;
 
     public bool SyncWordIsValid => _bits.Skip(64).Take(16).SequenceEqual(SyncWord);
+
+    /// <summary><c>true</c> when the sync word is intact and the word has even
+    /// parity — the two integrity checks a decoder applies before trusting the
+    /// fields. Range is a <i>separate</i> gate: a well-formed word can still name
+    /// no timecode (see <see cref="ToTimecode"/>), which
+    /// <c>golden/ltc-decode-v1.json</c>'s <c>bcd-out-of-range</c> case pins.</summary>
+    public bool IsWellFormed => SyncWordIsValid && HasEvenParity;
+
+    /// <summary>
+    /// The timecode this frame carries, at <paramref name="framesPerSecond"/>.
+    /// The wire form only distinguishes drop-frame, via bit 10 — the rate
+    /// magnitude comes from the signal's measured bit period, not from the word.
+    /// <c>null</c> if the BCD fields are out of range (or name a
+    /// drop-frame-skipped number), or if <paramref name="framesPerSecond"/> has
+    /// no <see cref="SmpteFramerate"/>.
+    /// </summary>
+    public Timecode? ToTimecode(int framesPerSecond)
+    {
+        var rate = SmpteFramerateExtensions.Matching(framesPerSecond, IsDropFrame);
+        return rate is null ? null : Timecode.Create(Hours, Minutes, Seconds, Frames, rate.Value);
+    }
+
+    private int Value(int start, int count)
+    {
+        var value = 0;
+        for (var offset = 0; offset < count; offset++)
+        {
+            if (_bits[start + offset])
+            {
+                value |= 1 << offset;
+            }
+        }
+
+        return value;
+    }
 
     /// <summary>The word as 80 <c>'0'</c> / <c>'1'</c> characters in transmission
     /// order — the spelling the golden vectors use.</summary>

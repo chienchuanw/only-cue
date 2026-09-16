@@ -4,6 +4,20 @@ Append-only session log. Newer entries on top.
 
 ---
 
+## 2026-09-16 — LTC 25 fps parity fix, then the LTC/MTC wire contract (#853, #854)
+
+**Shipped to `dev` (PR #856, rebase-merged as `a75a0f0`, closes #853; PR #857, rebase-merged as `4c085ed` head, closes #854):**
+
+- `fix(ltc)`: the bit-polarity-correction (parity) bit was parked at bit 27 for **every** rate. SMPTE 12M swaps it with a binary-group flag at 25 fps: the correction lives at bit **59** there, and bit 27 is BGF0. So a 25 fps word both raised a flag a conforming reader acts on *and* left the real parity position clear — the word could go out with odd parity. `LTCFrame.parityBitIndex(for:)` now returns 59 at 25 fps and 27 elsewhere.
+- `LTCDecoder` needed **no** change, and that was checked rather than assumed: parity is a count over the whole word, and neither candidate position is read as data, so both layouts decode unchanged. The stale doc comment claiming otherwise was corrected instead of "fixing" working code.
+- `chore(windows)`: with the Swift side right, the **wire formats** are now pinned as cross-platform golden vectors — `golden/ltc-wire-v1.json` (26 cases) and `golden/mtc-wire-v1.json` (44 cases) — with `LtcFrame` / `LtcEncoder` / `MtcFrame` mirrors in `OnlyCue.Core`. Swift 1852 tests, C# 644 (was 566).
+- Two hazards drove the case matrix. **Rounding is part of the LTC wire format**: slot `k` spans `[round(k·R)…round((k+1)·R))`, and at 24 fps / 48 kHz `R` is exactly 12.5, so every odd boundary is a midpoint tie — Swift's `.rounded()` goes away from zero, .NET's default `Math.Round` is banker's rounding, so `LtcEncoder` carries an explicit `MidpointRounding.AwayFromZero`. And the vectors assert bits 27 **and** 59 at every rate in **both** directions, so a port that parks the correction at one position fails rather than passing on the rates where the bit happens to be clear.
+- PCM travels as run lengths (`[[sign, sampleCount], …]`) rather than 2000 floats per case — the run boundaries are exactly what the rounding decides — with a round-trip test proving the encoding lossless. The 12.5 tie is visible in the file as the `[1, 13], [-1, 12]` pair.
+- **Mutation testing, including the one that didn't die.** Reverting `AwayFromZero`, hardcoding the parity index to 27, and reverting #853 on the Swift side are all killed. Dropping the `(byte)` cast on `MtcFrame`'s piece-7 shift — which the spec listed as must-fail — **survives**, and the honest reason is that it is an *equivalent* mutant: that expression's value over the full reachable domain (4 rate codes × hours 0–23) is 0–7, and the enclosing `(byte)` cast on the return absorbs the `int` promotion. Verified exhaustively over that domain rather than argued, then a behavioural mutation of the same line (`>> 4` → `>> 5`) confirmed the line is genuinely covered. The spec's claim was wrong; the cast is defensive typing, not behaviour.
+- Also confirmed (as in #853): `test_frame_correctionBit_isSetExactlyWhenTheRestOfTheWordIsOdd` survives the parity mutants because it derives its index from the same mutated function. It is a consistency test; the placement guarantee lives in the named 25 fps test and now in the vectors.
+- **Milestone label is wrong in the spec and issue title.** Both say "#728 M2 slice 1", but the epic's M2 is *media* and this is **M3 — hardware** (LTC audio out, MIDI in/out). The epic's task list now records it under M3 with the mismatch noted. The work itself is pure logic, which is why it was pulled forward — M1e (`OnlyCue.App.ViewModels` + the WinUI shell) still needs a real Windows machine.
+- `LTCBiphaseEncoder` is deliberately outside the contract: no production caller, and `LTCEncoder.samples` inlines its own modulation against *fractional* slot boundaries the primitive's `samplesPerHalfBit: Int` cannot express. Pinning it would pin dead code.
+
 ## 2026-09-05 — MIDI Timecode (MTC) output (#794)
 
 **Shipped to `dev` (PR #795, rebase-merged as `d677822` head, closes #794); released as v0.31.0 (build 49):**

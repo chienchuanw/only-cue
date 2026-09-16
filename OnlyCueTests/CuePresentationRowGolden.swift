@@ -15,25 +15,57 @@ enum CuePresentationRowGolden {
         CuePresentationRowFixtures.rowTaps.map { fixture in
             let intent = CueRowTap.intent(
                 target: fixture.target,
-                isExtending: fixture.isExtending,
+                modifier: fixture.modifier,
                 isReadOnly: fixture.isReadOnly
             )
             return .init(
                 name: fixture.name,
                 target: fixture.target == .field ? "field" : "stripe",
-                isExtending: fixture.isExtending,
+                modifier: name(of: fixture.modifier),
                 isReadOnly: fixture.isReadOnly,
                 expect: name(of: intent)
             )
         }
     }
 
+    static func name(of modifier: CueRowTapModifier) -> String {
+        switch modifier {
+        case .plain: "plain"
+        case .toggle: "toggle"
+        case .range: "range"
+        }
+    }
+
     private static func name(of intent: CueRowTapIntent) -> String {
         switch intent {
         case .beginEdit: "beginEdit"
-        case .extendSelection: "extendSelection"
+        case .toggleSelection: "toggleSelection"
+        case .extendRange: "extendRange"
         case .selectAndSeek: "selectAndSeek"
         case .ignored: "ignored"
+        }
+    }
+
+    /// The range is emitted in displayed order so the committed JSON diffs
+    /// readably, but `range(in:from:to:)` returns a *set* — the C# verifier
+    /// compares it as one.
+    static func rangeSelectionCases() throws -> [CuePresentationGoldenVector.RangeSelectionCase] {
+        try CuePresentationRowFixtures.rangeSelections.map { fixture in
+            let displayed = try fixture.displayed.map(CuePresentationGolden.uuid)
+            let anchor = try fixture.anchor.map(CuePresentationGolden.uuid)
+            let target = try CuePresentationGolden.uuid(fixture.target)
+            let selected = CueRangeSelection.range(in: displayed, from: anchor, to: target)
+            // `target` can sit outside `displayed` (the orphan case), so walk
+            // the displayed order first and append anything left over.
+            let ordered = displayed.filter(selected.contains)
+                + selected.subtracting(displayed).sorted { $0.uuidString < $1.uuidString }
+            return .init(
+                name: fixture.name,
+                displayed: fixture.displayed,
+                anchor: fixture.anchor,
+                target: fixture.target,
+                expect: ordered.map(\.uuidString)
+            )
         }
     }
 

@@ -15,8 +15,11 @@ struct CueRowView: View {
     /// Make this row the selection. Fires before an edit begins, so the cue
     /// being typed into is also the one Delete and Renumber act on (#786).
     var onSelect: () -> Void = {}
-    /// Toggle this row's membership of the selection — the modifier-click path.
-    var onExtendSelection: () -> Void = {}
+    /// Toggle this row's membership of the selection — the ⌘-click path.
+    var onToggleSelection: () -> Void = {}
+    /// Select from the anchor to this row, replacing the selection — the
+    /// ⇧-click path (#790).
+    var onExtendRange: () -> Void = {}
     /// Move the playhead to this cue's time. The colour stripe only: editing
     /// text must never seek.
     var onSeek: () -> Void = {}
@@ -211,27 +214,23 @@ struct CueRowView: View {
     // MARK: - Tap routing
 
     /// A plain click in a column types there, a plain click on the stripe
-    /// seeks, and ⌘/⇧ anywhere means "I am selecting, not doing either".
+    /// seeks, ⌘ anywhere toggles this one row, and ⇧ ranges from the anchor.
     private func handleTap(on target: CueRowTapTarget, beginEditing: () -> Void = {}) {
-        switch CueRowTap.intent(target: target, isExtending: Self.isExtending, isReadOnly: isReadOnly) {
+        let modifier = CueRowTapModifier(flags: NSEvent.modifierFlags)
+        switch CueRowTap.intent(target: target, modifier: modifier, isReadOnly: isReadOnly) {
         case .beginEdit:
             onSelect()
             beginEditing()
-        case .extendSelection:
-            onExtendSelection()
+        case .toggleSelection:
+            onToggleSelection()
+        case .extendRange:
+            onExtendRange()
         case .selectAndSeek:
             onSelect()
             onSeek()
         case .ignored:
             break
         }
-    }
-
-    /// Read exactly the way `CueMarkersOverlay.handleTap` reads it, so the
-    /// timeline and the cue list agree on what a modifier-click means.
-    private static var isExtending: Bool {
-        let modifiers = NSEvent.modifierFlags
-        return modifiers.contains(.command) || modifiers.contains(.shift)
     }
 
     // MARK: - Commit / cancel

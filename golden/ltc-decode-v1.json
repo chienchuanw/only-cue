@@ -1,0 +1,4951 @@
+{
+  "cases" : [
+    {
+      "expect" : {
+        "firstTransitions" : [
+          25,
+          50,
+          75,
+          100,
+          125,
+          150,
+          175,
+          200
+        ],
+        "lastTransitions" : [
+          11888,
+          11900,
+          11913,
+          11925,
+          11938,
+          11950,
+          11975,
+          11988
+        ],
+        "sampleCount" : 12000,
+        "transitionCount" : 573
+      },
+      "input" : {
+        "amplitude" : "0.800000011920929",
+        "frameCount" : 6,
+        "leadSilenceSamples" : 0,
+        "rate" : "24",
+        "sampleRate" : "48000.0",
+        "timecode" : [
+          1,
+          0,
+          0,
+          0
+        ],
+        "trailSilenceSamples" : 0
+      },
+      "label" : "transitions/clean/24@48000/01:00:00:00/x6",
+      "op" : "transitions"
+    },
+    {
+      "expect" : {
+        "halfBitSamples" : "12.502673796791443",
+        "sampleCount" : 12000
+      },
+      "input" : {
+        "amplitude" : "0.800000011920929",
+        "frameCount" : 6,
+        "leadSilenceSamples" : 0,
+        "rate" : "24",
+        "sampleRate" : "48000.0",
+        "timecode" : [
+          1,
+          0,
+          0,
+          0
+        ],
+        "trailSilenceSamples" : 0
+      },
+      "label" : "halfBit/clean/24@48000/01:00:00:00/x6",
+      "op" : "halfBit"
+    },
+    {
+      "expect" : {
+        "framesPerSecond" : 24,
+        "sampleCount" : 12000
+      },
+      "input" : {
+        "amplitude" : "0.800000011920929",
+        "frameCount" : 6,
+        "leadSilenceSamples" : 0,
+        "rate" : "24",
+        "sampleRate" : "48000.0",
+        "timecode" : [
+          1,
+          0,
+          0,
+          0
+        ],
+        "trailSilenceSamples" : 0
+      },
+      "label" : "framesPerSecond/clean/24@48000/01:00:00:00/x6",
+      "op" : "framesPerSecond"
+    },
+    {
+      "expect" : {
+        "bitCount" : 478,
+        "firstBits" : "000000000000000000000000000000000000000000000001000000000000000001111111111110110000000000000000",
+        "lastBits" : "000111111111111011010000000000000000000000000000000000000000000001000000000000000001111111111110",
+        "sampleCount" : 12000
+      },
+      "input" : {
+        "amplitude" : "0.800000011920929",
+        "frameCount" : 6,
+        "leadSilenceSamples" : 0,
+        "rate" : "24",
+        "sampleRate" : "48000.0",
+        "timecode" : [
+          1,
+          0,
+          0,
+          0
+        ],
+        "trailSilenceSamples" : 0
+      },
+      "label" : "bits/clean/24@48000/01:00:00:00/x6",
+      "op" : "bits"
+    },
+    {
+      "expect" : {
+        "frames" : [
+          {
+            "startSample" : 2000,
+            "timecode" : "01:00:00:01"
+          },
+          {
+            "startSample" : 4000,
+            "timecode" : "01:00:00:02"
+          },
+          {
+            "startSample" : 6000,
+            "timecode" : "01:00:00:03"
+          },
+          {
+            "startSample" : 8000,
+            "timecode" : "01:00:00:04"
+          }
+        ],
+        "sampleCount" : 12000
+      },
+      "input" : {
+        "amplitude" : "0.800000011920929",
+        "frameCount" : 6,
+        "leadSilenceSamples" : 0,
+        "rate" : "24",
+        "sampleRate" : "48000.0",
+        "timecode" : [
+          1,
+          0,
+          0,
+          0
+        ],
+        "trailSilenceSamples" : 0
+      },
+      "label" : "decode/clean/24@48000/01:00:00:00/x6",
+      "op" : "decode"
+    },
+    {
+      "expect" : {
+        "firstTransitions" : [
+          13,
+          25,
+          50,
+          75,
+          100,
+          125,
+          150,
+          175
+        ],
+        "lastTransitions" : [
+          11888,
+          11900,
+          11913,
+          11925,
+          11938,
+          11950,
+          11975,
+          11988
+        ],
+        "sampleCount" : 12000,
+        "transitionCount" : 585
+      },
+      "input" : {
+        "amplitude" : "0.800000011920929",
+        "frameCount" : 6,
+        "leadSilenceSamples" : 0,
+        "rate" : "24",
+        "sampleRate" : "48000.0",
+        "timecode" : [
+          0,
+          0,
+          59,
+          21
+        ],
+        "trailSilenceSamples" : 0
+      },
+      "label" : "transitions/boundary/24@48000/00:00:59:21/x6",
+      "op" : "transitions"
+    },
+    {
+      "expect" : {
+        "halfBitSamples" : "12.5",
+        "sampleCount" : 12000
+      },
+      "input" : {
+        "amplitude" : "0.800000011920929",
+        "frameCount" : 6,
+        "leadSilenceSamples" : 0,
+        "rate" : "24",
+        "sampleRate" : "48000.0",
+        "timecode" : [
+          0,
+          0,
+          59,
+          21
+        ],
+        "trailSilenceSamples" : 0
+      },
+      "label" : "halfBit/boundary/24@48000/00:00:59:21/x6",
+      "op" : "halfBit"
+    },
+    {
+      "expect" : {
+        "framesPerSecond" : 24,
+        "sampleCount" : 12000
+      },
+      "input" : {
+        "amplitude" : "0.800000011920929",
+        "frameCount" : 6,
+        "leadSilenceSamples" : 0,
+        "rate" : "24",
+        "sampleRate" : "48000.0",
+        "timecode" : [
+          0,
+          0,
+          59,
+          21
+        ],
+        "trailSilenceSamples" : 0
+      },
+      "label" : "framesPerSecond/boundary/24@48000/00:00:59:21/x6",
+      "op" : "framesPerSecond"
+    },
+    {
+      "expect" : {
+        "bitCount" : 478,
+        "firstBits" : "100000001000000100100001011000000000000000000000000000000000000001111111111110101000000010000001",
+        "lastBits" : "000111111111111010100000000000000000000000001000010000000000000000000000000000000001111111111110",
+        "sampleCount" : 12000
+      },
+      "input" : {
+        "amplitude" : "0.800000011920929",
+        "frameCount" : 6,
+        "leadSilenceSamples" : 0,
+        "rate" : "24",
+        "sampleRate" : "48000.0",
+        "timecode" : [
+          0,
+          0,
+          59,
+          21
+        ],
+        "trailSilenceSamples" : 0
+      },
+      "label" : "bits/boundary/24@48000/00:00:59:21/x6",
+      "op" : "bits"
+    },
+    {
+      "expect" : {
+        "frames" : [
+          {
+            "startSample" : 2000,
+            "timecode" : "00:00:59:22"
+          },
+          {
+            "startSample" : 4000,
+            "timecode" : "00:00:59:23"
+          },
+          {
+            "startSample" : 6000,
+            "timecode" : "00:01:00:00"
+          },
+          {
+            "startSample" : 8000,
+            "timecode" : "00:01:00:01"
+          }
+        ],
+        "sampleCount" : 12000
+      },
+      "input" : {
+        "amplitude" : "0.800000011920929",
+        "frameCount" : 6,
+        "leadSilenceSamples" : 0,
+        "rate" : "24",
+        "sampleRate" : "48000.0",
+        "timecode" : [
+          0,
+          0,
+          59,
+          21
+        ],
+        "trailSilenceSamples" : 0
+      },
+      "label" : "decode/boundary/24@48000/00:00:59:21/x6",
+      "op" : "decode"
+    },
+    {
+      "expect" : {
+        "firstTransitions" : [
+          23,
+          46,
+          69,
+          92,
+          115,
+          138,
+          161,
+          184
+        ],
+        "lastTransitions" : [
+          10924,
+          10936,
+          10947,
+          10959,
+          10970,
+          10982,
+          11005,
+          11016
+        ],
+        "sampleCount" : 11028,
+        "transitionCount" : 573
+      },
+      "input" : {
+        "amplitude" : "0.800000011920929",
+        "frameCount" : 6,
+        "leadSilenceSamples" : 0,
+        "rate" : "24",
+        "sampleRate" : "44100.0",
+        "timecode" : [
+          1,
+          0,
+          0,
+          0
+        ],
+        "trailSilenceSamples" : 0
+      },
+      "label" : "transitions/clean/24@44100/01:00:00:00/x6",
+      "op" : "transitions"
+    },
+    {
+      "expect" : {
+        "halfBitSamples" : "11.46524064171123",
+        "sampleCount" : 11028
+      },
+      "input" : {
+        "amplitude" : "0.800000011920929",
+        "frameCount" : 6,
+        "leadSilenceSamples" : 0,
+        "rate" : "24",
+        "sampleRate" : "44100.0",
+        "timecode" : [
+          1,
+          0,
+          0,
+          0
+        ],
+        "trailSilenceSamples" : 0
+      },
+      "label" : "halfBit/clean/24@44100/01:00:00:00/x6",
+      "op" : "halfBit"
+    },
+    {
+      "expect" : {
+        "framesPerSecond" : 24,
+        "sampleCount" : 11028
+      },
+      "input" : {
+        "amplitude" : "0.800000011920929",
+        "frameCount" : 6,
+        "leadSilenceSamples" : 0,
+        "rate" : "24",
+        "sampleRate" : "44100.0",
+        "timecode" : [
+          1,
+          0,
+          0,
+          0
+        ],
+        "trailSilenceSamples" : 0
+      },
+      "label" : "framesPerSecond/clean/24@44100/01:00:00:00/x6",
+      "op" : "framesPerSecond"
+    },
+    {
+      "expect" : {
+        "bitCount" : 478,
+        "firstBits" : "000000000000000000000000000000000000000000000001000000000000000001111111111110110000000000000000",
+        "lastBits" : "000111111111111011010000000000000000000000000000000000000000000001000000000000000001111111111110",
+        "sampleCount" : 11028
+      },
+      "input" : {
+        "amplitude" : "0.800000011920929",
+        "frameCount" : 6,
+        "leadSilenceSamples" : 0,
+        "rate" : "24",
+        "sampleRate" : "44100.0",
+        "timecode" : [
+          1,
+          0,
+          0,
+          0
+        ],
+        "trailSilenceSamples" : 0
+      },
+      "label" : "bits/clean/24@44100/01:00:00:00/x6",
+      "op" : "bits"
+    },
+    {
+      "expect" : {
+        "frames" : [
+          {
+            "startSample" : 1838,
+            "timecode" : "01:00:00:01"
+          },
+          {
+            "startSample" : 3676,
+            "timecode" : "01:00:00:02"
+          },
+          {
+            "startSample" : 5514,
+            "timecode" : "01:00:00:03"
+          },
+          {
+            "startSample" : 7352,
+            "timecode" : "01:00:00:04"
+          }
+        ],
+        "sampleCount" : 11028
+      },
+      "input" : {
+        "amplitude" : "0.800000011920929",
+        "frameCount" : 6,
+        "leadSilenceSamples" : 0,
+        "rate" : "24",
+        "sampleRate" : "44100.0",
+        "timecode" : [
+          1,
+          0,
+          0,
+          0
+        ],
+        "trailSilenceSamples" : 0
+      },
+      "label" : "decode/clean/24@44100/01:00:00:00/x6",
+      "op" : "decode"
+    },
+    {
+      "expect" : {
+        "firstTransitions" : [
+          11,
+          23,
+          46,
+          69,
+          92,
+          115,
+          138,
+          161
+        ],
+        "lastTransitions" : [
+          10924,
+          10936,
+          10947,
+          10959,
+          10970,
+          10982,
+          11005,
+          11016
+        ],
+        "sampleCount" : 11028,
+        "transitionCount" : 585
+      },
+      "input" : {
+        "amplitude" : "0.800000011920929",
+        "frameCount" : 6,
+        "leadSilenceSamples" : 0,
+        "rate" : "24",
+        "sampleRate" : "44100.0",
+        "timecode" : [
+          0,
+          0,
+          59,
+          21
+        ],
+        "trailSilenceSamples" : 0
+      },
+      "label" : "transitions/boundary/24@44100/00:00:59:21/x6",
+      "op" : "transitions"
+    },
+    {
+      "expect" : {
+        "halfBitSamples" : "11.485714285714286",
+        "sampleCount" : 11028
+      },
+      "input" : {
+        "amplitude" : "0.800000011920929",
+        "frameCount" : 6,
+        "leadSilenceSamples" : 0,
+        "rate" : "24",
+        "sampleRate" : "44100.0",
+        "timecode" : [
+          0,
+          0,
+          59,
+          21
+        ],
+        "trailSilenceSamples" : 0
+      },
+      "label" : "halfBit/boundary/24@44100/00:00:59:21/x6",
+      "op" : "halfBit"
+    },
+    {
+      "expect" : {
+        "framesPerSecond" : 24,
+        "sampleCount" : 11028
+      },
+      "input" : {
+        "amplitude" : "0.800000011920929",
+        "frameCount" : 6,
+        "leadSilenceSamples" : 0,
+        "rate" : "24",
+        "sampleRate" : "44100.0",
+        "timecode" : [
+          0,
+          0,
+          59,
+          21
+        ],
+        "trailSilenceSamples" : 0
+      },
+      "label" : "framesPerSecond/boundary/24@44100/00:00:59:21/x6",
+      "op" : "framesPerSecond"
+    },
+    {
+      "expect" : {
+        "bitCount" : 478,
+        "firstBits" : "100000001000000100100001011000000000000000000000000000000000000001111111111110101000000010000001",
+        "lastBits" : "000111111111111010100000000000000000000000001000010000000000000000000000000000000001111111111110",
+        "sampleCount" : 11028
+      },
+      "input" : {
+        "amplitude" : "0.800000011920929",
+        "frameCount" : 6,
+        "leadSilenceSamples" : 0,
+        "rate" : "24",
+        "sampleRate" : "44100.0",
+        "timecode" : [
+          0,
+          0,
+          59,
+          21
+        ],
+        "trailSilenceSamples" : 0
+      },
+      "label" : "bits/boundary/24@44100/00:00:59:21/x6",
+      "op" : "bits"
+    },
+    {
+      "expect" : {
+        "frames" : [
+          {
+            "startSample" : 1838,
+            "timecode" : "00:00:59:22"
+          },
+          {
+            "startSample" : 3676,
+            "timecode" : "00:00:59:23"
+          },
+          {
+            "startSample" : 5514,
+            "timecode" : "00:01:00:00"
+          },
+          {
+            "startSample" : 7352,
+            "timecode" : "00:01:00:01"
+          }
+        ],
+        "sampleCount" : 11028
+      },
+      "input" : {
+        "amplitude" : "0.800000011920929",
+        "frameCount" : 6,
+        "leadSilenceSamples" : 0,
+        "rate" : "24",
+        "sampleRate" : "44100.0",
+        "timecode" : [
+          0,
+          0,
+          59,
+          21
+        ],
+        "trailSilenceSamples" : 0
+      },
+      "label" : "decode/boundary/24@44100/00:00:59:21/x6",
+      "op" : "decode"
+    },
+    {
+      "expect" : {
+        "firstTransitions" : [
+          24,
+          48,
+          72,
+          96,
+          120,
+          144,
+          168,
+          192
+        ],
+        "lastTransitions" : [
+          11412,
+          11424,
+          11436,
+          11448,
+          11460,
+          11472,
+          11496,
+          11508
+        ],
+        "sampleCount" : 11520,
+        "transitionCount" : 573
+      },
+      "input" : {
+        "amplitude" : "0.800000011920929",
+        "frameCount" : 6,
+        "leadSilenceSamples" : 0,
+        "rate" : "25",
+        "sampleRate" : "48000.0",
+        "timecode" : [
+          1,
+          0,
+          0,
+          0
+        ],
+        "trailSilenceSamples" : 0
+      },
+      "label" : "transitions/clean/25@48000/01:00:00:00/x6",
+      "op" : "transitions"
+    },
+    {
+      "expect" : {
+        "halfBitSamples" : "12.0",
+        "sampleCount" : 11520
+      },
+      "input" : {
+        "amplitude" : "0.800000011920929",
+        "frameCount" : 6,
+        "leadSilenceSamples" : 0,
+        "rate" : "25",
+        "sampleRate" : "48000.0",
+        "timecode" : [
+          1,
+          0,
+          0,
+          0
+        ],
+        "trailSilenceSamples" : 0
+      },
+      "label" : "halfBit/clean/25@48000/01:00:00:00/x6",
+      "op" : "halfBit"
+    },
+    {
+      "expect" : {
+        "framesPerSecond" : 25,
+        "sampleCount" : 11520
+      },
+      "input" : {
+        "amplitude" : "0.800000011920929",
+        "frameCount" : 6,
+        "leadSilenceSamples" : 0,
+        "rate" : "25",
+        "sampleRate" : "48000.0",
+        "timecode" : [
+          1,
+          0,
+          0,
+          0
+        ],
+        "trailSilenceSamples" : 0
+      },
+      "label" : "framesPerSecond/clean/25@48000/01:00:00:00/x6",
+      "op" : "framesPerSecond"
+    },
+    {
+      "expect" : {
+        "bitCount" : 478,
+        "firstBits" : "000000000000000000000000000000000000000000000001000000000000000001111111111110110000000000000000",
+        "lastBits" : "000111111111111011010000000000000000000000000000000000000000000001000000000000000001111111111110",
+        "sampleCount" : 11520
+      },
+      "input" : {
+        "amplitude" : "0.800000011920929",
+        "frameCount" : 6,
+        "leadSilenceSamples" : 0,
+        "rate" : "25",
+        "sampleRate" : "48000.0",
+        "timecode" : [
+          1,
+          0,
+          0,
+          0
+        ],
+        "trailSilenceSamples" : 0
+      },
+      "label" : "bits/clean/25@48000/01:00:00:00/x6",
+      "op" : "bits"
+    },
+    {
+      "expect" : {
+        "frames" : [
+          {
+            "startSample" : 1920,
+            "timecode" : "01:00:00:01"
+          },
+          {
+            "startSample" : 3840,
+            "timecode" : "01:00:00:02"
+          },
+          {
+            "startSample" : 5760,
+            "timecode" : "01:00:00:03"
+          },
+          {
+            "startSample" : 7680,
+            "timecode" : "01:00:00:04"
+          }
+        ],
+        "sampleCount" : 11520
+      },
+      "input" : {
+        "amplitude" : "0.800000011920929",
+        "frameCount" : 6,
+        "leadSilenceSamples" : 0,
+        "rate" : "25",
+        "sampleRate" : "48000.0",
+        "timecode" : [
+          1,
+          0,
+          0,
+          0
+        ],
+        "trailSilenceSamples" : 0
+      },
+      "label" : "decode/clean/25@48000/01:00:00:00/x6",
+      "op" : "decode"
+    },
+    {
+      "expect" : {
+        "firstTransitions" : [
+          24,
+          36,
+          48,
+          72,
+          96,
+          120,
+          144,
+          168
+        ],
+        "lastTransitions" : [
+          11412,
+          11424,
+          11436,
+          11448,
+          11460,
+          11472,
+          11496,
+          11508
+        ],
+        "sampleCount" : 11520,
+        "transitionCount" : 585
+      },
+      "input" : {
+        "amplitude" : "0.800000011920929",
+        "frameCount" : 6,
+        "leadSilenceSamples" : 0,
+        "rate" : "25",
+        "sampleRate" : "48000.0",
+        "timecode" : [
+          0,
+          0,
+          59,
+          22
+        ],
+        "trailSilenceSamples" : 0
+      },
+      "label" : "transitions/boundary/25@48000/00:00:59:22/x6",
+      "op" : "transitions"
+    },
+    {
+      "expect" : {
+        "halfBitSamples" : "12.0",
+        "sampleCount" : 11520
+      },
+      "input" : {
+        "amplitude" : "0.800000011920929",
+        "frameCount" : 6,
+        "leadSilenceSamples" : 0,
+        "rate" : "25",
+        "sampleRate" : "48000.0",
+        "timecode" : [
+          0,
+          0,
+          59,
+          22
+        ],
+        "trailSilenceSamples" : 0
+      },
+      "label" : "halfBit/boundary/25@48000/00:00:59:22/x6",
+      "op" : "halfBit"
+    },
+    {
+      "expect" : {
+        "framesPerSecond" : 25,
+        "sampleCount" : 11520
+      },
+      "input" : {
+        "amplitude" : "0.800000011920929",
+        "frameCount" : 6,
+        "leadSilenceSamples" : 0,
+        "rate" : "25",
+        "sampleRate" : "48000.0",
+        "timecode" : [
+          0,
+          0,
+          59,
+          22
+        ],
+        "trailSilenceSamples" : 0
+      },
+      "label" : "framesPerSecond/boundary/25@48000/00:00:59:22/x6",
+      "op" : "framesPerSecond"
+    },
+    {
+      "expect" : {
+        "bitCount" : 478,
+        "firstBits" : "100000001000000100100001010000000000000000000000000000000010000001111111111110111000000010000001",
+        "lastBits" : "000111111111111010100000000000000000000000000000010000000000000000000000000010000001111111111110",
+        "sampleCount" : 11520
+      },
+      "input" : {
+        "amplitude" : "0.800000011920929",
+        "frameCount" : 6,
+        "leadSilenceSamples" : 0,
+        "rate" : "25",
+        "sampleRate" : "48000.0",
+        "timecode" : [
+          0,
+          0,
+          59,
+          22
+        ],
+        "trailSilenceSamples" : 0
+      },
+      "label" : "bits/boundary/25@48000/00:00:59:22/x6",
+      "op" : "bits"
+    },
+    {
+      "expect" : {
+        "frames" : [
+          {
+            "startSample" : 1920,
+            "timecode" : "00:00:59:23"
+          },
+          {
+            "startSample" : 3840,
+            "timecode" : "00:00:59:24"
+          },
+          {
+            "startSample" : 5760,
+            "timecode" : "00:01:00:00"
+          },
+          {
+            "startSample" : 7680,
+            "timecode" : "00:01:00:01"
+          }
+        ],
+        "sampleCount" : 11520
+      },
+      "input" : {
+        "amplitude" : "0.800000011920929",
+        "frameCount" : 6,
+        "leadSilenceSamples" : 0,
+        "rate" : "25",
+        "sampleRate" : "48000.0",
+        "timecode" : [
+          0,
+          0,
+          59,
+          22
+        ],
+        "trailSilenceSamples" : 0
+      },
+      "label" : "decode/boundary/25@48000/00:00:59:22/x6",
+      "op" : "decode"
+    },
+    {
+      "expect" : {
+        "firstTransitions" : [
+          22,
+          44,
+          66,
+          88,
+          110,
+          132,
+          154,
+          176
+        ],
+        "lastTransitions" : [
+          10485,
+          10496,
+          10507,
+          10518,
+          10529,
+          10540,
+          10562,
+          10573
+        ],
+        "sampleCount" : 10584,
+        "transitionCount" : 573
+      },
+      "input" : {
+        "amplitude" : "0.800000011920929",
+        "frameCount" : 6,
+        "leadSilenceSamples" : 0,
+        "rate" : "25",
+        "sampleRate" : "44100.0",
+        "timecode" : [
+          1,
+          0,
+          0,
+          0
+        ],
+        "trailSilenceSamples" : 0
+      },
+      "label" : "transitions/clean/25@44100/01:00:00:00/x6",
+      "op" : "transitions"
+    },
+    {
+      "expect" : {
+        "halfBitSamples" : "11.032085561497325",
+        "sampleCount" : 10584
+      },
+      "input" : {
+        "amplitude" : "0.800000011920929",
+        "frameCount" : 6,
+        "leadSilenceSamples" : 0,
+        "rate" : "25",
+        "sampleRate" : "44100.0",
+        "timecode" : [
+          1,
+          0,
+          0,
+          0
+        ],
+        "trailSilenceSamples" : 0
+      },
+      "label" : "halfBit/clean/25@44100/01:00:00:00/x6",
+      "op" : "halfBit"
+    },
+    {
+      "expect" : {
+        "framesPerSecond" : 25,
+        "sampleCount" : 10584
+      },
+      "input" : {
+        "amplitude" : "0.800000011920929",
+        "frameCount" : 6,
+        "leadSilenceSamples" : 0,
+        "rate" : "25",
+        "sampleRate" : "44100.0",
+        "timecode" : [
+          1,
+          0,
+          0,
+          0
+        ],
+        "trailSilenceSamples" : 0
+      },
+      "label" : "framesPerSecond/clean/25@44100/01:00:00:00/x6",
+      "op" : "framesPerSecond"
+    },
+    {
+      "expect" : {
+        "bitCount" : 478,
+        "firstBits" : "000000000000000000000000000000000000000000000001000000000000000001111111111110110000000000000000",
+        "lastBits" : "000111111111111011010000000000000000000000000000000000000000000001000000000000000001111111111110",
+        "sampleCount" : 10584
+      },
+      "input" : {
+        "amplitude" : "0.800000011920929",
+        "frameCount" : 6,
+        "leadSilenceSamples" : 0,
+        "rate" : "25",
+        "sampleRate" : "44100.0",
+        "timecode" : [
+          1,
+          0,
+          0,
+          0
+        ],
+        "trailSilenceSamples" : 0
+      },
+      "label" : "bits/clean/25@44100/01:00:00:00/x6",
+      "op" : "bits"
+    },
+    {
+      "expect" : {
+        "frames" : [
+          {
+            "startSample" : 1764,
+            "timecode" : "01:00:00:01"
+          },
+          {
+            "startSample" : 3528,
+            "timecode" : "01:00:00:02"
+          },
+          {
+            "startSample" : 5292,
+            "timecode" : "01:00:00:03"
+          },
+          {
+            "startSample" : 7056,
+            "timecode" : "01:00:00:04"
+          }
+        ],
+        "sampleCount" : 10584
+      },
+      "input" : {
+        "amplitude" : "0.800000011920929",
+        "frameCount" : 6,
+        "leadSilenceSamples" : 0,
+        "rate" : "25",
+        "sampleRate" : "44100.0",
+        "timecode" : [
+          1,
+          0,
+          0,
+          0
+        ],
+        "trailSilenceSamples" : 0
+      },
+      "label" : "decode/clean/25@44100/01:00:00:00/x6",
+      "op" : "decode"
+    },
+    {
+      "expect" : {
+        "firstTransitions" : [
+          22,
+          33,
+          44,
+          66,
+          88,
+          110,
+          132,
+          154
+        ],
+        "lastTransitions" : [
+          10485,
+          10496,
+          10507,
+          10518,
+          10529,
+          10540,
+          10562,
+          10573
+        ],
+        "sampleCount" : 10584,
+        "transitionCount" : 585
+      },
+      "input" : {
+        "amplitude" : "0.800000011920929",
+        "frameCount" : 6,
+        "leadSilenceSamples" : 0,
+        "rate" : "25",
+        "sampleRate" : "44100.0",
+        "timecode" : [
+          0,
+          0,
+          59,
+          22
+        ],
+        "trailSilenceSamples" : 0
+      },
+      "label" : "transitions/boundary/25@44100/00:00:59:22/x6",
+      "op" : "transitions"
+    },
+    {
+      "expect" : {
+        "halfBitSamples" : "11.042654028436019",
+        "sampleCount" : 10584
+      },
+      "input" : {
+        "amplitude" : "0.800000011920929",
+        "frameCount" : 6,
+        "leadSilenceSamples" : 0,
+        "rate" : "25",
+        "sampleRate" : "44100.0",
+        "timecode" : [
+          0,
+          0,
+          59,
+          22
+        ],
+        "trailSilenceSamples" : 0
+      },
+      "label" : "halfBit/boundary/25@44100/00:00:59:22/x6",
+      "op" : "halfBit"
+    },
+    {
+      "expect" : {
+        "framesPerSecond" : 25,
+        "sampleCount" : 10584
+      },
+      "input" : {
+        "amplitude" : "0.800000011920929",
+        "frameCount" : 6,
+        "leadSilenceSamples" : 0,
+        "rate" : "25",
+        "sampleRate" : "44100.0",
+        "timecode" : [
+          0,
+          0,
+          59,
+          22
+        ],
+        "trailSilenceSamples" : 0
+      },
+      "label" : "framesPerSecond/boundary/25@44100/00:00:59:22/x6",
+      "op" : "framesPerSecond"
+    },
+    {
+      "expect" : {
+        "bitCount" : 478,
+        "firstBits" : "100000001000000100100001010000000000000000000000000000000010000001111111111110111000000010000001",
+        "lastBits" : "000111111111111010100000000000000000000000000000010000000000000000000000000010000001111111111110",
+        "sampleCount" : 10584
+      },
+      "input" : {
+        "amplitude" : "0.800000011920929",
+        "frameCount" : 6,
+        "leadSilenceSamples" : 0,
+        "rate" : "25",
+        "sampleRate" : "44100.0",
+        "timecode" : [
+          0,
+          0,
+          59,
+          22
+        ],
+        "trailSilenceSamples" : 0
+      },
+      "label" : "bits/boundary/25@44100/00:00:59:22/x6",
+      "op" : "bits"
+    },
+    {
+      "expect" : {
+        "frames" : [
+          {
+            "startSample" : 1764,
+            "timecode" : "00:00:59:23"
+          },
+          {
+            "startSample" : 3528,
+            "timecode" : "00:00:59:24"
+          },
+          {
+            "startSample" : 5292,
+            "timecode" : "00:01:00:00"
+          },
+          {
+            "startSample" : 7056,
+            "timecode" : "00:01:00:01"
+          }
+        ],
+        "sampleCount" : 10584
+      },
+      "input" : {
+        "amplitude" : "0.800000011920929",
+        "frameCount" : 6,
+        "leadSilenceSamples" : 0,
+        "rate" : "25",
+        "sampleRate" : "44100.0",
+        "timecode" : [
+          0,
+          0,
+          59,
+          22
+        ],
+        "trailSilenceSamples" : 0
+      },
+      "label" : "decode/boundary/25@44100/00:00:59:22/x6",
+      "op" : "decode"
+    },
+    {
+      "expect" : {
+        "firstTransitions" : [
+          20,
+          40,
+          60,
+          80,
+          100,
+          120,
+          140,
+          160
+        ],
+        "lastTransitions" : [
+          9510,
+          9520,
+          9530,
+          9540,
+          9550,
+          9560,
+          9580,
+          9590
+        ],
+        "sampleCount" : 9600,
+        "transitionCount" : 573
+      },
+      "input" : {
+        "amplitude" : "0.800000011920929",
+        "frameCount" : 6,
+        "leadSilenceSamples" : 0,
+        "rate" : "30",
+        "sampleRate" : "48000.0",
+        "timecode" : [
+          1,
+          0,
+          0,
+          0
+        ],
+        "trailSilenceSamples" : 0
+      },
+      "label" : "transitions/clean/30@48000/01:00:00:00/x6",
+      "op" : "transitions"
+    },
+    {
+      "expect" : {
+        "halfBitSamples" : "10.0",
+        "sampleCount" : 9600
+      },
+      "input" : {
+        "amplitude" : "0.800000011920929",
+        "frameCount" : 6,
+        "leadSilenceSamples" : 0,
+        "rate" : "30",
+        "sampleRate" : "48000.0",
+        "timecode" : [
+          1,
+          0,
+          0,
+          0
+        ],
+        "trailSilenceSamples" : 0
+      },
+      "label" : "halfBit/clean/30@48000/01:00:00:00/x6",
+      "op" : "halfBit"
+    },
+    {
+      "expect" : {
+        "framesPerSecond" : 30,
+        "sampleCount" : 9600
+      },
+      "input" : {
+        "amplitude" : "0.800000011920929",
+        "frameCount" : 6,
+        "leadSilenceSamples" : 0,
+        "rate" : "30",
+        "sampleRate" : "48000.0",
+        "timecode" : [
+          1,
+          0,
+          0,
+          0
+        ],
+        "trailSilenceSamples" : 0
+      },
+      "label" : "framesPerSecond/clean/30@48000/01:00:00:00/x6",
+      "op" : "framesPerSecond"
+    },
+    {
+      "expect" : {
+        "bitCount" : 478,
+        "firstBits" : "000000000000000000000000000000000000000000000001000000000000000001111111111110110000000000000000",
+        "lastBits" : "000111111111111011010000000000000000000000000000000000000000000001000000000000000001111111111110",
+        "sampleCount" : 9600
+      },
+      "input" : {
+        "amplitude" : "0.800000011920929",
+        "frameCount" : 6,
+        "leadSilenceSamples" : 0,
+        "rate" : "30",
+        "sampleRate" : "48000.0",
+        "timecode" : [
+          1,
+          0,
+          0,
+          0
+        ],
+        "trailSilenceSamples" : 0
+      },
+      "label" : "bits/clean/30@48000/01:00:00:00/x6",
+      "op" : "bits"
+    },
+    {
+      "expect" : {
+        "frames" : [
+          {
+            "startSample" : 1600,
+            "timecode" : "01:00:00:01"
+          },
+          {
+            "startSample" : 3200,
+            "timecode" : "01:00:00:02"
+          },
+          {
+            "startSample" : 4800,
+            "timecode" : "01:00:00:03"
+          },
+          {
+            "startSample" : 6400,
+            "timecode" : "01:00:00:04"
+          }
+        ],
+        "sampleCount" : 9600
+      },
+      "input" : {
+        "amplitude" : "0.800000011920929",
+        "frameCount" : 6,
+        "leadSilenceSamples" : 0,
+        "rate" : "30",
+        "sampleRate" : "48000.0",
+        "timecode" : [
+          1,
+          0,
+          0,
+          0
+        ],
+        "trailSilenceSamples" : 0
+      },
+      "label" : "decode/clean/30@48000/01:00:00:00/x6",
+      "op" : "decode"
+    },
+    {
+      "expect" : {
+        "firstTransitions" : [
+          10,
+          20,
+          30,
+          40,
+          50,
+          60,
+          80,
+          100
+        ],
+        "lastTransitions" : [
+          9510,
+          9520,
+          9530,
+          9540,
+          9550,
+          9560,
+          9580,
+          9590
+        ],
+        "sampleCount" : 9600,
+        "transitionCount" : 587
+      },
+      "input" : {
+        "amplitude" : "0.800000011920929",
+        "frameCount" : 6,
+        "leadSilenceSamples" : 0,
+        "rate" : "30",
+        "sampleRate" : "48000.0",
+        "timecode" : [
+          0,
+          0,
+          59,
+          27
+        ],
+        "trailSilenceSamples" : 0
+      },
+      "label" : "transitions/boundary/30@48000/00:00:59:27/x6",
+      "op" : "transitions"
+    },
+    {
+      "expect" : {
+        "halfBitSamples" : "10.0",
+        "sampleCount" : 9600
+      },
+      "input" : {
+        "amplitude" : "0.800000011920929",
+        "frameCount" : 6,
+        "leadSilenceSamples" : 0,
+        "rate" : "30",
+        "sampleRate" : "48000.0",
+        "timecode" : [
+          0,
+          0,
+          59,
+          27
+        ],
+        "trailSilenceSamples" : 0
+      },
+      "label" : "halfBit/boundary/30@48000/00:00:59:27/x6",
+      "op" : "halfBit"
+    },
+    {
+      "expect" : {
+        "framesPerSecond" : 30,
+        "sampleCount" : 9600
+      },
+      "input" : {
+        "amplitude" : "0.800000011920929",
+        "frameCount" : 6,
+        "leadSilenceSamples" : 0,
+        "rate" : "30",
+        "sampleRate" : "48000.0",
+        "timecode" : [
+          0,
+          0,
+          59,
+          27
+        ],
+        "trailSilenceSamples" : 0
+      },
+      "label" : "framesPerSecond/boundary/30@48000/00:00:59:27/x6",
+      "op" : "framesPerSecond"
+    },
+    {
+      "expect" : {
+        "bitCount" : 478,
+        "firstBits" : "111000001000000100100001011000000000000000000000000000000000000001111111111110100010000010000001",
+        "lastBits" : "000111111111111010100000000000000000000000001000010000000000000000000000000000000001111111111110",
+        "sampleCount" : 9600
+      },
+      "input" : {
+        "amplitude" : "0.800000011920929",
+        "frameCount" : 6,
+        "leadSilenceSamples" : 0,
+        "rate" : "30",
+        "sampleRate" : "48000.0",
+        "timecode" : [
+          0,
+          0,
+          59,
+          27
+        ],
+        "trailSilenceSamples" : 0
+      },
+      "label" : "bits/boundary/30@48000/00:00:59:27/x6",
+      "op" : "bits"
+    },
+    {
+      "expect" : {
+        "frames" : [
+          {
+            "startSample" : 1600,
+            "timecode" : "00:00:59:28"
+          },
+          {
+            "startSample" : 3200,
+            "timecode" : "00:00:59:29"
+          },
+          {
+            "startSample" : 4800,
+            "timecode" : "00:01:00:00"
+          },
+          {
+            "startSample" : 6400,
+            "timecode" : "00:01:00:01"
+          }
+        ],
+        "sampleCount" : 9600
+      },
+      "input" : {
+        "amplitude" : "0.800000011920929",
+        "frameCount" : 6,
+        "leadSilenceSamples" : 0,
+        "rate" : "30",
+        "sampleRate" : "48000.0",
+        "timecode" : [
+          0,
+          0,
+          59,
+          27
+        ],
+        "trailSilenceSamples" : 0
+      },
+      "label" : "decode/boundary/30@48000/00:00:59:27/x6",
+      "op" : "decode"
+    },
+    {
+      "expect" : {
+        "firstTransitions" : [
+          18,
+          37,
+          55,
+          74,
+          92,
+          110,
+          129,
+          147
+        ],
+        "lastTransitions" : [
+          8737,
+          8747,
+          8756,
+          8765,
+          8774,
+          8783,
+          8802,
+          8811
+        ],
+        "sampleCount" : 8820,
+        "transitionCount" : 573
+      },
+      "input" : {
+        "amplitude" : "0.800000011920929",
+        "frameCount" : 6,
+        "leadSilenceSamples" : 0,
+        "rate" : "30",
+        "sampleRate" : "44100.0",
+        "timecode" : [
+          1,
+          0,
+          0,
+          0
+        ],
+        "trailSilenceSamples" : 0
+      },
+      "label" : "transitions/clean/30@44100/01:00:00:00/x6",
+      "op" : "transitions"
+    },
+    {
+      "expect" : {
+        "halfBitSamples" : "9.155080213903743",
+        "sampleCount" : 8820
+      },
+      "input" : {
+        "amplitude" : "0.800000011920929",
+        "frameCount" : 6,
+        "leadSilenceSamples" : 0,
+        "rate" : "30",
+        "sampleRate" : "44100.0",
+        "timecode" : [
+          1,
+          0,
+          0,
+          0
+        ],
+        "trailSilenceSamples" : 0
+      },
+      "label" : "halfBit/clean/30@44100/01:00:00:00/x6",
+      "op" : "halfBit"
+    },
+    {
+      "expect" : {
+        "framesPerSecond" : 30,
+        "sampleCount" : 8820
+      },
+      "input" : {
+        "amplitude" : "0.800000011920929",
+        "frameCount" : 6,
+        "leadSilenceSamples" : 0,
+        "rate" : "30",
+        "sampleRate" : "44100.0",
+        "timecode" : [
+          1,
+          0,
+          0,
+          0
+        ],
+        "trailSilenceSamples" : 0
+      },
+      "label" : "framesPerSecond/clean/30@44100/01:00:00:00/x6",
+      "op" : "framesPerSecond"
+    },
+    {
+      "expect" : {
+        "bitCount" : 478,
+        "firstBits" : "000000000000000000000000000000000000000000000001000000000000000001111111111110110000000000000000",
+        "lastBits" : "000111111111111011010000000000000000000000000000000000000000000001000000000000000001111111111110",
+        "sampleCount" : 8820
+      },
+      "input" : {
+        "amplitude" : "0.800000011920929",
+        "frameCount" : 6,
+        "leadSilenceSamples" : 0,
+        "rate" : "30",
+        "sampleRate" : "44100.0",
+        "timecode" : [
+          1,
+          0,
+          0,
+          0
+        ],
+        "trailSilenceSamples" : 0
+      },
+      "label" : "bits/clean/30@44100/01:00:00:00/x6",
+      "op" : "bits"
+    },
+    {
+      "expect" : {
+        "frames" : [
+          {
+            "startSample" : 1470,
+            "timecode" : "01:00:00:01"
+          },
+          {
+            "startSample" : 2940,
+            "timecode" : "01:00:00:02"
+          },
+          {
+            "startSample" : 4410,
+            "timecode" : "01:00:00:03"
+          },
+          {
+            "startSample" : 5880,
+            "timecode" : "01:00:00:04"
+          }
+        ],
+        "sampleCount" : 8820
+      },
+      "input" : {
+        "amplitude" : "0.800000011920929",
+        "frameCount" : 6,
+        "leadSilenceSamples" : 0,
+        "rate" : "30",
+        "sampleRate" : "44100.0",
+        "timecode" : [
+          1,
+          0,
+          0,
+          0
+        ],
+        "trailSilenceSamples" : 0
+      },
+      "label" : "decode/clean/30@44100/01:00:00:00/x6",
+      "op" : "decode"
+    },
+    {
+      "expect" : {
+        "firstTransitions" : [
+          9,
+          18,
+          28,
+          37,
+          46,
+          55,
+          74,
+          92
+        ],
+        "lastTransitions" : [
+          8737,
+          8747,
+          8756,
+          8765,
+          8774,
+          8783,
+          8802,
+          8811
+        ],
+        "sampleCount" : 8820,
+        "transitionCount" : 587
+      },
+      "input" : {
+        "amplitude" : "0.800000011920929",
+        "frameCount" : 6,
+        "leadSilenceSamples" : 0,
+        "rate" : "30",
+        "sampleRate" : "44100.0",
+        "timecode" : [
+          0,
+          0,
+          59,
+          27
+        ],
+        "trailSilenceSamples" : 0
+      },
+      "label" : "transitions/boundary/30@44100/00:00:59:27/x6",
+      "op" : "transitions"
+    },
+    {
+      "expect" : {
+        "halfBitSamples" : "9.177570093457945",
+        "sampleCount" : 8820
+      },
+      "input" : {
+        "amplitude" : "0.800000011920929",
+        "frameCount" : 6,
+        "leadSilenceSamples" : 0,
+        "rate" : "30",
+        "sampleRate" : "44100.0",
+        "timecode" : [
+          0,
+          0,
+          59,
+          27
+        ],
+        "trailSilenceSamples" : 0
+      },
+      "label" : "halfBit/boundary/30@44100/00:00:59:27/x6",
+      "op" : "halfBit"
+    },
+    {
+      "expect" : {
+        "framesPerSecond" : 30,
+        "sampleCount" : 8820
+      },
+      "input" : {
+        "amplitude" : "0.800000011920929",
+        "frameCount" : 6,
+        "leadSilenceSamples" : 0,
+        "rate" : "30",
+        "sampleRate" : "44100.0",
+        "timecode" : [
+          0,
+          0,
+          59,
+          27
+        ],
+        "trailSilenceSamples" : 0
+      },
+      "label" : "framesPerSecond/boundary/30@44100/00:00:59:27/x6",
+      "op" : "framesPerSecond"
+    },
+    {
+      "expect" : {
+        "bitCount" : 478,
+        "firstBits" : "111000001000000100100001011000000000000000000000000000000000000001111111111110100010000010000001",
+        "lastBits" : "000111111111111010100000000000000000000000001000010000000000000000000000000000000001111111111110",
+        "sampleCount" : 8820
+      },
+      "input" : {
+        "amplitude" : "0.800000011920929",
+        "frameCount" : 6,
+        "leadSilenceSamples" : 0,
+        "rate" : "30",
+        "sampleRate" : "44100.0",
+        "timecode" : [
+          0,
+          0,
+          59,
+          27
+        ],
+        "trailSilenceSamples" : 0
+      },
+      "label" : "bits/boundary/30@44100/00:00:59:27/x6",
+      "op" : "bits"
+    },
+    {
+      "expect" : {
+        "frames" : [
+          {
+            "startSample" : 1470,
+            "timecode" : "00:00:59:28"
+          },
+          {
+            "startSample" : 2940,
+            "timecode" : "00:00:59:29"
+          },
+          {
+            "startSample" : 4410,
+            "timecode" : "00:01:00:00"
+          },
+          {
+            "startSample" : 5880,
+            "timecode" : "00:01:00:01"
+          }
+        ],
+        "sampleCount" : 8820
+      },
+      "input" : {
+        "amplitude" : "0.800000011920929",
+        "frameCount" : 6,
+        "leadSilenceSamples" : 0,
+        "rate" : "30",
+        "sampleRate" : "44100.0",
+        "timecode" : [
+          0,
+          0,
+          59,
+          27
+        ],
+        "trailSilenceSamples" : 0
+      },
+      "label" : "decode/boundary/30@44100/00:00:59:27/x6",
+      "op" : "decode"
+    },
+    {
+      "expect" : {
+        "firstTransitions" : [
+          20,
+          40,
+          60,
+          80,
+          100,
+          120,
+          140,
+          160
+        ],
+        "lastTransitions" : [
+          9510,
+          9520,
+          9530,
+          9540,
+          9550,
+          9560,
+          9580,
+          9590
+        ],
+        "sampleCount" : 9600,
+        "transitionCount" : 579
+      },
+      "input" : {
+        "amplitude" : "0.800000011920929",
+        "frameCount" : 6,
+        "leadSilenceSamples" : 0,
+        "rate" : "30df",
+        "sampleRate" : "48000.0",
+        "timecode" : [
+          1,
+          0,
+          0,
+          0
+        ],
+        "trailSilenceSamples" : 0
+      },
+      "label" : "transitions/clean/30df@48000/01:00:00;00/x6",
+      "op" : "transitions"
+    },
+    {
+      "expect" : {
+        "halfBitSamples" : "10.0",
+        "sampleCount" : 9600
+      },
+      "input" : {
+        "amplitude" : "0.800000011920929",
+        "frameCount" : 6,
+        "leadSilenceSamples" : 0,
+        "rate" : "30df",
+        "sampleRate" : "48000.0",
+        "timecode" : [
+          1,
+          0,
+          0,
+          0
+        ],
+        "trailSilenceSamples" : 0
+      },
+      "label" : "halfBit/clean/30df@48000/01:00:00;00/x6",
+      "op" : "halfBit"
+    },
+    {
+      "expect" : {
+        "framesPerSecond" : 30,
+        "sampleCount" : 9600
+      },
+      "input" : {
+        "amplitude" : "0.800000011920929",
+        "frameCount" : 6,
+        "leadSilenceSamples" : 0,
+        "rate" : "30df",
+        "sampleRate" : "48000.0",
+        "timecode" : [
+          1,
+          0,
+          0,
+          0
+        ],
+        "trailSilenceSamples" : 0
+      },
+      "label" : "framesPerSecond/clean/30df@48000/01:00:00;00/x6",
+      "op" : "framesPerSecond"
+    },
+    {
+      "expect" : {
+        "bitCount" : 478,
+        "firstBits" : "000000000100000000000000001000000000000000000001000000000000000001111111111110110000000001000000",
+        "lastBits" : "000111111111111011010000000100000000000000001000000000000000000001000000000000000001111111111110",
+        "sampleCount" : 9600
+      },
+      "input" : {
+        "amplitude" : "0.800000011920929",
+        "frameCount" : 6,
+        "leadSilenceSamples" : 0,
+        "rate" : "30df",
+        "sampleRate" : "48000.0",
+        "timecode" : [
+          1,
+          0,
+          0,
+          0
+        ],
+        "trailSilenceSamples" : 0
+      },
+      "label" : "bits/clean/30df@48000/01:00:00;00/x6",
+      "op" : "bits"
+    },
+    {
+      "expect" : {
+        "frames" : [
+          {
+            "startSample" : 1600,
+            "timecode" : "01:00:00;01"
+          },
+          {
+            "startSample" : 3200,
+            "timecode" : "01:00:00;02"
+          },
+          {
+            "startSample" : 4800,
+            "timecode" : "01:00:00;03"
+          },
+          {
+            "startSample" : 6400,
+            "timecode" : "01:00:00;04"
+          }
+        ],
+        "sampleCount" : 9600
+      },
+      "input" : {
+        "amplitude" : "0.800000011920929",
+        "frameCount" : 6,
+        "leadSilenceSamples" : 0,
+        "rate" : "30df",
+        "sampleRate" : "48000.0",
+        "timecode" : [
+          1,
+          0,
+          0,
+          0
+        ],
+        "trailSilenceSamples" : 0
+      },
+      "label" : "decode/clean/30df@48000/01:00:00;00/x6",
+      "op" : "decode"
+    },
+    {
+      "expect" : {
+        "firstTransitions" : [
+          10,
+          20,
+          30,
+          40,
+          50,
+          60,
+          80,
+          100
+        ],
+        "lastTransitions" : [
+          9510,
+          9520,
+          9530,
+          9540,
+          9550,
+          9560,
+          9580,
+          9590
+        ],
+        "sampleCount" : 9600,
+        "transitionCount" : 593
+      },
+      "input" : {
+        "amplitude" : "0.800000011920929",
+        "frameCount" : 6,
+        "leadSilenceSamples" : 0,
+        "rate" : "30df",
+        "sampleRate" : "48000.0",
+        "timecode" : [
+          0,
+          0,
+          59,
+          27
+        ],
+        "trailSilenceSamples" : 0
+      },
+      "label" : "transitions/boundary/30df@48000/00:00:59;27/x6",
+      "op" : "transitions"
+    },
+    {
+      "expect" : {
+        "halfBitSamples" : "10.0",
+        "sampleCount" : 9600
+      },
+      "input" : {
+        "amplitude" : "0.800000011920929",
+        "frameCount" : 6,
+        "leadSilenceSamples" : 0,
+        "rate" : "30df",
+        "sampleRate" : "48000.0",
+        "timecode" : [
+          0,
+          0,
+          59,
+          27
+        ],
+        "trailSilenceSamples" : 0
+      },
+      "label" : "halfBit/boundary/30df@48000/00:00:59;27/x6",
+      "op" : "halfBit"
+    },
+    {
+      "expect" : {
+        "framesPerSecond" : 30,
+        "sampleCount" : 9600
+      },
+      "input" : {
+        "amplitude" : "0.800000011920929",
+        "frameCount" : 6,
+        "leadSilenceSamples" : 0,
+        "rate" : "30df",
+        "sampleRate" : "48000.0",
+        "timecode" : [
+          0,
+          0,
+          59,
+          27
+        ],
+        "trailSilenceSamples" : 0
+      },
+      "label" : "framesPerSecond/boundary/30df@48000/00:00:59;27/x6",
+      "op" : "framesPerSecond"
+    },
+    {
+      "expect" : {
+        "bitCount" : 478,
+        "firstBits" : "111000001100000100100001010000000000000000000000000000000000000001111111111110100010000011000001",
+        "lastBits" : "000111111111111010010000000100000000000000000000010000000000000000000000000000000001111111111110",
+        "sampleCount" : 9600
+      },
+      "input" : {
+        "amplitude" : "0.800000011920929",
+        "frameCount" : 6,
+        "leadSilenceSamples" : 0,
+        "rate" : "30df",
+        "sampleRate" : "48000.0",
+        "timecode" : [
+          0,
+          0,
+          59,
+          27
+        ],
+        "trailSilenceSamples" : 0
+      },
+      "label" : "bits/boundary/30df@48000/00:00:59;27/x6",
+      "op" : "bits"
+    },
+    {
+      "expect" : {
+        "frames" : [
+          {
+            "startSample" : 1600,
+            "timecode" : "00:00:59;28"
+          },
+          {
+            "startSample" : 3200,
+            "timecode" : "00:00:59;29"
+          },
+          {
+            "startSample" : 4800,
+            "timecode" : "00:01:00;02"
+          },
+          {
+            "startSample" : 6400,
+            "timecode" : "00:01:00;03"
+          }
+        ],
+        "sampleCount" : 9600
+      },
+      "input" : {
+        "amplitude" : "0.800000011920929",
+        "frameCount" : 6,
+        "leadSilenceSamples" : 0,
+        "rate" : "30df",
+        "sampleRate" : "48000.0",
+        "timecode" : [
+          0,
+          0,
+          59,
+          27
+        ],
+        "trailSilenceSamples" : 0
+      },
+      "label" : "decode/boundary/30df@48000/00:00:59;27/x6",
+      "op" : "decode"
+    },
+    {
+      "expect" : {
+        "firstTransitions" : [
+          18,
+          37,
+          55,
+          74,
+          92,
+          110,
+          129,
+          147
+        ],
+        "lastTransitions" : [
+          8737,
+          8747,
+          8756,
+          8765,
+          8774,
+          8783,
+          8802,
+          8811
+        ],
+        "sampleCount" : 8820,
+        "transitionCount" : 579
+      },
+      "input" : {
+        "amplitude" : "0.800000011920929",
+        "frameCount" : 6,
+        "leadSilenceSamples" : 0,
+        "rate" : "30df",
+        "sampleRate" : "44100.0",
+        "timecode" : [
+          1,
+          0,
+          0,
+          0
+        ],
+        "trailSilenceSamples" : 0
+      },
+      "label" : "transitions/clean/30df@44100/01:00:00;00/x6",
+      "op" : "transitions"
+    },
+    {
+      "expect" : {
+        "halfBitSamples" : "9.14572864321608",
+        "sampleCount" : 8820
+      },
+      "input" : {
+        "amplitude" : "0.800000011920929",
+        "frameCount" : 6,
+        "leadSilenceSamples" : 0,
+        "rate" : "30df",
+        "sampleRate" : "44100.0",
+        "timecode" : [
+          1,
+          0,
+          0,
+          0
+        ],
+        "trailSilenceSamples" : 0
+      },
+      "label" : "halfBit/clean/30df@44100/01:00:00;00/x6",
+      "op" : "halfBit"
+    },
+    {
+      "expect" : {
+        "framesPerSecond" : 30,
+        "sampleCount" : 8820
+      },
+      "input" : {
+        "amplitude" : "0.800000011920929",
+        "frameCount" : 6,
+        "leadSilenceSamples" : 0,
+        "rate" : "30df",
+        "sampleRate" : "44100.0",
+        "timecode" : [
+          1,
+          0,
+          0,
+          0
+        ],
+        "trailSilenceSamples" : 0
+      },
+      "label" : "framesPerSecond/clean/30df@44100/01:00:00;00/x6",
+      "op" : "framesPerSecond"
+    },
+    {
+      "expect" : {
+        "bitCount" : 478,
+        "firstBits" : "000000000100000000000000001000000000000000000001000000000000000001111111111110110000000001000000",
+        "lastBits" : "000111111111111011010000000100000000000000001000000000000000000001000000000000000001111111111110",
+        "sampleCount" : 8820
+      },
+      "input" : {
+        "amplitude" : "0.800000011920929",
+        "frameCount" : 6,
+        "leadSilenceSamples" : 0,
+        "rate" : "30df",
+        "sampleRate" : "44100.0",
+        "timecode" : [
+          1,
+          0,
+          0,
+          0
+        ],
+        "trailSilenceSamples" : 0
+      },
+      "label" : "bits/clean/30df@44100/01:00:00;00/x6",
+      "op" : "bits"
+    },
+    {
+      "expect" : {
+        "frames" : [
+          {
+            "startSample" : 1470,
+            "timecode" : "01:00:00;01"
+          },
+          {
+            "startSample" : 2940,
+            "timecode" : "01:00:00;02"
+          },
+          {
+            "startSample" : 4410,
+            "timecode" : "01:00:00;03"
+          },
+          {
+            "startSample" : 5880,
+            "timecode" : "01:00:00;04"
+          }
+        ],
+        "sampleCount" : 8820
+      },
+      "input" : {
+        "amplitude" : "0.800000011920929",
+        "frameCount" : 6,
+        "leadSilenceSamples" : 0,
+        "rate" : "30df",
+        "sampleRate" : "44100.0",
+        "timecode" : [
+          1,
+          0,
+          0,
+          0
+        ],
+        "trailSilenceSamples" : 0
+      },
+      "label" : "decode/clean/30df@44100/01:00:00;00/x6",
+      "op" : "decode"
+    },
+    {
+      "expect" : {
+        "firstTransitions" : [
+          9,
+          18,
+          28,
+          37,
+          46,
+          55,
+          74,
+          92
+        ],
+        "lastTransitions" : [
+          8737,
+          8747,
+          8756,
+          8765,
+          8774,
+          8783,
+          8802,
+          8811
+        ],
+        "sampleCount" : 8820,
+        "transitionCount" : 593
+      },
+      "input" : {
+        "amplitude" : "0.800000011920929",
+        "frameCount" : 6,
+        "leadSilenceSamples" : 0,
+        "rate" : "30df",
+        "sampleRate" : "44100.0",
+        "timecode" : [
+          0,
+          0,
+          59,
+          27
+        ],
+        "trailSilenceSamples" : 0
+      },
+      "label" : "transitions/boundary/30df@44100/00:00:59;27/x6",
+      "op" : "transitions"
+    },
+    {
+      "expect" : {
+        "halfBitSamples" : "9.163716814159292",
+        "sampleCount" : 8820
+      },
+      "input" : {
+        "amplitude" : "0.800000011920929",
+        "frameCount" : 6,
+        "leadSilenceSamples" : 0,
+        "rate" : "30df",
+        "sampleRate" : "44100.0",
+        "timecode" : [
+          0,
+          0,
+          59,
+          27
+        ],
+        "trailSilenceSamples" : 0
+      },
+      "label" : "halfBit/boundary/30df@44100/00:00:59;27/x6",
+      "op" : "halfBit"
+    },
+    {
+      "expect" : {
+        "framesPerSecond" : 30,
+        "sampleCount" : 8820
+      },
+      "input" : {
+        "amplitude" : "0.800000011920929",
+        "frameCount" : 6,
+        "leadSilenceSamples" : 0,
+        "rate" : "30df",
+        "sampleRate" : "44100.0",
+        "timecode" : [
+          0,
+          0,
+          59,
+          27
+        ],
+        "trailSilenceSamples" : 0
+      },
+      "label" : "framesPerSecond/boundary/30df@44100/00:00:59;27/x6",
+      "op" : "framesPerSecond"
+    },
+    {
+      "expect" : {
+        "bitCount" : 478,
+        "firstBits" : "111000001100000100100001010000000000000000000000000000000000000001111111111110100010000011000001",
+        "lastBits" : "000111111111111010010000000100000000000000000000010000000000000000000000000000000001111111111110",
+        "sampleCount" : 8820
+      },
+      "input" : {
+        "amplitude" : "0.800000011920929",
+        "frameCount" : 6,
+        "leadSilenceSamples" : 0,
+        "rate" : "30df",
+        "sampleRate" : "44100.0",
+        "timecode" : [
+          0,
+          0,
+          59,
+          27
+        ],
+        "trailSilenceSamples" : 0
+      },
+      "label" : "bits/boundary/30df@44100/00:00:59;27/x6",
+      "op" : "bits"
+    },
+    {
+      "expect" : {
+        "frames" : [
+          {
+            "startSample" : 1470,
+            "timecode" : "00:00:59;28"
+          },
+          {
+            "startSample" : 2940,
+            "timecode" : "00:00:59;29"
+          },
+          {
+            "startSample" : 4410,
+            "timecode" : "00:01:00;02"
+          },
+          {
+            "startSample" : 5880,
+            "timecode" : "00:01:00;03"
+          }
+        ],
+        "sampleCount" : 8820
+      },
+      "input" : {
+        "amplitude" : "0.800000011920929",
+        "frameCount" : 6,
+        "leadSilenceSamples" : 0,
+        "rate" : "30df",
+        "sampleRate" : "44100.0",
+        "timecode" : [
+          0,
+          0,
+          59,
+          27
+        ],
+        "trailSilenceSamples" : 0
+      },
+      "label" : "decode/boundary/30df@44100/00:00:59;27/x6",
+      "op" : "decode"
+    },
+    {
+      "expect" : {
+        "firstTransitions" : [
+          20,
+          40,
+          60,
+          80,
+          100,
+          120,
+          140,
+          160
+        ],
+        "lastTransitions" : [
+          47910,
+          47920,
+          47930,
+          47940,
+          47950,
+          47960,
+          47980,
+          47990
+        ],
+        "sampleCount" : 48000,
+        "transitionCount" : 2899
+      },
+      "input" : {
+        "amplitude" : "0.800000011920929",
+        "frameCount" : 30,
+        "leadSilenceSamples" : 0,
+        "rate" : "30",
+        "sampleRate" : "48000.0",
+        "timecode" : [
+          1,
+          0,
+          0,
+          0
+        ],
+        "trailSilenceSamples" : 0
+      },
+      "label" : "transitions/long/30@48000/01:00:00:00/x30",
+      "op" : "transitions"
+    },
+    {
+      "expect" : {
+        "halfBitSamples" : "10.0",
+        "sampleCount" : 48000
+      },
+      "input" : {
+        "amplitude" : "0.800000011920929",
+        "frameCount" : 30,
+        "leadSilenceSamples" : 0,
+        "rate" : "30",
+        "sampleRate" : "48000.0",
+        "timecode" : [
+          1,
+          0,
+          0,
+          0
+        ],
+        "trailSilenceSamples" : 0
+      },
+      "label" : "halfBit/long/30@48000/01:00:00:00/x30",
+      "op" : "halfBit"
+    },
+    {
+      "expect" : {
+        "framesPerSecond" : 30,
+        "sampleCount" : 48000
+      },
+      "input" : {
+        "amplitude" : "0.800000011920929",
+        "frameCount" : 30,
+        "leadSilenceSamples" : 0,
+        "rate" : "30",
+        "sampleRate" : "48000.0",
+        "timecode" : [
+          1,
+          0,
+          0,
+          0
+        ],
+        "trailSilenceSamples" : 0
+      },
+      "label" : "framesPerSecond/long/30@48000/01:00:00:00/x30",
+      "op" : "framesPerSecond"
+    },
+    {
+      "expect" : {
+        "bitCount" : 2398,
+        "firstBits" : "000000000000000000000000000000000000000000000001000000000000000001111111111110110000000000000000",
+        "lastBits" : "000111111111111011001000001000000000000000001000000000000000000001000000000000000001111111111110",
+        "sampleCount" : 48000
+      },
+      "input" : {
+        "amplitude" : "0.800000011920929",
+        "frameCount" : 30,
+        "leadSilenceSamples" : 0,
+        "rate" : "30",
+        "sampleRate" : "48000.0",
+        "timecode" : [
+          1,
+          0,
+          0,
+          0
+        ],
+        "trailSilenceSamples" : 0
+      },
+      "label" : "bits/long/30@48000/01:00:00:00/x30",
+      "op" : "bits"
+    },
+    {
+      "expect" : {
+        "frames" : [
+          {
+            "startSample" : 1600,
+            "timecode" : "01:00:00:01"
+          },
+          {
+            "startSample" : 3200,
+            "timecode" : "01:00:00:02"
+          },
+          {
+            "startSample" : 4800,
+            "timecode" : "01:00:00:03"
+          },
+          {
+            "startSample" : 6400,
+            "timecode" : "01:00:00:04"
+          },
+          {
+            "startSample" : 8000,
+            "timecode" : "01:00:00:05"
+          },
+          {
+            "startSample" : 9600,
+            "timecode" : "01:00:00:06"
+          },
+          {
+            "startSample" : 11200,
+            "timecode" : "01:00:00:07"
+          },
+          {
+            "startSample" : 12800,
+            "timecode" : "01:00:00:08"
+          },
+          {
+            "startSample" : 14400,
+            "timecode" : "01:00:00:09"
+          },
+          {
+            "startSample" : 16000,
+            "timecode" : "01:00:00:10"
+          },
+          {
+            "startSample" : 17600,
+            "timecode" : "01:00:00:11"
+          },
+          {
+            "startSample" : 19200,
+            "timecode" : "01:00:00:12"
+          },
+          {
+            "startSample" : 20800,
+            "timecode" : "01:00:00:13"
+          },
+          {
+            "startSample" : 22400,
+            "timecode" : "01:00:00:14"
+          },
+          {
+            "startSample" : 24000,
+            "timecode" : "01:00:00:15"
+          },
+          {
+            "startSample" : 25600,
+            "timecode" : "01:00:00:16"
+          },
+          {
+            "startSample" : 27200,
+            "timecode" : "01:00:00:17"
+          },
+          {
+            "startSample" : 28800,
+            "timecode" : "01:00:00:18"
+          },
+          {
+            "startSample" : 30400,
+            "timecode" : "01:00:00:19"
+          },
+          {
+            "startSample" : 32000,
+            "timecode" : "01:00:00:20"
+          },
+          {
+            "startSample" : 33600,
+            "timecode" : "01:00:00:21"
+          },
+          {
+            "startSample" : 35200,
+            "timecode" : "01:00:00:22"
+          },
+          {
+            "startSample" : 36800,
+            "timecode" : "01:00:00:23"
+          },
+          {
+            "startSample" : 38400,
+            "timecode" : "01:00:00:24"
+          },
+          {
+            "startSample" : 40000,
+            "timecode" : "01:00:00:25"
+          },
+          {
+            "startSample" : 41600,
+            "timecode" : "01:00:00:26"
+          },
+          {
+            "startSample" : 43200,
+            "timecode" : "01:00:00:27"
+          },
+          {
+            "startSample" : 44800,
+            "timecode" : "01:00:00:28"
+          }
+        ],
+        "sampleCount" : 48000
+      },
+      "input" : {
+        "amplitude" : "0.800000011920929",
+        "frameCount" : 30,
+        "leadSilenceSamples" : 0,
+        "rate" : "30",
+        "sampleRate" : "48000.0",
+        "timecode" : [
+          1,
+          0,
+          0,
+          0
+        ],
+        "trailSilenceSamples" : 0
+      },
+      "label" : "decode/long/30@48000/01:00:00:00/x30",
+      "op" : "decode"
+    },
+    {
+      "expect" : {
+        "firstTransitions" : [
+          25,
+          50,
+          75,
+          100,
+          125,
+          150,
+          175,
+          200
+        ],
+        "lastTransitions" : [
+          11888,
+          11900,
+          11913,
+          11925,
+          11938,
+          11950,
+          11975,
+          11988
+        ],
+        "sampleCount" : 12000,
+        "transitionCount" : 573
+      },
+      "input" : {
+        "amplitude" : "0.25",
+        "frameCount" : 6,
+        "leadSilenceSamples" : 0,
+        "rate" : "24",
+        "sampleRate" : "48000.0",
+        "timecode" : [
+          1,
+          0,
+          0,
+          0
+        ],
+        "trailSilenceSamples" : 0
+      },
+      "label" : "transitions/quiet/24@48000/01:00:00:00/x6",
+      "op" : "transitions"
+    },
+    {
+      "expect" : {
+        "halfBitSamples" : "12.502673796791443",
+        "sampleCount" : 12000
+      },
+      "input" : {
+        "amplitude" : "0.25",
+        "frameCount" : 6,
+        "leadSilenceSamples" : 0,
+        "rate" : "24",
+        "sampleRate" : "48000.0",
+        "timecode" : [
+          1,
+          0,
+          0,
+          0
+        ],
+        "trailSilenceSamples" : 0
+      },
+      "label" : "halfBit/quiet/24@48000/01:00:00:00/x6",
+      "op" : "halfBit"
+    },
+    {
+      "expect" : {
+        "framesPerSecond" : 24,
+        "sampleCount" : 12000
+      },
+      "input" : {
+        "amplitude" : "0.25",
+        "frameCount" : 6,
+        "leadSilenceSamples" : 0,
+        "rate" : "24",
+        "sampleRate" : "48000.0",
+        "timecode" : [
+          1,
+          0,
+          0,
+          0
+        ],
+        "trailSilenceSamples" : 0
+      },
+      "label" : "framesPerSecond/quiet/24@48000/01:00:00:00/x6",
+      "op" : "framesPerSecond"
+    },
+    {
+      "expect" : {
+        "bitCount" : 478,
+        "firstBits" : "000000000000000000000000000000000000000000000001000000000000000001111111111110110000000000000000",
+        "lastBits" : "000111111111111011010000000000000000000000000000000000000000000001000000000000000001111111111110",
+        "sampleCount" : 12000
+      },
+      "input" : {
+        "amplitude" : "0.25",
+        "frameCount" : 6,
+        "leadSilenceSamples" : 0,
+        "rate" : "24",
+        "sampleRate" : "48000.0",
+        "timecode" : [
+          1,
+          0,
+          0,
+          0
+        ],
+        "trailSilenceSamples" : 0
+      },
+      "label" : "bits/quiet/24@48000/01:00:00:00/x6",
+      "op" : "bits"
+    },
+    {
+      "expect" : {
+        "frames" : [
+          {
+            "startSample" : 2000,
+            "timecode" : "01:00:00:01"
+          },
+          {
+            "startSample" : 4000,
+            "timecode" : "01:00:00:02"
+          },
+          {
+            "startSample" : 6000,
+            "timecode" : "01:00:00:03"
+          },
+          {
+            "startSample" : 8000,
+            "timecode" : "01:00:00:04"
+          }
+        ],
+        "sampleCount" : 12000
+      },
+      "input" : {
+        "amplitude" : "0.25",
+        "frameCount" : 6,
+        "leadSilenceSamples" : 0,
+        "rate" : "24",
+        "sampleRate" : "48000.0",
+        "timecode" : [
+          1,
+          0,
+          0,
+          0
+        ],
+        "trailSilenceSamples" : 0
+      },
+      "label" : "decode/quiet/24@48000/01:00:00:00/x6",
+      "op" : "decode"
+    },
+    {
+      "expect" : {
+        "firstTransitions" : [
+          25,
+          50,
+          75,
+          100,
+          125,
+          150,
+          175,
+          200
+        ],
+        "lastTransitions" : [
+          11888,
+          11900,
+          11913,
+          11925,
+          11938,
+          11950,
+          11975,
+          11988
+        ],
+        "sampleCount" : 12000,
+        "transitionCount" : 574
+      },
+      "input" : {
+        "amplitude" : "0.800000011920929",
+        "flipBitInFrame" : 2,
+        "flipBitIndices" : [
+          3
+        ],
+        "frameCount" : 6,
+        "leadSilenceSamples" : 0,
+        "rate" : "24",
+        "sampleRate" : "48000.0",
+        "timecode" : [
+          1,
+          0,
+          0,
+          0
+        ],
+        "trailSilenceSamples" : 0
+      },
+      "label" : "transitions/parity-flipped-middle-frame/24@48000/01:00:00:00/x6",
+      "op" : "transitions"
+    },
+    {
+      "expect" : {
+        "halfBitSamples" : "12.502645502645503",
+        "sampleCount" : 12000
+      },
+      "input" : {
+        "amplitude" : "0.800000011920929",
+        "flipBitInFrame" : 2,
+        "flipBitIndices" : [
+          3
+        ],
+        "frameCount" : 6,
+        "leadSilenceSamples" : 0,
+        "rate" : "24",
+        "sampleRate" : "48000.0",
+        "timecode" : [
+          1,
+          0,
+          0,
+          0
+        ],
+        "trailSilenceSamples" : 0
+      },
+      "label" : "halfBit/parity-flipped-middle-frame/24@48000/01:00:00:00/x6",
+      "op" : "halfBit"
+    },
+    {
+      "expect" : {
+        "framesPerSecond" : 24,
+        "sampleCount" : 12000
+      },
+      "input" : {
+        "amplitude" : "0.800000011920929",
+        "flipBitInFrame" : 2,
+        "flipBitIndices" : [
+          3
+        ],
+        "frameCount" : 6,
+        "leadSilenceSamples" : 0,
+        "rate" : "24",
+        "sampleRate" : "48000.0",
+        "timecode" : [
+          1,
+          0,
+          0,
+          0
+        ],
+        "trailSilenceSamples" : 0
+      },
+      "label" : "framesPerSecond/parity-flipped-middle-frame/24@48000/01:00:00:00/x6",
+      "op" : "framesPerSecond"
+    },
+    {
+      "expect" : {
+        "bitCount" : 478,
+        "firstBits" : "000000000000000000000000000000000000000000000001000000000000000001111111111110110000000000000000",
+        "lastBits" : "000111111111111011010000000000000000000000000000000000000000000001000000000000000001111111111110",
+        "sampleCount" : 12000
+      },
+      "input" : {
+        "amplitude" : "0.800000011920929",
+        "flipBitInFrame" : 2,
+        "flipBitIndices" : [
+          3
+        ],
+        "frameCount" : 6,
+        "leadSilenceSamples" : 0,
+        "rate" : "24",
+        "sampleRate" : "48000.0",
+        "timecode" : [
+          1,
+          0,
+          0,
+          0
+        ],
+        "trailSilenceSamples" : 0
+      },
+      "label" : "bits/parity-flipped-middle-frame/24@48000/01:00:00:00/x6",
+      "op" : "bits"
+    },
+    {
+      "expect" : {
+        "frames" : [
+          {
+            "startSample" : 2000,
+            "timecode" : "01:00:00:01"
+          },
+          {
+            "startSample" : 6000,
+            "timecode" : "01:00:00:03"
+          },
+          {
+            "startSample" : 8000,
+            "timecode" : "01:00:00:04"
+          }
+        ],
+        "sampleCount" : 12000
+      },
+      "input" : {
+        "amplitude" : "0.800000011920929",
+        "flipBitInFrame" : 2,
+        "flipBitIndices" : [
+          3
+        ],
+        "frameCount" : 6,
+        "leadSilenceSamples" : 0,
+        "rate" : "24",
+        "sampleRate" : "48000.0",
+        "timecode" : [
+          1,
+          0,
+          0,
+          0
+        ],
+        "trailSilenceSamples" : 0
+      },
+      "label" : "decode/parity-flipped-middle-frame/24@48000/01:00:00:00/x6",
+      "op" : "decode"
+    },
+    {
+      "expect" : {
+        "firstTransitions" : [
+          25,
+          50,
+          75,
+          100,
+          125,
+          150,
+          175,
+          200
+        ],
+        "lastTransitions" : [
+          11888,
+          11900,
+          11913,
+          11925,
+          11938,
+          11950,
+          11975,
+          11988
+        ],
+        "sampleCount" : 12000,
+        "transitionCount" : 571
+      },
+      "input" : {
+        "amplitude" : "0.800000011920929",
+        "flipBitInFrame" : 2,
+        "flipBitIndices" : [
+          70,
+          71
+        ],
+        "frameCount" : 6,
+        "leadSilenceSamples" : 0,
+        "rate" : "24",
+        "sampleRate" : "48000.0",
+        "timecode" : [
+          1,
+          0,
+          0,
+          0
+        ],
+        "trailSilenceSamples" : 0
+      },
+      "label" : "transitions/sync-word-broken/24@48000/01:00:00:00/x6",
+      "op" : "transitions"
+    },
+    {
+      "expect" : {
+        "halfBitSamples" : "12.502732240437158",
+        "sampleCount" : 12000
+      },
+      "input" : {
+        "amplitude" : "0.800000011920929",
+        "flipBitInFrame" : 2,
+        "flipBitIndices" : [
+          70,
+          71
+        ],
+        "frameCount" : 6,
+        "leadSilenceSamples" : 0,
+        "rate" : "24",
+        "sampleRate" : "48000.0",
+        "timecode" : [
+          1,
+          0,
+          0,
+          0
+        ],
+        "trailSilenceSamples" : 0
+      },
+      "label" : "halfBit/sync-word-broken/24@48000/01:00:00:00/x6",
+      "op" : "halfBit"
+    },
+    {
+      "expect" : {
+        "framesPerSecond" : 24,
+        "sampleCount" : 12000
+      },
+      "input" : {
+        "amplitude" : "0.800000011920929",
+        "flipBitInFrame" : 2,
+        "flipBitIndices" : [
+          70,
+          71
+        ],
+        "frameCount" : 6,
+        "leadSilenceSamples" : 0,
+        "rate" : "24",
+        "sampleRate" : "48000.0",
+        "timecode" : [
+          1,
+          0,
+          0,
+          0
+        ],
+        "trailSilenceSamples" : 0
+      },
+      "label" : "framesPerSecond/sync-word-broken/24@48000/01:00:00:00/x6",
+      "op" : "framesPerSecond"
+    },
+    {
+      "expect" : {
+        "bitCount" : 478,
+        "firstBits" : "000000000000000000000000000000000000000000000001000000000000000001111111111110110000000000000000",
+        "lastBits" : "000111111111111011010000000000000000000000000000000000000000000001000000000000000001111111111110",
+        "sampleCount" : 12000
+      },
+      "input" : {
+        "amplitude" : "0.800000011920929",
+        "flipBitInFrame" : 2,
+        "flipBitIndices" : [
+          70,
+          71
+        ],
+        "frameCount" : 6,
+        "leadSilenceSamples" : 0,
+        "rate" : "24",
+        "sampleRate" : "48000.0",
+        "timecode" : [
+          1,
+          0,
+          0,
+          0
+        ],
+        "trailSilenceSamples" : 0
+      },
+      "label" : "bits/sync-word-broken/24@48000/01:00:00:00/x6",
+      "op" : "bits"
+    },
+    {
+      "expect" : {
+        "frames" : [
+          {
+            "startSample" : 2000,
+            "timecode" : "01:00:00:01"
+          },
+          {
+            "startSample" : 6000,
+            "timecode" : "01:00:00:03"
+          },
+          {
+            "startSample" : 8000,
+            "timecode" : "01:00:00:04"
+          }
+        ],
+        "sampleCount" : 12000
+      },
+      "input" : {
+        "amplitude" : "0.800000011920929",
+        "flipBitInFrame" : 2,
+        "flipBitIndices" : [
+          70,
+          71
+        ],
+        "frameCount" : 6,
+        "leadSilenceSamples" : 0,
+        "rate" : "24",
+        "sampleRate" : "48000.0",
+        "timecode" : [
+          1,
+          0,
+          0,
+          0
+        ],
+        "trailSilenceSamples" : 0
+      },
+      "label" : "decode/sync-word-broken/24@48000/01:00:00:00/x6",
+      "op" : "decode"
+    },
+    {
+      "expect" : {
+        "firstTransitions" : [
+          25,
+          50,
+          75,
+          100,
+          125,
+          150,
+          175,
+          200
+        ],
+        "lastTransitions" : [
+          11888,
+          11900,
+          11913,
+          11925,
+          11938,
+          11950,
+          11975,
+          11988
+        ],
+        "sampleCount" : 12000,
+        "transitionCount" : 575
+      },
+      "input" : {
+        "amplitude" : "0.800000011920929",
+        "flipBitInFrame" : 2,
+        "flipBitIndices" : [
+          0,
+          8,
+          9,
+          27
+        ],
+        "frameCount" : 6,
+        "leadSilenceSamples" : 0,
+        "rate" : "24",
+        "sampleRate" : "48000.0",
+        "timecode" : [
+          1,
+          0,
+          0,
+          0
+        ],
+        "trailSilenceSamples" : 0
+      },
+      "label" : "transitions/bcd-out-of-range/24@48000/01:00:00:00/x6",
+      "op" : "transitions"
+    },
+    {
+      "expect" : {
+        "halfBitSamples" : "12.502617801047121",
+        "sampleCount" : 12000
+      },
+      "input" : {
+        "amplitude" : "0.800000011920929",
+        "flipBitInFrame" : 2,
+        "flipBitIndices" : [
+          0,
+          8,
+          9,
+          27
+        ],
+        "frameCount" : 6,
+        "leadSilenceSamples" : 0,
+        "rate" : "24",
+        "sampleRate" : "48000.0",
+        "timecode" : [
+          1,
+          0,
+          0,
+          0
+        ],
+        "trailSilenceSamples" : 0
+      },
+      "label" : "halfBit/bcd-out-of-range/24@48000/01:00:00:00/x6",
+      "op" : "halfBit"
+    },
+    {
+      "expect" : {
+        "framesPerSecond" : 24,
+        "sampleCount" : 12000
+      },
+      "input" : {
+        "amplitude" : "0.800000011920929",
+        "flipBitInFrame" : 2,
+        "flipBitIndices" : [
+          0,
+          8,
+          9,
+          27
+        ],
+        "frameCount" : 6,
+        "leadSilenceSamples" : 0,
+        "rate" : "24",
+        "sampleRate" : "48000.0",
+        "timecode" : [
+          1,
+          0,
+          0,
+          0
+        ],
+        "trailSilenceSamples" : 0
+      },
+      "label" : "framesPerSecond/bcd-out-of-range/24@48000/01:00:00:00/x6",
+      "op" : "framesPerSecond"
+    },
+    {
+      "expect" : {
+        "bitCount" : 478,
+        "firstBits" : "000000000000000000000000000000000000000000000001000000000000000001111111111110110000000000000000",
+        "lastBits" : "000111111111111011010000000000000000000000000000000000000000000001000000000000000001111111111110",
+        "sampleCount" : 12000
+      },
+      "input" : {
+        "amplitude" : "0.800000011920929",
+        "flipBitInFrame" : 2,
+        "flipBitIndices" : [
+          0,
+          8,
+          9,
+          27
+        ],
+        "frameCount" : 6,
+        "leadSilenceSamples" : 0,
+        "rate" : "24",
+        "sampleRate" : "48000.0",
+        "timecode" : [
+          1,
+          0,
+          0,
+          0
+        ],
+        "trailSilenceSamples" : 0
+      },
+      "label" : "bits/bcd-out-of-range/24@48000/01:00:00:00/x6",
+      "op" : "bits"
+    },
+    {
+      "expect" : {
+        "frames" : [
+          {
+            "startSample" : 2000,
+            "timecode" : "01:00:00:01"
+          },
+          {
+            "startSample" : 6000,
+            "timecode" : "01:00:00:03"
+          },
+          {
+            "startSample" : 8000,
+            "timecode" : "01:00:00:04"
+          }
+        ],
+        "sampleCount" : 12000
+      },
+      "input" : {
+        "amplitude" : "0.800000011920929",
+        "flipBitInFrame" : 2,
+        "flipBitIndices" : [
+          0,
+          8,
+          9,
+          27
+        ],
+        "frameCount" : 6,
+        "leadSilenceSamples" : 0,
+        "rate" : "24",
+        "sampleRate" : "48000.0",
+        "timecode" : [
+          1,
+          0,
+          0,
+          0
+        ],
+        "trailSilenceSamples" : 0
+      },
+      "label" : "decode/bcd-out-of-range/24@48000/01:00:00:00/x6",
+      "op" : "decode"
+    },
+    {
+      "expect" : {
+        "firstTransitions" : [
+          25,
+          50,
+          75,
+          100,
+          125,
+          150,
+          175,
+          200
+        ],
+        "lastTransitions" : [
+          8800,
+          8825,
+          8850,
+          8875,
+          8900,
+          8925,
+          8950,
+          8975
+        ],
+        "sampleCount" : 9000,
+        "transitionCount" : 423
+      },
+      "input" : {
+        "amplitude" : "0.800000011920929",
+        "frameCount" : 6,
+        "leadSilenceSamples" : 0,
+        "rate" : "24",
+        "sampleRate" : "48000.0",
+        "timecode" : [
+          1,
+          0,
+          0,
+          0
+        ],
+        "trailSilenceSamples" : 0,
+        "truncateToSamples" : 9000
+      },
+      "label" : "transitions/truncated-mid-frame/24@48000/01:00:00:00/x6",
+      "op" : "transitions"
+    },
+    {
+      "expect" : {
+        "halfBitSamples" : "12.5",
+        "sampleCount" : 9000
+      },
+      "input" : {
+        "amplitude" : "0.800000011920929",
+        "frameCount" : 6,
+        "leadSilenceSamples" : 0,
+        "rate" : "24",
+        "sampleRate" : "48000.0",
+        "timecode" : [
+          1,
+          0,
+          0,
+          0
+        ],
+        "trailSilenceSamples" : 0,
+        "truncateToSamples" : 9000
+      },
+      "label" : "halfBit/truncated-mid-frame/24@48000/01:00:00:00/x6",
+      "op" : "halfBit"
+    },
+    {
+      "expect" : {
+        "framesPerSecond" : 24,
+        "sampleCount" : 9000
+      },
+      "input" : {
+        "amplitude" : "0.800000011920929",
+        "frameCount" : 6,
+        "leadSilenceSamples" : 0,
+        "rate" : "24",
+        "sampleRate" : "48000.0",
+        "timecode" : [
+          1,
+          0,
+          0,
+          0
+        ],
+        "trailSilenceSamples" : 0,
+        "truncateToSamples" : 9000
+      },
+      "label" : "framesPerSecond/truncated-mid-frame/24@48000/01:00:00:00/x6",
+      "op" : "framesPerSecond"
+    },
+    {
+      "expect" : {
+        "bitCount" : 358,
+        "firstBits" : "000000000000000000000000000000000000000000000001000000000000000001111111111110110000000000000000",
+        "lastBits" : "000000000000000000000000010000000000000000011111111111101001000000000000000000000000100000000000",
+        "sampleCount" : 9000
+      },
+      "input" : {
+        "amplitude" : "0.800000011920929",
+        "frameCount" : 6,
+        "leadSilenceSamples" : 0,
+        "rate" : "24",
+        "sampleRate" : "48000.0",
+        "timecode" : [
+          1,
+          0,
+          0,
+          0
+        ],
+        "trailSilenceSamples" : 0,
+        "truncateToSamples" : 9000
+      },
+      "label" : "bits/truncated-mid-frame/24@48000/01:00:00:00/x6",
+      "op" : "bits"
+    },
+    {
+      "expect" : {
+        "frames" : [
+          {
+            "startSample" : 2000,
+            "timecode" : "01:00:00:01"
+          },
+          {
+            "startSample" : 4000,
+            "timecode" : "01:00:00:02"
+          },
+          {
+            "startSample" : 6000,
+            "timecode" : "01:00:00:03"
+          }
+        ],
+        "sampleCount" : 9000
+      },
+      "input" : {
+        "amplitude" : "0.800000011920929",
+        "frameCount" : 6,
+        "leadSilenceSamples" : 0,
+        "rate" : "24",
+        "sampleRate" : "48000.0",
+        "timecode" : [
+          1,
+          0,
+          0,
+          0
+        ],
+        "trailSilenceSamples" : 0,
+        "truncateToSamples" : 9000
+      },
+      "label" : "decode/truncated-mid-frame/24@48000/01:00:00:00/x6",
+      "op" : "decode"
+    },
+    {
+      "expect" : {
+        "firstTransitions" : [
+          25,
+          50,
+          75,
+          100,
+          125,
+          150,
+          175,
+          200
+        ],
+        "lastTransitions" : [
+          7888,
+          7900,
+          7913,
+          7925,
+          7938,
+          7950,
+          7975,
+          7988
+        ],
+        "sampleCount" : 8000,
+        "transitionCount" : 381
+      },
+      "input" : {
+        "amplitude" : "0.800000011920929",
+        "frameCount" : 6,
+        "leadSilenceSamples" : 0,
+        "rate" : "24",
+        "sampleRate" : "48000.0",
+        "timecode" : [
+          1,
+          0,
+          0,
+          0
+        ],
+        "trailSilenceSamples" : 0,
+        "truncateToSamples" : 8000
+      },
+      "label" : "transitions/truncated-immediately-after-a-frame/24@48000/01:00:00:00/x6",
+      "op" : "transitions"
+    },
+    {
+      "expect" : {
+        "halfBitSamples" : "12.504065040650406",
+        "sampleCount" : 8000
+      },
+      "input" : {
+        "amplitude" : "0.800000011920929",
+        "frameCount" : 6,
+        "leadSilenceSamples" : 0,
+        "rate" : "24",
+        "sampleRate" : "48000.0",
+        "timecode" : [
+          1,
+          0,
+          0,
+          0
+        ],
+        "trailSilenceSamples" : 0,
+        "truncateToSamples" : 8000
+      },
+      "label" : "halfBit/truncated-immediately-after-a-frame/24@48000/01:00:00:00/x6",
+      "op" : "halfBit"
+    },
+    {
+      "expect" : {
+        "framesPerSecond" : 24,
+        "sampleCount" : 8000
+      },
+      "input" : {
+        "amplitude" : "0.800000011920929",
+        "frameCount" : 6,
+        "leadSilenceSamples" : 0,
+        "rate" : "24",
+        "sampleRate" : "48000.0",
+        "timecode" : [
+          1,
+          0,
+          0,
+          0
+        ],
+        "trailSilenceSamples" : 0,
+        "truncateToSamples" : 8000
+      },
+      "label" : "framesPerSecond/truncated-immediately-after-a-frame/24@48000/01:00:00:00/x6",
+      "op" : "framesPerSecond"
+    },
+    {
+      "expect" : {
+        "bitCount" : 318,
+        "firstBits" : "000000000000000000000000000000000000000000000001000000000000000001111111111110110000000000000000",
+        "lastBits" : "000111111111111011100000000000000000000000000000000000000000000001000000000000000001111111111110",
+        "sampleCount" : 8000
+      },
+      "input" : {
+        "amplitude" : "0.800000011920929",
+        "frameCount" : 6,
+        "leadSilenceSamples" : 0,
+        "rate" : "24",
+        "sampleRate" : "48000.0",
+        "timecode" : [
+          1,
+          0,
+          0,
+          0
+        ],
+        "trailSilenceSamples" : 0,
+        "truncateToSamples" : 8000
+      },
+      "label" : "bits/truncated-immediately-after-a-frame/24@48000/01:00:00:00/x6",
+      "op" : "bits"
+    },
+    {
+      "expect" : {
+        "frames" : [
+          {
+            "startSample" : 2000,
+            "timecode" : "01:00:00:01"
+          },
+          {
+            "startSample" : 4000,
+            "timecode" : "01:00:00:02"
+          }
+        ],
+        "sampleCount" : 8000
+      },
+      "input" : {
+        "amplitude" : "0.800000011920929",
+        "frameCount" : 6,
+        "leadSilenceSamples" : 0,
+        "rate" : "24",
+        "sampleRate" : "48000.0",
+        "timecode" : [
+          1,
+          0,
+          0,
+          0
+        ],
+        "trailSilenceSamples" : 0,
+        "truncateToSamples" : 8000
+      },
+      "label" : "decode/truncated-immediately-after-a-frame/24@48000/01:00:00:00/x6",
+      "op" : "decode"
+    },
+    {
+      "expect" : {
+        "firstTransitions" : [
+          25
+        ],
+        "lastTransitions" : [
+          25
+        ],
+        "sampleCount" : 30,
+        "transitionCount" : 1
+      },
+      "input" : {
+        "amplitude" : "0.800000011920929",
+        "frameCount" : 6,
+        "leadSilenceSamples" : 0,
+        "rate" : "24",
+        "sampleRate" : "48000.0",
+        "timecode" : [
+          1,
+          0,
+          0,
+          0
+        ],
+        "trailSilenceSamples" : 0,
+        "truncateToSamples" : 30
+      },
+      "label" : "transitions/too-few-transitions/24@48000/01:00:00:00/x6",
+      "op" : "transitions"
+    },
+    {
+      "expect" : {
+        "sampleCount" : 30
+      },
+      "input" : {
+        "amplitude" : "0.800000011920929",
+        "frameCount" : 6,
+        "leadSilenceSamples" : 0,
+        "rate" : "24",
+        "sampleRate" : "48000.0",
+        "timecode" : [
+          1,
+          0,
+          0,
+          0
+        ],
+        "trailSilenceSamples" : 0,
+        "truncateToSamples" : 30
+      },
+      "label" : "halfBit/too-few-transitions/24@48000/01:00:00:00/x6",
+      "op" : "halfBit"
+    },
+    {
+      "expect" : {
+        "sampleCount" : 30
+      },
+      "input" : {
+        "amplitude" : "0.800000011920929",
+        "frameCount" : 6,
+        "leadSilenceSamples" : 0,
+        "rate" : "24",
+        "sampleRate" : "48000.0",
+        "timecode" : [
+          1,
+          0,
+          0,
+          0
+        ],
+        "trailSilenceSamples" : 0,
+        "truncateToSamples" : 30
+      },
+      "label" : "framesPerSecond/too-few-transitions/24@48000/01:00:00:00/x6",
+      "op" : "framesPerSecond"
+    },
+    {
+      "expect" : {
+        "bitCount" : 0,
+        "firstBits" : "",
+        "lastBits" : "",
+        "sampleCount" : 30
+      },
+      "input" : {
+        "amplitude" : "0.800000011920929",
+        "frameCount" : 6,
+        "leadSilenceSamples" : 0,
+        "rate" : "24",
+        "sampleRate" : "48000.0",
+        "timecode" : [
+          1,
+          0,
+          0,
+          0
+        ],
+        "trailSilenceSamples" : 0,
+        "truncateToSamples" : 30
+      },
+      "label" : "bits/too-few-transitions/24@48000/01:00:00:00/x6",
+      "op" : "bits"
+    },
+    {
+      "expect" : {
+        "frames" : [
+
+        ],
+        "sampleCount" : 30
+      },
+      "input" : {
+        "amplitude" : "0.800000011920929",
+        "frameCount" : 6,
+        "leadSilenceSamples" : 0,
+        "rate" : "24",
+        "sampleRate" : "48000.0",
+        "timecode" : [
+          1,
+          0,
+          0,
+          0
+        ],
+        "trailSilenceSamples" : 0,
+        "truncateToSamples" : 30
+      },
+      "label" : "decode/too-few-transitions/24@48000/01:00:00:00/x6",
+      "op" : "decode"
+    },
+    {
+      "expect" : {
+        "firstTransitions" : [
+
+        ],
+        "lastTransitions" : [
+
+        ],
+        "sampleCount" : 4000,
+        "transitionCount" : 0
+      },
+      "input" : {
+        "amplitude" : "0.800000011920929",
+        "frameCount" : 0,
+        "leadSilenceSamples" : 4000,
+        "rate" : "24",
+        "sampleRate" : "48000.0",
+        "timecode" : [
+          1,
+          0,
+          0,
+          0
+        ],
+        "trailSilenceSamples" : 0
+      },
+      "label" : "transitions/silence-only/24@48000/01:00:00:00/x0",
+      "op" : "transitions"
+    },
+    {
+      "expect" : {
+        "sampleCount" : 4000
+      },
+      "input" : {
+        "amplitude" : "0.800000011920929",
+        "frameCount" : 0,
+        "leadSilenceSamples" : 4000,
+        "rate" : "24",
+        "sampleRate" : "48000.0",
+        "timecode" : [
+          1,
+          0,
+          0,
+          0
+        ],
+        "trailSilenceSamples" : 0
+      },
+      "label" : "halfBit/silence-only/24@48000/01:00:00:00/x0",
+      "op" : "halfBit"
+    },
+    {
+      "expect" : {
+        "sampleCount" : 4000
+      },
+      "input" : {
+        "amplitude" : "0.800000011920929",
+        "frameCount" : 0,
+        "leadSilenceSamples" : 4000,
+        "rate" : "24",
+        "sampleRate" : "48000.0",
+        "timecode" : [
+          1,
+          0,
+          0,
+          0
+        ],
+        "trailSilenceSamples" : 0
+      },
+      "label" : "framesPerSecond/silence-only/24@48000/01:00:00:00/x0",
+      "op" : "framesPerSecond"
+    },
+    {
+      "expect" : {
+        "bitCount" : 0,
+        "firstBits" : "",
+        "lastBits" : "",
+        "sampleCount" : 4000
+      },
+      "input" : {
+        "amplitude" : "0.800000011920929",
+        "frameCount" : 0,
+        "leadSilenceSamples" : 4000,
+        "rate" : "24",
+        "sampleRate" : "48000.0",
+        "timecode" : [
+          1,
+          0,
+          0,
+          0
+        ],
+        "trailSilenceSamples" : 0
+      },
+      "label" : "bits/silence-only/24@48000/01:00:00:00/x0",
+      "op" : "bits"
+    },
+    {
+      "expect" : {
+        "frames" : [
+
+        ],
+        "sampleCount" : 4000
+      },
+      "input" : {
+        "amplitude" : "0.800000011920929",
+        "frameCount" : 0,
+        "leadSilenceSamples" : 4000,
+        "rate" : "24",
+        "sampleRate" : "48000.0",
+        "timecode" : [
+          1,
+          0,
+          0,
+          0
+        ],
+        "trailSilenceSamples" : 0
+      },
+      "label" : "decode/silence-only/24@48000/01:00:00:00/x0",
+      "op" : "decode"
+    },
+    {
+      "expect" : {
+        "firstTransitions" : [
+          24025,
+          24050,
+          24075,
+          24100,
+          24125,
+          24150,
+          24175,
+          24200
+        ],
+        "lastTransitions" : [
+          35888,
+          35900,
+          35913,
+          35925,
+          35938,
+          35950,
+          35975,
+          35988
+        ],
+        "sampleCount" : 36000,
+        "transitionCount" : 573
+      },
+      "input" : {
+        "amplitude" : "0.800000011920929",
+        "frameCount" : 6,
+        "leadSilenceSamples" : 24000,
+        "rate" : "24",
+        "sampleRate" : "48000.0",
+        "timecode" : [
+          1,
+          0,
+          0,
+          0
+        ],
+        "trailSilenceSamples" : 0
+      },
+      "label" : "transitions/silence-lead-in/24@48000/01:00:00:00/x6",
+      "op" : "transitions"
+    },
+    {
+      "expect" : {
+        "halfBitSamples" : "12.502673796791443",
+        "sampleCount" : 36000
+      },
+      "input" : {
+        "amplitude" : "0.800000011920929",
+        "frameCount" : 6,
+        "leadSilenceSamples" : 24000,
+        "rate" : "24",
+        "sampleRate" : "48000.0",
+        "timecode" : [
+          1,
+          0,
+          0,
+          0
+        ],
+        "trailSilenceSamples" : 0
+      },
+      "label" : "halfBit/silence-lead-in/24@48000/01:00:00:00/x6",
+      "op" : "halfBit"
+    },
+    {
+      "expect" : {
+        "framesPerSecond" : 24,
+        "sampleCount" : 36000
+      },
+      "input" : {
+        "amplitude" : "0.800000011920929",
+        "frameCount" : 6,
+        "leadSilenceSamples" : 24000,
+        "rate" : "24",
+        "sampleRate" : "48000.0",
+        "timecode" : [
+          1,
+          0,
+          0,
+          0
+        ],
+        "trailSilenceSamples" : 0
+      },
+      "label" : "framesPerSecond/silence-lead-in/24@48000/01:00:00:00/x6",
+      "op" : "framesPerSecond"
+    },
+    {
+      "expect" : {
+        "bitCount" : 478,
+        "firstBits" : "000000000000000000000000000000000000000000000001000000000000000001111111111110110000000000000000",
+        "lastBits" : "000111111111111011010000000000000000000000000000000000000000000001000000000000000001111111111110",
+        "sampleCount" : 36000
+      },
+      "input" : {
+        "amplitude" : "0.800000011920929",
+        "frameCount" : 6,
+        "leadSilenceSamples" : 24000,
+        "rate" : "24",
+        "sampleRate" : "48000.0",
+        "timecode" : [
+          1,
+          0,
+          0,
+          0
+        ],
+        "trailSilenceSamples" : 0
+      },
+      "label" : "bits/silence-lead-in/24@48000/01:00:00:00/x6",
+      "op" : "bits"
+    },
+    {
+      "expect" : {
+        "frames" : [
+          {
+            "startSample" : 26000,
+            "timecode" : "01:00:00:01"
+          },
+          {
+            "startSample" : 28000,
+            "timecode" : "01:00:00:02"
+          },
+          {
+            "startSample" : 30000,
+            "timecode" : "01:00:00:03"
+          },
+          {
+            "startSample" : 32000,
+            "timecode" : "01:00:00:04"
+          }
+        ],
+        "sampleCount" : 36000
+      },
+      "input" : {
+        "amplitude" : "0.800000011920929",
+        "frameCount" : 6,
+        "leadSilenceSamples" : 24000,
+        "rate" : "24",
+        "sampleRate" : "48000.0",
+        "timecode" : [
+          1,
+          0,
+          0,
+          0
+        ],
+        "trailSilenceSamples" : 0
+      },
+      "label" : "decode/silence-lead-in/24@48000/01:00:00:00/x6",
+      "op" : "decode"
+    },
+    {
+      "expect" : {
+        "firstTransitions" : [
+          25,
+          50,
+          75,
+          100,
+          125,
+          150,
+          175,
+          200
+        ],
+        "lastTransitions" : [
+          11888,
+          11900,
+          11913,
+          11925,
+          11938,
+          11950,
+          11975,
+          11988
+        ],
+        "sampleCount" : 12000,
+        "transitionCount" : 573
+      },
+      "input" : {
+        "amplitude" : "0.800000011920929",
+        "frameCount" : 6,
+        "leadSilenceSamples" : 0,
+        "offsetBy" : "0.5",
+        "rate" : "24",
+        "sampleRate" : "48000.0",
+        "timecode" : [
+          1,
+          0,
+          0,
+          0
+        ],
+        "trailSilenceSamples" : 0
+      },
+      "label" : "transitions/dc-offset/d0.5/24@48000/01:00:00:00/x6",
+      "op" : "transitions"
+    },
+    {
+      "expect" : {
+        "halfBitSamples" : "12.502673796791443",
+        "sampleCount" : 12000
+      },
+      "input" : {
+        "amplitude" : "0.800000011920929",
+        "frameCount" : 6,
+        "leadSilenceSamples" : 0,
+        "offsetBy" : "0.5",
+        "rate" : "24",
+        "sampleRate" : "48000.0",
+        "timecode" : [
+          1,
+          0,
+          0,
+          0
+        ],
+        "trailSilenceSamples" : 0
+      },
+      "label" : "halfBit/dc-offset/d0.5/24@48000/01:00:00:00/x6",
+      "op" : "halfBit"
+    },
+    {
+      "expect" : {
+        "framesPerSecond" : 24,
+        "sampleCount" : 12000
+      },
+      "input" : {
+        "amplitude" : "0.800000011920929",
+        "frameCount" : 6,
+        "leadSilenceSamples" : 0,
+        "offsetBy" : "0.5",
+        "rate" : "24",
+        "sampleRate" : "48000.0",
+        "timecode" : [
+          1,
+          0,
+          0,
+          0
+        ],
+        "trailSilenceSamples" : 0
+      },
+      "label" : "framesPerSecond/dc-offset/d0.5/24@48000/01:00:00:00/x6",
+      "op" : "framesPerSecond"
+    },
+    {
+      "expect" : {
+        "bitCount" : 478,
+        "firstBits" : "000000000000000000000000000000000000000000000001000000000000000001111111111110110000000000000000",
+        "lastBits" : "000111111111111011010000000000000000000000000000000000000000000001000000000000000001111111111110",
+        "sampleCount" : 12000
+      },
+      "input" : {
+        "amplitude" : "0.800000011920929",
+        "frameCount" : 6,
+        "leadSilenceSamples" : 0,
+        "offsetBy" : "0.5",
+        "rate" : "24",
+        "sampleRate" : "48000.0",
+        "timecode" : [
+          1,
+          0,
+          0,
+          0
+        ],
+        "trailSilenceSamples" : 0
+      },
+      "label" : "bits/dc-offset/d0.5/24@48000/01:00:00:00/x6",
+      "op" : "bits"
+    },
+    {
+      "expect" : {
+        "frames" : [
+          {
+            "startSample" : 2000,
+            "timecode" : "01:00:00:01"
+          },
+          {
+            "startSample" : 4000,
+            "timecode" : "01:00:00:02"
+          },
+          {
+            "startSample" : 6000,
+            "timecode" : "01:00:00:03"
+          },
+          {
+            "startSample" : 8000,
+            "timecode" : "01:00:00:04"
+          }
+        ],
+        "sampleCount" : 12000
+      },
+      "input" : {
+        "amplitude" : "0.800000011920929",
+        "frameCount" : 6,
+        "leadSilenceSamples" : 0,
+        "offsetBy" : "0.5",
+        "rate" : "24",
+        "sampleRate" : "48000.0",
+        "timecode" : [
+          1,
+          0,
+          0,
+          0
+        ],
+        "trailSilenceSamples" : 0
+      },
+      "label" : "decode/dc-offset/d0.5/24@48000/01:00:00:00/x6",
+      "op" : "decode"
+    },
+    {
+      "expect" : {
+        "firstTransitions" : [
+          25,
+          50,
+          75,
+          100,
+          125,
+          150,
+          175,
+          200
+        ],
+        "lastTransitions" : [
+          11888,
+          11900,
+          11913,
+          11925,
+          11938,
+          11950,
+          11975,
+          11988
+        ],
+        "sampleCount" : 12000,
+        "transitionCount" : 573
+      },
+      "input" : {
+        "amplitude" : "0.800000011920929",
+        "frameCount" : 6,
+        "leadSilenceSamples" : 0,
+        "offsetBy" : "0.5145999789237976",
+        "rate" : "24",
+        "sampleRate" : "48000.0",
+        "timecode" : [
+          1,
+          0,
+          0,
+          0
+        ],
+        "trailSilenceSamples" : 0
+      },
+      "label" : "transitions/dc-offset/d0.5146/24@48000/01:00:00:00/x6",
+      "op" : "transitions"
+    },
+    {
+      "expect" : {
+        "halfBitSamples" : "12.502673796791443",
+        "sampleCount" : 12000
+      },
+      "input" : {
+        "amplitude" : "0.800000011920929",
+        "frameCount" : 6,
+        "leadSilenceSamples" : 0,
+        "offsetBy" : "0.5145999789237976",
+        "rate" : "24",
+        "sampleRate" : "48000.0",
+        "timecode" : [
+          1,
+          0,
+          0,
+          0
+        ],
+        "trailSilenceSamples" : 0
+      },
+      "label" : "halfBit/dc-offset/d0.5146/24@48000/01:00:00:00/x6",
+      "op" : "halfBit"
+    },
+    {
+      "expect" : {
+        "framesPerSecond" : 24,
+        "sampleCount" : 12000
+      },
+      "input" : {
+        "amplitude" : "0.800000011920929",
+        "frameCount" : 6,
+        "leadSilenceSamples" : 0,
+        "offsetBy" : "0.5145999789237976",
+        "rate" : "24",
+        "sampleRate" : "48000.0",
+        "timecode" : [
+          1,
+          0,
+          0,
+          0
+        ],
+        "trailSilenceSamples" : 0
+      },
+      "label" : "framesPerSecond/dc-offset/d0.5146/24@48000/01:00:00:00/x6",
+      "op" : "framesPerSecond"
+    },
+    {
+      "expect" : {
+        "bitCount" : 478,
+        "firstBits" : "000000000000000000000000000000000000000000000001000000000000000001111111111110110000000000000000",
+        "lastBits" : "000111111111111011010000000000000000000000000000000000000000000001000000000000000001111111111110",
+        "sampleCount" : 12000
+      },
+      "input" : {
+        "amplitude" : "0.800000011920929",
+        "frameCount" : 6,
+        "leadSilenceSamples" : 0,
+        "offsetBy" : "0.5145999789237976",
+        "rate" : "24",
+        "sampleRate" : "48000.0",
+        "timecode" : [
+          1,
+          0,
+          0,
+          0
+        ],
+        "trailSilenceSamples" : 0
+      },
+      "label" : "bits/dc-offset/d0.5146/24@48000/01:00:00:00/x6",
+      "op" : "bits"
+    },
+    {
+      "expect" : {
+        "frames" : [
+          {
+            "startSample" : 2000,
+            "timecode" : "01:00:00:01"
+          },
+          {
+            "startSample" : 4000,
+            "timecode" : "01:00:00:02"
+          },
+          {
+            "startSample" : 6000,
+            "timecode" : "01:00:00:03"
+          },
+          {
+            "startSample" : 8000,
+            "timecode" : "01:00:00:04"
+          }
+        ],
+        "sampleCount" : 12000
+      },
+      "input" : {
+        "amplitude" : "0.800000011920929",
+        "frameCount" : 6,
+        "leadSilenceSamples" : 0,
+        "offsetBy" : "0.5145999789237976",
+        "rate" : "24",
+        "sampleRate" : "48000.0",
+        "timecode" : [
+          1,
+          0,
+          0,
+          0
+        ],
+        "trailSilenceSamples" : 0
+      },
+      "label" : "decode/dc-offset/d0.5146/24@48000/01:00:00:00/x6",
+      "op" : "decode"
+    },
+    {
+      "expect" : {
+        "firstTransitions" : [
+
+        ],
+        "lastTransitions" : [
+
+        ],
+        "sampleCount" : 12000,
+        "transitionCount" : 0
+      },
+      "input" : {
+        "amplitude" : "0.800000011920929",
+        "frameCount" : 6,
+        "leadSilenceSamples" : 0,
+        "offsetBy" : "0.550000011920929",
+        "rate" : "24",
+        "sampleRate" : "48000.0",
+        "timecode" : [
+          1,
+          0,
+          0,
+          0
+        ],
+        "trailSilenceSamples" : 0
+      },
+      "label" : "transitions/dc-offset/d0.55/24@48000/01:00:00:00/x6",
+      "op" : "transitions"
+    },
+    {
+      "expect" : {
+        "sampleCount" : 12000
+      },
+      "input" : {
+        "amplitude" : "0.800000011920929",
+        "frameCount" : 6,
+        "leadSilenceSamples" : 0,
+        "offsetBy" : "0.550000011920929",
+        "rate" : "24",
+        "sampleRate" : "48000.0",
+        "timecode" : [
+          1,
+          0,
+          0,
+          0
+        ],
+        "trailSilenceSamples" : 0
+      },
+      "label" : "halfBit/dc-offset/d0.55/24@48000/01:00:00:00/x6",
+      "op" : "halfBit"
+    },
+    {
+      "expect" : {
+        "sampleCount" : 12000
+      },
+      "input" : {
+        "amplitude" : "0.800000011920929",
+        "frameCount" : 6,
+        "leadSilenceSamples" : 0,
+        "offsetBy" : "0.550000011920929",
+        "rate" : "24",
+        "sampleRate" : "48000.0",
+        "timecode" : [
+          1,
+          0,
+          0,
+          0
+        ],
+        "trailSilenceSamples" : 0
+      },
+      "label" : "framesPerSecond/dc-offset/d0.55/24@48000/01:00:00:00/x6",
+      "op" : "framesPerSecond"
+    },
+    {
+      "expect" : {
+        "bitCount" : 0,
+        "firstBits" : "",
+        "lastBits" : "",
+        "sampleCount" : 12000
+      },
+      "input" : {
+        "amplitude" : "0.800000011920929",
+        "frameCount" : 6,
+        "leadSilenceSamples" : 0,
+        "offsetBy" : "0.550000011920929",
+        "rate" : "24",
+        "sampleRate" : "48000.0",
+        "timecode" : [
+          1,
+          0,
+          0,
+          0
+        ],
+        "trailSilenceSamples" : 0
+      },
+      "label" : "bits/dc-offset/d0.55/24@48000/01:00:00:00/x6",
+      "op" : "bits"
+    },
+    {
+      "expect" : {
+        "frames" : [
+
+        ],
+        "sampleCount" : 12000
+      },
+      "input" : {
+        "amplitude" : "0.800000011920929",
+        "frameCount" : 6,
+        "leadSilenceSamples" : 0,
+        "offsetBy" : "0.550000011920929",
+        "rate" : "24",
+        "sampleRate" : "48000.0",
+        "timecode" : [
+          1,
+          0,
+          0,
+          0
+        ],
+        "trailSilenceSamples" : 0
+      },
+      "label" : "decode/dc-offset/d0.55/24@48000/01:00:00:00/x6",
+      "op" : "decode"
+    },
+    {
+      "expect" : {
+        "firstTransitions" : [
+          25,
+          50,
+          75,
+          100,
+          125,
+          150,
+          175,
+          200
+        ],
+        "lastTransitions" : [
+          11888,
+          11900,
+          11913,
+          11925,
+          11938,
+          11950,
+          11975,
+          11988
+        ],
+        "sampleCount" : 12000,
+        "transitionCount" : 573
+      },
+      "input" : {
+        "amplitude" : "0.00019999999494757503",
+        "frameCount" : 6,
+        "leadSilenceSamples" : 0,
+        "rate" : "24",
+        "sampleRate" : "48000.0",
+        "timecode" : [
+          1,
+          0,
+          0,
+          0
+        ],
+        "trailSilenceSamples" : 0
+      },
+      "label" : "transitions/silence-floor/a0.0002/24@48000/01:00:00:00/x6",
+      "op" : "transitions"
+    },
+    {
+      "expect" : {
+        "halfBitSamples" : "12.502673796791443",
+        "sampleCount" : 12000
+      },
+      "input" : {
+        "amplitude" : "0.00019999999494757503",
+        "frameCount" : 6,
+        "leadSilenceSamples" : 0,
+        "rate" : "24",
+        "sampleRate" : "48000.0",
+        "timecode" : [
+          1,
+          0,
+          0,
+          0
+        ],
+        "trailSilenceSamples" : 0
+      },
+      "label" : "halfBit/silence-floor/a0.0002/24@48000/01:00:00:00/x6",
+      "op" : "halfBit"
+    },
+    {
+      "expect" : {
+        "framesPerSecond" : 24,
+        "sampleCount" : 12000
+      },
+      "input" : {
+        "amplitude" : "0.00019999999494757503",
+        "frameCount" : 6,
+        "leadSilenceSamples" : 0,
+        "rate" : "24",
+        "sampleRate" : "48000.0",
+        "timecode" : [
+          1,
+          0,
+          0,
+          0
+        ],
+        "trailSilenceSamples" : 0
+      },
+      "label" : "framesPerSecond/silence-floor/a0.0002/24@48000/01:00:00:00/x6",
+      "op" : "framesPerSecond"
+    },
+    {
+      "expect" : {
+        "bitCount" : 478,
+        "firstBits" : "000000000000000000000000000000000000000000000001000000000000000001111111111110110000000000000000",
+        "lastBits" : "000111111111111011010000000000000000000000000000000000000000000001000000000000000001111111111110",
+        "sampleCount" : 12000
+      },
+      "input" : {
+        "amplitude" : "0.00019999999494757503",
+        "frameCount" : 6,
+        "leadSilenceSamples" : 0,
+        "rate" : "24",
+        "sampleRate" : "48000.0",
+        "timecode" : [
+          1,
+          0,
+          0,
+          0
+        ],
+        "trailSilenceSamples" : 0
+      },
+      "label" : "bits/silence-floor/a0.0002/24@48000/01:00:00:00/x6",
+      "op" : "bits"
+    },
+    {
+      "expect" : {
+        "frames" : [
+          {
+            "startSample" : 2000,
+            "timecode" : "01:00:00:01"
+          },
+          {
+            "startSample" : 4000,
+            "timecode" : "01:00:00:02"
+          },
+          {
+            "startSample" : 6000,
+            "timecode" : "01:00:00:03"
+          },
+          {
+            "startSample" : 8000,
+            "timecode" : "01:00:00:04"
+          }
+        ],
+        "sampleCount" : 12000
+      },
+      "input" : {
+        "amplitude" : "0.00019999999494757503",
+        "frameCount" : 6,
+        "leadSilenceSamples" : 0,
+        "rate" : "24",
+        "sampleRate" : "48000.0",
+        "timecode" : [
+          1,
+          0,
+          0,
+          0
+        ],
+        "trailSilenceSamples" : 0
+      },
+      "label" : "decode/silence-floor/a0.0002/24@48000/01:00:00:00/x6",
+      "op" : "decode"
+    },
+    {
+      "expect" : {
+        "firstTransitions" : [
+          25,
+          50,
+          75,
+          100,
+          125,
+          150,
+          175,
+          200
+        ],
+        "lastTransitions" : [
+          11888,
+          11900,
+          11913,
+          11925,
+          11938,
+          11950,
+          11975,
+          11988
+        ],
+        "sampleCount" : 12000,
+        "transitionCount" : 573
+      },
+      "input" : {
+        "amplitude" : "9.999999747378752e-05",
+        "frameCount" : 6,
+        "leadSilenceSamples" : 0,
+        "rate" : "24",
+        "sampleRate" : "48000.0",
+        "timecode" : [
+          1,
+          0,
+          0,
+          0
+        ],
+        "trailSilenceSamples" : 0
+      },
+      "label" : "transitions/silence-floor/a0.0001/24@48000/01:00:00:00/x6",
+      "op" : "transitions"
+    },
+    {
+      "expect" : {
+        "halfBitSamples" : "12.502673796791443",
+        "sampleCount" : 12000
+      },
+      "input" : {
+        "amplitude" : "9.999999747378752e-05",
+        "frameCount" : 6,
+        "leadSilenceSamples" : 0,
+        "rate" : "24",
+        "sampleRate" : "48000.0",
+        "timecode" : [
+          1,
+          0,
+          0,
+          0
+        ],
+        "trailSilenceSamples" : 0
+      },
+      "label" : "halfBit/silence-floor/a0.0001/24@48000/01:00:00:00/x6",
+      "op" : "halfBit"
+    },
+    {
+      "expect" : {
+        "framesPerSecond" : 24,
+        "sampleCount" : 12000
+      },
+      "input" : {
+        "amplitude" : "9.999999747378752e-05",
+        "frameCount" : 6,
+        "leadSilenceSamples" : 0,
+        "rate" : "24",
+        "sampleRate" : "48000.0",
+        "timecode" : [
+          1,
+          0,
+          0,
+          0
+        ],
+        "trailSilenceSamples" : 0
+      },
+      "label" : "framesPerSecond/silence-floor/a0.0001/24@48000/01:00:00:00/x6",
+      "op" : "framesPerSecond"
+    },
+    {
+      "expect" : {
+        "bitCount" : 478,
+        "firstBits" : "000000000000000000000000000000000000000000000001000000000000000001111111111110110000000000000000",
+        "lastBits" : "000111111111111011010000000000000000000000000000000000000000000001000000000000000001111111111110",
+        "sampleCount" : 12000
+      },
+      "input" : {
+        "amplitude" : "9.999999747378752e-05",
+        "frameCount" : 6,
+        "leadSilenceSamples" : 0,
+        "rate" : "24",
+        "sampleRate" : "48000.0",
+        "timecode" : [
+          1,
+          0,
+          0,
+          0
+        ],
+        "trailSilenceSamples" : 0
+      },
+      "label" : "bits/silence-floor/a0.0001/24@48000/01:00:00:00/x6",
+      "op" : "bits"
+    },
+    {
+      "expect" : {
+        "frames" : [
+          {
+            "startSample" : 2000,
+            "timecode" : "01:00:00:01"
+          },
+          {
+            "startSample" : 4000,
+            "timecode" : "01:00:00:02"
+          },
+          {
+            "startSample" : 6000,
+            "timecode" : "01:00:00:03"
+          },
+          {
+            "startSample" : 8000,
+            "timecode" : "01:00:00:04"
+          }
+        ],
+        "sampleCount" : 12000
+      },
+      "input" : {
+        "amplitude" : "9.999999747378752e-05",
+        "frameCount" : 6,
+        "leadSilenceSamples" : 0,
+        "rate" : "24",
+        "sampleRate" : "48000.0",
+        "timecode" : [
+          1,
+          0,
+          0,
+          0
+        ],
+        "trailSilenceSamples" : 0
+      },
+      "label" : "decode/silence-floor/a0.0001/24@48000/01:00:00:00/x6",
+      "op" : "decode"
+    },
+    {
+      "expect" : {
+        "firstTransitions" : [
+
+        ],
+        "lastTransitions" : [
+
+        ],
+        "sampleCount" : 12000,
+        "transitionCount" : 0
+      },
+      "input" : {
+        "amplitude" : "9.899999713525176e-05",
+        "frameCount" : 6,
+        "leadSilenceSamples" : 0,
+        "rate" : "24",
+        "sampleRate" : "48000.0",
+        "timecode" : [
+          1,
+          0,
+          0,
+          0
+        ],
+        "trailSilenceSamples" : 0
+      },
+      "label" : "transitions/silence-floor/a9.9e-05/24@48000/01:00:00:00/x6",
+      "op" : "transitions"
+    },
+    {
+      "expect" : {
+        "sampleCount" : 12000
+      },
+      "input" : {
+        "amplitude" : "9.899999713525176e-05",
+        "frameCount" : 6,
+        "leadSilenceSamples" : 0,
+        "rate" : "24",
+        "sampleRate" : "48000.0",
+        "timecode" : [
+          1,
+          0,
+          0,
+          0
+        ],
+        "trailSilenceSamples" : 0
+      },
+      "label" : "halfBit/silence-floor/a9.9e-05/24@48000/01:00:00:00/x6",
+      "op" : "halfBit"
+    },
+    {
+      "expect" : {
+        "sampleCount" : 12000
+      },
+      "input" : {
+        "amplitude" : "9.899999713525176e-05",
+        "frameCount" : 6,
+        "leadSilenceSamples" : 0,
+        "rate" : "24",
+        "sampleRate" : "48000.0",
+        "timecode" : [
+          1,
+          0,
+          0,
+          0
+        ],
+        "trailSilenceSamples" : 0
+      },
+      "label" : "framesPerSecond/silence-floor/a9.9e-05/24@48000/01:00:00:00/x6",
+      "op" : "framesPerSecond"
+    },
+    {
+      "expect" : {
+        "bitCount" : 0,
+        "firstBits" : "",
+        "lastBits" : "",
+        "sampleCount" : 12000
+      },
+      "input" : {
+        "amplitude" : "9.899999713525176e-05",
+        "frameCount" : 6,
+        "leadSilenceSamples" : 0,
+        "rate" : "24",
+        "sampleRate" : "48000.0",
+        "timecode" : [
+          1,
+          0,
+          0,
+          0
+        ],
+        "trailSilenceSamples" : 0
+      },
+      "label" : "bits/silence-floor/a9.9e-05/24@48000/01:00:00:00/x6",
+      "op" : "bits"
+    },
+    {
+      "expect" : {
+        "frames" : [
+
+        ],
+        "sampleCount" : 12000
+      },
+      "input" : {
+        "amplitude" : "9.899999713525176e-05",
+        "frameCount" : 6,
+        "leadSilenceSamples" : 0,
+        "rate" : "24",
+        "sampleRate" : "48000.0",
+        "timecode" : [
+          1,
+          0,
+          0,
+          0
+        ],
+        "trailSilenceSamples" : 0
+      },
+      "label" : "decode/silence-floor/a9.9e-05/24@48000/01:00:00:00/x6",
+      "op" : "decode"
+    },
+    {
+      "expect" : {
+        "firstTransitions" : [
+
+        ],
+        "lastTransitions" : [
+
+        ],
+        "sampleCount" : 12000,
+        "transitionCount" : 0
+      },
+      "input" : {
+        "amplitude" : "4.999999873689376e-05",
+        "frameCount" : 6,
+        "leadSilenceSamples" : 0,
+        "rate" : "24",
+        "sampleRate" : "48000.0",
+        "timecode" : [
+          1,
+          0,
+          0,
+          0
+        ],
+        "trailSilenceSamples" : 0
+      },
+      "label" : "transitions/silence-floor/a5e-05/24@48000/01:00:00:00/x6",
+      "op" : "transitions"
+    },
+    {
+      "expect" : {
+        "sampleCount" : 12000
+      },
+      "input" : {
+        "amplitude" : "4.999999873689376e-05",
+        "frameCount" : 6,
+        "leadSilenceSamples" : 0,
+        "rate" : "24",
+        "sampleRate" : "48000.0",
+        "timecode" : [
+          1,
+          0,
+          0,
+          0
+        ],
+        "trailSilenceSamples" : 0
+      },
+      "label" : "halfBit/silence-floor/a5e-05/24@48000/01:00:00:00/x6",
+      "op" : "halfBit"
+    },
+    {
+      "expect" : {
+        "sampleCount" : 12000
+      },
+      "input" : {
+        "amplitude" : "4.999999873689376e-05",
+        "frameCount" : 6,
+        "leadSilenceSamples" : 0,
+        "rate" : "24",
+        "sampleRate" : "48000.0",
+        "timecode" : [
+          1,
+          0,
+          0,
+          0
+        ],
+        "trailSilenceSamples" : 0
+      },
+      "label" : "framesPerSecond/silence-floor/a5e-05/24@48000/01:00:00:00/x6",
+      "op" : "framesPerSecond"
+    },
+    {
+      "expect" : {
+        "bitCount" : 0,
+        "firstBits" : "",
+        "lastBits" : "",
+        "sampleCount" : 12000
+      },
+      "input" : {
+        "amplitude" : "4.999999873689376e-05",
+        "frameCount" : 6,
+        "leadSilenceSamples" : 0,
+        "rate" : "24",
+        "sampleRate" : "48000.0",
+        "timecode" : [
+          1,
+          0,
+          0,
+          0
+        ],
+        "trailSilenceSamples" : 0
+      },
+      "label" : "bits/silence-floor/a5e-05/24@48000/01:00:00:00/x6",
+      "op" : "bits"
+    },
+    {
+      "expect" : {
+        "frames" : [
+
+        ],
+        "sampleCount" : 12000
+      },
+      "input" : {
+        "amplitude" : "4.999999873689376e-05",
+        "frameCount" : 6,
+        "leadSilenceSamples" : 0,
+        "rate" : "24",
+        "sampleRate" : "48000.0",
+        "timecode" : [
+          1,
+          0,
+          0,
+          0
+        ],
+        "trailSilenceSamples" : 0
+      },
+      "label" : "decode/silence-floor/a5e-05/24@48000/01:00:00:00/x6",
+      "op" : "decode"
+    }
+  ],
+  "contract" : "ltc-decode",
+  "note" : "macOS-generated golden vectors for the OnlyCue LTC decoder. The C# OnlyCue.Core re-implementation must reproduce every case exactly. Signals are recipes, not sample dumps: both sides build the same [Float] from the input fields, applying the mutations in the order documented on LTCDecodeGolden.samples(for:), and expect.sampleCount fingerprints the result. The five ops tap the pipeline stage by stage so a failure localises. To regenerate after a deliberate change, delete golden/ltc-decode-v1.json and re-run the suite.",
+  "version" : 1
+}

@@ -18,8 +18,7 @@ extension LTCDecodeGolden {
             leadSilenceSamples: signal.leadSilenceSamples,
             trailSilenceSamples: signal.trailSilenceSamples,
             truncateToSamples: signal.truncateToSamples,
-            flipBitInFrame: signal.flipBitInFrame,
-            flipBitIndices: signal.flipBitIndices,
+            flips: signal.flips,
             offsetBy: GoldenDouble(signal.offsetBy.map { Double($0) })
         )
     }
@@ -85,7 +84,7 @@ extension LTCDecodeGolden {
                 + "expect.sampleCount fingerprints the result. The five ops tap the pipeline stage "
                 + "by stage so a failure localises. To regenerate after a deliberate change, delete "
                 + "golden/ltc-decode-v1.json and re-run the suite.",
-            cases: try allSignals.flatMap(cases(for:))
+            cases: try allSignals().flatMap(cases(for:))
         )
     }
 
@@ -114,30 +113,33 @@ final class LTCDecodeGoldenVectorTests: XCTestCase {
     }
 
     private func structural(_ label: String) throws -> LTCDecodeGolden.Signal {
-        try XCTUnwrap(LTCDecodeGolden.structuralSignals.first { $0.label == label })
+        try XCTUnwrap(try LTCDecodeGolden.structuralSignals().first { $0.label == label })
     }
 
     private func decode(_ signal: LTCDecodeGolden.Signal) throws -> [LTCDecoder.DecodedFrame] {
         LTCDecoder.decode(samples: try LTCDecodeGolden.samples(for: signal), sampleRate: signal.sampleRate)
     }
 
-    /// The control run minus the one frame `signal`'s mutation lands on, matched
+    /// The control run minus every frame `signal`'s mutations land on, matched
     /// **by timecode**. The decoder drops the leading and trailing frame of every
     /// run, so an index into the encoded run is not an index into the decoded one;
     /// and the guard below is what keeps this from degenerating into "the control
     /// never decoded that frame either, so of course nothing changed".
-    private func withoutTheCorruptedFrame(
+    private func withoutTheCorruptedFrames(
         _ control: [LTCDecoder.DecodedFrame],
         of signal: LTCDecodeGolden.Signal
     ) throws -> [LTCDecoder.DecodedFrame] {
         let start = try LTCDecodeGolden.timecode(signal.start, rate: signal.rate)
-        let offset = try XCTUnwrap(signal.flipBitInFrame)
-        let corrupted = Timecode(frameCount: start.frameCount + offset, rate: signal.rate)
-        XCTAssertTrue(
-            control.contains { $0.timecode == corrupted },
-            "the control must decode \(corrupted.displayString) or the case proves nothing"
-        )
-        return control.filter { $0.timecode != corrupted }
+        let flips = try XCTUnwrap(signal.flips)
+        XCTAssertFalse(flips.isEmpty, "a corrupted case must name at least one flip")
+        let corrupted = flips.map { Timecode(frameCount: start.frameCount + $0.frame, rate: signal.rate) }
+        for timecode in corrupted {
+            XCTAssertTrue(
+                control.contains { $0.timecode == timecode },
+                "the control must decode \(timecode.displayString) or the case proves nothing"
+            )
+        }
+        return control.filter { corrupted.contains($0.timecode) == false }
     }
 
     /// **Hazard 3, stated as a rule rather than as a golden number.**
@@ -188,22 +190,82 @@ final class LTCDecodeGoldenVectorTests: XCTestCase {
     ///
     /// `extractFrames` advances 80 bits on a **sync match**, not on a **valid
     /// frame**. So a frame whose parity has been broken is *consumed* and the
-    /// search resumes cleanly after it. The assertion that catches a port which
-    /// puts the advance inside the validity check is therefore not "one frame is
-    /// missing" — it is that *only* that frame is missing and every other frame
-    /// comes back at a byte-identical `startSample`.
+    /// search resumes cleanly after it: *only* that frame is missing and every
+    /// other frame comes back at a byte-identical `startSample`.
     ///
     /// The control is the same recipe with no mutation, so the two runs differ in
     /// exactly one bit on the wire. The corrupted frame is found by timecode
     /// rather than by index, because the decoder drops the leading and trailing
     /// frame of every run — an index into the *encoded* run is not an index into
     /// the *decoded* one.
+    ///
+    /// **What this case does not prove.** An earlier version of this comment
+    /// claimed it was the assertion that catches a port which puts the advance
+    /// inside the validity check. Mutation testing falsified that: a decoder that
+    /// advances only on a valid frame, and even one that never skips at all, crawl
+    /// bit-by-bit through the broken frame and re-lock on the *next* real sync
+    /// word, returning this exact list. With no sync word anywhere but the frame
+    /// boundaries there is nothing for them to re-lock on wrongly. That is what
+    /// `spurious-sync-after-a-broken-frame` is for; see
+    /// `test_aPlantedSyncWordIsSkipped_becauseTheAdvanceIsEightyBits`.
     func test_aParityBrokenFrameIsConsumed_soTheFramesAfterItKeepTheirOffsets() throws {
         let corrupted = try structural("parity-flipped-middle-frame")
         let control = try decode(try clean(.fps24, 48000))
 
         XCTAssertGreaterThanOrEqual(control.count, 3, "the corrupted frame needs neighbours on both sides")
-        XCTAssertEqual(try decode(corrupted), try withoutTheCorruptedFrame(control, of: corrupted))
+        XCTAssertEqual(try decode(corrupted), try withoutTheCorruptedFrames(control, of: corrupted))
+    }
+
+    /// **The advance really is 80 bits — the case that mutation testing forced.**
+    ///
+    /// `spurious-sync-after-a-broken-frame` breaks frame 2's parity *and* plants a
+    /// sync word inside frame 3's payload. The planted word makes the 80-bit
+    /// window ending on it a syntactically complete, well-formed, in-range frame
+    /// (`00:00:45:00`) that straddles the two real frames and is aligned to
+    /// neither — a frame that was never transmitted.
+    ///
+    /// The real decoder never sees it: it matches frame 2's sync, advances a whole
+    /// 80 bits, and lands past the trap. A decoder that advances only on a *valid*
+    /// frame, or one that always advances a single bit, walks into it and reports
+    /// the phantom. Both of those are green on every other case in this contract.
+    func test_aPlantedSyncWordIsSkipped_becauseTheAdvanceIsEightyBits() throws {
+        let signal = try structural("spurious-sync-after-a-broken-frame")
+        let samples = try LTCDecodeGolden.samples(for: signal)
+        let pipeline = LTCDecodeGolden.pipeline(of: samples, sampleRate: signal.sampleRate)
+
+        // The trap is really on the wire, and off the frame grid. The demodulated
+        // stream does not begin on a frame boundary (the comparator's first latch
+        // is not a transition), so the grid is read off the stream rather than
+        // assumed: the real sync words all share one residue mod 80, and the plant
+        // is the single one that does not.
+        let bitsPerFrame = 80
+        let bits = try XCTUnwrap(pipeline.bits)
+        let matches = (0...(bits.count - LTCFrame.syncWord.count)).filter {
+            Array(bits[$0..<($0 + LTCFrame.syncWord.count)]) == LTCFrame.syncWord
+        }
+        let grid = try XCTUnwrap(
+            Dictionary(grouping: matches, by: { $0 % bitsPerFrame })
+                .max { $0.value.count < $1.value.count }?.key,
+            "no sync word at all — the case cannot prove anything"
+        )
+        let offGrid = matches.filter { $0 % bitsPerFrame != grid }
+        XCTAssertEqual(offGrid.count, 1, "exactly one sync word must be off the frame grid: the plant")
+        // And it landed where the recipe designed it: the real sync word starts at
+        // bit 64 of its frame, the plant at `plantSyncAtBit` of its own.
+        XCTAssertEqual(
+            offGrid.first.map { $0 % bitsPerFrame },
+            (grid + LTCDecodeGolden.plantSyncAtBit - 64 + bitsPerFrame) % bitsPerFrame
+        )
+
+        // And the decoder steps straight over it: what survives is the control run
+        // minus the two frames the flips land on, and nothing else.
+        let control = try decode(try clean(.fps24, 48000))
+        let decoded = try decode(signal)
+        XCTAssertEqual(decoded, try withoutTheCorruptedFrames(control, of: signal))
+        XCTAssertFalse(
+            decoded.contains { $0.timecode.displayString == "00:00:45:00" },
+            "the phantom frame the planted sync word spells out must never be reported"
+        )
     }
 
     /// **A well-formed word can still name no timecode.** `bcd-out-of-range`
@@ -212,15 +274,16 @@ final class LTCDecodeGoldenVectorTests: XCTestCase {
     /// `timecode(framesPerSecond:)`. Validity and range are two gates; a port that
     /// folds them into one passes every clean case and fails here.
     ///
-    /// The word is rebuilt from the frame the mutation actually lands on
-    /// (`flipBitInFrame`), not from the run's first frame — otherwise this would
-    /// pin arithmetic that never reaches the wire.
+    /// The word is rebuilt from the frame the mutation actually lands on (the
+    /// single entry in `flips`), not from the run's first frame — otherwise this
+    /// would pin arithmetic that never reaches the wire.
     func test_bcdOutOfRange_isWellFormedButNamesNoTimecode() throws {
         let signal = try structural("bcd-out-of-range")
         let start = try LTCDecodeGolden.timecode(signal.start, rate: signal.rate)
-        let offset = try XCTUnwrap(signal.flipBitInFrame)
-        var bits = LTCFrame(timecode: Timecode(frameCount: start.frameCount + offset, rate: signal.rate)).bits
-        for index in try XCTUnwrap(signal.flipBitIndices) { bits[index].toggle() }
+        let flip = try XCTUnwrap(signal.flips?.first)
+        XCTAssertEqual(signal.flips?.count, 1, "this case corrupts exactly one frame")
+        var bits = LTCFrame(timecode: Timecode(frameCount: start.frameCount + flip.frame, rate: signal.rate)).bits
+        for index in flip.indices { bits[index].toggle() }
         let frame = LTCFrame(bits: bits)
 
         XCTAssertTrue(frame.isWellFormed, "an even number of flips preserves parity")
@@ -230,7 +293,7 @@ final class LTCDecodeGoldenVectorTests: XCTestCase {
         // Refused at the range gate, not the validity gate — so, exactly as with a
         // broken parity, only that frame goes missing.
         let control = try decode(try clean(.fps24, 48000))
-        XCTAssertEqual(try decode(signal), try withoutTheCorruptedFrame(control, of: signal))
+        XCTAssertEqual(try decode(signal), try withoutTheCorruptedFrames(control, of: signal))
     }
 
     /// **The DC ladder straddles a root, and the root is algebra, not a golden

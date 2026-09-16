@@ -2805,9 +2805,13 @@
       },
       "input" : {
         "amplitude" : "0.800000011920929",
-        "flipBitInFrame" : 2,
-        "flipBitIndices" : [
-          3
+        "flips" : [
+          {
+            "frame" : 2,
+            "indices" : [
+              3
+            ]
+          }
         ],
         "frameCount" : 6,
         "leadSilenceSamples" : 0,
@@ -2831,9 +2835,13 @@
       },
       "input" : {
         "amplitude" : "0.800000011920929",
-        "flipBitInFrame" : 2,
-        "flipBitIndices" : [
-          3
+        "flips" : [
+          {
+            "frame" : 2,
+            "indices" : [
+              3
+            ]
+          }
         ],
         "frameCount" : 6,
         "leadSilenceSamples" : 0,
@@ -2857,9 +2865,13 @@
       },
       "input" : {
         "amplitude" : "0.800000011920929",
-        "flipBitInFrame" : 2,
-        "flipBitIndices" : [
-          3
+        "flips" : [
+          {
+            "frame" : 2,
+            "indices" : [
+              3
+            ]
+          }
         ],
         "frameCount" : 6,
         "leadSilenceSamples" : 0,
@@ -2885,9 +2897,13 @@
       },
       "input" : {
         "amplitude" : "0.800000011920929",
-        "flipBitInFrame" : 2,
-        "flipBitIndices" : [
-          3
+        "flips" : [
+          {
+            "frame" : 2,
+            "indices" : [
+              3
+            ]
+          }
         ],
         "frameCount" : 6,
         "leadSilenceSamples" : 0,
@@ -2924,9 +2940,13 @@
       },
       "input" : {
         "amplitude" : "0.800000011920929",
-        "flipBitInFrame" : 2,
-        "flipBitIndices" : [
-          3
+        "flips" : [
+          {
+            "frame" : 2,
+            "indices" : [
+              3
+            ]
+          }
         ],
         "frameCount" : 6,
         "leadSilenceSamples" : 0,
@@ -2970,10 +2990,14 @@
       },
       "input" : {
         "amplitude" : "0.800000011920929",
-        "flipBitInFrame" : 2,
-        "flipBitIndices" : [
-          70,
-          71
+        "flips" : [
+          {
+            "frame" : 2,
+            "indices" : [
+              70,
+              71
+            ]
+          }
         ],
         "frameCount" : 6,
         "leadSilenceSamples" : 0,
@@ -2997,10 +3021,14 @@
       },
       "input" : {
         "amplitude" : "0.800000011920929",
-        "flipBitInFrame" : 2,
-        "flipBitIndices" : [
-          70,
-          71
+        "flips" : [
+          {
+            "frame" : 2,
+            "indices" : [
+              70,
+              71
+            ]
+          }
         ],
         "frameCount" : 6,
         "leadSilenceSamples" : 0,
@@ -3024,10 +3052,14 @@
       },
       "input" : {
         "amplitude" : "0.800000011920929",
-        "flipBitInFrame" : 2,
-        "flipBitIndices" : [
-          70,
-          71
+        "flips" : [
+          {
+            "frame" : 2,
+            "indices" : [
+              70,
+              71
+            ]
+          }
         ],
         "frameCount" : 6,
         "leadSilenceSamples" : 0,
@@ -3053,10 +3085,14 @@
       },
       "input" : {
         "amplitude" : "0.800000011920929",
-        "flipBitInFrame" : 2,
-        "flipBitIndices" : [
-          70,
-          71
+        "flips" : [
+          {
+            "frame" : 2,
+            "indices" : [
+              70,
+              71
+            ]
+          }
         ],
         "frameCount" : 6,
         "leadSilenceSamples" : 0,
@@ -3093,10 +3129,14 @@
       },
       "input" : {
         "amplitude" : "0.800000011920929",
-        "flipBitInFrame" : 2,
-        "flipBitIndices" : [
-          70,
-          71
+        "flips" : [
+          {
+            "frame" : 2,
+            "indices" : [
+              70,
+              71
+            ]
+          }
         ],
         "frameCount" : 6,
         "leadSilenceSamples" : 0,
@@ -3140,12 +3180,16 @@
       },
       "input" : {
         "amplitude" : "0.800000011920929",
-        "flipBitInFrame" : 2,
-        "flipBitIndices" : [
-          0,
-          8,
-          9,
-          27
+        "flips" : [
+          {
+            "frame" : 2,
+            "indices" : [
+              0,
+              8,
+              9,
+              27
+            ]
+          }
         ],
         "frameCount" : 6,
         "leadSilenceSamples" : 0,
@@ -3169,12 +3213,16 @@
       },
       "input" : {
         "amplitude" : "0.800000011920929",
-        "flipBitInFrame" : 2,
-        "flipBitIndices" : [
-          0,
-          8,
-          9,
-          27
+        "flips" : [
+          {
+            "frame" : 2,
+            "indices" : [
+              0,
+              8,
+              9,
+              27
+            ]
+          }
         ],
         "frameCount" : 6,
         "leadSilenceSamples" : 0,
@@ -3198,12 +3246,16 @@
       },
       "input" : {
         "amplitude" : "0.800000011920929",
-        "flipBitInFrame" : 2,
-        "flipBitIndices" : [
-          0,
-          8,
-          9,
-          27
+        "flips" : [
+          {
+            "frame" : 2,
+            "indices" : [
+              0,
+              8,
+              9,
+              27
+            ]
+          }
         ],
         "frameCount" : 6,
         "leadSilenceSamples" : 0,
@@ -3229,12 +3281,16 @@
       },
       "input" : {
         "amplitude" : "0.800000011920929",
-        "flipBitInFrame" : 2,
-        "flipBitIndices" : [
-          0,
-          8,
-          9,
-          27
+        "flips" : [
+          {
+            "frame" : 2,
+            "indices" : [
+              0,
+              8,
+              9,
+              27
+            ]
+          }
         ],
         "frameCount" : 6,
         "leadSilenceSamples" : 0,
@@ -3271,12 +3327,16 @@
       },
       "input" : {
         "amplitude" : "0.800000011920929",
-        "flipBitInFrame" : 2,
-        "flipBitIndices" : [
-          0,
-          8,
-          9,
-          27
+        "flips" : [
+          {
+            "frame" : 2,
+            "indices" : [
+              0,
+              8,
+              9,
+              27
+            ]
+          }
         ],
         "frameCount" : 6,
         "leadSilenceSamples" : 0,
@@ -3291,6 +3351,272 @@
         "trailSilenceSamples" : 0
       },
       "label" : "decode/bcd-out-of-range/24@48000/01:00:00:00/x6",
+      "op" : "decode"
+    },
+    {
+      "expect" : {
+        "firstTransitions" : [
+          25,
+          50,
+          75,
+          100,
+          125,
+          150,
+          175,
+          200
+        ],
+        "lastTransitions" : [
+          11888,
+          11900,
+          11913,
+          11925,
+          11938,
+          11950,
+          11975,
+          11988
+        ],
+        "sampleCount" : 12000,
+        "transitionCount" : 586
+      },
+      "input" : {
+        "amplitude" : "0.800000011920929",
+        "flips" : [
+          {
+            "frame" : 2,
+            "indices" : [
+              3
+            ]
+          },
+          {
+            "frame" : 3,
+            "indices" : [
+              38,
+              39,
+              40,
+              41,
+              42,
+              43,
+              44,
+              45,
+              46,
+              47,
+              49,
+              51
+            ]
+          }
+        ],
+        "frameCount" : 6,
+        "leadSilenceSamples" : 0,
+        "rate" : "24",
+        "sampleRate" : "48000.0",
+        "timecode" : [
+          1,
+          0,
+          0,
+          0
+        ],
+        "trailSilenceSamples" : 0
+      },
+      "label" : "transitions/spurious-sync-after-a-broken-frame/24@48000/01:00:00:00/x6",
+      "op" : "transitions"
+    },
+    {
+      "expect" : {
+        "halfBitSamples" : "12.502347417840376",
+        "sampleCount" : 12000
+      },
+      "input" : {
+        "amplitude" : "0.800000011920929",
+        "flips" : [
+          {
+            "frame" : 2,
+            "indices" : [
+              3
+            ]
+          },
+          {
+            "frame" : 3,
+            "indices" : [
+              38,
+              39,
+              40,
+              41,
+              42,
+              43,
+              44,
+              45,
+              46,
+              47,
+              49,
+              51
+            ]
+          }
+        ],
+        "frameCount" : 6,
+        "leadSilenceSamples" : 0,
+        "rate" : "24",
+        "sampleRate" : "48000.0",
+        "timecode" : [
+          1,
+          0,
+          0,
+          0
+        ],
+        "trailSilenceSamples" : 0
+      },
+      "label" : "halfBit/spurious-sync-after-a-broken-frame/24@48000/01:00:00:00/x6",
+      "op" : "halfBit"
+    },
+    {
+      "expect" : {
+        "framesPerSecond" : 24,
+        "sampleCount" : 12000
+      },
+      "input" : {
+        "amplitude" : "0.800000011920929",
+        "flips" : [
+          {
+            "frame" : 2,
+            "indices" : [
+              3
+            ]
+          },
+          {
+            "frame" : 3,
+            "indices" : [
+              38,
+              39,
+              40,
+              41,
+              42,
+              43,
+              44,
+              45,
+              46,
+              47,
+              49,
+              51
+            ]
+          }
+        ],
+        "frameCount" : 6,
+        "leadSilenceSamples" : 0,
+        "rate" : "24",
+        "sampleRate" : "48000.0",
+        "timecode" : [
+          1,
+          0,
+          0,
+          0
+        ],
+        "trailSilenceSamples" : 0
+      },
+      "label" : "framesPerSecond/spurious-sync-after-a-broken-frame/24@48000/01:00:00:00/x6",
+      "op" : "framesPerSecond"
+    },
+    {
+      "expect" : {
+        "bitCount" : 478,
+        "firstBits" : "000000000000000000000000000000000000000000000001000000000000000001111111111110110000000000000000",
+        "lastBits" : "000111111111111011010000000000000000000000000000000000000000000001000000000000000001111111111110",
+        "sampleCount" : 12000
+      },
+      "input" : {
+        "amplitude" : "0.800000011920929",
+        "flips" : [
+          {
+            "frame" : 2,
+            "indices" : [
+              3
+            ]
+          },
+          {
+            "frame" : 3,
+            "indices" : [
+              38,
+              39,
+              40,
+              41,
+              42,
+              43,
+              44,
+              45,
+              46,
+              47,
+              49,
+              51
+            ]
+          }
+        ],
+        "frameCount" : 6,
+        "leadSilenceSamples" : 0,
+        "rate" : "24",
+        "sampleRate" : "48000.0",
+        "timecode" : [
+          1,
+          0,
+          0,
+          0
+        ],
+        "trailSilenceSamples" : 0
+      },
+      "label" : "bits/spurious-sync-after-a-broken-frame/24@48000/01:00:00:00/x6",
+      "op" : "bits"
+    },
+    {
+      "expect" : {
+        "frames" : [
+          {
+            "startSample" : 2000,
+            "timecode" : "01:00:00:01"
+          },
+          {
+            "startSample" : 8000,
+            "timecode" : "01:00:00:04"
+          }
+        ],
+        "sampleCount" : 12000
+      },
+      "input" : {
+        "amplitude" : "0.800000011920929",
+        "flips" : [
+          {
+            "frame" : 2,
+            "indices" : [
+              3
+            ]
+          },
+          {
+            "frame" : 3,
+            "indices" : [
+              38,
+              39,
+              40,
+              41,
+              42,
+              43,
+              44,
+              45,
+              46,
+              47,
+              49,
+              51
+            ]
+          }
+        ],
+        "frameCount" : 6,
+        "leadSilenceSamples" : 0,
+        "rate" : "24",
+        "sampleRate" : "48000.0",
+        "timecode" : [
+          1,
+          0,
+          0,
+          0
+        ],
+        "trailSilenceSamples" : 0
+      },
+      "label" : "decode/spurious-sync-after-a-broken-frame/24@48000/01:00:00:00/x6",
       "op" : "decode"
     },
     {

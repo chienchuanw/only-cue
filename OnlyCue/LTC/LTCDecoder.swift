@@ -20,6 +20,13 @@ import Foundation
 /// counting the ones across the whole word, and neither candidate position is
 /// read as data, so both the 24 / 30 fps (bit 27) and the 25 fps (bit 59)
 /// layouts decode unchanged.
+///
+/// The intermediate stages — `framesPerSecond(sampleRate:halfBitSamples:)`,
+/// `transitionIndices(in:)`, `estimateHalfBitSamples(transitions:)` and
+/// `demodulate(transitions:halfBitSamples:)` — are `internal` rather than
+/// `private` so `golden/ltc-decode-v1.json` can pin each one on its own. With
+/// only `decode` to assert on, every hazard in the pipeline fails the same way
+/// and a mutation cannot tell a broken comparator from a broken framer.
 enum LTCDecoder {
 
     /// One recovered frame: the timecode and the sample index where its first
@@ -37,11 +44,21 @@ enum LTCDecoder {
         guard transitions.count >= 3 else { return [] }
         guard let halfBit = estimateHalfBitSamples(transitions: transitions) else { return [] }
 
-        let bitRate = sampleRate / (2.0 * halfBit)
-        let framesPerSecond = Int((bitRate / 80.0).rounded())
-
         let stream = demodulate(transitions: transitions, halfBitSamples: halfBit)
-        return extractFrames(stream: stream, framesPerSecond: framesPerSecond)
+        return extractFrames(
+            stream: stream,
+            framesPerSecond: framesPerSecond(sampleRate: sampleRate, halfBitSamples: halfBit)
+        )
+    }
+
+    /// The timeline rate implied by a measured half-bit period: 80 bits per
+    /// frame, two half-bits per bit. `.rounded()` is half away from zero — the
+    /// same Swift-vs-.NET hazard as the encoder's slot boundaries, except that
+    /// here getting it wrong does not shift a sample, it returns the wrong rate
+    /// or none at all.
+    static func framesPerSecond(sampleRate: Double, halfBitSamples: Double) -> Int {
+        let bitRate = sampleRate / (2.0 * halfBitSamples)
+        return Int((bitRate / 80.0).rounded())
     }
 
     // MARK: - Zero crossings
@@ -78,7 +95,7 @@ enum LTCDecoder {
     /// buffer and must stay global. A per-block adaptive reference
     /// re-introduces the bug: a block of pure noise has an RMS equal to the
     /// noise, so its threshold collapses to the noise floor.
-    private static func transitionIndices(in samples: [Float]) -> [Int] {
+    static func transitionIndices(in samples: [Float]) -> [Int] {
         let reference = rms(samples)
         guard reference >= silenceRMSFloor else { return [] }
         let threshold = thresholdFraction * reference
@@ -105,7 +122,7 @@ enum LTCDecoder {
     /// mean of every interval within 1.5x of the minimum. This is only sound
     /// because `transitionIndices` gates out noise first — an ungated minimum
     /// collapses to 1 sample (#793).
-    private static func estimateHalfBitSamples(transitions: [Int]) -> Double? {
+    static func estimateHalfBitSamples(transitions: [Int]) -> Double? {
         var intervals: [Int] = []
         intervals.reserveCapacity(transitions.count - 1)
         for index in 1..<transitions.count {
@@ -121,7 +138,7 @@ enum LTCDecoder {
 
     /// The recovered bit sequence plus, for each bit, the sample index of the
     /// transition that began it (so a frame's start can be reported in samples).
-    private struct BitStream {
+    struct BitStream {
         var bits: [Bool] = []
         var startSamples: [Int] = []
     }
@@ -129,7 +146,7 @@ enum LTCDecoder {
     /// Walk the transitions, classifying each inter-transition interval as a
     /// whole bit period (`0`) or a half (the first of the two halves of a `1`).
     /// Intervals that fit neither are dropped (re-sync).
-    private static func demodulate(transitions: [Int], halfBitSamples: Double) -> BitStream {
+    static func demodulate(transitions: [Int], halfBitSamples: Double) -> BitStream {
         var stream = BitStream()
         var index = 1
         while index < transitions.count {

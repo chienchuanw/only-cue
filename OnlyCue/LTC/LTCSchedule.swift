@@ -8,8 +8,15 @@ import Foundation
 ///
 /// Each buffer is `framesPerBuffer` whole LTC frames, starting at
 /// `startTimecode`. Within a buffer the biphase-mark polarity is threaded (via
-/// `LTCFrameStream`); between buffers it resets to the canonical start level —
-/// harmless, since an LTC reader keys on transitions, not absolute polarity.
+/// `LTCFrameStream`); between buffers it resets to the canonical start level.
+/// That reset changes nothing: every LTC frame ends at the level it started at,
+/// because the bit-polarity-correction bit forces an even number of ones and so
+/// an even number of mid-bit flips. The buffer seam is therefore byte-identical
+/// to a threaded one, not merely tolerable — `golden/ltc-schedule-v1.json`'s
+/// `bufferSeam` cases pin the samples either side of it.
+///
+/// What would be a real fault is an *inverted* seam, which drops a transition
+/// and so misreads a bit; that is what the pinned seam window catches.
 struct LTCSchedule {
 
     /// Timecode of the very first frame of buffer 0.

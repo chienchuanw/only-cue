@@ -1,0 +1,2768 @@
+{
+  "cases" : [
+    {
+      "expect" : {
+        "ticksPerQuarterFrame" : "10416666.666666666"
+      },
+      "input" : {
+        "anchorHostTime" : 1000,
+        "frames" : 20,
+        "hours" : 0,
+        "minutes" : 0,
+        "seconds" : 59,
+        "ticksPerSecond" : "1000000000.0"
+      },
+      "label" : "cadence/24/1e9",
+      "op" : "cadence",
+      "rate" : "24"
+    },
+    {
+      "expect" : {
+        "ticksPerQuarterFrame" : "250000.0"
+      },
+      "input" : {
+        "anchorHostTime" : 1000,
+        "frames" : 20,
+        "hours" : 0,
+        "minutes" : 0,
+        "seconds" : 59,
+        "ticksPerSecond" : "24000000.0"
+      },
+      "label" : "cadence/24/24e6",
+      "op" : "cadence",
+      "rate" : "24"
+    },
+    {
+      "expect" : {
+        "ticksPerQuarterFrame" : "0.5208333333333334"
+      },
+      "input" : {
+        "anchorHostTime" : 1000,
+        "frames" : 20,
+        "hours" : 0,
+        "minutes" : 0,
+        "seconds" : 59,
+        "ticksPerSecond" : "50.0"
+      },
+      "label" : "cadence/24/50",
+      "op" : "cadence",
+      "rate" : "24"
+    },
+    {
+      "expect" : {
+        "ticksPerQuarterFrame" : "10000000.0"
+      },
+      "input" : {
+        "anchorHostTime" : 1000,
+        "frames" : 20,
+        "hours" : 0,
+        "minutes" : 0,
+        "seconds" : 59,
+        "ticksPerSecond" : "1000000000.0"
+      },
+      "label" : "cadence/25/1e9",
+      "op" : "cadence",
+      "rate" : "25"
+    },
+    {
+      "expect" : {
+        "ticksPerQuarterFrame" : "240000.0"
+      },
+      "input" : {
+        "anchorHostTime" : 1000,
+        "frames" : 20,
+        "hours" : 0,
+        "minutes" : 0,
+        "seconds" : 59,
+        "ticksPerSecond" : "24000000.0"
+      },
+      "label" : "cadence/25/24e6",
+      "op" : "cadence",
+      "rate" : "25"
+    },
+    {
+      "expect" : {
+        "ticksPerQuarterFrame" : "0.5"
+      },
+      "input" : {
+        "anchorHostTime" : 1000,
+        "frames" : 20,
+        "hours" : 0,
+        "minutes" : 0,
+        "seconds" : 59,
+        "ticksPerSecond" : "50.0"
+      },
+      "label" : "cadence/25/50",
+      "op" : "cadence",
+      "rate" : "25"
+    },
+    {
+      "expect" : {
+        "ticksPerQuarterFrame" : "8333333.333333333"
+      },
+      "input" : {
+        "anchorHostTime" : 1000,
+        "frames" : 20,
+        "hours" : 0,
+        "minutes" : 0,
+        "seconds" : 59,
+        "ticksPerSecond" : "1000000000.0"
+      },
+      "label" : "cadence/30/1e9",
+      "op" : "cadence",
+      "rate" : "30"
+    },
+    {
+      "expect" : {
+        "ticksPerQuarterFrame" : "200000.0"
+      },
+      "input" : {
+        "anchorHostTime" : 1000,
+        "frames" : 20,
+        "hours" : 0,
+        "minutes" : 0,
+        "seconds" : 59,
+        "ticksPerSecond" : "24000000.0"
+      },
+      "label" : "cadence/30/24e6",
+      "op" : "cadence",
+      "rate" : "30"
+    },
+    {
+      "expect" : {
+        "ticksPerQuarterFrame" : "0.4166666666666667"
+      },
+      "input" : {
+        "anchorHostTime" : 1000,
+        "frames" : 20,
+        "hours" : 0,
+        "minutes" : 0,
+        "seconds" : 59,
+        "ticksPerSecond" : "50.0"
+      },
+      "label" : "cadence/30/50",
+      "op" : "cadence",
+      "rate" : "30"
+    },
+    {
+      "expect" : {
+        "ticksPerQuarterFrame" : "8333333.333333333"
+      },
+      "input" : {
+        "anchorHostTime" : 1000,
+        "frames" : 20,
+        "hours" : 0,
+        "minutes" : 0,
+        "seconds" : 59,
+        "ticksPerSecond" : "1000000000.0"
+      },
+      "label" : "cadence/30df/1e9",
+      "op" : "cadence",
+      "rate" : "30df"
+    },
+    {
+      "expect" : {
+        "ticksPerQuarterFrame" : "200000.0"
+      },
+      "input" : {
+        "anchorHostTime" : 1000,
+        "frames" : 20,
+        "hours" : 0,
+        "minutes" : 0,
+        "seconds" : 59,
+        "ticksPerSecond" : "24000000.0"
+      },
+      "label" : "cadence/30df/24e6",
+      "op" : "cadence",
+      "rate" : "30df"
+    },
+    {
+      "expect" : {
+        "ticksPerQuarterFrame" : "0.4166666666666667"
+      },
+      "input" : {
+        "anchorHostTime" : 1000,
+        "frames" : 20,
+        "hours" : 0,
+        "minutes" : 0,
+        "seconds" : 59,
+        "ticksPerSecond" : "50.0"
+      },
+      "label" : "cadence/30df/50",
+      "op" : "cadence",
+      "rate" : "30df"
+    },
+    {
+      "expect" : {
+        "timecode" : "00:00:59:20"
+      },
+      "input" : {
+        "anchorHostTime" : 1000,
+        "frames" : 20,
+        "hours" : 0,
+        "minutes" : 0,
+        "seconds" : 59,
+        "sequenceIndex" : -2,
+        "ticksPerSecond" : "1000000000.0"
+      },
+      "label" : "sequenceTimecode/24/00:00:59:20/seq-2",
+      "op" : "sequenceTimecode",
+      "rate" : "24"
+    },
+    {
+      "expect" : {
+        "timecode" : "00:00:59:20"
+      },
+      "input" : {
+        "anchorHostTime" : 1000,
+        "frames" : 20,
+        "hours" : 0,
+        "minutes" : 0,
+        "seconds" : 59,
+        "sequenceIndex" : 0,
+        "ticksPerSecond" : "1000000000.0"
+      },
+      "label" : "sequenceTimecode/24/00:00:59:20/seq0",
+      "op" : "sequenceTimecode",
+      "rate" : "24"
+    },
+    {
+      "expect" : {
+        "timecode" : "00:00:59:22"
+      },
+      "input" : {
+        "anchorHostTime" : 1000,
+        "frames" : 20,
+        "hours" : 0,
+        "minutes" : 0,
+        "seconds" : 59,
+        "sequenceIndex" : 1,
+        "ticksPerSecond" : "1000000000.0"
+      },
+      "label" : "sequenceTimecode/24/00:00:59:20/seq1",
+      "op" : "sequenceTimecode",
+      "rate" : "24"
+    },
+    {
+      "expect" : {
+        "timecode" : "00:01:00:06"
+      },
+      "input" : {
+        "anchorHostTime" : 1000,
+        "frames" : 20,
+        "hours" : 0,
+        "minutes" : 0,
+        "seconds" : 59,
+        "sequenceIndex" : 5,
+        "ticksPerSecond" : "1000000000.0"
+      },
+      "label" : "sequenceTimecode/24/00:00:59:20/seq5",
+      "op" : "sequenceTimecode",
+      "rate" : "24"
+    },
+    {
+      "expect" : {
+        "timecode" : "00:01:00:10"
+      },
+      "input" : {
+        "anchorHostTime" : 1000,
+        "frames" : 20,
+        "hours" : 0,
+        "minutes" : 0,
+        "seconds" : 59,
+        "sequenceIndex" : 7,
+        "ticksPerSecond" : "1000000000.0"
+      },
+      "label" : "sequenceTimecode/24/00:00:59:20/seq7",
+      "op" : "sequenceTimecode",
+      "rate" : "24"
+    },
+    {
+      "expect" : {
+        "timecode" : "00:01:08:04"
+      },
+      "input" : {
+        "anchorHostTime" : 1000,
+        "frames" : 20,
+        "hours" : 0,
+        "minutes" : 0,
+        "seconds" : 59,
+        "sequenceIndex" : 100,
+        "ticksPerSecond" : "1000000000.0"
+      },
+      "label" : "sequenceTimecode/24/00:00:59:20/seq100",
+      "op" : "sequenceTimecode",
+      "rate" : "24"
+    },
+    {
+      "expect" : {
+        "timecode" : "00:00:59:20"
+      },
+      "input" : {
+        "anchorHostTime" : 1000,
+        "frames" : 20,
+        "hours" : 0,
+        "minutes" : 0,
+        "seconds" : 59,
+        "sequenceIndex" : -2,
+        "ticksPerSecond" : "1000000000.0"
+      },
+      "label" : "sequenceTimecode/25/00:00:59:20/seq-2",
+      "op" : "sequenceTimecode",
+      "rate" : "25"
+    },
+    {
+      "expect" : {
+        "timecode" : "00:00:59:20"
+      },
+      "input" : {
+        "anchorHostTime" : 1000,
+        "frames" : 20,
+        "hours" : 0,
+        "minutes" : 0,
+        "seconds" : 59,
+        "sequenceIndex" : 0,
+        "ticksPerSecond" : "1000000000.0"
+      },
+      "label" : "sequenceTimecode/25/00:00:59:20/seq0",
+      "op" : "sequenceTimecode",
+      "rate" : "25"
+    },
+    {
+      "expect" : {
+        "timecode" : "00:00:59:22"
+      },
+      "input" : {
+        "anchorHostTime" : 1000,
+        "frames" : 20,
+        "hours" : 0,
+        "minutes" : 0,
+        "seconds" : 59,
+        "sequenceIndex" : 1,
+        "ticksPerSecond" : "1000000000.0"
+      },
+      "label" : "sequenceTimecode/25/00:00:59:20/seq1",
+      "op" : "sequenceTimecode",
+      "rate" : "25"
+    },
+    {
+      "expect" : {
+        "timecode" : "00:01:00:05"
+      },
+      "input" : {
+        "anchorHostTime" : 1000,
+        "frames" : 20,
+        "hours" : 0,
+        "minutes" : 0,
+        "seconds" : 59,
+        "sequenceIndex" : 5,
+        "ticksPerSecond" : "1000000000.0"
+      },
+      "label" : "sequenceTimecode/25/00:00:59:20/seq5",
+      "op" : "sequenceTimecode",
+      "rate" : "25"
+    },
+    {
+      "expect" : {
+        "timecode" : "00:01:00:09"
+      },
+      "input" : {
+        "anchorHostTime" : 1000,
+        "frames" : 20,
+        "hours" : 0,
+        "minutes" : 0,
+        "seconds" : 59,
+        "sequenceIndex" : 7,
+        "ticksPerSecond" : "1000000000.0"
+      },
+      "label" : "sequenceTimecode/25/00:00:59:20/seq7",
+      "op" : "sequenceTimecode",
+      "rate" : "25"
+    },
+    {
+      "expect" : {
+        "timecode" : "00:01:07:20"
+      },
+      "input" : {
+        "anchorHostTime" : 1000,
+        "frames" : 20,
+        "hours" : 0,
+        "minutes" : 0,
+        "seconds" : 59,
+        "sequenceIndex" : 100,
+        "ticksPerSecond" : "1000000000.0"
+      },
+      "label" : "sequenceTimecode/25/00:00:59:20/seq100",
+      "op" : "sequenceTimecode",
+      "rate" : "25"
+    },
+    {
+      "expect" : {
+        "timecode" : "00:00:59:20"
+      },
+      "input" : {
+        "anchorHostTime" : 1000,
+        "frames" : 20,
+        "hours" : 0,
+        "minutes" : 0,
+        "seconds" : 59,
+        "sequenceIndex" : -2,
+        "ticksPerSecond" : "1000000000.0"
+      },
+      "label" : "sequenceTimecode/30/00:00:59:20/seq-2",
+      "op" : "sequenceTimecode",
+      "rate" : "30"
+    },
+    {
+      "expect" : {
+        "timecode" : "00:00:59:20"
+      },
+      "input" : {
+        "anchorHostTime" : 1000,
+        "frames" : 20,
+        "hours" : 0,
+        "minutes" : 0,
+        "seconds" : 59,
+        "sequenceIndex" : 0,
+        "ticksPerSecond" : "1000000000.0"
+      },
+      "label" : "sequenceTimecode/30/00:00:59:20/seq0",
+      "op" : "sequenceTimecode",
+      "rate" : "30"
+    },
+    {
+      "expect" : {
+        "timecode" : "00:00:59:22"
+      },
+      "input" : {
+        "anchorHostTime" : 1000,
+        "frames" : 20,
+        "hours" : 0,
+        "minutes" : 0,
+        "seconds" : 59,
+        "sequenceIndex" : 1,
+        "ticksPerSecond" : "1000000000.0"
+      },
+      "label" : "sequenceTimecode/30/00:00:59:20/seq1",
+      "op" : "sequenceTimecode",
+      "rate" : "30"
+    },
+    {
+      "expect" : {
+        "timecode" : "00:01:00:00"
+      },
+      "input" : {
+        "anchorHostTime" : 1000,
+        "frames" : 20,
+        "hours" : 0,
+        "minutes" : 0,
+        "seconds" : 59,
+        "sequenceIndex" : 5,
+        "ticksPerSecond" : "1000000000.0"
+      },
+      "label" : "sequenceTimecode/30/00:00:59:20/seq5",
+      "op" : "sequenceTimecode",
+      "rate" : "30"
+    },
+    {
+      "expect" : {
+        "timecode" : "00:01:00:04"
+      },
+      "input" : {
+        "anchorHostTime" : 1000,
+        "frames" : 20,
+        "hours" : 0,
+        "minutes" : 0,
+        "seconds" : 59,
+        "sequenceIndex" : 7,
+        "ticksPerSecond" : "1000000000.0"
+      },
+      "label" : "sequenceTimecode/30/00:00:59:20/seq7",
+      "op" : "sequenceTimecode",
+      "rate" : "30"
+    },
+    {
+      "expect" : {
+        "timecode" : "00:01:06:10"
+      },
+      "input" : {
+        "anchorHostTime" : 1000,
+        "frames" : 20,
+        "hours" : 0,
+        "minutes" : 0,
+        "seconds" : 59,
+        "sequenceIndex" : 100,
+        "ticksPerSecond" : "1000000000.0"
+      },
+      "label" : "sequenceTimecode/30/00:00:59:20/seq100",
+      "op" : "sequenceTimecode",
+      "rate" : "30"
+    },
+    {
+      "expect" : {
+        "timecode" : "00:00:59;20"
+      },
+      "input" : {
+        "anchorHostTime" : 1000,
+        "frames" : 20,
+        "hours" : 0,
+        "minutes" : 0,
+        "seconds" : 59,
+        "sequenceIndex" : -2,
+        "ticksPerSecond" : "1000000000.0"
+      },
+      "label" : "sequenceTimecode/30df/00:00:59;20/seq-2",
+      "op" : "sequenceTimecode",
+      "rate" : "30df"
+    },
+    {
+      "expect" : {
+        "timecode" : "00:00:59;20"
+      },
+      "input" : {
+        "anchorHostTime" : 1000,
+        "frames" : 20,
+        "hours" : 0,
+        "minutes" : 0,
+        "seconds" : 59,
+        "sequenceIndex" : 0,
+        "ticksPerSecond" : "1000000000.0"
+      },
+      "label" : "sequenceTimecode/30df/00:00:59;20/seq0",
+      "op" : "sequenceTimecode",
+      "rate" : "30df"
+    },
+    {
+      "expect" : {
+        "timecode" : "00:00:59;22"
+      },
+      "input" : {
+        "anchorHostTime" : 1000,
+        "frames" : 20,
+        "hours" : 0,
+        "minutes" : 0,
+        "seconds" : 59,
+        "sequenceIndex" : 1,
+        "ticksPerSecond" : "1000000000.0"
+      },
+      "label" : "sequenceTimecode/30df/00:00:59;20/seq1",
+      "op" : "sequenceTimecode",
+      "rate" : "30df"
+    },
+    {
+      "expect" : {
+        "timecode" : "00:01:00;02"
+      },
+      "input" : {
+        "anchorHostTime" : 1000,
+        "frames" : 20,
+        "hours" : 0,
+        "minutes" : 0,
+        "seconds" : 59,
+        "sequenceIndex" : 5,
+        "ticksPerSecond" : "1000000000.0"
+      },
+      "label" : "sequenceTimecode/30df/00:00:59;20/seq5",
+      "op" : "sequenceTimecode",
+      "rate" : "30df"
+    },
+    {
+      "expect" : {
+        "timecode" : "00:01:00;06"
+      },
+      "input" : {
+        "anchorHostTime" : 1000,
+        "frames" : 20,
+        "hours" : 0,
+        "minutes" : 0,
+        "seconds" : 59,
+        "sequenceIndex" : 7,
+        "ticksPerSecond" : "1000000000.0"
+      },
+      "label" : "sequenceTimecode/30df/00:00:59;20/seq7",
+      "op" : "sequenceTimecode",
+      "rate" : "30df"
+    },
+    {
+      "expect" : {
+        "timecode" : "00:01:06;12"
+      },
+      "input" : {
+        "anchorHostTime" : 1000,
+        "frames" : 20,
+        "hours" : 0,
+        "minutes" : 0,
+        "seconds" : 59,
+        "sequenceIndex" : 100,
+        "ticksPerSecond" : "1000000000.0"
+      },
+      "label" : "sequenceTimecode/30df/00:00:59;20/seq100",
+      "op" : "sequenceTimecode",
+      "rate" : "30df"
+    },
+    {
+      "expect" : {
+        "byte" : 4,
+        "timestamp" : 1000
+      },
+      "input" : {
+        "anchorHostTime" : 1000,
+        "frames" : 20,
+        "hours" : 0,
+        "minutes" : 0,
+        "quarterFrameIndex" : -1,
+        "seconds" : 59,
+        "ticksPerSecond" : "1000000000.0"
+      },
+      "label" : "quarterFrame/24/1e9/index-1",
+      "op" : "quarterFrame",
+      "rate" : "24"
+    },
+    {
+      "expect" : {
+        "byte" : 4,
+        "timestamp" : 1000
+      },
+      "input" : {
+        "anchorHostTime" : 1000,
+        "frames" : 20,
+        "hours" : 0,
+        "minutes" : 0,
+        "quarterFrameIndex" : 0,
+        "seconds" : 59,
+        "ticksPerSecond" : "1000000000.0"
+      },
+      "label" : "quarterFrame/24/1e9/index0",
+      "op" : "quarterFrame",
+      "rate" : "24"
+    },
+    {
+      "expect" : {
+        "byte" : 17,
+        "timestamp" : 10417667
+      },
+      "input" : {
+        "anchorHostTime" : 1000,
+        "frames" : 20,
+        "hours" : 0,
+        "minutes" : 0,
+        "quarterFrameIndex" : 1,
+        "seconds" : 59,
+        "ticksPerSecond" : "1000000000.0"
+      },
+      "label" : "quarterFrame/24/1e9/index1",
+      "op" : "quarterFrame",
+      "rate" : "24"
+    },
+    {
+      "expect" : {
+        "byte" : 112,
+        "timestamp" : 72917667
+      },
+      "input" : {
+        "anchorHostTime" : 1000,
+        "frames" : 20,
+        "hours" : 0,
+        "minutes" : 0,
+        "quarterFrameIndex" : 7,
+        "seconds" : 59,
+        "ticksPerSecond" : "1000000000.0"
+      },
+      "label" : "quarterFrame/24/1e9/index7",
+      "op" : "quarterFrame",
+      "rate" : "24"
+    },
+    {
+      "expect" : {
+        "byte" : 6,
+        "timestamp" : 83334333
+      },
+      "input" : {
+        "anchorHostTime" : 1000,
+        "frames" : 20,
+        "hours" : 0,
+        "minutes" : 0,
+        "quarterFrameIndex" : 8,
+        "seconds" : 59,
+        "ticksPerSecond" : "1000000000.0"
+      },
+      "label" : "quarterFrame/24/1e9/index8",
+      "op" : "quarterFrame",
+      "rate" : "24"
+    },
+    {
+      "expect" : {
+        "byte" : 17,
+        "timestamp" : 93751000
+      },
+      "input" : {
+        "anchorHostTime" : 1000,
+        "frames" : 20,
+        "hours" : 0,
+        "minutes" : 0,
+        "quarterFrameIndex" : 9,
+        "seconds" : 59,
+        "ticksPerSecond" : "1000000000.0"
+      },
+      "label" : "quarterFrame/24/1e9/index9",
+      "op" : "quarterFrame",
+      "rate" : "24"
+    },
+    {
+      "expect" : {
+        "byte" : 112,
+        "timestamp" : 156251000
+      },
+      "input" : {
+        "anchorHostTime" : 1000,
+        "frames" : 20,
+        "hours" : 0,
+        "minutes" : 0,
+        "quarterFrameIndex" : 15,
+        "seconds" : 59,
+        "ticksPerSecond" : "1000000000.0"
+      },
+      "label" : "quarterFrame/24/1e9/index15",
+      "op" : "quarterFrame",
+      "rate" : "24"
+    },
+    {
+      "expect" : {
+        "byte" : 0,
+        "timestamp" : 166667667
+      },
+      "input" : {
+        "anchorHostTime" : 1000,
+        "frames" : 20,
+        "hours" : 0,
+        "minutes" : 0,
+        "quarterFrameIndex" : 16,
+        "seconds" : 59,
+        "ticksPerSecond" : "1000000000.0"
+      },
+      "label" : "quarterFrame/24/1e9/index16",
+      "op" : "quarterFrame",
+      "rate" : "24"
+    },
+    {
+      "expect" : {
+        "byte" : 6,
+        "timestamp" : 2083334333
+      },
+      "input" : {
+        "anchorHostTime" : 1000,
+        "frames" : 20,
+        "hours" : 0,
+        "minutes" : 0,
+        "quarterFrameIndex" : 200,
+        "seconds" : 59,
+        "ticksPerSecond" : "1000000000.0"
+      },
+      "label" : "quarterFrame/24/1e9/index200",
+      "op" : "quarterFrame",
+      "rate" : "24"
+    },
+    {
+      "expect" : {
+        "byte" : 4,
+        "timestamp" : 1000
+      },
+      "input" : {
+        "anchorHostTime" : 1000,
+        "frames" : 20,
+        "hours" : 0,
+        "minutes" : 0,
+        "quarterFrameIndex" : -1,
+        "seconds" : 59,
+        "ticksPerSecond" : "1000000000.0"
+      },
+      "label" : "quarterFrame/25/1e9/index-1",
+      "op" : "quarterFrame",
+      "rate" : "25"
+    },
+    {
+      "expect" : {
+        "byte" : 4,
+        "timestamp" : 1000
+      },
+      "input" : {
+        "anchorHostTime" : 1000,
+        "frames" : 20,
+        "hours" : 0,
+        "minutes" : 0,
+        "quarterFrameIndex" : 0,
+        "seconds" : 59,
+        "ticksPerSecond" : "1000000000.0"
+      },
+      "label" : "quarterFrame/25/1e9/index0",
+      "op" : "quarterFrame",
+      "rate" : "25"
+    },
+    {
+      "expect" : {
+        "byte" : 17,
+        "timestamp" : 10001000
+      },
+      "input" : {
+        "anchorHostTime" : 1000,
+        "frames" : 20,
+        "hours" : 0,
+        "minutes" : 0,
+        "quarterFrameIndex" : 1,
+        "seconds" : 59,
+        "ticksPerSecond" : "1000000000.0"
+      },
+      "label" : "quarterFrame/25/1e9/index1",
+      "op" : "quarterFrame",
+      "rate" : "25"
+    },
+    {
+      "expect" : {
+        "byte" : 114,
+        "timestamp" : 70001000
+      },
+      "input" : {
+        "anchorHostTime" : 1000,
+        "frames" : 20,
+        "hours" : 0,
+        "minutes" : 0,
+        "quarterFrameIndex" : 7,
+        "seconds" : 59,
+        "ticksPerSecond" : "1000000000.0"
+      },
+      "label" : "quarterFrame/25/1e9/index7",
+      "op" : "quarterFrame",
+      "rate" : "25"
+    },
+    {
+      "expect" : {
+        "byte" : 6,
+        "timestamp" : 80001000
+      },
+      "input" : {
+        "anchorHostTime" : 1000,
+        "frames" : 20,
+        "hours" : 0,
+        "minutes" : 0,
+        "quarterFrameIndex" : 8,
+        "seconds" : 59,
+        "ticksPerSecond" : "1000000000.0"
+      },
+      "label" : "quarterFrame/25/1e9/index8",
+      "op" : "quarterFrame",
+      "rate" : "25"
+    },
+    {
+      "expect" : {
+        "byte" : 17,
+        "timestamp" : 90001000
+      },
+      "input" : {
+        "anchorHostTime" : 1000,
+        "frames" : 20,
+        "hours" : 0,
+        "minutes" : 0,
+        "quarterFrameIndex" : 9,
+        "seconds" : 59,
+        "ticksPerSecond" : "1000000000.0"
+      },
+      "label" : "quarterFrame/25/1e9/index9",
+      "op" : "quarterFrame",
+      "rate" : "25"
+    },
+    {
+      "expect" : {
+        "byte" : 114,
+        "timestamp" : 150001000
+      },
+      "input" : {
+        "anchorHostTime" : 1000,
+        "frames" : 20,
+        "hours" : 0,
+        "minutes" : 0,
+        "quarterFrameIndex" : 15,
+        "seconds" : 59,
+        "ticksPerSecond" : "1000000000.0"
+      },
+      "label" : "quarterFrame/25/1e9/index15",
+      "op" : "quarterFrame",
+      "rate" : "25"
+    },
+    {
+      "expect" : {
+        "byte" : 8,
+        "timestamp" : 160001000
+      },
+      "input" : {
+        "anchorHostTime" : 1000,
+        "frames" : 20,
+        "hours" : 0,
+        "minutes" : 0,
+        "quarterFrameIndex" : 16,
+        "seconds" : 59,
+        "ticksPerSecond" : "1000000000.0"
+      },
+      "label" : "quarterFrame/25/1e9/index16",
+      "op" : "quarterFrame",
+      "rate" : "25"
+    },
+    {
+      "expect" : {
+        "byte" : 4,
+        "timestamp" : 2000001000
+      },
+      "input" : {
+        "anchorHostTime" : 1000,
+        "frames" : 20,
+        "hours" : 0,
+        "minutes" : 0,
+        "quarterFrameIndex" : 200,
+        "seconds" : 59,
+        "ticksPerSecond" : "1000000000.0"
+      },
+      "label" : "quarterFrame/25/1e9/index200",
+      "op" : "quarterFrame",
+      "rate" : "25"
+    },
+    {
+      "expect" : {
+        "byte" : 4,
+        "timestamp" : 1000
+      },
+      "input" : {
+        "anchorHostTime" : 1000,
+        "frames" : 20,
+        "hours" : 0,
+        "minutes" : 0,
+        "quarterFrameIndex" : -1,
+        "seconds" : 59,
+        "ticksPerSecond" : "24000000.0"
+      },
+      "label" : "quarterFrame/30/24e6/index-1",
+      "op" : "quarterFrame",
+      "rate" : "30"
+    },
+    {
+      "expect" : {
+        "byte" : 4,
+        "timestamp" : 1000
+      },
+      "input" : {
+        "anchorHostTime" : 1000,
+        "frames" : 20,
+        "hours" : 0,
+        "minutes" : 0,
+        "quarterFrameIndex" : 0,
+        "seconds" : 59,
+        "ticksPerSecond" : "24000000.0"
+      },
+      "label" : "quarterFrame/30/24e6/index0",
+      "op" : "quarterFrame",
+      "rate" : "30"
+    },
+    {
+      "expect" : {
+        "byte" : 17,
+        "timestamp" : 201000
+      },
+      "input" : {
+        "anchorHostTime" : 1000,
+        "frames" : 20,
+        "hours" : 0,
+        "minutes" : 0,
+        "quarterFrameIndex" : 1,
+        "seconds" : 59,
+        "ticksPerSecond" : "24000000.0"
+      },
+      "label" : "quarterFrame/30/24e6/index1",
+      "op" : "quarterFrame",
+      "rate" : "30"
+    },
+    {
+      "expect" : {
+        "byte" : 118,
+        "timestamp" : 1401000
+      },
+      "input" : {
+        "anchorHostTime" : 1000,
+        "frames" : 20,
+        "hours" : 0,
+        "minutes" : 0,
+        "quarterFrameIndex" : 7,
+        "seconds" : 59,
+        "ticksPerSecond" : "24000000.0"
+      },
+      "label" : "quarterFrame/30/24e6/index7",
+      "op" : "quarterFrame",
+      "rate" : "30"
+    },
+    {
+      "expect" : {
+        "byte" : 6,
+        "timestamp" : 1601000
+      },
+      "input" : {
+        "anchorHostTime" : 1000,
+        "frames" : 20,
+        "hours" : 0,
+        "minutes" : 0,
+        "quarterFrameIndex" : 8,
+        "seconds" : 59,
+        "ticksPerSecond" : "24000000.0"
+      },
+      "label" : "quarterFrame/30/24e6/index8",
+      "op" : "quarterFrame",
+      "rate" : "30"
+    },
+    {
+      "expect" : {
+        "byte" : 17,
+        "timestamp" : 1801000
+      },
+      "input" : {
+        "anchorHostTime" : 1000,
+        "frames" : 20,
+        "hours" : 0,
+        "minutes" : 0,
+        "quarterFrameIndex" : 9,
+        "seconds" : 59,
+        "ticksPerSecond" : "24000000.0"
+      },
+      "label" : "quarterFrame/30/24e6/index9",
+      "op" : "quarterFrame",
+      "rate" : "30"
+    },
+    {
+      "expect" : {
+        "byte" : 118,
+        "timestamp" : 3001000
+      },
+      "input" : {
+        "anchorHostTime" : 1000,
+        "frames" : 20,
+        "hours" : 0,
+        "minutes" : 0,
+        "quarterFrameIndex" : 15,
+        "seconds" : 59,
+        "ticksPerSecond" : "24000000.0"
+      },
+      "label" : "quarterFrame/30/24e6/index15",
+      "op" : "quarterFrame",
+      "rate" : "30"
+    },
+    {
+      "expect" : {
+        "byte" : 8,
+        "timestamp" : 3201000
+      },
+      "input" : {
+        "anchorHostTime" : 1000,
+        "frames" : 20,
+        "hours" : 0,
+        "minutes" : 0,
+        "quarterFrameIndex" : 16,
+        "seconds" : 59,
+        "ticksPerSecond" : "24000000.0"
+      },
+      "label" : "quarterFrame/30/24e6/index16",
+      "op" : "quarterFrame",
+      "rate" : "30"
+    },
+    {
+      "expect" : {
+        "byte" : 10,
+        "timestamp" : 40001000
+      },
+      "input" : {
+        "anchorHostTime" : 1000,
+        "frames" : 20,
+        "hours" : 0,
+        "minutes" : 0,
+        "quarterFrameIndex" : 200,
+        "seconds" : 59,
+        "ticksPerSecond" : "24000000.0"
+      },
+      "label" : "quarterFrame/30/24e6/index200",
+      "op" : "quarterFrame",
+      "rate" : "30"
+    },
+    {
+      "expect" : {
+        "byte" : 4,
+        "timestamp" : 1000
+      },
+      "input" : {
+        "anchorHostTime" : 1000,
+        "frames" : 20,
+        "hours" : 0,
+        "minutes" : 0,
+        "quarterFrameIndex" : -1,
+        "seconds" : 59,
+        "ticksPerSecond" : "50.0"
+      },
+      "label" : "quarterFrame/25/50/index-1",
+      "op" : "quarterFrame",
+      "rate" : "25"
+    },
+    {
+      "expect" : {
+        "byte" : 4,
+        "timestamp" : 1000
+      },
+      "input" : {
+        "anchorHostTime" : 1000,
+        "frames" : 20,
+        "hours" : 0,
+        "minutes" : 0,
+        "quarterFrameIndex" : 0,
+        "seconds" : 59,
+        "ticksPerSecond" : "50.0"
+      },
+      "label" : "quarterFrame/25/50/index0",
+      "op" : "quarterFrame",
+      "rate" : "25"
+    },
+    {
+      "expect" : {
+        "byte" : 17,
+        "timestamp" : 1001
+      },
+      "input" : {
+        "anchorHostTime" : 1000,
+        "frames" : 20,
+        "hours" : 0,
+        "minutes" : 0,
+        "quarterFrameIndex" : 1,
+        "seconds" : 59,
+        "ticksPerSecond" : "50.0"
+      },
+      "label" : "quarterFrame/25/50/index1",
+      "op" : "quarterFrame",
+      "rate" : "25"
+    },
+    {
+      "expect" : {
+        "byte" : 114,
+        "timestamp" : 1004
+      },
+      "input" : {
+        "anchorHostTime" : 1000,
+        "frames" : 20,
+        "hours" : 0,
+        "minutes" : 0,
+        "quarterFrameIndex" : 7,
+        "seconds" : 59,
+        "ticksPerSecond" : "50.0"
+      },
+      "label" : "quarterFrame/25/50/index7",
+      "op" : "quarterFrame",
+      "rate" : "25"
+    },
+    {
+      "expect" : {
+        "byte" : 6,
+        "timestamp" : 1004
+      },
+      "input" : {
+        "anchorHostTime" : 1000,
+        "frames" : 20,
+        "hours" : 0,
+        "minutes" : 0,
+        "quarterFrameIndex" : 8,
+        "seconds" : 59,
+        "ticksPerSecond" : "50.0"
+      },
+      "label" : "quarterFrame/25/50/index8",
+      "op" : "quarterFrame",
+      "rate" : "25"
+    },
+    {
+      "expect" : {
+        "byte" : 17,
+        "timestamp" : 1005
+      },
+      "input" : {
+        "anchorHostTime" : 1000,
+        "frames" : 20,
+        "hours" : 0,
+        "minutes" : 0,
+        "quarterFrameIndex" : 9,
+        "seconds" : 59,
+        "ticksPerSecond" : "50.0"
+      },
+      "label" : "quarterFrame/25/50/index9",
+      "op" : "quarterFrame",
+      "rate" : "25"
+    },
+    {
+      "expect" : {
+        "byte" : 114,
+        "timestamp" : 1008
+      },
+      "input" : {
+        "anchorHostTime" : 1000,
+        "frames" : 20,
+        "hours" : 0,
+        "minutes" : 0,
+        "quarterFrameIndex" : 15,
+        "seconds" : 59,
+        "ticksPerSecond" : "50.0"
+      },
+      "label" : "quarterFrame/25/50/index15",
+      "op" : "quarterFrame",
+      "rate" : "25"
+    },
+    {
+      "expect" : {
+        "byte" : 8,
+        "timestamp" : 1008
+      },
+      "input" : {
+        "anchorHostTime" : 1000,
+        "frames" : 20,
+        "hours" : 0,
+        "minutes" : 0,
+        "quarterFrameIndex" : 16,
+        "seconds" : 59,
+        "ticksPerSecond" : "50.0"
+      },
+      "label" : "quarterFrame/25/50/index16",
+      "op" : "quarterFrame",
+      "rate" : "25"
+    },
+    {
+      "expect" : {
+        "byte" : 4,
+        "timestamp" : 1100
+      },
+      "input" : {
+        "anchorHostTime" : 1000,
+        "frames" : 20,
+        "hours" : 0,
+        "minutes" : 0,
+        "quarterFrameIndex" : 200,
+        "seconds" : 59,
+        "ticksPerSecond" : "50.0"
+      },
+      "label" : "quarterFrame/25/50/index200",
+      "op" : "quarterFrame",
+      "rate" : "25"
+    },
+    {
+      "expect" : {
+        "messages" : [
+
+        ]
+      },
+      "input" : {
+        "anchorHostTime" : 1000,
+        "frames" : 20,
+        "from" : 31251000,
+        "hours" : 0,
+        "minutes" : 0,
+        "seconds" : 59,
+        "ticksPerSecond" : "1000000000.0",
+        "until" : 31251000
+      },
+      "label" : "batch/24/1e9/empty",
+      "op" : "batch",
+      "rate" : "24"
+    },
+    {
+      "expect" : {
+        "messages" : [
+
+        ]
+      },
+      "input" : {
+        "anchorHostTime" : 1000,
+        "frames" : 20,
+        "from" : 52084333,
+        "hours" : 0,
+        "minutes" : 0,
+        "seconds" : 59,
+        "ticksPerSecond" : "1000000000.0",
+        "until" : 20834333
+      },
+      "label" : "batch/24/1e9/inverted",
+      "op" : "batch",
+      "rate" : "24"
+    },
+    {
+      "expect" : {
+        "messages" : [
+
+        ]
+      },
+      "input" : {
+        "anchorHostTime" : 1000,
+        "frames" : 20,
+        "from" : 0,
+        "hours" : 0,
+        "minutes" : 0,
+        "seconds" : 59,
+        "ticksPerSecond" : "1000000000.0",
+        "until" : 1000
+      },
+      "label" : "batch/24/1e9/before-anchor-empty",
+      "op" : "batch",
+      "rate" : "24"
+    },
+    {
+      "expect" : {
+        "messages" : [
+          [
+            4,
+            1000
+          ]
+        ]
+      },
+      "input" : {
+        "anchorHostTime" : 1000,
+        "frames" : 20,
+        "from" : 0,
+        "hours" : 0,
+        "minutes" : 0,
+        "seconds" : 59,
+        "ticksPerSecond" : "1000000000.0",
+        "until" : 5001000
+      },
+      "label" : "batch/24/1e9/before-anchor-yields-zero",
+      "op" : "batch",
+      "rate" : "24"
+    },
+    {
+      "expect" : {
+        "messages" : [
+
+        ]
+      },
+      "input" : {
+        "anchorHostTime" : 1000,
+        "frames" : 20,
+        "from" : 31252000,
+        "hours" : 0,
+        "minutes" : 0,
+        "seconds" : 59,
+        "ticksPerSecond" : "1000000000.0",
+        "until" : 31253000
+      },
+      "label" : "batch/24/1e9/inside-a-gap",
+      "op" : "batch",
+      "rate" : "24"
+    },
+    {
+      "expect" : {
+        "combined" : [
+          [
+            4,
+            1000
+          ],
+          [
+            17,
+            10417667
+          ],
+          [
+            43,
+            20834333
+          ],
+          [
+            51,
+            31251000
+          ],
+          [
+            64,
+            41667667
+          ],
+          [
+            80,
+            52084333
+          ],
+          [
+            96,
+            62501000
+          ],
+          [
+            112,
+            72917667
+          ],
+          [
+            6,
+            83334333
+          ],
+          [
+            17,
+            93751000
+          ],
+          [
+            43,
+            104167667
+          ],
+          [
+            51,
+            114584333
+          ],
+          [
+            64,
+            125001000
+          ],
+          [
+            80,
+            135417667
+          ],
+          [
+            96,
+            145834333
+          ],
+          [
+            112,
+            156251000
+          ],
+          [
+            0,
+            166667667
+          ],
+          [
+            16,
+            177084333
+          ],
+          [
+            32,
+            187501000
+          ],
+          [
+            48,
+            197917667
+          ],
+          [
+            65,
+            208334333
+          ],
+          [
+            80,
+            218751000
+          ],
+          [
+            96,
+            229167667
+          ],
+          [
+            112,
+            239584333
+          ]
+        ],
+        "windows" : [
+          [
+            [
+              4,
+              1000
+            ],
+            [
+              17,
+              10417667
+            ],
+            [
+              43,
+              20834333
+            ],
+            [
+              51,
+              31251000
+            ],
+            [
+              64,
+              41667667
+            ],
+            [
+              80,
+              52084333
+            ],
+            [
+              96,
+              62501000
+            ],
+            [
+              112,
+              72917667
+            ]
+          ],
+          [
+            [
+              6,
+              83334333
+            ],
+            [
+              17,
+              93751000
+            ],
+            [
+              43,
+              104167667
+            ],
+            [
+              51,
+              114584333
+            ],
+            [
+              64,
+              125001000
+            ],
+            [
+              80,
+              135417667
+            ],
+            [
+              96,
+              145834333
+            ],
+            [
+              112,
+              156251000
+            ]
+          ],
+          [
+            [
+              0,
+              166667667
+            ],
+            [
+              16,
+              177084333
+            ],
+            [
+              32,
+              187501000
+            ],
+            [
+              48,
+              197917667
+            ],
+            [
+              65,
+              208334333
+            ],
+            [
+              80,
+              218751000
+            ],
+            [
+              96,
+              229167667
+            ],
+            [
+              112,
+              239584333
+            ]
+          ]
+        ]
+      },
+      "input" : {
+        "anchorHostTime" : 1000,
+        "boundaries" : [
+          1000,
+          83334333,
+          166667667,
+          250001000
+        ],
+        "frames" : 20,
+        "hours" : 0,
+        "minutes" : 0,
+        "seconds" : 59,
+        "ticksPerSecond" : "1000000000.0"
+      },
+      "label" : "batchChain/24/1e9/seams-on-timestamps",
+      "op" : "batchChain",
+      "rate" : "24"
+    },
+    {
+      "expect" : {
+        "combined" : [
+          [
+            4,
+            1000
+          ],
+          [
+            17,
+            8334333
+          ],
+          [
+            43,
+            16667667
+          ],
+          [
+            51,
+            25001000
+          ],
+          [
+            64,
+            33334333
+          ],
+          [
+            80,
+            41667667
+          ],
+          [
+            96,
+            50001000
+          ],
+          [
+            118,
+            58334333
+          ],
+          [
+            6,
+            66667667
+          ],
+          [
+            17,
+            75001000
+          ],
+          [
+            43,
+            83334333
+          ],
+          [
+            51,
+            91667667
+          ],
+          [
+            64,
+            100001000
+          ],
+          [
+            80,
+            108334333
+          ],
+          [
+            96,
+            116667667
+          ],
+          [
+            118,
+            125001000
+          ],
+          [
+            8,
+            133334333
+          ],
+          [
+            17,
+            141667667
+          ],
+          [
+            43,
+            150001000
+          ],
+          [
+            51,
+            158334333
+          ],
+          [
+            64,
+            166667667
+          ],
+          [
+            80,
+            175001000
+          ],
+          [
+            96,
+            183334333
+          ],
+          [
+            118,
+            191667667
+          ]
+        ],
+        "windows" : [
+          [
+            [
+              4,
+              1000
+            ],
+            [
+              17,
+              8334333
+            ],
+            [
+              43,
+              16667667
+            ],
+            [
+              51,
+              25001000
+            ],
+            [
+              64,
+              33334333
+            ],
+            [
+              80,
+              41667667
+            ],
+            [
+              96,
+              50001000
+            ],
+            [
+              118,
+              58334333
+            ]
+          ],
+          [
+            [
+              6,
+              66667667
+            ],
+            [
+              17,
+              75001000
+            ],
+            [
+              43,
+              83334333
+            ],
+            [
+              51,
+              91667667
+            ],
+            [
+              64,
+              100001000
+            ],
+            [
+              80,
+              108334333
+            ],
+            [
+              96,
+              116667667
+            ],
+            [
+              118,
+              125001000
+            ]
+          ],
+          [
+            [
+              8,
+              133334333
+            ],
+            [
+              17,
+              141667667
+            ],
+            [
+              43,
+              150001000
+            ],
+            [
+              51,
+              158334333
+            ],
+            [
+              64,
+              166667667
+            ],
+            [
+              80,
+              175001000
+            ],
+            [
+              96,
+              183334333
+            ],
+            [
+              118,
+              191667667
+            ]
+          ]
+        ]
+      },
+      "input" : {
+        "anchorHostTime" : 1000,
+        "boundaries" : [
+          1000,
+          66667667,
+          133334333,
+          200001000
+        ],
+        "frames" : 20,
+        "hours" : 0,
+        "minutes" : 0,
+        "seconds" : 59,
+        "ticksPerSecond" : "1000000000.0"
+      },
+      "label" : "batchChain/30/1e9/seams-on-timestamps",
+      "op" : "batchChain",
+      "rate" : "30"
+    },
+    {
+      "expect" : {
+        "combined" : [
+          [
+            4,
+            1000
+          ],
+          [
+            17,
+            10001000
+          ],
+          [
+            43,
+            20001000
+          ],
+          [
+            51,
+            30001000
+          ],
+          [
+            64,
+            40001000
+          ],
+          [
+            80,
+            50001000
+          ],
+          [
+            96,
+            60001000
+          ],
+          [
+            114,
+            70001000
+          ],
+          [
+            6,
+            80001000
+          ],
+          [
+            17,
+            90001000
+          ],
+          [
+            43,
+            100001000
+          ],
+          [
+            51,
+            110001000
+          ],
+          [
+            64,
+            120001000
+          ],
+          [
+            80,
+            130001000
+          ],
+          [
+            96,
+            140001000
+          ],
+          [
+            114,
+            150001000
+          ],
+          [
+            8,
+            160001000
+          ],
+          [
+            17,
+            170001000
+          ],
+          [
+            43,
+            180001000
+          ],
+          [
+            51,
+            190001000
+          ],
+          [
+            64,
+            200001000
+          ],
+          [
+            80,
+            210001000
+          ],
+          [
+            96,
+            220001000
+          ],
+          [
+            114,
+            230001000
+          ]
+        ],
+        "windows" : [
+          [
+            [
+              4,
+              1000
+            ],
+            [
+              17,
+              10001000
+            ],
+            [
+              43,
+              20001000
+            ],
+            [
+              51,
+              30001000
+            ],
+            [
+              64,
+              40001000
+            ],
+            [
+              80,
+              50001000
+            ],
+            [
+              96,
+              60001000
+            ],
+            [
+              114,
+              70001000
+            ]
+          ],
+          [
+            [
+              6,
+              80001000
+            ],
+            [
+              17,
+              90001000
+            ],
+            [
+              43,
+              100001000
+            ],
+            [
+              51,
+              110001000
+            ],
+            [
+              64,
+              120001000
+            ],
+            [
+              80,
+              130001000
+            ],
+            [
+              96,
+              140001000
+            ],
+            [
+              114,
+              150001000
+            ]
+          ],
+          [
+            [
+              8,
+              160001000
+            ],
+            [
+              17,
+              170001000
+            ],
+            [
+              43,
+              180001000
+            ],
+            [
+              51,
+              190001000
+            ],
+            [
+              64,
+              200001000
+            ],
+            [
+              80,
+              210001000
+            ],
+            [
+              96,
+              220001000
+            ],
+            [
+              114,
+              230001000
+            ]
+          ]
+        ]
+      },
+      "input" : {
+        "anchorHostTime" : 1000,
+        "boundaries" : [
+          1000,
+          80001000,
+          160001000,
+          240001000
+        ],
+        "frames" : 20,
+        "hours" : 0,
+        "minutes" : 0,
+        "seconds" : 59,
+        "ticksPerSecond" : "1000000000.0"
+      },
+      "label" : "batchChain/25/1e9/seams-on-timestamps-exact-period",
+      "op" : "batchChain",
+      "rate" : "25"
+    },
+    {
+      "expect" : {
+        "combined" : [
+          [
+            4,
+            1000
+          ],
+          [
+            17,
+            251000
+          ],
+          [
+            43,
+            501000
+          ],
+          [
+            51,
+            751000
+          ],
+          [
+            64,
+            1001000
+          ],
+          [
+            80,
+            1251000
+          ],
+          [
+            96,
+            1501000
+          ],
+          [
+            112,
+            1751000
+          ],
+          [
+            6,
+            2001000
+          ],
+          [
+            17,
+            2251000
+          ],
+          [
+            43,
+            2501000
+          ],
+          [
+            51,
+            2751000
+          ],
+          [
+            64,
+            3001000
+          ],
+          [
+            80,
+            3251000
+          ],
+          [
+            96,
+            3501000
+          ],
+          [
+            112,
+            3751000
+          ],
+          [
+            0,
+            4001000
+          ],
+          [
+            16,
+            4251000
+          ],
+          [
+            32,
+            4501000
+          ],
+          [
+            48,
+            4751000
+          ],
+          [
+            65,
+            5001000
+          ],
+          [
+            80,
+            5251000
+          ],
+          [
+            96,
+            5501000
+          ],
+          [
+            112,
+            5751000
+          ]
+        ],
+        "windows" : [
+          [
+            [
+              4,
+              1000
+            ],
+            [
+              17,
+              251000
+            ],
+            [
+              43,
+              501000
+            ],
+            [
+              51,
+              751000
+            ],
+            [
+              64,
+              1001000
+            ],
+            [
+              80,
+              1251000
+            ],
+            [
+              96,
+              1501000
+            ],
+            [
+              112,
+              1751000
+            ]
+          ],
+          [
+            [
+              6,
+              2001000
+            ],
+            [
+              17,
+              2251000
+            ],
+            [
+              43,
+              2501000
+            ],
+            [
+              51,
+              2751000
+            ],
+            [
+              64,
+              3001000
+            ],
+            [
+              80,
+              3251000
+            ],
+            [
+              96,
+              3501000
+            ],
+            [
+              112,
+              3751000
+            ]
+          ],
+          [
+            [
+              0,
+              4001000
+            ],
+            [
+              16,
+              4251000
+            ],
+            [
+              32,
+              4501000
+            ],
+            [
+              48,
+              4751000
+            ],
+            [
+              65,
+              5001000
+            ],
+            [
+              80,
+              5251000
+            ],
+            [
+              96,
+              5501000
+            ],
+            [
+              112,
+              5751000
+            ]
+          ]
+        ]
+      },
+      "input" : {
+        "anchorHostTime" : 1000,
+        "boundaries" : [
+          1000,
+          2001000,
+          4001000,
+          6001000
+        ],
+        "frames" : 20,
+        "hours" : 0,
+        "minutes" : 0,
+        "seconds" : 59,
+        "ticksPerSecond" : "24000000.0"
+      },
+      "label" : "batchChain/24/24e6/seams-on-timestamps-exact-period",
+      "op" : "batchChain",
+      "rate" : "24"
+    },
+    {
+      "expect" : {
+        "combined" : [
+          [
+            17,
+            10417667
+          ],
+          [
+            43,
+            20834333
+          ],
+          [
+            51,
+            31251000
+          ],
+          [
+            64,
+            41667667
+          ],
+          [
+            80,
+            52084333
+          ],
+          [
+            96,
+            62501000
+          ],
+          [
+            112,
+            72917667
+          ],
+          [
+            6,
+            83334333
+          ],
+          [
+            17,
+            93751000
+          ],
+          [
+            43,
+            104167667
+          ],
+          [
+            51,
+            114584333
+          ],
+          [
+            64,
+            125001000
+          ],
+          [
+            80,
+            135417667
+          ],
+          [
+            96,
+            145834333
+          ],
+          [
+            112,
+            156251000
+          ],
+          [
+            0,
+            166667667
+          ],
+          [
+            16,
+            177084333
+          ]
+        ],
+        "windows" : [
+          [
+            [
+              17,
+              10417667
+            ],
+            [
+              43,
+              20834333
+            ],
+            [
+              51,
+              31251000
+            ],
+            [
+              64,
+              41667667
+            ],
+            [
+              80,
+              52084333
+            ]
+          ],
+          [
+            [
+              96,
+              62501000
+            ],
+            [
+              112,
+              72917667
+            ],
+            [
+              6,
+              83334333
+            ],
+            [
+              17,
+              93751000
+            ],
+            [
+              43,
+              104167667
+            ],
+            [
+              51,
+              114584333
+            ]
+          ],
+          [
+            [
+              64,
+              125001000
+            ],
+            [
+              80,
+              135417667
+            ],
+            [
+              96,
+              145834333
+            ],
+            [
+              112,
+              156251000
+            ],
+            [
+              0,
+              166667667
+            ],
+            [
+              16,
+              177084333
+            ]
+          ]
+        ]
+      },
+      "input" : {
+        "anchorHostTime" : 1000,
+        "boundaries" : [
+          5001000,
+          57084333,
+          119584333,
+          182084333
+        ],
+        "frames" : 20,
+        "hours" : 0,
+        "minutes" : 0,
+        "seconds" : 59,
+        "ticksPerSecond" : "1000000000.0"
+      },
+      "label" : "batchChain/24/1e9/seams-mid-gap",
+      "op" : "batchChain",
+      "rate" : "24"
+    },
+    {
+      "expect" : {
+        "combined" : [
+          [
+            4,
+            1000
+          ],
+          [
+            17,
+            8334333
+          ],
+          [
+            43,
+            16667667
+          ],
+          [
+            51,
+            25001000
+          ],
+          [
+            64,
+            33334333
+          ],
+          [
+            80,
+            41667667
+          ],
+          [
+            96,
+            50001000
+          ],
+          [
+            116,
+            58334333
+          ],
+          [
+            6,
+            66667667
+          ],
+          [
+            17,
+            75001000
+          ],
+          [
+            43,
+            83334333
+          ],
+          [
+            51,
+            91667667
+          ],
+          [
+            64,
+            100001000
+          ],
+          [
+            80,
+            108334333
+          ],
+          [
+            96,
+            116667667
+          ],
+          [
+            116,
+            125001000
+          ],
+          [
+            8,
+            133334333
+          ],
+          [
+            17,
+            141667667
+          ],
+          [
+            43,
+            150001000
+          ],
+          [
+            51,
+            158334333
+          ],
+          [
+            64,
+            166667667
+          ],
+          [
+            80,
+            175001000
+          ],
+          [
+            96,
+            183334333
+          ],
+          [
+            116,
+            191667667
+          ],
+          [
+            10,
+            200001000
+          ],
+          [
+            17,
+            208334333
+          ],
+          [
+            43,
+            216667667
+          ],
+          [
+            51,
+            225001000
+          ],
+          [
+            64,
+            233334333
+          ],
+          [
+            80,
+            241667667
+          ],
+          [
+            96,
+            250001000
+          ],
+          [
+            116,
+            258334333
+          ],
+          [
+            12,
+            266667667
+          ],
+          [
+            17,
+            275001000
+          ],
+          [
+            43,
+            283334333
+          ],
+          [
+            51,
+            291667667
+          ],
+          [
+            64,
+            300001000
+          ],
+          [
+            80,
+            308334333
+          ],
+          [
+            96,
+            316667667
+          ],
+          [
+            116,
+            325001000
+          ]
+        ],
+        "windows" : [
+          [
+            [
+              4,
+              1000
+            ],
+            [
+              17,
+              8334333
+            ],
+            [
+              43,
+              16667667
+            ],
+            [
+              51,
+              25001000
+            ],
+            [
+              64,
+              33334333
+            ],
+            [
+              80,
+              41667667
+            ],
+            [
+              96,
+              50001000
+            ],
+            [
+              116,
+              58334333
+            ],
+            [
+              6,
+              66667667
+            ],
+            [
+              17,
+              75001000
+            ],
+            [
+              43,
+              83334333
+            ],
+            [
+              51,
+              91667667
+            ]
+          ],
+          [
+            [
+              64,
+              100001000
+            ],
+            [
+              80,
+              108334333
+            ],
+            [
+              96,
+              116667667
+            ],
+            [
+              116,
+              125001000
+            ],
+            [
+              8,
+              133334333
+            ],
+            [
+              17,
+              141667667
+            ],
+            [
+              43,
+              150001000
+            ],
+            [
+              51,
+              158334333
+            ],
+            [
+              64,
+              166667667
+            ],
+            [
+              80,
+              175001000
+            ],
+            [
+              96,
+              183334333
+            ],
+            [
+              116,
+              191667667
+            ]
+          ],
+          [
+            [
+              10,
+              200001000
+            ],
+            [
+              17,
+              208334333
+            ],
+            [
+              43,
+              216667667
+            ],
+            [
+              51,
+              225001000
+            ],
+            [
+              64,
+              233334333
+            ],
+            [
+              80,
+              241667667
+            ],
+            [
+              96,
+              250001000
+            ],
+            [
+              116,
+              258334333
+            ],
+            [
+              12,
+              266667667
+            ],
+            [
+              17,
+              275001000
+            ],
+            [
+              43,
+              283334333
+            ],
+            [
+              51,
+              291667667
+            ],
+            [
+              64,
+              300001000
+            ],
+            [
+              80,
+              308334333
+            ],
+            [
+              96,
+              316667667
+            ],
+            [
+              116,
+              325001000
+            ]
+          ]
+        ]
+      },
+      "input" : {
+        "anchorHostTime" : 1000,
+        "boundaries" : [
+          1000,
+          100001000,
+          200001000,
+          333334333
+        ],
+        "frames" : 20,
+        "hours" : 0,
+        "minutes" : 0,
+        "seconds" : 59,
+        "ticksPerSecond" : "1000000000.0"
+      },
+      "label" : "batchChain/30df/1e9/seams-on-timestamps-dropframe",
+      "op" : "batchChain",
+      "rate" : "30df"
+    }
+  ],
+  "contract" : "mtc-schedule",
+  "note" : "macOS-generated golden vectors for the OnlyCue MTC scheduling layer (MTCSchedule). The C# OnlyCue.Core re-implementation must reproduce every case exactly. batchChain is the load-bearing op: concat(windows) must equal combined, so a message dropped at a tiled seam and one duplicated there fail differently. hostTicksPerSecond() is out of contract — it is Mach-specific. To regenerate after a deliberate change, delete golden/mtc-schedule-v1.json and re-run the suite.",
+  "version" : 1
+}

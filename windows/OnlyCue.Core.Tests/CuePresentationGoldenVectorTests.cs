@@ -27,6 +27,8 @@ public class CuePresentationGoldenVectorTests
 
     public static TheoryData<string> RowTapNames => Names(Vector.RowTapIntent.Select(c => c.Name));
 
+    public static TheoryData<string> RangeSelectionNames => Names(Vector.RangeSelection.Select(c => c.Name));
+
     public static TheoryData<string> RowFillNames => Names(Vector.RowFill.Select(c => c.Name));
 
     public static TheoryData<string> GoFilterNames => Names(Vector.GoFilter.Select(c => c.Name));
@@ -45,7 +47,10 @@ public class CuePresentationGoldenVectorTests
         // Group counts, not just NotEmpty: a vector that lost most of a group to a
         // regenerate would still be "not empty" while quietly dropping coverage.
         Assert.Equal(8, Vector.RowFill.Count);
-        Assert.Equal(8, Vector.RowTapIntent.Count);
+        // 12 since #790 split Ctrl/Cmd from Shift — 8 here would mean the vector
+        // was regenerated from a core that still collapses them.
+        Assert.Equal(12, Vector.RowTapIntent.Count);
+        Assert.NotEmpty(Vector.RangeSelection);
         Assert.NotEmpty(Vector.FadeParse);
         Assert.NotEmpty(Vector.CueNumberValidation);
     }
@@ -141,9 +146,27 @@ public class CuePresentationGoldenVectorTests
     {
         var golden = Vector.RowTapIntent.Single(c => c.Name == name);
 
-        var actual = CueRowTap.Intent(TapTarget(golden.Target), golden.IsExtending, golden.IsReadOnly);
+        var actual = CueRowTap.Intent(TapTarget(golden.Target), TapModifier(golden.Modifier), golden.IsReadOnly);
 
         Assert.Equal(TapIntent(golden.Expect), actual);
+    }
+
+    [Theory]
+    [MemberData(nameof(RangeSelectionNames))]
+    public void RangeSelection_ReproducesGoldenCase(string name)
+    {
+        var golden = Vector.RangeSelection.Single(c => c.Name == name);
+
+        var actual = CueRangeSelection.Range(
+            golden.Displayed.Select(Guid.Parse).ToList(),
+            golden.Anchor is null ? null : Guid.Parse(golden.Anchor),
+            Guid.Parse(golden.Target));
+
+        // A set, compared as a set of parsed Guids: the vector emits the ids in
+        // displayed order only so the committed JSON diffs readably, and Swift's
+        // `uuidString` uppercases the hex where .NET's `Guid.ToString()` lowercases
+        // it, so a string compare would fail an implementation that is correct.
+        Assert.Equal(golden.Expect.Select(Guid.Parse).ToHashSet(), actual.ToHashSet());
     }
 
     [Theory]
@@ -276,10 +299,19 @@ public class CuePresentationGoldenVectorTests
         _ => throw new InvalidDataException($"unknown tap target '{raw}'")
     };
 
+    private static CueRowTapModifier TapModifier(string raw) => raw switch
+    {
+        "plain" => CueRowTapModifier.Plain,
+        "toggle" => CueRowTapModifier.Toggle,
+        "range" => CueRowTapModifier.Range,
+        _ => throw new InvalidDataException($"unknown tap modifier '{raw}'")
+    };
+
     private static CueRowTapIntent TapIntent(string raw) => raw switch
     {
         "beginEdit" => CueRowTapIntent.BeginEdit,
-        "extendSelection" => CueRowTapIntent.ExtendSelection,
+        "toggleSelection" => CueRowTapIntent.ToggleSelection,
+        "extendRange" => CueRowTapIntent.ExtendRange,
         "selectAndSeek" => CueRowTapIntent.SelectAndSeek,
         "ignored" => CueRowTapIntent.Ignored,
         _ => throw new InvalidDataException($"unknown tap intent '{raw}'")

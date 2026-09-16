@@ -111,7 +111,8 @@ established bootstrap-and-fail / byte-compare pattern, with fixtures split into
 | `cueNumberValidation` | `CueNumberValidator.validate` | `.ok` / `.invalidFormat` / `.duplicate` / `.outOfRange` + both bounds |
 | `cueNumberErrors` | `CueNumberErrorMessage.text` | the exact user-facing strings, byte for byte |
 | `sectionCount` | `CueListSectionHeader.countText` | singular/plural/zero |
-| `rowTapIntent` | `CueRowTap.intent` | all six `(target, isExtending, isReadOnly)` combinations |
+| `rowTapIntent` | `CueRowTap.intent` | all eight `(target, isExtending, isReadOnly)` combinations — **twelve** since #790 split the flag into `(target, modifier, isReadOnly)` |
+| `rangeSelection` | `CueRangeSelection.range` *(added by #790)* | the ⇧-click range: both directions, a missing/stale anchor, displayed order over id order |
 | `rowFill` | `CueRowFill.Resolution` *(new)* | the branch chosen, not the `Color` |
 | `goFilter` | `CueListGoFilter.resolve` *(new)* | raw id + live types + read-only → resolved filter |
 | `rowOpacity` | `CueListRowOpacity.value` *(new)* | dimmed vs. full |

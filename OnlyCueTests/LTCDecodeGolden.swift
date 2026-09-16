@@ -33,9 +33,13 @@ enum LTCDecodeGolden {
         var leadSilenceSamples = 0
         var trailSilenceSamples = 0
         var truncateToSamples: Int?
-        var flipBitInFrame: Int?
-        var flipBitIndices: [Int]?
+        var flips: [LTCDecodeGoldenVector.FrameFlip]?
         var offsetBy: Float?
+    }
+
+    /// One frame's worth of flips, for the common single-frame corruption.
+    static func flip(_ frame: Int, _ indices: [Int]) -> [LTCDecodeGoldenVector.FrameFlip] {
+        [LTCDecodeGoldenVector.FrameFlip(frame: frame, indices: indices)]
     }
 
     static let allRates: [SMPTEFramerate] = [.fps24, .fps25, .fps30, .fps30drop]
@@ -123,13 +127,18 @@ enum LTCDecodeGolden {
     /// the payload *and* makes the parity odd, so the word is syntactically a
     /// frame (its sync word is intact) but fails `isWellFormed`.
     ///
-    /// This is the case hazard 8 exists for. `extractFrames` advances 80 bits on
-    /// a **sync match**, not on a **valid frame** — so the corrupted frame is
-    /// consumed and the search resumes cleanly after it. A port that puts the
-    /// advance inside the validity check keeps sliding bit-by-bit through the bad
-    /// frame and can re-lock on a spurious window. The expectation that catches
-    /// that is not "one frame is missing" but "*only* that frame is missing, and
-    /// every other frame is still at its byte-identical `startSample`".
+    /// `extractFrames` advances 80 bits on a **sync match**, not on a **valid
+    /// frame** — so the corrupted frame is consumed and the search resumes cleanly
+    /// after it. What this case pins is therefore not "one frame is missing" but
+    /// "*only* that frame is missing, and every other frame is still at its
+    /// byte-identical `startSample`".
+    ///
+    /// It does **not** catch a port that puts the advance inside the validity
+    /// check. An earlier version of this comment claimed it did; mutation testing
+    /// falsified that. With no sync word anywhere but the frame boundaries, a
+    /// bit-by-bit crawl through the broken frame simply re-locks on the *next* real
+    /// sync word and returns this identical list. `spuriousSyncSignal()` is the
+    /// case that actually separates them.
     static let parityFlipBit = 3
 
     /// Two sync-word bits, both `1`, so parity stays **even** and only the sync
@@ -153,20 +162,64 @@ enum LTCDecodeGolden {
     /// frame 2 leaves recovered neighbours on both sides of it.
     static let flipInFrame = 2
 
-    static var structuralSignals: [Signal] {
+    /// Where the spurious sync word is planted inside the frame after the broken
+    /// one, and why 36 rather than any other offset.
+    ///
+    /// A 16-bit sync word written at offset `j` of frame `flipInFrame + 1` makes
+    /// the 80-bit window *ending* at that word a syntactic frame — one that
+    /// straddles the two frames and is aligned to neither. Only some `j` produce
+    /// a window that is also well-formed and in range, because the window's own
+    /// payload contains the previous frame's real sync word, whose twelve
+    /// consecutive `1`s drive most BCD fields out of range. 36 is the lowest that
+    /// clears both gates: the window reads `00:00:45:00`, and it lies entirely
+    /// inside the 80 bits the real decoder skips over.
+    ///
+    /// `plantSyncAtBit + 16 <= 64`, so the carrier frame keeps its *own* sync word
+    /// and still locks at its aligned position — the trap is in the payload, not
+    /// in the frame structure.
+    static let plantSyncAtBit = 36
+
+    /// The bits to toggle to turn frame `flipInFrame + 1`'s payload into a sync
+    /// word at `plantSyncAtBit` — derived from the word rather than written down,
+    /// so the case survives any change to the reference start timecode.
+    static func plantSyncIndices() throws -> [Int] {
+        let start = try timecode(referenceStart, rate: referenceRate)
+        let word = LTCFrame(
+            timecode: Timecode(frameCount: start.frameCount + flipInFrame + 1, rate: referenceRate)
+        ).bits
+        return (0..<LTCFrame.syncWord.count).compactMap { offset in
+            word[plantSyncAtBit + offset] == LTCFrame.syncWord[offset] ? nil : plantSyncAtBit + offset
+        }
+    }
+
+    /// **The case mutation testing demanded.** `parity-flipped-middle-frame`
+    /// asserts that a broken frame is *consumed*, but it cannot tell the real
+    /// decoder from one that advances only on a valid frame, or from one that
+    /// never skips at all: with no sync word anywhere but the frame boundaries,
+    /// all three crawl to the same place and return the same frames. Mutants 8 and
+    /// 9 both survived the whole 165-case matrix on exactly that.
+    ///
+    /// So: break frame 2's parity *and* plant a sync word inside frame 3. The real
+    /// decoder never sees the trap — it advances 80 bits from frame 2's sync match
+    /// and lands past it. A decoder that advances only on a *valid* frame (mutant
+    /// 8), or one that always advances a single bit (mutant 9), crawls into the
+    /// planted window and reports a frame that was never transmitted.
+    static func spuriousSyncSignal() throws -> Signal {
+        let indices = try plantSyncIndices()
+        return reference("spurious-sync-after-a-broken-frame") {
+            $0.flips = [
+                LTCDecodeGoldenVector.FrameFlip(frame: flipInFrame, indices: [parityFlipBit]),
+                LTCDecodeGoldenVector.FrameFlip(frame: flipInFrame + 1, indices: indices)
+            ]
+        }
+    }
+
+    static func structuralSignals() throws -> [Signal] {
         [
-            reference("parity-flipped-middle-frame") {
-                $0.flipBitInFrame = flipInFrame
-                $0.flipBitIndices = [parityFlipBit]
-            },
-            reference("sync-word-broken") {
-                $0.flipBitInFrame = flipInFrame
-                $0.flipBitIndices = syncFlipBits
-            },
-            reference("bcd-out-of-range") {
-                $0.flipBitInFrame = flipInFrame
-                $0.flipBitIndices = bcdOutOfRangeBits
-            },
+            reference("parity-flipped-middle-frame") { $0.flips = flip(flipInFrame, [parityFlipBit]) },
+            reference("sync-word-broken") { $0.flips = flip(flipInFrame, syncFlipBits) },
+            reference("bcd-out-of-range") { $0.flips = flip(flipInFrame, bcdOutOfRangeBits) },
+            try spuriousSyncSignal(),
             // Cut 4.5 frames in: the last window is incomplete and must simply
             // not produce a frame, while the frames before it still decode.
             reference("truncated-mid-frame") {
@@ -238,7 +291,7 @@ enum LTCDecodeGolden {
         }
     }
 
-    static var allSignals: [Signal] { cleanSignals + structuralSignals }
+    static func allSignals() throws -> [Signal] { cleanSignals + (try structuralSignals()) }
 
     // MARK: - The recipe builder (mirrored verbatim in C#)
 
@@ -258,11 +311,11 @@ enum LTCDecodeGolden {
     /// Build the signal a case describes. **The order is the contract:**
     ///
     /// 1. Encode `frameCount` consecutive frames from `start`, biphase polarity
-    ///    threaded across the joins exactly as `LTCFrameStream` does. The frame
-    ///    at `flipBitInFrame` is re-encoded from its word with `flipBitIndices`
-    ///    toggled — so corruption is a genuinely wrong word on the wire, and the
-    ///    polarity thread carries its consequences into the frames that follow,
-    ///    just as a real encoder would have.
+    ///    threaded across the joins exactly as `LTCFrameStream` does. A frame named
+    ///    by `flips` is re-encoded from its word with those bit positions toggled —
+    ///    so corruption is a genuinely wrong word on the wire, and the polarity
+    ///    thread carries its consequences into the frames that follow, just as a
+    ///    real encoder would have.
     /// 2. Prepend `leadSilenceSamples` zeros, append `trailSilenceSamples` zeros.
     /// 3. Truncate to `truncateToSamples` (a prefix).
     /// 4. Add `offsetBy` to every sample.
@@ -303,7 +356,8 @@ enum LTCDecodeGolden {
 
     private static func frame(of signal: Signal, at offset: Int, from start: Timecode) -> LTCFrame {
         let frame = LTCFrame(timecode: Timecode(frameCount: start.frameCount + offset, rate: signal.rate))
-        guard signal.flipBitInFrame == offset, let indices = signal.flipBitIndices else { return frame }
+        let indices = (signal.flips ?? []).filter { $0.frame == offset }.flatMap(\.indices)
+        guard indices.isEmpty == false else { return frame }
         var bits = frame.bits
         for index in indices { bits[index].toggle() }
         return LTCFrame(bits: bits)

@@ -182,27 +182,35 @@ public class LtcDecodeGoldenVectorTests
     private static LtcDecodeCase CaseFor(string op, string signal) => CasesFor(op, signal).Single();
 
     /// <summary>
-    /// Mirrors the Swift <c>withoutTheCorruptedFrame</c>. The expectation for a
-    /// corrupted run is "the control run, minus exactly the frame the mutation
-    /// lands on" — derived from <c>flipBitInFrame</c> rather than written down as
-    /// positional indices, so the assertion survives a change to the run length
-    /// and still fails if a neighbour shifts by a single sample.
+    /// Mirrors the Swift <c>withoutTheCorruptedFrames</c>. The expectation for a
+    /// corrupted run is "the control run, minus exactly the frames the mutations
+    /// land on" — derived from <c>flips</c> rather than written down as positional
+    /// indices, so the assertion survives a change to the run length and still
+    /// fails if a neighbour shifts by a single sample. The
+    /// <c>control must decode</c> guard is what keeps this from degenerating into
+    /// "the control never decoded that frame either, so of course nothing changed".
     /// </summary>
-    private static List<LtcDecodeFrame> WithoutTheCorruptedFrame(
+    private static List<LtcDecodeFrame> WithoutTheCorruptedFrames(
         List<LtcDecodeFrame> control,
         LtcDecodeCase goldenCase)
     {
         var input = goldenCase.Input;
         var start = LtcDecodeRecipe.StartOf(input);
-        var offset = Required(input.FlipBitInFrame, goldenCase.Label, "flipBitInFrame");
-        var corrupted = Timecode
-            .FromFrameCount(start.FrameCount + offset, LtcDecodeRecipe.RateOf(input))
-            .DisplayString;
+        var rate = LtcDecodeRecipe.RateOf(input);
+        var flips = Required(input.Flips, goldenCase.Label, "flips");
+        Assert.NotEmpty(flips);
 
-        Assert.True(
-            control.Any(frame => frame.Timecode == corrupted),
-            $"the control must decode {corrupted} or the case proves nothing");
-        return control.Where(frame => frame.Timecode != corrupted).ToList();
+        var corrupted = flips
+            .Select(flip => Timecode.FromFrameCount(start.FrameCount + flip.Frame, rate).DisplayString)
+            .ToHashSet();
+        foreach (var timecode in corrupted)
+        {
+            Assert.True(
+                control.Any(frame => frame.Timecode == timecode),
+                $"the control must decode {timecode} or the case proves nothing");
+        }
+
+        return control.Where(frame => !corrupted.Contains(frame.Timecode)).ToList();
     }
 
     // MARK: - Independent pins (hand-derived, not read off the vectors)
@@ -259,10 +267,18 @@ public class LtcDecodeGoldenVectorTests
     /// <summary>
     /// <b>A parity-broken frame is consumed, so the frames after it keep their
     /// offsets.</b> <c>ExtractFrames</c> advances 80 bits on a <i>sync match</i>,
-    /// not on a <i>valid frame</i>. The assertion that catches a port which puts
-    /// the advance inside the validity check is therefore not "one frame is
-    /// missing" — it is that frames 3 and 4 come back at byte-identical start
-    /// samples to the uncorrupted run.
+    /// not on a <i>valid frame</i>, so the assertion is not "one frame is missing"
+    /// but that every other frame comes back at a byte-identical start sample.
+    /// <para>
+    /// <b>What this case does not prove.</b> An earlier version of this remark
+    /// claimed it catches a port which puts the advance inside the validity check.
+    /// Mutation testing falsified that: such a port, and one that never skips at
+    /// all, both crawl bit-by-bit through the broken frame, re-lock on the
+    /// <i>next</i> real sync word, and return this exact list. With sync words only
+    /// at frame boundaries there is nothing for them to re-lock on wrongly. That is
+    /// what <see cref="PlantedSyncWord_IsSkipped_BecauseTheAdvanceIsEightyBits"/>
+    /// is for.
+    /// </para>
     /// </summary>
     [Fact]
     public void ParityBrokenFrame_IsConsumed_SoLaterFramesKeepTheirOffsets()
@@ -271,7 +287,55 @@ public class LtcDecodeGoldenVectorTests
         var control = Decode(CaseFor("decode", "clean/24@48000"));
 
         Assert.True(control.Count >= 3, "the corrupted frame needs neighbours on both sides");
-        Assert.Equal(WithoutTheCorruptedFrame(control, corrupted), Decode(corrupted));
+        Assert.Equal(WithoutTheCorruptedFrames(control, corrupted), Decode(corrupted));
+    }
+
+    /// <summary>
+    /// <b>The advance really is 80 bits — the case mutation testing forced.</b>
+    /// <c>spurious-sync-after-a-broken-frame</c> breaks one frame's parity
+    /// <i>and</i> plants a sync word inside the next frame's payload. The planted
+    /// word makes the 80-bit window ending on it a syntactically complete,
+    /// well-formed, in-range frame that straddles the two real frames and is
+    /// aligned to neither — a frame that was never transmitted.
+    /// <para>
+    /// The real decoder never sees it: it matches the broken frame's sync, advances
+    /// a whole 80 bits, and lands past the trap. A decoder that advances only on a
+    /// <i>valid</i> frame, or one that always advances a single bit, walks into it
+    /// and reports the phantom. Both are green on every other case in this
+    /// contract.
+    /// </para>
+    /// </summary>
+    [Fact]
+    public void PlantedSyncWord_IsSkipped_BecauseTheAdvanceIsEightyBits()
+    {
+        const int BitsPerFrame = 80;
+        var goldenCase = CaseFor("decode", "spurious-sync-after-a-broken-frame");
+        var samples = LtcDecodeRecipe.Samples(goldenCase.Input);
+        var sampleRate = LtcDecodeRecipe.SampleRateOf(goldenCase.Input);
+
+        // The trap is really on the wire, and off the frame grid. The demodulated
+        // stream does not begin on a frame boundary (the comparator's first latch
+        // is not a transition), so the grid is read off the stream rather than
+        // assumed: the real sync words all share one residue mod 80, and the plant
+        // is the single one that does not.
+        var bits = PipelineOf(samples, sampleRate).Bits ?? [];
+        var matches = Enumerable.Range(0, bits.Count - LtcFrame.SyncWord.Count + 1)
+            .Where(start => bits.Skip(start).Take(LtcFrame.SyncWord.Count).SequenceEqual(LtcFrame.SyncWord))
+            .ToList();
+        Assert.NotEmpty(matches);
+
+        var grid = matches.GroupBy(start => start % BitsPerFrame)
+            .OrderByDescending(group => group.Count())
+            .First().Key;
+        var offGrid = matches.Where(start => start % BitsPerFrame != grid).ToList();
+        Assert.Single(offGrid);  // exactly one sync word off the frame grid: the plant
+
+        // And the decoder steps straight over it: what survives is the control run
+        // minus the two frames the flips land on, and nothing else.
+        var control = Decode(CaseFor("decode", "clean/24@48000"));
+        var decoded = Decode(goldenCase);
+        Assert.Equal(WithoutTheCorruptedFrames(control, goldenCase), decoded);
+        Assert.DoesNotContain(decoded, frame => frame.Timecode == "00:00:45:00");
     }
 
     /// <summary>
@@ -282,9 +346,9 @@ public class LtcDecodeGoldenVectorTests
     /// <see cref="LtcFrame.ToTimecode"/>. Validity and range are two gates; a port
     /// that folds them into one passes every clean case and fails here.
     /// <para>
-    /// The word is rebuilt from the frame the mutation actually lands on
-    /// (<c>flipBitInFrame</c>), not from the run's first frame — otherwise this
-    /// would pin arithmetic that never reaches the wire.
+    /// The word is rebuilt from the frame the mutation actually lands on (the
+    /// single entry in <c>flips</c>), not from the run's first frame — otherwise
+    /// this would pin arithmetic that never reaches the wire.
     /// </para>
     /// </summary>
     [Fact]
@@ -293,12 +357,12 @@ public class LtcDecodeGoldenVectorTests
         var goldenCase = CaseFor("decode", "bcd-out-of-range");
         var input = goldenCase.Input;
         var start = LtcDecodeRecipe.StartOf(input);
-        var offset = Required(input.FlipBitInFrame, goldenCase.Label, "flipBitInFrame");
+        var flip = Assert.Single(Required(input.Flips, goldenCase.Label, "flips"));
         var rate = LtcDecodeRecipe.RateOf(input);
         var bits = LtcFrame
-            .FromTimecode(Timecode.FromFrameCount(start.FrameCount + offset, rate))
+            .FromTimecode(Timecode.FromFrameCount(start.FrameCount + flip.Frame, rate))
             .Bits.ToArray();
-        foreach (var index in Required(input.FlipBitIndices, goldenCase.Label, "flipBitIndices"))
+        foreach (var index in flip.Indices)
         {
             bits[index] = !bits[index];
         }
@@ -311,7 +375,7 @@ public class LtcDecodeGoldenVectorTests
         // Refused at the range gate, not the validity gate — so, exactly as with a
         // broken parity, only that frame goes missing.
         var control = Decode(CaseFor("decode", "clean/24@48000"));
-        Assert.Equal(WithoutTheCorruptedFrame(control, goldenCase), Decode(goldenCase));
+        Assert.Equal(WithoutTheCorruptedFrames(control, goldenCase), Decode(goldenCase));
     }
 
     /// <summary>
@@ -386,7 +450,7 @@ public class LtcDecodeGoldenVectorTests
                             && input.LeadSilenceSamples == 0
                             && input.TrailSilenceSamples == 0
                             && input.TruncateToSamples is null
-                            && input.FlipBitInFrame is null
+                            && input.Flips is null
                             && input.OffsetBy is null)
             .ToList();
 

@@ -39,9 +39,17 @@ public sealed record LtcDecodeInput(
     [property: JsonPropertyName("leadSilenceSamples")] int LeadSilenceSamples,
     [property: JsonPropertyName("trailSilenceSamples")] int TrailSilenceSamples,
     [property: JsonPropertyName("truncateToSamples")] int? TruncateToSamples,
-    [property: JsonPropertyName("flipBitInFrame")] int? FlipBitInFrame,
-    [property: JsonPropertyName("flipBitIndices")] IReadOnlyList<int>? FlipBitIndices,
+    [property: JsonPropertyName("flips")] IReadOnlyList<LtcDecodeFlip>? Flips,
     [property: JsonPropertyName("offsetBy")] string? OffsetBy);
+
+/// <summary>
+/// A bit-flip mutation on one encoded frame. A list, not a single frame, because
+/// the <c>spurious-sync-after-a-broken-frame</c> case needs two: one frame broken
+/// and the <i>next</i> one carrying the trap.
+/// </summary>
+public sealed record LtcDecodeFlip(
+    [property: JsonPropertyName("frame")] int Frame,
+    [property: JsonPropertyName("indices")] IReadOnlyList<int> Indices);
 
 public sealed record LtcDecodeFrame(
     [property: JsonPropertyName("timecode")] string Timecode,
@@ -78,10 +86,10 @@ internal static class LtcDecodeRecipe
     /// <list type="number">
     /// <item>Encode <c>frameCount</c> consecutive frames from <c>timecode</c>,
     /// biphase polarity threaded across the joins exactly as
-    /// <see cref="LtcFrameStream"/> does. The frame at <c>flipBitInFrame</c> is
-    /// re-encoded from its word with <c>flipBitIndices</c> toggled — so corruption
-    /// is a genuinely wrong word on the wire, and the polarity thread carries its
-    /// consequences into the frames that follow.</item>
+    /// <see cref="LtcFrameStream"/> does. Every frame named by <c>flips</c> is
+    /// re-encoded from its word with that entry's <c>indices</c> toggled — so
+    /// corruption is a genuinely wrong word on the wire, and the polarity thread
+    /// carries its consequences into the frames that follow.</item>
     /// <item>Prepend <c>leadSilenceSamples</c> zeros, append
     /// <c>trailSilenceSamples</c> zeros.</item>
     /// <item>Truncate to <c>truncateToSamples</c> (a prefix).</item>
@@ -163,7 +171,11 @@ internal static class LtcDecodeRecipe
     {
         var rate = RateOf(input);
         var frame = LtcFrame.FromTimecode(Timecode.FromFrameCount(start.FrameCount + offset, rate));
-        if (input.FlipBitInFrame != offset || input.FlipBitIndices is not { } indices)
+        var indices = (input.Flips ?? [])
+            .Where(flip => flip.Frame == offset)
+            .SelectMany(flip => flip.Indices)
+            .ToArray();
+        if (indices.Length == 0)
         {
             return frame;
         }

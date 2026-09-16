@@ -246,10 +246,18 @@ public static class LtcDecoder
     /// The window advances 80 bits on a <b>sync match</b>, not on a <b>valid
     /// frame</b> — so a frame whose parity has been broken is consumed and the
     /// search resumes cleanly after it, leaving the frames that follow at their
-    /// correct start samples. Moving the advance inside the validity check makes
-    /// the search crawl bit-by-bit through the bad frame and re-lock on a spurious
-    /// window; the vectors' <c>parity-flipped-middle-frame</c> case exists to
-    /// catch exactly that.
+    /// correct start samples — pinned by the vectors'
+    /// <c>parity-flipped-middle-frame</c> case.
+    /// <para>
+    /// That case alone does <b>not</b> catch a port that moves the advance inside
+    /// the validity check, nor one that never skips at all. An earlier version of
+    /// this remark claimed it did; mutation testing falsified it. With sync words
+    /// only at frame boundaries, a bit-by-bit crawl through the broken frame
+    /// re-locks on the next real sync word and returns an identical list. The case
+    /// that separates them is <c>spurious-sync-after-a-broken-frame</c>, which
+    /// plants a sync word inside the following frame's payload so a crawling
+    /// decoder reports a frame that was never transmitted.
+    /// </para>
     /// </remarks>
     private static IReadOnlyList<DecodedFrame> ExtractFrames(BitStream stream, int framesPerSecond)
     {

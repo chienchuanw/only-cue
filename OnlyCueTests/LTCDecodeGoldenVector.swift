@@ -72,9 +72,16 @@ struct LTCDecodeGoldenVector: Codable, Equatable {
         var leadSilenceSamples = 0
         var trailSilenceSamples = 0
         var truncateToSamples: Int?
-        var flipBitInFrame: Int?     // 0-based index into the encoded frames
-        var flipBitIndices: [Int]?   // 0-based bit positions, transmission order
+        var flips: [FrameFlip]?      // bit flips, per encoded frame
         var offsetBy: GoldenDouble?  // DC added to every sample, last
+    }
+
+    /// A bit-flip mutation on one encoded frame. A list, not a single frame,
+    /// because the `spurious-sync-after-a-broken-frame` case needs two: one frame
+    /// broken and the *next* one carrying the trap.
+    struct FrameFlip: Codable, Equatable {
+        let frame: Int       // 0-based index into the encoded frames
+        let indices: [Int]   // 0-based bit positions, transmission order
     }
 
     struct Frame: Codable, Equatable {

@@ -122,6 +122,91 @@ final class CueListSingleClickEditUITests: OnlyCueUITestCase {
         )
     }
 
+    /// #790 — ⇧ and ⌘ are two gestures, not the one "extend" flag #786 read them
+    /// as. A ⇧-click on a stripe must select the contiguous run from the anchor.
+    ///
+    /// Given the playhead parked on "Lights Up" by a plain click on its stripe
+    /// When I ⇧-click the third row's stripe
+    /// Then the playhead stays put and three cues are selected, not two.
+    ///
+    /// A multi-row selection has no direct XCUITest observable: it paints a row
+    /// background (not queryable) and the `.isSelected` trait is spent on the
+    /// playhead's current cue, not on selection. Nor is the ⌫ path available —
+    /// `List.onDeleteCommand` needs the list first-responder, and clicking a
+    /// stripe (a `Button`) does not give it focus; measured, not assumed. So the
+    /// two signals here are the ones the app does publish:
+    ///
+    /// 1. the playhead — a ⇧-click is `extendRange`, which never seeks, whereas
+    ///    a ⇧ that failed to reach `NSEvent.modifierFlags` would fall through to
+    ///    the stripe's plain `selectAndSeek` and jump to 165s;
+    /// 2. "Renumber Selected…", which appears only for `selection.count >= 2`
+    ///    and whose sheet titles itself with the count. Under #786's toggle that
+    ///    count would read 2.
+    func test_shiftClickOnColourStripe_selectsTheRangeFromTheAnchor() throws {
+        let app = launchApp(seed: .setListActI)
+        try waitForCueList(in: app)
+
+        let readout = app.staticTexts["currentTimeReadout"]
+        XCTAssertTrue(readout.waitForExistence(timeout: 15), "the transport readout must be present")
+
+        // The stripes inherit `cueRow-<id>`; cues are time-sorted, so index 0 is
+        // "Lights Up" (18s) and index 2 is "Chorus Hit" (165s).
+        let stripes = app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH 'cueRow-'"))
+        XCTAssertTrue(
+            stripes.element(boundBy: 2).waitForExistence(timeout: 15),
+            "the Set List seed must display at least three cue rows"
+        )
+
+        // The plain click sets the anchor — and seeks, which is how we know the
+        // click landed on the stripe at all.
+        stripes.element(boundBy: 0).click()
+        let seeked = NSPredicate(format: "value CONTAINS '18'")
+        expectation(for: seeked, evaluatedWith: readout)
+        waitForExpectations(timeout: 5) { error in
+            XCTAssertNil(error, "the anchoring click must seek to the first cue's 18s mark")
+        }
+        let timeAtAnchor = Self.timecode(of: readout)
+
+        // `performWithKeyModifiers` pushes ⇧ as global state, which is what the
+        // row's `NSEvent.modifierFlags` read sees.
+        XCUIElement.perform(withKeyModifiers: .shift) {
+            stripes.element(boundBy: 2).click()
+        }
+
+        XCTAssertEqual(
+            Self.timecode(of: readout),
+            timeAtAnchor,
+            "a ⇧-click extends the selection and must not seek — a jump to 165s means ⇧ was dropped"
+        )
+
+        let rows = app.descendants(matching: .any)
+            .matching(NSPredicate(format: "identifier BEGINSWITH 'cueRow-'"))
+        try openContextMenu(
+            on: rows.element(boundBy: 0),
+            probe: app.menuItems["cueRowContextEditNotes"],
+            describedAs: "cue row context menu"
+        )
+        let renumber = app.menuItems["cueRowContextRenumberSelected"]
+        XCTAssertTrue(
+            renumber.waitForExistence(timeout: 3),
+            "'Renumber Selected…' is gated on two or more selected cues — one row means the range never happened"
+        )
+        renumber.click()
+
+        // The sheet titles itself "Renumber N Cues", which is localized — read
+        // the digits out rather than matching the English string.
+        let sheet = app.descendants(matching: .any).matching(identifier: "renumberCuesSheet").firstMatch
+        XCTAssertTrue(sheet.waitForExistence(timeout: 5), "'Renumber Selected…' must open the renumber sheet")
+        let selectedCount = (sheet.value as? String ?? "").filter(\.isNumber)
+        XCTAssertEqual(
+            selectedCount,
+            "3",
+            "⇧-clicking the third row must select all three rows from the anchor, not just the two clicked"
+        )
+
+        app.typeKey(.escape, modifierFlags: [])
+    }
+
     /// `setListActI` titles its window "Set List — Act I" rather than the
     /// `seed-` prefix `waitForSeedWindow` matches, so wait on the pane instead.
     private func waitForCueList(in app: XCUIApplication) throws {

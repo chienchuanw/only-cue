@@ -39,6 +39,29 @@ public static class SmpteFramerateExtensions
         _ => throw new ArgumentOutOfRangeException(nameof(rate))
     };
 
+    /// <summary>
+    /// The rate with this nominal frames-per-second and drop-frame flag, or
+    /// <c>null</c> if there is none (drop-frame only exists at 30 fps; only
+    /// 24 / 25 / 30 are supported). Used when recovering a rate from a decoded
+    /// LTC signal: the magnitude comes from the measured bit period, the
+    /// drop-frame bit from the frame itself.
+    /// </summary>
+    public static SmpteFramerate? Matching(int framesPerSecond, bool isDropFrame)
+    {
+        if (isDropFrame)
+        {
+            return framesPerSecond == 30 ? SmpteFramerate.Fps30Drop : null;
+        }
+
+        return framesPerSecond switch
+        {
+            24 => SmpteFramerate.Fps24,
+            25 => SmpteFramerate.Fps25,
+            30 => SmpteFramerate.Fps30,
+            _ => null
+        };
+    }
+
     public static SmpteFramerate FromRawValue(string rawValue) => rawValue switch
     {
         "24" => SmpteFramerate.Fps24,

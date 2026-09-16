@@ -6,4 +6,11 @@
     <Nullable>enable</Nullable>
   </PropertyGroup>
 
+  <ItemGroup>
+    <!-- LtcDecoder's intermediate pipeline stages are internal: golden/ltc-decode-v1.json
+         pins each one on its own, but they are not product API. This is the only
+         internals grant in the solution. -->
+    <InternalsVisibleTo Include="OnlyCue.Core.Tests" />
+  </ItemGroup>
+
 </Project>

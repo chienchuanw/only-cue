@@ -7,7 +7,7 @@ namespace OnlyCue.Core.Ltc;
 /// </summary>
 /// <remarks>
 /// <para>
-/// Mirrors the Swift <c>LTCEncoder.samples(for:sampleRate:amplitude:startLevel:)</c>
+/// Mirrors the Swift <c>LTCEncoder</c>'s two <c>samples(for:…)</c> overloads
 /// (<c>OnlyCue/LTC/LTCEncoder.swift</c>); macOS is the source of truth and
 /// <c>golden/ltc-wire-v1.json</c> is the contract. The <c>AVAudioPCMBuffer</c>
 /// half of the Swift type is Apple-only and has no mirror.
@@ -45,6 +45,29 @@ public static class LtcEncoder
         Timecode timecode,
         double sampleRate,
         float amplitude = DefaultAmplitude,
+        bool startLevel = false) =>
+        Samples(
+            LtcFrame.FromTimecode(timecode),
+            timecode.Rate.FramesPerSecond(),
+            sampleRate,
+            amplitude,
+            startLevel);
+
+    /// <summary>
+    /// The same modulation, driven by an explicit 80-bit word rather than by a
+    /// <see cref="Timecode"/>. Nothing in the app calls this —
+    /// <see cref="LtcFrame.FromTimecode"/> always produces a well-formed word —
+    /// but <c>golden/ltc-decode-v1.json</c> needs it: its structural-corruption
+    /// cases are built by flipping bits in a frame and re-modulating, so that
+    /// "bad parity" means a genuinely mis-parity word on the wire rather than a
+    /// smeared waveform. Going through the production encoder is the point; a
+    /// test-local modulator would pin itself.
+    /// </summary>
+    public static (float[] Samples, bool EndLevel) Samples(
+        LtcFrame frame,
+        int framesPerSecond,
+        double sampleRate,
+        float amplitude = DefaultAmplitude,
         bool startLevel = false)
     {
         if (!(sampleRate > 0))
@@ -52,13 +75,12 @@ public static class LtcEncoder
             throw new ArgumentOutOfRangeException(nameof(sampleRate), sampleRate, "sample rate must be positive");
         }
 
-        var frame = LtcFrame.FromTimecode(timecode);
-        var halfBitSamples = sampleRate / (HalfBitSlotsPerFrame * (double)timecode.Rate.FramesPerSecond());
+        var halfBitSamples = sampleRate / (HalfBitSlotsPerFrame * (double)framesPerSecond);
         var high = amplitude;
         var low = -amplitude;
 
         var level = startLevel;
-        var samples = new List<float>((int)Round(sampleRate / timecode.Rate.FramesPerSecond()) + 2);
+        var samples = new List<float>(Round(sampleRate / framesPerSecond) + 2);
         var slot = 0;
 
         void EmitSlot()

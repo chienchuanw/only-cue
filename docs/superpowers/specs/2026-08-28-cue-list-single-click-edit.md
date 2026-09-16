@@ -144,6 +144,13 @@ let m = NSEvent.modifierFlags
 let isExtending = m.contains(.command) || m.contains(.shift)
 ```
 
+> **Superseded in part by #790.** Collapsing ⌘ and ⇧ into one `isExtending`
+> flag made a ⇧-click a toggle and left the cue list with no contiguous range
+> selection at all. #790 replaces the flag with `CueRowTapModifier`
+> (`plain` / `toggle` / `range`, ⇧ winning when both are held) and splits
+> `.extendSelection` into `.toggleSelection` and `.extendRange`, taking the
+> truth table from eight rows to twelve. The rest of this spec still holds.
+
 A second pure helper covers Decisions 6 and 7, so "clearing a name is legal" is
 provable without a UI test:
 

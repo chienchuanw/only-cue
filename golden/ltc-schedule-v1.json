@@ -1,0 +1,2618 @@
+{
+  "cases" : [
+    {
+      "expect" : {
+        "firstSampleIsHigh" : true,
+        "joins" : [
+
+        ],
+        "lastSampleIsHigh" : false,
+        "samplesPerFrame" : 2000,
+        "totalSamples" : 2000
+      },
+      "input" : {
+        "amplitude" : "0.800000011920929",
+        "frameCount" : 1,
+        "frames" : 4,
+        "hours" : 1,
+        "minutes" : 2,
+        "sampleRate" : "48000.0",
+        "seconds" : 3
+      },
+      "label" : "stream/24@48000/01:02:03:04/x1",
+      "op" : "stream",
+      "rate" : "24"
+    },
+    {
+      "expect" : {
+        "firstSampleIsHigh" : true,
+        "joins" : [
+          {
+            "at" : 2000,
+            "runs" : [
+              [
+                1,
+                4
+              ],
+              [
+                -1,
+                12
+              ],
+              [
+                1,
+                13
+              ],
+              [
+                -1,
+                3
+              ]
+            ]
+          }
+        ],
+        "lastSampleIsHigh" : false,
+        "samplesPerFrame" : 2000,
+        "totalSamples" : 4000
+      },
+      "input" : {
+        "amplitude" : "0.800000011920929",
+        "frameCount" : 2,
+        "frames" : 4,
+        "hours" : 1,
+        "minutes" : 2,
+        "sampleRate" : "48000.0",
+        "seconds" : 3
+      },
+      "label" : "stream/24@48000/01:02:03:04/x2",
+      "op" : "stream",
+      "rate" : "24"
+    },
+    {
+      "expect" : {
+        "firstSampleIsHigh" : true,
+        "joins" : [
+          {
+            "at" : 2000,
+            "runs" : [
+              [
+                1,
+                4
+              ],
+              [
+                -1,
+                12
+              ],
+              [
+                1,
+                13
+              ],
+              [
+                -1,
+                3
+              ]
+            ]
+          },
+          {
+            "at" : 4000,
+            "runs" : [
+              [
+                1,
+                4
+              ],
+              [
+                -1,
+                12
+              ],
+              [
+                1,
+                16
+              ]
+            ]
+          },
+          {
+            "at" : 6000,
+            "runs" : [
+              [
+                1,
+                4
+              ],
+              [
+                -1,
+                12
+              ],
+              [
+                1,
+                13
+              ],
+              [
+                -1,
+                3
+              ]
+            ]
+          },
+          {
+            "at" : 8000,
+            "runs" : [
+              [
+                1,
+                4
+              ],
+              [
+                -1,
+                12
+              ],
+              [
+                1,
+                16
+              ]
+            ]
+          },
+          {
+            "at" : 10000,
+            "runs" : [
+              [
+                1,
+                4
+              ],
+              [
+                -1,
+                12
+              ],
+              [
+                1,
+                13
+              ],
+              [
+                -1,
+                3
+              ]
+            ]
+          },
+          {
+            "at" : 12000,
+            "runs" : [
+              [
+                1,
+                4
+              ],
+              [
+                -1,
+                12
+              ],
+              [
+                1,
+                16
+              ]
+            ]
+          },
+          {
+            "at" : 14000,
+            "runs" : [
+              [
+                1,
+                4
+              ],
+              [
+                -1,
+                12
+              ],
+              [
+                1,
+                13
+              ],
+              [
+                -1,
+                3
+              ]
+            ]
+          }
+        ],
+        "lastSampleIsHigh" : false,
+        "samplesPerFrame" : 2000,
+        "totalSamples" : 16000
+      },
+      "input" : {
+        "amplitude" : "0.800000011920929",
+        "frameCount" : 8,
+        "frames" : 4,
+        "hours" : 1,
+        "minutes" : 2,
+        "sampleRate" : "48000.0",
+        "seconds" : 3
+      },
+      "label" : "stream/24@48000/01:02:03:04/x8",
+      "op" : "stream",
+      "rate" : "24"
+    },
+    {
+      "expect" : {
+        "firstSampleIsHigh" : true,
+        "joins" : [
+          {
+            "at" : 1920,
+            "runs" : [
+              [
+                1,
+                4
+              ],
+              [
+                -1,
+                12
+              ],
+              [
+                1,
+                12
+              ],
+              [
+                -1,
+                4
+              ]
+            ]
+          }
+        ],
+        "lastSampleIsHigh" : false,
+        "samplesPerFrame" : 1920,
+        "totalSamples" : 3840
+      },
+      "input" : {
+        "amplitude" : "0.800000011920929",
+        "frameCount" : 2,
+        "frames" : 4,
+        "hours" : 1,
+        "minutes" : 2,
+        "sampleRate" : "48000.0",
+        "seconds" : 3
+      },
+      "label" : "stream/25@48000/01:02:03:04/x2",
+      "op" : "stream",
+      "rate" : "25"
+    },
+    {
+      "expect" : {
+        "firstSampleIsHigh" : true,
+        "joins" : [
+          {
+            "at" : 1600,
+            "runs" : [
+              [
+                1,
+                6
+              ],
+              [
+                -1,
+                10
+              ],
+              [
+                1,
+                10
+              ],
+              [
+                -1,
+                6
+              ]
+            ]
+          }
+        ],
+        "lastSampleIsHigh" : false,
+        "samplesPerFrame" : 1600,
+        "totalSamples" : 3200
+      },
+      "input" : {
+        "amplitude" : "0.800000011920929",
+        "frameCount" : 2,
+        "frames" : 4,
+        "hours" : 1,
+        "minutes" : 2,
+        "sampleRate" : "48000.0",
+        "seconds" : 3
+      },
+      "label" : "stream/30@48000/01:02:03:04/x2",
+      "op" : "stream",
+      "rate" : "30"
+    },
+    {
+      "expect" : {
+        "firstSampleIsHigh" : true,
+        "joins" : [
+          {
+            "at" : 1600,
+            "runs" : [
+              [
+                1,
+                6
+              ],
+              [
+                -1,
+                10
+              ],
+              [
+                1,
+                10
+              ],
+              [
+                -1,
+                6
+              ]
+            ]
+          }
+        ],
+        "lastSampleIsHigh" : false,
+        "samplesPerFrame" : 1600,
+        "totalSamples" : 3200
+      },
+      "input" : {
+        "amplitude" : "0.800000011920929",
+        "frameCount" : 2,
+        "frames" : 4,
+        "hours" : 1,
+        "minutes" : 2,
+        "sampleRate" : "48000.0",
+        "seconds" : 3
+      },
+      "label" : "stream/30df@48000/01:02:03;04/x2",
+      "op" : "stream",
+      "rate" : "30df"
+    },
+    {
+      "expect" : {
+        "firstSampleIsHigh" : true,
+        "joins" : [
+          {
+            "at" : 1838,
+            "runs" : [
+              [
+                1,
+                4
+              ],
+              [
+                -1,
+                12
+              ],
+              [
+                1,
+                11
+              ],
+              [
+                -1,
+                5
+              ]
+            ]
+          },
+          {
+            "at" : 3676,
+            "runs" : [
+              [
+                1,
+                4
+              ],
+              [
+                -1,
+                12
+              ],
+              [
+                1,
+                16
+              ]
+            ]
+          },
+          {
+            "at" : 5514,
+            "runs" : [
+              [
+                1,
+                4
+              ],
+              [
+                -1,
+                12
+              ],
+              [
+                1,
+                11
+              ],
+              [
+                -1,
+                5
+              ]
+            ]
+          },
+          {
+            "at" : 7352,
+            "runs" : [
+              [
+                1,
+                4
+              ],
+              [
+                -1,
+                12
+              ],
+              [
+                1,
+                16
+              ]
+            ]
+          },
+          {
+            "at" : 9190,
+            "runs" : [
+              [
+                1,
+                4
+              ],
+              [
+                -1,
+                12
+              ],
+              [
+                1,
+                11
+              ],
+              [
+                -1,
+                5
+              ]
+            ]
+          },
+          {
+            "at" : 11028,
+            "runs" : [
+              [
+                1,
+                4
+              ],
+              [
+                -1,
+                12
+              ],
+              [
+                1,
+                16
+              ]
+            ]
+          },
+          {
+            "at" : 12866,
+            "runs" : [
+              [
+                1,
+                4
+              ],
+              [
+                -1,
+                12
+              ],
+              [
+                1,
+                11
+              ],
+              [
+                -1,
+                5
+              ]
+            ]
+          }
+        ],
+        "lastSampleIsHigh" : false,
+        "samplesPerFrame" : 1838,
+        "totalSamples" : 14704
+      },
+      "input" : {
+        "amplitude" : "0.800000011920929",
+        "frameCount" : 8,
+        "frames" : 4,
+        "hours" : 1,
+        "minutes" : 2,
+        "sampleRate" : "44100.0",
+        "seconds" : 3
+      },
+      "label" : "stream/24@44100/01:02:03:04/x8",
+      "op" : "stream",
+      "rate" : "24"
+    },
+    {
+      "expect" : {
+        "firstSampleIsHigh" : true,
+        "joins" : [
+          {
+            "at" : 1764,
+            "runs" : [
+              [
+                1,
+                5
+              ],
+              [
+                -1,
+                11
+              ],
+              [
+                1,
+                11
+              ],
+              [
+                -1,
+                5
+              ]
+            ]
+          }
+        ],
+        "lastSampleIsHigh" : false,
+        "samplesPerFrame" : 1764,
+        "totalSamples" : 3528
+      },
+      "input" : {
+        "amplitude" : "0.800000011920929",
+        "frameCount" : 2,
+        "frames" : 4,
+        "hours" : 1,
+        "minutes" : 2,
+        "sampleRate" : "44100.0",
+        "seconds" : 3
+      },
+      "label" : "stream/25@44100/01:02:03:04/x2",
+      "op" : "stream",
+      "rate" : "25"
+    },
+    {
+      "expect" : {
+        "firstSampleIsHigh" : true,
+        "joins" : [
+          {
+            "at" : 1470,
+            "runs" : [
+              [
+                1,
+                7
+              ],
+              [
+                -1,
+                9
+              ],
+              [
+                1,
+                9
+              ],
+              [
+                -1,
+                7
+              ]
+            ]
+          }
+        ],
+        "lastSampleIsHigh" : false,
+        "samplesPerFrame" : 1470,
+        "totalSamples" : 2940
+      },
+      "input" : {
+        "amplitude" : "0.800000011920929",
+        "frameCount" : 2,
+        "frames" : 4,
+        "hours" : 1,
+        "minutes" : 2,
+        "sampleRate" : "44100.0",
+        "seconds" : 3
+      },
+      "label" : "stream/30@44100/01:02:03:04/x2",
+      "op" : "stream",
+      "rate" : "30"
+    },
+    {
+      "expect" : {
+        "firstSampleIsHigh" : true,
+        "joins" : [
+          {
+            "at" : 4000,
+            "runs" : [
+              [
+                -1,
+                16
+              ],
+              [
+                1,
+                16
+              ]
+            ]
+          }
+        ],
+        "lastSampleIsHigh" : false,
+        "samplesPerFrame" : 4000,
+        "totalSamples" : 8000
+      },
+      "input" : {
+        "amplitude" : "0.800000011920929",
+        "frameCount" : 2,
+        "frames" : 4,
+        "hours" : 1,
+        "minutes" : 2,
+        "sampleRate" : "96000.0",
+        "seconds" : 3
+      },
+      "label" : "stream/24@96000/01:02:03:04/x2",
+      "op" : "stream",
+      "rate" : "24"
+    },
+    {
+      "expect" : {
+        "joins" : [
+
+        ],
+        "samplesPerFrame" : 2000,
+        "totalSamples" : 0
+      },
+      "input" : {
+        "amplitude" : "0.800000011920929",
+        "frameCount" : 0,
+        "frames" : 4,
+        "hours" : 1,
+        "minutes" : 2,
+        "sampleRate" : "48000.0",
+        "seconds" : 3
+      },
+      "label" : "stream/24@48000/01:02:03:04/x0",
+      "op" : "stream",
+      "rate" : "24"
+    },
+    {
+      "expect" : {
+        "joins" : [
+
+        ],
+        "samplesPerFrame" : 2000,
+        "totalSamples" : 0
+      },
+      "input" : {
+        "amplitude" : "0.800000011920929",
+        "frameCount" : -3,
+        "frames" : 4,
+        "hours" : 1,
+        "minutes" : 2,
+        "sampleRate" : "48000.0",
+        "seconds" : 3
+      },
+      "label" : "stream/24@48000/01:02:03:04/x-3",
+      "op" : "stream",
+      "rate" : "24"
+    },
+    {
+      "expect" : {
+        "timecode" : "00:00:59:00"
+      },
+      "input" : {
+        "frameOffset" : -5,
+        "frames" : 0,
+        "hours" : 0,
+        "minutes" : 0,
+        "seconds" : 59
+      },
+      "label" : "streamTimecode/24/00:00:59:00/offset-5",
+      "op" : "streamTimecode",
+      "rate" : "24"
+    },
+    {
+      "expect" : {
+        "timecode" : "00:00:59:00"
+      },
+      "input" : {
+        "frameOffset" : -1,
+        "frames" : 0,
+        "hours" : 0,
+        "minutes" : 0,
+        "seconds" : 59
+      },
+      "label" : "streamTimecode/24/00:00:59:00/offset-1",
+      "op" : "streamTimecode",
+      "rate" : "24"
+    },
+    {
+      "expect" : {
+        "timecode" : "00:00:59:00"
+      },
+      "input" : {
+        "frameOffset" : 0,
+        "frames" : 0,
+        "hours" : 0,
+        "minutes" : 0,
+        "seconds" : 59
+      },
+      "label" : "streamTimecode/24/00:00:59:00/offset0",
+      "op" : "streamTimecode",
+      "rate" : "24"
+    },
+    {
+      "expect" : {
+        "timecode" : "00:00:59:01"
+      },
+      "input" : {
+        "frameOffset" : 1,
+        "frames" : 0,
+        "hours" : 0,
+        "minutes" : 0,
+        "seconds" : 59
+      },
+      "label" : "streamTimecode/24/00:00:59:00/offset1",
+      "op" : "streamTimecode",
+      "rate" : "24"
+    },
+    {
+      "expect" : {
+        "timecode" : "00:00:59:23"
+      },
+      "input" : {
+        "frameOffset" : 23,
+        "frames" : 0,
+        "hours" : 0,
+        "minutes" : 0,
+        "seconds" : 59
+      },
+      "label" : "streamTimecode/24/00:00:59:00/offset23",
+      "op" : "streamTimecode",
+      "rate" : "24"
+    },
+    {
+      "expect" : {
+        "timecode" : "00:01:00:00"
+      },
+      "input" : {
+        "frameOffset" : 24,
+        "frames" : 0,
+        "hours" : 0,
+        "minutes" : 0,
+        "seconds" : 59
+      },
+      "label" : "streamTimecode/24/00:00:59:00/offset24",
+      "op" : "streamTimecode",
+      "rate" : "24"
+    },
+    {
+      "expect" : {
+        "timecode" : "00:01:00:01"
+      },
+      "input" : {
+        "frameOffset" : 25,
+        "frames" : 0,
+        "hours" : 0,
+        "minutes" : 0,
+        "seconds" : 59
+      },
+      "label" : "streamTimecode/24/00:00:59:00/offset25",
+      "op" : "streamTimecode",
+      "rate" : "24"
+    },
+    {
+      "expect" : {
+        "timecode" : "00:01:00:06"
+      },
+      "input" : {
+        "frameOffset" : 30,
+        "frames" : 0,
+        "hours" : 0,
+        "minutes" : 0,
+        "seconds" : 59
+      },
+      "label" : "streamTimecode/24/00:00:59:00/offset30",
+      "op" : "streamTimecode",
+      "rate" : "24"
+    },
+    {
+      "expect" : {
+        "timecode" : "00:01:00:07"
+      },
+      "input" : {
+        "frameOffset" : 31,
+        "frames" : 0,
+        "hours" : 0,
+        "minutes" : 0,
+        "seconds" : 59
+      },
+      "label" : "streamTimecode/24/00:00:59:00/offset31",
+      "op" : "streamTimecode",
+      "rate" : "24"
+    },
+    {
+      "expect" : {
+        "timecode" : "00:00:59:00"
+      },
+      "input" : {
+        "frameOffset" : -5,
+        "frames" : 0,
+        "hours" : 0,
+        "minutes" : 0,
+        "seconds" : 59
+      },
+      "label" : "streamTimecode/25/00:00:59:00/offset-5",
+      "op" : "streamTimecode",
+      "rate" : "25"
+    },
+    {
+      "expect" : {
+        "timecode" : "00:00:59:00"
+      },
+      "input" : {
+        "frameOffset" : -1,
+        "frames" : 0,
+        "hours" : 0,
+        "minutes" : 0,
+        "seconds" : 59
+      },
+      "label" : "streamTimecode/25/00:00:59:00/offset-1",
+      "op" : "streamTimecode",
+      "rate" : "25"
+    },
+    {
+      "expect" : {
+        "timecode" : "00:00:59:00"
+      },
+      "input" : {
+        "frameOffset" : 0,
+        "frames" : 0,
+        "hours" : 0,
+        "minutes" : 0,
+        "seconds" : 59
+      },
+      "label" : "streamTimecode/25/00:00:59:00/offset0",
+      "op" : "streamTimecode",
+      "rate" : "25"
+    },
+    {
+      "expect" : {
+        "timecode" : "00:00:59:01"
+      },
+      "input" : {
+        "frameOffset" : 1,
+        "frames" : 0,
+        "hours" : 0,
+        "minutes" : 0,
+        "seconds" : 59
+      },
+      "label" : "streamTimecode/25/00:00:59:00/offset1",
+      "op" : "streamTimecode",
+      "rate" : "25"
+    },
+    {
+      "expect" : {
+        "timecode" : "00:00:59:23"
+      },
+      "input" : {
+        "frameOffset" : 23,
+        "frames" : 0,
+        "hours" : 0,
+        "minutes" : 0,
+        "seconds" : 59
+      },
+      "label" : "streamTimecode/25/00:00:59:00/offset23",
+      "op" : "streamTimecode",
+      "rate" : "25"
+    },
+    {
+      "expect" : {
+        "timecode" : "00:00:59:24"
+      },
+      "input" : {
+        "frameOffset" : 24,
+        "frames" : 0,
+        "hours" : 0,
+        "minutes" : 0,
+        "seconds" : 59
+      },
+      "label" : "streamTimecode/25/00:00:59:00/offset24",
+      "op" : "streamTimecode",
+      "rate" : "25"
+    },
+    {
+      "expect" : {
+        "timecode" : "00:01:00:00"
+      },
+      "input" : {
+        "frameOffset" : 25,
+        "frames" : 0,
+        "hours" : 0,
+        "minutes" : 0,
+        "seconds" : 59
+      },
+      "label" : "streamTimecode/25/00:00:59:00/offset25",
+      "op" : "streamTimecode",
+      "rate" : "25"
+    },
+    {
+      "expect" : {
+        "timecode" : "00:01:00:05"
+      },
+      "input" : {
+        "frameOffset" : 30,
+        "frames" : 0,
+        "hours" : 0,
+        "minutes" : 0,
+        "seconds" : 59
+      },
+      "label" : "streamTimecode/25/00:00:59:00/offset30",
+      "op" : "streamTimecode",
+      "rate" : "25"
+    },
+    {
+      "expect" : {
+        "timecode" : "00:01:00:06"
+      },
+      "input" : {
+        "frameOffset" : 31,
+        "frames" : 0,
+        "hours" : 0,
+        "minutes" : 0,
+        "seconds" : 59
+      },
+      "label" : "streamTimecode/25/00:00:59:00/offset31",
+      "op" : "streamTimecode",
+      "rate" : "25"
+    },
+    {
+      "expect" : {
+        "timecode" : "00:00:59:00"
+      },
+      "input" : {
+        "frameOffset" : -5,
+        "frames" : 0,
+        "hours" : 0,
+        "minutes" : 0,
+        "seconds" : 59
+      },
+      "label" : "streamTimecode/30/00:00:59:00/offset-5",
+      "op" : "streamTimecode",
+      "rate" : "30"
+    },
+    {
+      "expect" : {
+        "timecode" : "00:00:59:00"
+      },
+      "input" : {
+        "frameOffset" : -1,
+        "frames" : 0,
+        "hours" : 0,
+        "minutes" : 0,
+        "seconds" : 59
+      },
+      "label" : "streamTimecode/30/00:00:59:00/offset-1",
+      "op" : "streamTimecode",
+      "rate" : "30"
+    },
+    {
+      "expect" : {
+        "timecode" : "00:00:59:00"
+      },
+      "input" : {
+        "frameOffset" : 0,
+        "frames" : 0,
+        "hours" : 0,
+        "minutes" : 0,
+        "seconds" : 59
+      },
+      "label" : "streamTimecode/30/00:00:59:00/offset0",
+      "op" : "streamTimecode",
+      "rate" : "30"
+    },
+    {
+      "expect" : {
+        "timecode" : "00:00:59:01"
+      },
+      "input" : {
+        "frameOffset" : 1,
+        "frames" : 0,
+        "hours" : 0,
+        "minutes" : 0,
+        "seconds" : 59
+      },
+      "label" : "streamTimecode/30/00:00:59:00/offset1",
+      "op" : "streamTimecode",
+      "rate" : "30"
+    },
+    {
+      "expect" : {
+        "timecode" : "00:00:59:23"
+      },
+      "input" : {
+        "frameOffset" : 23,
+        "frames" : 0,
+        "hours" : 0,
+        "minutes" : 0,
+        "seconds" : 59
+      },
+      "label" : "streamTimecode/30/00:00:59:00/offset23",
+      "op" : "streamTimecode",
+      "rate" : "30"
+    },
+    {
+      "expect" : {
+        "timecode" : "00:00:59:24"
+      },
+      "input" : {
+        "frameOffset" : 24,
+        "frames" : 0,
+        "hours" : 0,
+        "minutes" : 0,
+        "seconds" : 59
+      },
+      "label" : "streamTimecode/30/00:00:59:00/offset24",
+      "op" : "streamTimecode",
+      "rate" : "30"
+    },
+    {
+      "expect" : {
+        "timecode" : "00:00:59:25"
+      },
+      "input" : {
+        "frameOffset" : 25,
+        "frames" : 0,
+        "hours" : 0,
+        "minutes" : 0,
+        "seconds" : 59
+      },
+      "label" : "streamTimecode/30/00:00:59:00/offset25",
+      "op" : "streamTimecode",
+      "rate" : "30"
+    },
+    {
+      "expect" : {
+        "timecode" : "00:01:00:00"
+      },
+      "input" : {
+        "frameOffset" : 30,
+        "frames" : 0,
+        "hours" : 0,
+        "minutes" : 0,
+        "seconds" : 59
+      },
+      "label" : "streamTimecode/30/00:00:59:00/offset30",
+      "op" : "streamTimecode",
+      "rate" : "30"
+    },
+    {
+      "expect" : {
+        "timecode" : "00:01:00:01"
+      },
+      "input" : {
+        "frameOffset" : 31,
+        "frames" : 0,
+        "hours" : 0,
+        "minutes" : 0,
+        "seconds" : 59
+      },
+      "label" : "streamTimecode/30/00:00:59:00/offset31",
+      "op" : "streamTimecode",
+      "rate" : "30"
+    },
+    {
+      "expect" : {
+        "timecode" : "00:00:59;00"
+      },
+      "input" : {
+        "frameOffset" : -5,
+        "frames" : 0,
+        "hours" : 0,
+        "minutes" : 0,
+        "seconds" : 59
+      },
+      "label" : "streamTimecode/30df/00:00:59;00/offset-5",
+      "op" : "streamTimecode",
+      "rate" : "30df"
+    },
+    {
+      "expect" : {
+        "timecode" : "00:00:59;00"
+      },
+      "input" : {
+        "frameOffset" : -1,
+        "frames" : 0,
+        "hours" : 0,
+        "minutes" : 0,
+        "seconds" : 59
+      },
+      "label" : "streamTimecode/30df/00:00:59;00/offset-1",
+      "op" : "streamTimecode",
+      "rate" : "30df"
+    },
+    {
+      "expect" : {
+        "timecode" : "00:00:59;00"
+      },
+      "input" : {
+        "frameOffset" : 0,
+        "frames" : 0,
+        "hours" : 0,
+        "minutes" : 0,
+        "seconds" : 59
+      },
+      "label" : "streamTimecode/30df/00:00:59;00/offset0",
+      "op" : "streamTimecode",
+      "rate" : "30df"
+    },
+    {
+      "expect" : {
+        "timecode" : "00:00:59;01"
+      },
+      "input" : {
+        "frameOffset" : 1,
+        "frames" : 0,
+        "hours" : 0,
+        "minutes" : 0,
+        "seconds" : 59
+      },
+      "label" : "streamTimecode/30df/00:00:59;00/offset1",
+      "op" : "streamTimecode",
+      "rate" : "30df"
+    },
+    {
+      "expect" : {
+        "timecode" : "00:00:59;23"
+      },
+      "input" : {
+        "frameOffset" : 23,
+        "frames" : 0,
+        "hours" : 0,
+        "minutes" : 0,
+        "seconds" : 59
+      },
+      "label" : "streamTimecode/30df/00:00:59;00/offset23",
+      "op" : "streamTimecode",
+      "rate" : "30df"
+    },
+    {
+      "expect" : {
+        "timecode" : "00:00:59;24"
+      },
+      "input" : {
+        "frameOffset" : 24,
+        "frames" : 0,
+        "hours" : 0,
+        "minutes" : 0,
+        "seconds" : 59
+      },
+      "label" : "streamTimecode/30df/00:00:59;00/offset24",
+      "op" : "streamTimecode",
+      "rate" : "30df"
+    },
+    {
+      "expect" : {
+        "timecode" : "00:00:59;25"
+      },
+      "input" : {
+        "frameOffset" : 25,
+        "frames" : 0,
+        "hours" : 0,
+        "minutes" : 0,
+        "seconds" : 59
+      },
+      "label" : "streamTimecode/30df/00:00:59;00/offset25",
+      "op" : "streamTimecode",
+      "rate" : "30df"
+    },
+    {
+      "expect" : {
+        "timecode" : "00:01:00;02"
+      },
+      "input" : {
+        "frameOffset" : 30,
+        "frames" : 0,
+        "hours" : 0,
+        "minutes" : 0,
+        "seconds" : 59
+      },
+      "label" : "streamTimecode/30df/00:00:59;00/offset30",
+      "op" : "streamTimecode",
+      "rate" : "30df"
+    },
+    {
+      "expect" : {
+        "timecode" : "00:01:00;03"
+      },
+      "input" : {
+        "frameOffset" : 31,
+        "frames" : 0,
+        "hours" : 0,
+        "minutes" : 0,
+        "seconds" : 59
+      },
+      "label" : "streamTimecode/30df/00:00:59;00/offset31",
+      "op" : "streamTimecode",
+      "rate" : "30df"
+    },
+    {
+      "expect" : {
+        "bufferDuration" : "0.16666666666666666",
+        "samplesPerBuffer" : 7352
+      },
+      "input" : {
+        "amplitude" : "0.800000011920929",
+        "frames" : 0,
+        "framesPerBuffer" : 4,
+        "hours" : 1,
+        "minutes" : 0,
+        "sampleRate" : "44100.0",
+        "seconds" : 0
+      },
+      "label" : "schedule/24@44100/01:00:00:00/fpb4",
+      "op" : "schedule",
+      "rate" : "24"
+    },
+    {
+      "expect" : {
+        "bufferDuration" : "0.041666666666666664",
+        "samplesPerBuffer" : 2000
+      },
+      "input" : {
+        "amplitude" : "0.800000011920929",
+        "frames" : 0,
+        "framesPerBuffer" : 1,
+        "hours" : 1,
+        "minutes" : 0,
+        "sampleRate" : "48000.0",
+        "seconds" : 0
+      },
+      "label" : "schedule/24@48000/01:00:00:00/fpb1",
+      "op" : "schedule",
+      "rate" : "24"
+    },
+    {
+      "expect" : {
+        "bufferDuration" : "0.08333333333333333",
+        "samplesPerBuffer" : 4000
+      },
+      "input" : {
+        "amplitude" : "0.800000011920929",
+        "frames" : 0,
+        "framesPerBuffer" : 2,
+        "hours" : 1,
+        "minutes" : 0,
+        "sampleRate" : "48000.0",
+        "seconds" : 0
+      },
+      "label" : "schedule/24@48000/01:00:00:00/fpb2",
+      "op" : "schedule",
+      "rate" : "24"
+    },
+    {
+      "expect" : {
+        "bufferDuration" : "0.16666666666666666",
+        "samplesPerBuffer" : 8000
+      },
+      "input" : {
+        "amplitude" : "0.800000011920929",
+        "frames" : 0,
+        "framesPerBuffer" : 4,
+        "hours" : 1,
+        "minutes" : 0,
+        "sampleRate" : "48000.0",
+        "seconds" : 0
+      },
+      "label" : "schedule/24@48000/01:00:00:00/fpb4",
+      "op" : "schedule",
+      "rate" : "24"
+    },
+    {
+      "expect" : {
+        "bufferDuration" : "1.0416666666666667",
+        "samplesPerBuffer" : 50000
+      },
+      "input" : {
+        "amplitude" : "0.800000011920929",
+        "frames" : 0,
+        "framesPerBuffer" : 25,
+        "hours" : 1,
+        "minutes" : 0,
+        "sampleRate" : "48000.0",
+        "seconds" : 0
+      },
+      "label" : "schedule/24@48000/01:00:00:00/fpb25",
+      "op" : "schedule",
+      "rate" : "24"
+    },
+    {
+      "expect" : {
+        "bufferDuration" : "0.16",
+        "samplesPerBuffer" : 7680
+      },
+      "input" : {
+        "amplitude" : "0.800000011920929",
+        "frames" : 0,
+        "framesPerBuffer" : 4,
+        "hours" : 1,
+        "minutes" : 0,
+        "sampleRate" : "48000.0",
+        "seconds" : 0
+      },
+      "label" : "schedule/25@48000/01:00:00:00/fpb4",
+      "op" : "schedule",
+      "rate" : "25"
+    },
+    {
+      "expect" : {
+        "bufferDuration" : "0.13333333333333333",
+        "samplesPerBuffer" : 6400
+      },
+      "input" : {
+        "amplitude" : "0.800000011920929",
+        "frames" : 0,
+        "framesPerBuffer" : 4,
+        "hours" : 1,
+        "minutes" : 0,
+        "sampleRate" : "48000.0",
+        "seconds" : 0
+      },
+      "label" : "schedule/30@48000/01:00:00:00/fpb4",
+      "op" : "schedule",
+      "rate" : "30"
+    },
+    {
+      "expect" : {
+        "bufferDuration" : "0.13333333333333333",
+        "samplesPerBuffer" : 6400
+      },
+      "input" : {
+        "amplitude" : "0.800000011920929",
+        "frames" : 0,
+        "framesPerBuffer" : 4,
+        "hours" : 1,
+        "minutes" : 0,
+        "sampleRate" : "48000.0",
+        "seconds" : 0
+      },
+      "label" : "schedule/30df@48000/01:00:00;00/fpb4",
+      "op" : "schedule",
+      "rate" : "30df"
+    },
+    {
+      "expect" : {
+        "bufferDuration" : "0.16",
+        "samplesPerBuffer" : 7056
+      },
+      "input" : {
+        "amplitude" : "0.800000011920929",
+        "frames" : 0,
+        "framesPerBuffer" : 4,
+        "hours" : 1,
+        "minutes" : 0,
+        "sampleRate" : "44100.0",
+        "seconds" : 0
+      },
+      "label" : "schedule/25@44100/01:00:00:00/fpb4",
+      "op" : "schedule",
+      "rate" : "25"
+    },
+    {
+      "expect" : {
+        "bufferDuration" : "0.13333333333333333",
+        "samplesPerBuffer" : 5880
+      },
+      "input" : {
+        "amplitude" : "0.800000011920929",
+        "frames" : 0,
+        "framesPerBuffer" : 4,
+        "hours" : 1,
+        "minutes" : 0,
+        "sampleRate" : "44100.0",
+        "seconds" : 0
+      },
+      "label" : "schedule/30@44100/01:00:00:00/fpb4",
+      "op" : "schedule",
+      "rate" : "30"
+    },
+    {
+      "expect" : {
+        "bufferDuration" : "0.16666666666666666",
+        "samplesPerBuffer" : 8000
+      },
+      "input" : {
+        "amplitude" : "0.800000011920929",
+        "frames" : 0,
+        "framesPerBuffer" : 5,
+        "hours" : 0,
+        "minutes" : 0,
+        "sampleRate" : "48000.0",
+        "seconds" : 59
+      },
+      "label" : "schedule/30df@48000/00:00:59;00/fpb5",
+      "op" : "schedule",
+      "rate" : "30df"
+    },
+    {
+      "expect" : {
+        "lastSampleIsHigh" : false,
+        "sampleCount" : 4000,
+        "timecode" : "01:00:00:00"
+      },
+      "input" : {
+        "amplitude" : "0.800000011920929",
+        "bufferIndex" : -2,
+        "frames" : 0,
+        "framesPerBuffer" : 2,
+        "hours" : 1,
+        "minutes" : 0,
+        "sampleRate" : "48000.0",
+        "seconds" : 0
+      },
+      "label" : "buffer/24@48000/01:00:00:00/fpb2/index-2",
+      "op" : "buffer",
+      "rate" : "24"
+    },
+    {
+      "expect" : {
+        "lastSampleIsHigh" : false,
+        "sampleCount" : 4000,
+        "timecode" : "01:00:00:00"
+      },
+      "input" : {
+        "amplitude" : "0.800000011920929",
+        "bufferIndex" : 0,
+        "frames" : 0,
+        "framesPerBuffer" : 2,
+        "hours" : 1,
+        "minutes" : 0,
+        "sampleRate" : "48000.0",
+        "seconds" : 0
+      },
+      "label" : "buffer/24@48000/01:00:00:00/fpb2/index0",
+      "op" : "buffer",
+      "rate" : "24"
+    },
+    {
+      "expect" : {
+        "lastSampleIsHigh" : false,
+        "sampleCount" : 4000,
+        "timecode" : "01:00:00:02"
+      },
+      "input" : {
+        "amplitude" : "0.800000011920929",
+        "bufferIndex" : 1,
+        "frames" : 0,
+        "framesPerBuffer" : 2,
+        "hours" : 1,
+        "minutes" : 0,
+        "sampleRate" : "48000.0",
+        "seconds" : 0
+      },
+      "label" : "buffer/24@48000/01:00:00:00/fpb2/index1",
+      "op" : "buffer",
+      "rate" : "24"
+    },
+    {
+      "expect" : {
+        "lastSampleIsHigh" : false,
+        "sampleCount" : 4000,
+        "timecode" : "01:00:00:06"
+      },
+      "input" : {
+        "amplitude" : "0.800000011920929",
+        "bufferIndex" : 3,
+        "frames" : 0,
+        "framesPerBuffer" : 2,
+        "hours" : 1,
+        "minutes" : 0,
+        "sampleRate" : "48000.0",
+        "seconds" : 0
+      },
+      "label" : "buffer/24@48000/01:00:00:00/fpb2/index3",
+      "op" : "buffer",
+      "rate" : "24"
+    },
+    {
+      "expect" : {
+        "lastSampleIsHigh" : false,
+        "sampleCount" : 7352,
+        "timecode" : "01:00:00:00"
+      },
+      "input" : {
+        "amplitude" : "0.800000011920929",
+        "bufferIndex" : -2,
+        "frames" : 0,
+        "framesPerBuffer" : 4,
+        "hours" : 1,
+        "minutes" : 0,
+        "sampleRate" : "44100.0",
+        "seconds" : 0
+      },
+      "label" : "buffer/24@44100/01:00:00:00/fpb4/index-2",
+      "op" : "buffer",
+      "rate" : "24"
+    },
+    {
+      "expect" : {
+        "lastSampleIsHigh" : false,
+        "sampleCount" : 7352,
+        "timecode" : "01:00:00:00"
+      },
+      "input" : {
+        "amplitude" : "0.800000011920929",
+        "bufferIndex" : 0,
+        "frames" : 0,
+        "framesPerBuffer" : 4,
+        "hours" : 1,
+        "minutes" : 0,
+        "sampleRate" : "44100.0",
+        "seconds" : 0
+      },
+      "label" : "buffer/24@44100/01:00:00:00/fpb4/index0",
+      "op" : "buffer",
+      "rate" : "24"
+    },
+    {
+      "expect" : {
+        "lastSampleIsHigh" : false,
+        "sampleCount" : 7352,
+        "timecode" : "01:00:00:04"
+      },
+      "input" : {
+        "amplitude" : "0.800000011920929",
+        "bufferIndex" : 1,
+        "frames" : 0,
+        "framesPerBuffer" : 4,
+        "hours" : 1,
+        "minutes" : 0,
+        "sampleRate" : "44100.0",
+        "seconds" : 0
+      },
+      "label" : "buffer/24@44100/01:00:00:00/fpb4/index1",
+      "op" : "buffer",
+      "rate" : "24"
+    },
+    {
+      "expect" : {
+        "lastSampleIsHigh" : false,
+        "sampleCount" : 7352,
+        "timecode" : "01:00:00:12"
+      },
+      "input" : {
+        "amplitude" : "0.800000011920929",
+        "bufferIndex" : 3,
+        "frames" : 0,
+        "framesPerBuffer" : 4,
+        "hours" : 1,
+        "minutes" : 0,
+        "sampleRate" : "44100.0",
+        "seconds" : 0
+      },
+      "label" : "buffer/24@44100/01:00:00:00/fpb4/index3",
+      "op" : "buffer",
+      "rate" : "24"
+    },
+    {
+      "expect" : {
+        "lastSampleIsHigh" : false,
+        "sampleCount" : 8000,
+        "timecode" : "00:00:59;00"
+      },
+      "input" : {
+        "amplitude" : "0.800000011920929",
+        "bufferIndex" : 0,
+        "frames" : 0,
+        "framesPerBuffer" : 5,
+        "hours" : 0,
+        "minutes" : 0,
+        "sampleRate" : "48000.0",
+        "seconds" : 59
+      },
+      "label" : "buffer/30df@48000/00:00:59;00/fpb5/index0",
+      "op" : "buffer",
+      "rate" : "30df"
+    },
+    {
+      "expect" : {
+        "lastSampleIsHigh" : false,
+        "sampleCount" : 8000,
+        "timecode" : "00:00:59;25"
+      },
+      "input" : {
+        "amplitude" : "0.800000011920929",
+        "bufferIndex" : 5,
+        "frames" : 0,
+        "framesPerBuffer" : 5,
+        "hours" : 0,
+        "minutes" : 0,
+        "sampleRate" : "48000.0",
+        "seconds" : 59
+      },
+      "label" : "buffer/30df@48000/00:00:59;00/fpb5/index5",
+      "op" : "buffer",
+      "rate" : "30df"
+    },
+    {
+      "expect" : {
+        "lastSampleIsHigh" : false,
+        "sampleCount" : 8000,
+        "timecode" : "00:01:00;02"
+      },
+      "input" : {
+        "amplitude" : "0.800000011920929",
+        "bufferIndex" : 6,
+        "frames" : 0,
+        "framesPerBuffer" : 5,
+        "hours" : 0,
+        "minutes" : 0,
+        "sampleRate" : "48000.0",
+        "seconds" : 59
+      },
+      "label" : "buffer/30df@48000/00:00:59;00/fpb5/index6",
+      "op" : "buffer",
+      "rate" : "30df"
+    },
+    {
+      "expect" : {
+        "nextStartsHigh" : true,
+        "previousEndsHigh" : false,
+        "runs" : [
+          [
+            1,
+            4
+          ],
+          [
+            -1,
+            12
+          ],
+          [
+            1,
+            16
+          ]
+        ]
+      },
+      "input" : {
+        "amplitude" : "0.800000011920929",
+        "bufferIndex" : 0,
+        "frames" : 0,
+        "framesPerBuffer" : 4,
+        "hours" : 1,
+        "minutes" : 0,
+        "sampleRate" : "44100.0",
+        "seconds" : 0
+      },
+      "label" : "bufferSeam/24@44100/01:00:00:00/fpb4/index0-1",
+      "op" : "bufferSeam",
+      "rate" : "24"
+    },
+    {
+      "expect" : {
+        "nextStartsHigh" : true,
+        "previousEndsHigh" : false,
+        "runs" : [
+          [
+            1,
+            4
+          ],
+          [
+            -1,
+            12
+          ],
+          [
+            1,
+            16
+          ]
+        ]
+      },
+      "input" : {
+        "amplitude" : "0.800000011920929",
+        "bufferIndex" : 1,
+        "frames" : 0,
+        "framesPerBuffer" : 4,
+        "hours" : 1,
+        "minutes" : 0,
+        "sampleRate" : "44100.0",
+        "seconds" : 0
+      },
+      "label" : "bufferSeam/24@44100/01:00:00:00/fpb4/index1-2",
+      "op" : "bufferSeam",
+      "rate" : "24"
+    },
+    {
+      "expect" : {
+        "nextStartsHigh" : true,
+        "previousEndsHigh" : false,
+        "runs" : [
+          [
+            1,
+            4
+          ],
+          [
+            -1,
+            12
+          ],
+          [
+            1,
+            16
+          ]
+        ]
+      },
+      "input" : {
+        "amplitude" : "0.800000011920929",
+        "bufferIndex" : 3,
+        "frames" : 0,
+        "framesPerBuffer" : 4,
+        "hours" : 1,
+        "minutes" : 0,
+        "sampleRate" : "44100.0",
+        "seconds" : 0
+      },
+      "label" : "bufferSeam/24@44100/01:00:00:00/fpb4/index3-4",
+      "op" : "bufferSeam",
+      "rate" : "24"
+    },
+    {
+      "expect" : {
+        "nextStartsHigh" : true,
+        "previousEndsHigh" : false,
+        "runs" : [
+          [
+            1,
+            4
+          ],
+          [
+            -1,
+            12
+          ],
+          [
+            1,
+            16
+          ]
+        ]
+      },
+      "input" : {
+        "amplitude" : "0.800000011920929",
+        "bufferIndex" : 0,
+        "frames" : 0,
+        "framesPerBuffer" : 2,
+        "hours" : 1,
+        "minutes" : 0,
+        "sampleRate" : "48000.0",
+        "seconds" : 0
+      },
+      "label" : "bufferSeam/24@48000/01:00:00:00/fpb2/index0-1",
+      "op" : "bufferSeam",
+      "rate" : "24"
+    },
+    {
+      "expect" : {
+        "nextStartsHigh" : true,
+        "previousEndsHigh" : false,
+        "runs" : [
+          [
+            1,
+            4
+          ],
+          [
+            -1,
+            12
+          ],
+          [
+            1,
+            16
+          ]
+        ]
+      },
+      "input" : {
+        "amplitude" : "0.800000011920929",
+        "bufferIndex" : 1,
+        "frames" : 0,
+        "framesPerBuffer" : 2,
+        "hours" : 1,
+        "minutes" : 0,
+        "sampleRate" : "48000.0",
+        "seconds" : 0
+      },
+      "label" : "bufferSeam/24@48000/01:00:00:00/fpb2/index1-2",
+      "op" : "bufferSeam",
+      "rate" : "24"
+    },
+    {
+      "expect" : {
+        "nextStartsHigh" : true,
+        "previousEndsHigh" : false,
+        "runs" : [
+          [
+            1,
+            4
+          ],
+          [
+            -1,
+            12
+          ],
+          [
+            1,
+            16
+          ]
+        ]
+      },
+      "input" : {
+        "amplitude" : "0.800000011920929",
+        "bufferIndex" : 3,
+        "frames" : 0,
+        "framesPerBuffer" : 2,
+        "hours" : 1,
+        "minutes" : 0,
+        "sampleRate" : "48000.0",
+        "seconds" : 0
+      },
+      "label" : "bufferSeam/24@48000/01:00:00:00/fpb2/index3-4",
+      "op" : "bufferSeam",
+      "rate" : "24"
+    },
+    {
+      "expect" : {
+        "count" : 0
+      },
+      "input" : {
+        "amplitude" : "0.800000011920929",
+        "elapsedSeconds" : "-1.0",
+        "frames" : 0,
+        "framesPerBuffer" : 4,
+        "hours" : 1,
+        "leadBuffers" : -1,
+        "minutes" : 0,
+        "sampleRate" : "48000.0",
+        "seconds" : 0
+      },
+      "label" : "targetBufferCount/25@48000/01:00:00:00/fpb4/elapsed-1.0/lead-1",
+      "op" : "targetBufferCount",
+      "rate" : "25"
+    },
+    {
+      "expect" : {
+        "count" : 0
+      },
+      "input" : {
+        "amplitude" : "0.800000011920929",
+        "elapsedSeconds" : "-1.0",
+        "frames" : 0,
+        "framesPerBuffer" : 4,
+        "hours" : 1,
+        "leadBuffers" : 0,
+        "minutes" : 0,
+        "sampleRate" : "48000.0",
+        "seconds" : 0
+      },
+      "label" : "targetBufferCount/25@48000/01:00:00:00/fpb4/elapsed-1.0/lead0",
+      "op" : "targetBufferCount",
+      "rate" : "25"
+    },
+    {
+      "expect" : {
+        "count" : 2
+      },
+      "input" : {
+        "amplitude" : "0.800000011920929",
+        "elapsedSeconds" : "-1.0",
+        "frames" : 0,
+        "framesPerBuffer" : 4,
+        "hours" : 1,
+        "leadBuffers" : 2,
+        "minutes" : 0,
+        "sampleRate" : "48000.0",
+        "seconds" : 0
+      },
+      "label" : "targetBufferCount/25@48000/01:00:00:00/fpb4/elapsed-1.0/lead2",
+      "op" : "targetBufferCount",
+      "rate" : "25"
+    },
+    {
+      "expect" : {
+        "count" : 0
+      },
+      "input" : {
+        "amplitude" : "0.800000011920929",
+        "elapsedSeconds" : "0.0",
+        "frames" : 0,
+        "framesPerBuffer" : 4,
+        "hours" : 1,
+        "leadBuffers" : -1,
+        "minutes" : 0,
+        "sampleRate" : "48000.0",
+        "seconds" : 0
+      },
+      "label" : "targetBufferCount/25@48000/01:00:00:00/fpb4/elapsed0.0/lead-1",
+      "op" : "targetBufferCount",
+      "rate" : "25"
+    },
+    {
+      "expect" : {
+        "count" : 0
+      },
+      "input" : {
+        "amplitude" : "0.800000011920929",
+        "elapsedSeconds" : "0.0",
+        "frames" : 0,
+        "framesPerBuffer" : 4,
+        "hours" : 1,
+        "leadBuffers" : 0,
+        "minutes" : 0,
+        "sampleRate" : "48000.0",
+        "seconds" : 0
+      },
+      "label" : "targetBufferCount/25@48000/01:00:00:00/fpb4/elapsed0.0/lead0",
+      "op" : "targetBufferCount",
+      "rate" : "25"
+    },
+    {
+      "expect" : {
+        "count" : 2
+      },
+      "input" : {
+        "amplitude" : "0.800000011920929",
+        "elapsedSeconds" : "0.0",
+        "frames" : 0,
+        "framesPerBuffer" : 4,
+        "hours" : 1,
+        "leadBuffers" : 2,
+        "minutes" : 0,
+        "sampleRate" : "48000.0",
+        "seconds" : 0
+      },
+      "label" : "targetBufferCount/25@48000/01:00:00:00/fpb4/elapsed0.0/lead2",
+      "op" : "targetBufferCount",
+      "rate" : "25"
+    },
+    {
+      "expect" : {
+        "count" : 1
+      },
+      "input" : {
+        "amplitude" : "0.800000011920929",
+        "elapsedSeconds" : "0.001",
+        "frames" : 0,
+        "framesPerBuffer" : 4,
+        "hours" : 1,
+        "leadBuffers" : -1,
+        "minutes" : 0,
+        "sampleRate" : "48000.0",
+        "seconds" : 0
+      },
+      "label" : "targetBufferCount/25@48000/01:00:00:00/fpb4/elapsed0.001/lead-1",
+      "op" : "targetBufferCount",
+      "rate" : "25"
+    },
+    {
+      "expect" : {
+        "count" : 1
+      },
+      "input" : {
+        "amplitude" : "0.800000011920929",
+        "elapsedSeconds" : "0.001",
+        "frames" : 0,
+        "framesPerBuffer" : 4,
+        "hours" : 1,
+        "leadBuffers" : 0,
+        "minutes" : 0,
+        "sampleRate" : "48000.0",
+        "seconds" : 0
+      },
+      "label" : "targetBufferCount/25@48000/01:00:00:00/fpb4/elapsed0.001/lead0",
+      "op" : "targetBufferCount",
+      "rate" : "25"
+    },
+    {
+      "expect" : {
+        "count" : 3
+      },
+      "input" : {
+        "amplitude" : "0.800000011920929",
+        "elapsedSeconds" : "0.001",
+        "frames" : 0,
+        "framesPerBuffer" : 4,
+        "hours" : 1,
+        "leadBuffers" : 2,
+        "minutes" : 0,
+        "sampleRate" : "48000.0",
+        "seconds" : 0
+      },
+      "label" : "targetBufferCount/25@48000/01:00:00:00/fpb4/elapsed0.001/lead2",
+      "op" : "targetBufferCount",
+      "rate" : "25"
+    },
+    {
+      "expect" : {
+        "count" : 1
+      },
+      "input" : {
+        "amplitude" : "0.800000011920929",
+        "elapsedSeconds" : "0.032",
+        "frames" : 0,
+        "framesPerBuffer" : 4,
+        "hours" : 1,
+        "leadBuffers" : -1,
+        "minutes" : 0,
+        "sampleRate" : "48000.0",
+        "seconds" : 0
+      },
+      "label" : "targetBufferCount/25@48000/01:00:00:00/fpb4/elapsed0.032/lead-1",
+      "op" : "targetBufferCount",
+      "rate" : "25"
+    },
+    {
+      "expect" : {
+        "count" : 1
+      },
+      "input" : {
+        "amplitude" : "0.800000011920929",
+        "elapsedSeconds" : "0.032",
+        "frames" : 0,
+        "framesPerBuffer" : 4,
+        "hours" : 1,
+        "leadBuffers" : 0,
+        "minutes" : 0,
+        "sampleRate" : "48000.0",
+        "seconds" : 0
+      },
+      "label" : "targetBufferCount/25@48000/01:00:00:00/fpb4/elapsed0.032/lead0",
+      "op" : "targetBufferCount",
+      "rate" : "25"
+    },
+    {
+      "expect" : {
+        "count" : 3
+      },
+      "input" : {
+        "amplitude" : "0.800000011920929",
+        "elapsedSeconds" : "0.032",
+        "frames" : 0,
+        "framesPerBuffer" : 4,
+        "hours" : 1,
+        "leadBuffers" : 2,
+        "minutes" : 0,
+        "sampleRate" : "48000.0",
+        "seconds" : 0
+      },
+      "label" : "targetBufferCount/25@48000/01:00:00:00/fpb4/elapsed0.032/lead2",
+      "op" : "targetBufferCount",
+      "rate" : "25"
+    },
+    {
+      "expect" : {
+        "count" : 1
+      },
+      "input" : {
+        "amplitude" : "0.800000011920929",
+        "elapsedSeconds" : "0.16",
+        "frames" : 0,
+        "framesPerBuffer" : 4,
+        "hours" : 1,
+        "leadBuffers" : -1,
+        "minutes" : 0,
+        "sampleRate" : "48000.0",
+        "seconds" : 0
+      },
+      "label" : "targetBufferCount/25@48000/01:00:00:00/fpb4/elapsed0.16/lead-1",
+      "op" : "targetBufferCount",
+      "rate" : "25"
+    },
+    {
+      "expect" : {
+        "count" : 1
+      },
+      "input" : {
+        "amplitude" : "0.800000011920929",
+        "elapsedSeconds" : "0.16",
+        "frames" : 0,
+        "framesPerBuffer" : 4,
+        "hours" : 1,
+        "leadBuffers" : 0,
+        "minutes" : 0,
+        "sampleRate" : "48000.0",
+        "seconds" : 0
+      },
+      "label" : "targetBufferCount/25@48000/01:00:00:00/fpb4/elapsed0.16/lead0",
+      "op" : "targetBufferCount",
+      "rate" : "25"
+    },
+    {
+      "expect" : {
+        "count" : 3
+      },
+      "input" : {
+        "amplitude" : "0.800000011920929",
+        "elapsedSeconds" : "0.16",
+        "frames" : 0,
+        "framesPerBuffer" : 4,
+        "hours" : 1,
+        "leadBuffers" : 2,
+        "minutes" : 0,
+        "sampleRate" : "48000.0",
+        "seconds" : 0
+      },
+      "label" : "targetBufferCount/25@48000/01:00:00:00/fpb4/elapsed0.16/lead2",
+      "op" : "targetBufferCount",
+      "rate" : "25"
+    },
+    {
+      "expect" : {
+        "count" : 3
+      },
+      "input" : {
+        "amplitude" : "0.800000011920929",
+        "elapsedSeconds" : "0.479",
+        "frames" : 0,
+        "framesPerBuffer" : 4,
+        "hours" : 1,
+        "leadBuffers" : -1,
+        "minutes" : 0,
+        "sampleRate" : "48000.0",
+        "seconds" : 0
+      },
+      "label" : "targetBufferCount/25@48000/01:00:00:00/fpb4/elapsed0.479/lead-1",
+      "op" : "targetBufferCount",
+      "rate" : "25"
+    },
+    {
+      "expect" : {
+        "count" : 3
+      },
+      "input" : {
+        "amplitude" : "0.800000011920929",
+        "elapsedSeconds" : "0.479",
+        "frames" : 0,
+        "framesPerBuffer" : 4,
+        "hours" : 1,
+        "leadBuffers" : 0,
+        "minutes" : 0,
+        "sampleRate" : "48000.0",
+        "seconds" : 0
+      },
+      "label" : "targetBufferCount/25@48000/01:00:00:00/fpb4/elapsed0.479/lead0",
+      "op" : "targetBufferCount",
+      "rate" : "25"
+    },
+    {
+      "expect" : {
+        "count" : 5
+      },
+      "input" : {
+        "amplitude" : "0.800000011920929",
+        "elapsedSeconds" : "0.479",
+        "frames" : 0,
+        "framesPerBuffer" : 4,
+        "hours" : 1,
+        "leadBuffers" : 2,
+        "minutes" : 0,
+        "sampleRate" : "48000.0",
+        "seconds" : 0
+      },
+      "label" : "targetBufferCount/25@48000/01:00:00:00/fpb4/elapsed0.479/lead2",
+      "op" : "targetBufferCount",
+      "rate" : "25"
+    },
+    {
+      "expect" : {
+        "count" : 3
+      },
+      "input" : {
+        "amplitude" : "0.800000011920929",
+        "elapsedSeconds" : "0.48",
+        "frames" : 0,
+        "framesPerBuffer" : 4,
+        "hours" : 1,
+        "leadBuffers" : -1,
+        "minutes" : 0,
+        "sampleRate" : "48000.0",
+        "seconds" : 0
+      },
+      "label" : "targetBufferCount/25@48000/01:00:00:00/fpb4/elapsed0.48/lead-1",
+      "op" : "targetBufferCount",
+      "rate" : "25"
+    },
+    {
+      "expect" : {
+        "count" : 3
+      },
+      "input" : {
+        "amplitude" : "0.800000011920929",
+        "elapsedSeconds" : "0.48",
+        "frames" : 0,
+        "framesPerBuffer" : 4,
+        "hours" : 1,
+        "leadBuffers" : 0,
+        "minutes" : 0,
+        "sampleRate" : "48000.0",
+        "seconds" : 0
+      },
+      "label" : "targetBufferCount/25@48000/01:00:00:00/fpb4/elapsed0.48/lead0",
+      "op" : "targetBufferCount",
+      "rate" : "25"
+    },
+    {
+      "expect" : {
+        "count" : 5
+      },
+      "input" : {
+        "amplitude" : "0.800000011920929",
+        "elapsedSeconds" : "0.48",
+        "frames" : 0,
+        "framesPerBuffer" : 4,
+        "hours" : 1,
+        "leadBuffers" : 2,
+        "minutes" : 0,
+        "sampleRate" : "48000.0",
+        "seconds" : 0
+      },
+      "label" : "targetBufferCount/25@48000/01:00:00:00/fpb4/elapsed0.48/lead2",
+      "op" : "targetBufferCount",
+      "rate" : "25"
+    },
+    {
+      "expect" : {
+        "count" : 4
+      },
+      "input" : {
+        "amplitude" : "0.800000011920929",
+        "elapsedSeconds" : "0.481",
+        "frames" : 0,
+        "framesPerBuffer" : 4,
+        "hours" : 1,
+        "leadBuffers" : -1,
+        "minutes" : 0,
+        "sampleRate" : "48000.0",
+        "seconds" : 0
+      },
+      "label" : "targetBufferCount/25@48000/01:00:00:00/fpb4/elapsed0.481/lead-1",
+      "op" : "targetBufferCount",
+      "rate" : "25"
+    },
+    {
+      "expect" : {
+        "count" : 4
+      },
+      "input" : {
+        "amplitude" : "0.800000011920929",
+        "elapsedSeconds" : "0.481",
+        "frames" : 0,
+        "framesPerBuffer" : 4,
+        "hours" : 1,
+        "leadBuffers" : 0,
+        "minutes" : 0,
+        "sampleRate" : "48000.0",
+        "seconds" : 0
+      },
+      "label" : "targetBufferCount/25@48000/01:00:00:00/fpb4/elapsed0.481/lead0",
+      "op" : "targetBufferCount",
+      "rate" : "25"
+    },
+    {
+      "expect" : {
+        "count" : 6
+      },
+      "input" : {
+        "amplitude" : "0.800000011920929",
+        "elapsedSeconds" : "0.481",
+        "frames" : 0,
+        "framesPerBuffer" : 4,
+        "hours" : 1,
+        "leadBuffers" : 2,
+        "minutes" : 0,
+        "sampleRate" : "48000.0",
+        "seconds" : 0
+      },
+      "label" : "targetBufferCount/25@48000/01:00:00:00/fpb4/elapsed0.481/lead2",
+      "op" : "targetBufferCount",
+      "rate" : "25"
+    },
+    {
+      "expect" : {
+        "count" : 13
+      },
+      "input" : {
+        "amplitude" : "0.800000011920929",
+        "elapsedSeconds" : "0.5",
+        "frames" : 0,
+        "framesPerBuffer" : 1,
+        "hours" : 1,
+        "leadBuffers" : 1,
+        "minutes" : 0,
+        "sampleRate" : "48000.0",
+        "seconds" : 0
+      },
+      "label" : "targetBufferCount/24@48000/01:00:00:00/fpb1/elapsed0.5/lead1",
+      "op" : "targetBufferCount",
+      "rate" : "24"
+    },
+    {
+      "expect" : {
+        "frames" : 1
+      },
+      "input" : {
+        "targetSeconds" : "-1.0"
+      },
+      "label" : "framesPerBuffer/24/-1.0s",
+      "op" : "framesPerBuffer",
+      "rate" : "24"
+    },
+    {
+      "expect" : {
+        "frames" : 1
+      },
+      "input" : {
+        "targetSeconds" : "0.0"
+      },
+      "label" : "framesPerBuffer/24/0.0s",
+      "op" : "framesPerBuffer",
+      "rate" : "24"
+    },
+    {
+      "expect" : {
+        "frames" : 1
+      },
+      "input" : {
+        "targetSeconds" : "0.02"
+      },
+      "label" : "framesPerBuffer/24/0.02s",
+      "op" : "framesPerBuffer",
+      "rate" : "24"
+    },
+    {
+      "expect" : {
+        "frames" : 2
+      },
+      "input" : {
+        "targetSeconds" : "0.1"
+      },
+      "label" : "framesPerBuffer/24/0.1s",
+      "op" : "framesPerBuffer",
+      "rate" : "24"
+    },
+    {
+      "expect" : {
+        "frames" : 7
+      },
+      "input" : {
+        "targetSeconds" : "0.3"
+      },
+      "label" : "framesPerBuffer/24/0.3s",
+      "op" : "framesPerBuffer",
+      "rate" : "24"
+    },
+    {
+      "expect" : {
+        "frames" : 12
+      },
+      "input" : {
+        "targetSeconds" : "0.5"
+      },
+      "label" : "framesPerBuffer/24/0.5s",
+      "op" : "framesPerBuffer",
+      "rate" : "24"
+    },
+    {
+      "expect" : {
+        "frames" : 24
+      },
+      "input" : {
+        "targetSeconds" : "1.0"
+      },
+      "label" : "framesPerBuffer/24/1.0s",
+      "op" : "framesPerBuffer",
+      "rate" : "24"
+    },
+    {
+      "expect" : {
+        "frames" : 1
+      },
+      "input" : {
+        "targetSeconds" : "-1.0"
+      },
+      "label" : "framesPerBuffer/25/-1.0s",
+      "op" : "framesPerBuffer",
+      "rate" : "25"
+    },
+    {
+      "expect" : {
+        "frames" : 1
+      },
+      "input" : {
+        "targetSeconds" : "0.0"
+      },
+      "label" : "framesPerBuffer/25/0.0s",
+      "op" : "framesPerBuffer",
+      "rate" : "25"
+    },
+    {
+      "expect" : {
+        "frames" : 1
+      },
+      "input" : {
+        "targetSeconds" : "0.02"
+      },
+      "label" : "framesPerBuffer/25/0.02s",
+      "op" : "framesPerBuffer",
+      "rate" : "25"
+    },
+    {
+      "expect" : {
+        "frames" : 3
+      },
+      "input" : {
+        "targetSeconds" : "0.1"
+      },
+      "label" : "framesPerBuffer/25/0.1s",
+      "op" : "framesPerBuffer",
+      "rate" : "25"
+    },
+    {
+      "expect" : {
+        "frames" : 8
+      },
+      "input" : {
+        "targetSeconds" : "0.3"
+      },
+      "label" : "framesPerBuffer/25/0.3s",
+      "op" : "framesPerBuffer",
+      "rate" : "25"
+    },
+    {
+      "expect" : {
+        "frames" : 13
+      },
+      "input" : {
+        "targetSeconds" : "0.5"
+      },
+      "label" : "framesPerBuffer/25/0.5s",
+      "op" : "framesPerBuffer",
+      "rate" : "25"
+    },
+    {
+      "expect" : {
+        "frames" : 25
+      },
+      "input" : {
+        "targetSeconds" : "1.0"
+      },
+      "label" : "framesPerBuffer/25/1.0s",
+      "op" : "framesPerBuffer",
+      "rate" : "25"
+    },
+    {
+      "expect" : {
+        "frames" : 1
+      },
+      "input" : {
+        "targetSeconds" : "-1.0"
+      },
+      "label" : "framesPerBuffer/30/-1.0s",
+      "op" : "framesPerBuffer",
+      "rate" : "30"
+    },
+    {
+      "expect" : {
+        "frames" : 1
+      },
+      "input" : {
+        "targetSeconds" : "0.0"
+      },
+      "label" : "framesPerBuffer/30/0.0s",
+      "op" : "framesPerBuffer",
+      "rate" : "30"
+    },
+    {
+      "expect" : {
+        "frames" : 1
+      },
+      "input" : {
+        "targetSeconds" : "0.02"
+      },
+      "label" : "framesPerBuffer/30/0.02s",
+      "op" : "framesPerBuffer",
+      "rate" : "30"
+    },
+    {
+      "expect" : {
+        "frames" : 3
+      },
+      "input" : {
+        "targetSeconds" : "0.1"
+      },
+      "label" : "framesPerBuffer/30/0.1s",
+      "op" : "framesPerBuffer",
+      "rate" : "30"
+    },
+    {
+      "expect" : {
+        "frames" : 9
+      },
+      "input" : {
+        "targetSeconds" : "0.3"
+      },
+      "label" : "framesPerBuffer/30/0.3s",
+      "op" : "framesPerBuffer",
+      "rate" : "30"
+    },
+    {
+      "expect" : {
+        "frames" : 15
+      },
+      "input" : {
+        "targetSeconds" : "0.5"
+      },
+      "label" : "framesPerBuffer/30/0.5s",
+      "op" : "framesPerBuffer",
+      "rate" : "30"
+    },
+    {
+      "expect" : {
+        "frames" : 30
+      },
+      "input" : {
+        "targetSeconds" : "1.0"
+      },
+      "label" : "framesPerBuffer/30/1.0s",
+      "op" : "framesPerBuffer",
+      "rate" : "30"
+    },
+    {
+      "expect" : {
+        "frames" : 1
+      },
+      "input" : {
+        "targetSeconds" : "-1.0"
+      },
+      "label" : "framesPerBuffer/30df/-1.0s",
+      "op" : "framesPerBuffer",
+      "rate" : "30df"
+    },
+    {
+      "expect" : {
+        "frames" : 1
+      },
+      "input" : {
+        "targetSeconds" : "0.0"
+      },
+      "label" : "framesPerBuffer/30df/0.0s",
+      "op" : "framesPerBuffer",
+      "rate" : "30df"
+    },
+    {
+      "expect" : {
+        "frames" : 1
+      },
+      "input" : {
+        "targetSeconds" : "0.02"
+      },
+      "label" : "framesPerBuffer/30df/0.02s",
+      "op" : "framesPerBuffer",
+      "rate" : "30df"
+    },
+    {
+      "expect" : {
+        "frames" : 3
+      },
+      "input" : {
+        "targetSeconds" : "0.1"
+      },
+      "label" : "framesPerBuffer/30df/0.1s",
+      "op" : "framesPerBuffer",
+      "rate" : "30df"
+    },
+    {
+      "expect" : {
+        "frames" : 9
+      },
+      "input" : {
+        "targetSeconds" : "0.3"
+      },
+      "label" : "framesPerBuffer/30df/0.3s",
+      "op" : "framesPerBuffer",
+      "rate" : "30df"
+    },
+    {
+      "expect" : {
+        "frames" : 15
+      },
+      "input" : {
+        "targetSeconds" : "0.5"
+      },
+      "label" : "framesPerBuffer/30df/0.5s",
+      "op" : "framesPerBuffer",
+      "rate" : "30df"
+    },
+    {
+      "expect" : {
+        "frames" : 30
+      },
+      "input" : {
+        "targetSeconds" : "1.0"
+      },
+      "label" : "framesPerBuffer/30df/1.0s",
+      "op" : "framesPerBuffer",
+      "rate" : "30df"
+    }
+  ],
+  "contract" : "ltc-schedule",
+  "note" : "macOS-generated golden vectors for the OnlyCue LTC scheduling layer (LTCFrameStream and LTCSchedule). The C# OnlyCue.Core re-implementation must reproduce every case exactly. PCM is pinned by structure plus a ±16-sample run-length window around each join; every sample of a single frame is already pinned by golden/ltc-wire-v1.json. To regenerate after a deliberate change, delete golden/ltc-schedule-v1.json and re-run the suite.",
+  "version" : 1
+}

@@ -87,6 +87,50 @@ final class LTCFrameTests: XCTestCase {
         }
     }
 
+    /// #853 — SMPTE 12M moves the bi-phase mark phase-correction bit to **59**
+    /// at 25 fps; bit 27 is BGF0 there. Writing the correction at 27 raises a
+    /// flag a conforming reader acts on *and* leaves the real parity position
+    /// clear, so the word can go out with odd parity.
+    ///
+    /// Each of these 25 fps values has an odd number of ones before correction
+    /// (the sync word alone contributes 13), so the bit must actually be set —
+    /// otherwise the test would pass on a frame that never needed correcting.
+    func test_frame_at25fps_writesCorrectionAtBit59_notBit27() throws {
+        for value in [[0, 0, 0, 0], [12, 34, 56, 7], [9, 0, 8, 7], [0, 1, 0, 2]] {
+            let frame = LTCFrame(timecode: try tc(value[0], value[1], value[2], value[3], .fps25))
+            XCTAssertTrue(frame.bits[59], "\(value): 25 fps carries the correction at bit 59")
+            XCTAssertFalse(frame.bits[27], "\(value): bit 27 is BGF0 at 25 fps and must stay clear")
+            XCTAssertTrue(frame.hasEvenParity, "\(value)")
+        }
+    }
+
+    /// The other half of #853: when the word is already even, *neither* candidate
+    /// position may be set. Without this, an implementation that simply set bit
+    /// 59 unconditionally would pass the test above.
+    func test_frame_at25fps_leavesBothPositionsClear_whenNoCorrectionIsNeeded() throws {
+        for value in [[1, 2, 3, 4], [23, 59, 59, 24], [17, 30, 45, 12]] {
+            let frame = LTCFrame(timecode: try tc(value[0], value[1], value[2], value[3], .fps25))
+            XCTAssertFalse(frame.bits[59], "\(value): no correction needed, bit 59 stays clear")
+            XCTAssertFalse(frame.bits[27], "\(value): no correction needed, bit 27 stays clear")
+            XCTAssertTrue(frame.hasEvenParity, "\(value)")
+        }
+    }
+
+    /// #853 — and the converse: at 24 / 30 fps bit 59 is BGF2 and must never be
+    /// used for correction, whichever way the parity falls.
+    func test_frame_at24And30fps_neverWritesBit59() throws {
+        for rate in [SMPTEFramerate.fps24, .fps30, .fps30drop] {
+            // `01:11:00:02` rather than `…:00` — at 30df frames 00 and 01 are
+            // skipped at the top of every minute but the tenth, so `01:11:00:00`
+            // is not a timecode at all and `tc` would fail to unwrap it.
+            for value in [[0, 0, 0, 1], [12, 34, 56, 7], [23, 59, 59, 23], [1, 11, 0, 2]] {
+                let frame = LTCFrame(timecode: try tc(value[0], value[1], value[2], value[3], rate))
+                XCTAssertFalse(frame.bits[59], "\(rate.rawValue) \(value): bit 59 is BGF2 outside 25 fps")
+                XCTAssertTrue(frame.hasEvenParity, "\(rate.rawValue) \(value)")
+            }
+        }
+    }
+
     // MARK: - LTCBiphaseEncoder
 
     func test_biphase_zeroBit_transitionsOnlyAtBoundary() {

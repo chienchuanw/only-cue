@@ -45,8 +45,10 @@ public static class LtcDecoder
     internal const float SilenceRmsFloor = 1e-4f;
 
     /// <summary>Fraction of the reference amplitude at which the comparator
-    /// latches.</summary>
-    private const float ThresholdFraction = 0.3f;
+    /// latches. <c>internal</c> so <c>LtcDecoderMutationEquivalenceTests</c> can
+    /// measure the exact threshold the comparator uses rather than a copy of
+    /// it.</summary>
+    internal const float ThresholdFraction = 0.3f;
 
     /// <summary>One recovered frame: the timecode and the sample index where its
     /// first bit started.</summary>
@@ -302,7 +304,10 @@ public static class LtcDecoder
     /// in <c>float</c> instead loses the tail of a long buffer and shifts the
     /// threshold.
     /// </summary>
-    private static float Rms(IReadOnlyList<float> samples)
+    /// <summary><c>internal</c> for the same reason as the pipeline stages: the
+    /// mutation-equivalence proof needs the exact reference amplitude the
+    /// comparator saw, not a re-derivation of it.</summary>
+    internal static float Rms(IReadOnlyList<float> samples)
     {
         if (samples.Count == 0)
         {
